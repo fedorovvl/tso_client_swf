@@ -1,0 +1,179 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="125" height="50">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Image;
+        import GUI.Components.ExtendedHSlider;
+        import GUI.Components.CustomTextInput;
+        import mx.collections.ArrayCollection;
+        import GUI.Components.CustomLabel;
+        import mx.containers.HBox;
+        import mx.core.mx_internal;
+        import mx.events.FlexEvent;
+        import mx.events.SliderEvent;
+        import flash.events.Event;
+        import flash.utils.setTimeout;
+        import flash.events.FocusEvent;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        private var dataProvider:ArrayCollection;
+
+        [Bindable]
+        private var offset:int;
+
+        [Bindable]
+        private var index:int;
+
+        private function UpdateAmount(argument1:SliderEvent):void
+        {
+            if (isNaN(argument1.value))
+            {
+                return;
+            };
+            data.current = argument1.value;
+            this.DisplayValues();
+            dispatchEvent(new FlexEvent(FlexEvent.DATA_CHANGE, true));
+        }
+
+        protected function selectedCountChangeHandler(argument1:Event):void
+        {
+            var localValue2:int = int(this.selectedCount.text);
+            localValue2 = Math.min(localValue2, data.maximum);
+            this.DisplayValues();
+            this.amountSlider.value = localValue2;
+        }
+
+        public function onSelectedCount_focusIn(argument1:FocusEvent):void
+        {
+            setTimeout(this.selectedCount.setSelection, 50, 0, this.selectedCount.text.length);
+        }
+
+        public function onNameLabel_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            if (argument1 != null)
+            {
+                this.unitIcon.toolTip = data.name_string;
+                this.nameLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, data.name_string);
+                this.unitIcon.source = gAssetManager.GetResourceIcon(data.name_string);
+                if (this.amountSlider.maximum != data.maximum)
+                {
+                    this.amountSlider.maximum = data.maximum;
+                };
+                this.amountSlider.value = data.current;
+                this.amountSlider.enabled = ((data.enabled) && (data.available > 0));
+            };
+            this.DisplayValues();
+            refreshRendererPresentation();
+        }
+
+        private function DisplayValues():void
+        {
+            this.selectedCount.text = data.current;
+            this.maximumCount.text = ("/" + data.available);
+            this.selectedCount.width = this.selectedCount.width;
+        }
+
+        public function onUnitIcon_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.MILITARY_UNIT_SKILL_string, argument1, data.general);
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            unitIcon.addEventListener("toolTipCreate", onUnitIcon_toolTipCreate);
+            nameLabel.addEventListener("toolTipCreate", onNameLabel_toolTipCreate);
+            selectedCount.addEventListener("change", selectedCountChangeHandler);
+            selectedCount.addEventListener("focusIn", onSelectedCount_focusIn);
+            amountSlider.addEventListener("change", UpdateAmount);
+            this.styleName = "buildQueueItem";
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.width = 125;
+            this.height = 50;
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"],
+                [amountSlider, "enabledChanged"]]);
+                selectedCount.enabled = amountSlider.enabled;
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="background" percentWidth="100" percentHeight="100"  backgroundSize="100%" backgroundImage="{gAssetManager.GetClass('BackgroundNormal')}" />
+    <mx:Image id="unitIcon" width="26" height="25"  top="5" left="5" />
+    <ui:CustomLabel id="nameLabel" width="95"  left="26" textAlign="center" top="0" color="0xFFFFFF" fontWeight="bold" />
+    <mx:HBox id="viewHBox1" right="5" top="15" horizontalAlign="right" verticalAlign="bottom" horizontalGap="0">
+        <ui:CustomTextInput id="selectedCount" height="17" width="27" styleName="standardInput" text="" restrict="0-9"  borderThickness="0" color="0xFFFFFF" fontSize="10" textAlign="right" />
+        <ui:CustomLabel id="maximumCount" text=""  color="0xFFFFFF" fontWeight="normal" />
+    </mx:HBox>
+    <ui:ExtendedHSlider id="amountSlider" minimum="0"  left="4" right="5" bottom="4" />
+</mx:Canvas>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    mouseEnabled="false" mouseChildren="false" minWidth="200" styleName="toolTip">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.core.ClassFactory;
+        import mx.collections.ArrayCollection;
+        import GUI.Components.ItemRenderer.ResourceItemRenderer;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+
+        private static const TEXT:String = "text";
+
+        private var _data:Object;
+        private var _rawKey:String;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this._data = _arg_1;
+        }
+
+        public function get text():String
+        {
+            if (headline)
+            {
+                return (headline.text);
+            };
+            return (this._rawKey);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            var _local_3:String;
+            this._rawKey = _arg_1;
+            if (!headline || !costsList)
+            {
+                return;
+            };
+            applyText();
+        }
+
+        private function applyText():void
+        {
+            var _local_3:String;
+            this.headline.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, this._data[TEXT]);
+            var _local_2:ArrayCollection = new ArrayCollection();
+            for (_local_3 in this._data)
+            {
+                if (_local_3 != TEXT)
+                {
+                    _local_2.addItem({
+                        "name_string":_local_3,
+                        "amount":this._data[_local_3]
+                    });
+                };
+            };
+            this.costsList.dataProvider = _local_2;
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            if (this._data != null)
+            {
+                applyText();
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("paddingLeft", 5);
+            this.setStyle("paddingRight", 5);
+            this.setStyle("paddingTop", 5);
+            this.setStyle("paddingBottom", 10);
+            costsList.itemRenderer = new ClassFactory(ResourceItemRenderer);
+            if (this._data != null && this._rawKey != null)
+            {
+                applyText();
+            };
+            if (cLocaManager.GetInstance().IsInitialized())
+            {
+                refreshLabels();
+            };
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+    ]]></mx:Script>
+    <gui:CustomText id="headline" fontWeight="bold" color="0xFFFFFF" />
+    <renderer:RendererPoolBox id="costsList" direction="horizontal" height="25" />
+</mx:VBox>

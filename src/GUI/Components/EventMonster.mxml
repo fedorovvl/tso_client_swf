@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="338" height="330">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(headerBox);
+            LegacyMxmlContent.createChildren(subHeaderBox);
+            LegacyMxmlContent.createChildren(applyBuff);
+            LegacyMxmlContent.createChildren(busyOverlay);
+            LegacyMxmlContent.createChildren(constructionTime);
+            LegacyMxmlContent.createChildren(buffContentSide);
+            LegacyMxmlContent.createChildren(enemyContentSide);
+            LegacyMxmlContent.createChildren(heartContainer);
+            overbuffed.source = gAssetManager.GetBitmap("icon_exclamationmark.png");
+            btnSend.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            btnAbort.setStyle("icon", gAssetManager.GetClass("ButtonIconAbort"));
+            refreshLabels();
+            updateSliderDependents();
+            updateBusyAnimation();
+            amountSlider.addEventListener("enabledChanged", updateSliderDependents, false, 0, true);
+            amountSlider.addEventListener("change", updateSliderDependents, false, 0, true);
+            amountSlider.addEventListener("valueCommit", updateSliderDependents, false, 0, true);
+            busyOverlay.addEventListener("show", updateBusyAnimation, false, 0, true);
+            busyOverlay.addEventListener("hide", updateBusyAnimation, false, 0, true);
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var buffsTitle:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "EventMonsterBuffs");
+            subHeaderLabel.text = ((buffsTitle == undefined) ? null : String(buffsTitle));
+            var overbuffedTip:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "EventMonsterOverbuffed");
+            overbuffed.toolTip = ((overbuffedTip == undefined) ? null : String(overbuffedTip));
+            var killTip:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "ButtonDefeatGolem");
+            btnKill.toolTip = ((killTip == undefined) ? null : String(killTip));
+        }
+
+        private function updateSliderDependents(event:Event = null):void
+        {
+            _EventMonster_Label2.enabled = amountSlider.enabled;
+            var sliderValue:* = amountSlider.value;
+            _EventMonster_Label2.text = ((sliderValue == undefined) ? null : String(sliderValue));
+            selectedCount.enabled = amountSlider.enabled;
+            btnSend.enabled = (amountSlider.value > 0);
+        }
+
+        private function updateBusyAnimation(event:Event = null):void
+        {
+            _EventMonster_SpriteLibAnimation1.visible = busyOverlay.visible;
+        }
+
+        public function SetToConstructionView():void
+        {
+            this.applyBuff.visible = false;
+            this.busyOverlay.visible = false;
+            this.subHeaderLabel.visible = false;
+            this.constructionTime.visible = true;
+            height = 215;
+            updateBusyAnimation();
+        }
+
+        public function SetToBuffApplyView():void
+        {
+            this.applyBuff.visible = true;
+            this.busyOverlay.visible = true;
+            this.subHeaderLabel.visible = true;
+            this.constructionTime.visible = false;
+            height = 330;
+            updateBusyAnimation();
+        }
+    ]]></mx:Script>
+    <gui:subComponents><mx:Array>
+        <mx:Canvas id="headerBox" styleName="detailsHeader" height="60" verticalScrollPolicy="off" left="2" right="2">
+            <mx:Image id="image" left="10" verticalCenter="1"/>
+            <mx:Text id="description" selectable="false" left="70" right="15" top="6" bottom="2" color="0xFFFFFF" fontWeight="normal"/>
+        </mx:Canvas>
+        <mx:Canvas id="subHeaderBox" styleName="detailsSubHeader" height="18" left="5" right="4" top="62">
+            <mx:Label id="subHeaderLabel" horizontalCenter="0" color="0xFFFFFF"/>
+        </mx:Canvas>
+        <mx:Canvas id="applyBuff" styleName="detailsContentBox" top="80" left="6" right="5" bottom="35">
+            <mx:Canvas percentWidth="100" top="0" bottom="97">
+                <mx:Image id="arrow" horizontalCenter="0" verticalCenter="0"/>
+                <mx:Canvas id="buffContentSide" percentWidth="50" percentHeight="100" left="0">
+                    <mx:Image id="buffIcon" verticalCenter="-10" horizontalCenter="0"/>
+                    <mx:HBox percentWidth="100" horizontalGap="0" horizontalAlign="center" verticalCenter="30">
+                        <mx:Label id="_EventMonster_Label2" height="17" styleName="standardInput" color="0xFFFFFF" fontSize="10" textAlign="right"/>
+                        <mx:Label id="buffCount" fontSize="10" color="0xFFFFFF"/>
+                    </mx:HBox>
+                </mx:Canvas>
+                <mx:Canvas id="enemyContentSide" percentWidth="50" percentHeight="100" right="0">
+                    <mx:Canvas id="heartContainer" verticalCenter="-10" horizontalCenter="0">
+                        <mx:Image id="heartToDestroy" horizontalAlign="center"/>
+                        <mx:Image id="overbuffed" width="80" horizontalAlign="right"/>
+                    </mx:Canvas>
+                    <mx:Text id="heartsRemaining" percentWidth="100" fontSize="10" color="0xFFFFFF" paddingLeft="6" textAlign="center" verticalCenter="30"/>
+                </mx:Canvas>
+            </mx:Canvas>
+            <mx:Canvas styleName="detailsSubContentBox" height="42" left="20" right="20" bottom="55">
+                <mx:HBox paddingLeft="14" horizontalCenter="0" horizontalGap="0" top="5" verticalAlign="middle">
+                    <mx:TextInput id="selectedCount" height="18" width="12" styleName="standardInput" text="" restrict="0-9" color="0xFFFFFF" fontSize="10" textAlign="right"/>
+                    <mx:Label id="maximumCount" fontSize="10" color="0xFFFFFF"/>
+                </mx:HBox>
+                <gui:ExtendedHSlider id="amountSlider" enabled="false" value="1" minimum="0" bottom="5" right="5" left="5"/>
+            </mx:Canvas>
+            <mx:HBox percentWidth="100" horizontalAlign="center" bottom="7">
+                <gui:StandardButton id="btnSend" width="70" height="32"/>
+                <gui:StandardButton id="btnAbort" width="70" height="32"/>
+                <mx:Canvas width="70" height="32" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+                    <gui:StandardButton id="btnKill" percentWidth="100" percentHeight="100"/>
+                    <mx:Image id="btnKillIcon" mouseEnabled="false" mouseChildren="false" verticalCenter="0" horizontalCenter="0"/>
+                </mx:Canvas>
+            </mx:HBox>
+        </mx:Canvas>
+        <mx:Canvas id="busyOverlay" styleName="detailsContentBox" visible="false" top="80" left="5" right="6" bottom="35">
+            <gui:SpriteLibAnimation id="_EventMonster_SpriteLibAnimation1" animationName="guianim_hourglass" loop="true" visible="false" width="48" height="48" horizontalCenter="0" verticalCenter="0"/>
+        </mx:Canvas>
+        <mx:Canvas id="constructionTime" styleName="detailsContentBox" height="65" top="80" left="6" right="5">
+            <gui:CustomLabel id="constructionTimeLabel" horizontalCenter="0" verticalCenter="0" fontWeight="normal"/>
+        </mx:Canvas>
+        <mx:Canvas styleName="hr" height="3" left="2" right="0" bottom="28"/>
+    </mx:Array></gui:subComponents>
+</gui:BasicPanel>

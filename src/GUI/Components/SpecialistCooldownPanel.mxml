@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="370" cacheAsBitmap="true">
+    <mx:Script><![CDATA[
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import flash.events.Event;
+        import mx.events.EffectEvent;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            setStyle("horizontalCenter", 0);
+            setStyle("verticalCenter", 0);
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            LegacyMxmlContent.createChildren(content);
+            clock.source = gAssetManager.GetBitmap("DetailsIconOverallTime");
+            btnPay.setStyle("icon", gAssetManager.GetClass("ButtonIconHalfTheTime"));
+            btnOK.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            fadeOut.addEventListener("effectEnd", __fadeOut_effectEnd);
+            detailsHeader.addEventListener("resize", updateContentMinHeight);
+            updateContentMinHeight();
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function contentMinHeight(headerHeight:Number):Number
+        {
+            return 120 + headerHeight;
+        }
+
+        private function updateContentMinHeight(event:Event = null):void
+        {
+            content.minHeight = contentMinHeight(detailsHeader.height);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var text:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ProductionStatus");
+            _SpecialistCooldownPanel_CustomLabel2.text = ((text == undefined) ? null : String(text));
+            text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "NotAvailableText");
+            _SpecialistCooldownPanel_CustomLabel3.text = ((text == undefined) ? null : String(text));
+            text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "HalfTheTime");
+            _SpecialistCooldownPanel_CustomText2.text = ((text == undefined) ? null : String(text));
+        }
+
+        public function __fadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <mx:Canvas styleName="basicPanel" top="17" left="5" right="9" bottom="0" />
+    <mx:Canvas id="completedHeader" styleName="questPanelHeader" height="82" visible="false" left="0" right="0" top="17" />
+    <mx:Image id="ornament" top="0" horizontalCenter="0"
+        source="@Embed(source='../../../assets/embedded/specialists/specialists_specialist_ornamental_top.png')" />
+    <mx:Canvas styleName="questPanelFooter" height="60" left="10" right="10" bottom="0" />
+    <gui:CustomLabel id="headline" left="46" top="25" right="46" textAlign="center" color="0xFFFFFF" />
+    <gui:CloseButton id="btnClose" top="22" right="24" />
+    <mx:VBox id="content" top="48" bottom="60" left="19" right="19" verticalGap="5" percentWidth="100">
+        <mx:Canvas id="detailsHeader" styleName="detailsHeader" horizontalScrollPolicy="off" verticalScrollPolicy="off" percentWidth="100">
+            <renderer:StarMenuItemRenderer id="specialistRenderer" left="10" top="7" />
+            <gui:CustomText id="description" color="0xFFFFFF" fontWeight="normal" left="70" top="7" selectable="false" percentWidth="100" />
+        </mx:Canvas>
+        <mx:Canvas percentHeight="100" percentWidth="100" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+            <mx:Canvas styleName="detailsSubHeader" height="20" percentWidth="100">
+                <gui:CustomLabel id="_SpecialistCooldownPanel_CustomLabel2" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+            </mx:Canvas>
+            <mx:Canvas styleName="detailsContentBox" height="40" percentWidth="100" top="20">
+                <mx:Image id="clock" top="1" left="20" />
+                <gui:CustomLabel id="_SpecialistCooldownPanel_CustomLabel3" top="1" left="30" horizontalCenter="0" color="0xFFFFFF" />
+                <gui:CustomLabel id="timeRemain" top="20" left="30" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+            </mx:Canvas>
+            <mx:Canvas styleName="detailsSubHeader" height="45" percentWidth="100" top="70">
+                <gui:StandardButton id="btnPay" left="40" top="10" toolTip="HalveTimeCost" playSound="false" width="70" height="26" focusEnabled="false" />
+                <gui:CustomText id="_SpecialistCooldownPanel_CustomText2" left="140" top="6" color="0xFFFFFF" width="160" selectable="false" />
+            </mx:Canvas>
+        </mx:Canvas>
+    </mx:VBox>
+    <gui:StandardButton id="btnOK" horizontalCenter="0" bottom="10" playSound="false" width="70" height="26" />
+</mx:Canvas>

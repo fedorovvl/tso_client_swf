@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="350" height="250">
+    <mx:Script><![CDATA[
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import flash.display.DisplayObject;
+        import flash.events.Event;
+        import mx.core.Container;
+        import mx.events.EffectEvent;
+        import mx.states.AddChild;
+        import mx.states.RemoveChild;
+        import mx.states.SetProperty;
+        import mx.states.State;
+
+        public var stateIdle:State;
+        public var stateFeedBack:State;
+        public var stateSpecial:State;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(stateHolder);
+            stateHolder.removeChild(idlePanel);
+            stateHolder.removeChild(perfectPanel);
+            stateHolder.removeChild(perfectPanel1);
+            stateHolder.removeChild(failPanel);
+            idleHr.label = "hr";
+            buildStates();
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            specialFeedbackIcon.source = gAssetManager.GetBitmap("IconSkull");
+            btnOK.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            fadeOut.addEventListener("effectEnd", __fadeOut_effectEnd);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function loca(key:String):String
+        {
+            var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key);
+            return value == undefined ? null : String(value);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            generalDistracted.text = loca("GeneralGetIntercepted");
+            generalDistractedSpecial.text = loca("GeneralGetIntercepted");
+        }
+
+        public function __fadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+
+        private function addTo(target:DisplayObject, relativeTo:Container = null, position:String = "lastChild"):AddChild
+        {
+            var add:AddChild = new AddChild();
+            add.relativeTo = relativeTo;
+            add.position = position;
+            add.target = target;
+            return add;
+        }
+
+        private function prop(target:Object, name:String, value:Object):SetProperty
+        {
+            var set:SetProperty = new SetProperty();
+            set.target = target;
+            set.name = name;
+            set.value = value;
+            return set;
+        }
+
+        private function drop(target:Object):RemoveChild
+        {
+            var remove:RemoveChild = new RemoveChild();
+            remove.target = target;
+            return remove;
+        }
+
+        private function buildStates():void
+        {
+            var idle:State = new State();
+            idle.name = "IdleState";
+            idle.overrides = [prop(this, "width", 300), prop(this, "height", 250),
+                drop(close),
+                prop(btnOK, "x", 115), prop(btnOK, "y", 215),
+                addTo(idlePanel, null, "firstChild")];
+            stateIdle = idle;
+            var feedback:State = new State();
+            feedback.name = "PreviewFeedBack";
+            feedback.overrides = [prop(this, "width", 455), prop(this, "height", 320),
+                addTo(perfectPanel, null, "firstChild"), addTo(perfectPanel1),
+                drop(btnOK), addTo(btnOK, perfectPanel),
+                prop(btnOK, "x", 278), prop(btnOK, "y", 180)];
+            stateFeedBack = feedback;
+            var special:State = new State();
+            special.name = "SpecialState";
+            special.overrides = [prop(this, "width", 300), prop(this, "height", 270),
+                addTo(failPanel, null, "firstChild"),
+                drop(btnOK), addTo(btnOK, failPanel),
+                prop(btnOK, "x", 115), prop(btnOK, "y", 229),
+                drop(close)];
+            stateSpecial = special;
+            states = [idle, feedback, special];
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <gui:CloseButton id="close" top="67" right="24" />
+    <gui:StandardButton id="btnOK" playSound="false" width="70" height="25" />
+
+    <mx:Canvas id="stateHolder" width="0" height="0">
+        <mx:Canvas id="idlePanel" x="0" y="0" width="300" height="250" styleName="specialPanel" backgroundSize="100%">
+            <mx:Canvas x="24" y="37" width="252" height="159" styleName="detailsHeader">
+                <gui:SpriteLibAnimation id="glassAnim" animationName="guianim_hourglass" loop="true" visible="false" width="48" height="48" horizontalCenter="0" verticalCenter="0" />
+            </mx:Canvas>
+            <mx:Canvas id="idleHr" x="10" y="204" width="280" height="3" />
+        </mx:Canvas>
+        <mx:Canvas id="perfectPanel" styleName="specialPanel" width="450" height="215" backgroundSize="100%" left="5" top="62">
+            <mx:Canvas styleName="hr" height="3" left="34" right="29" top="139" />
+            <mx:Canvas styleName="hr" height="3" left="18" right="16" top="148" />
+            <mx:Canvas styleName="detailsSpecialContentBox" height="80" left="34" right="29" top="60">
+                <gui:CustomText id="perfectDescription" selectable="false" width="185" top="4" left="185" color="0xFFFFFF" fontSize="10" fontWeight="normal" />
+            </mx:Canvas>
+            <mx:Canvas id="header" height="29" top="32" left="28" right="23">
+                <gui:CustomText id="perfectTitle" selectable="false" top="7" right="85" color="0xFFFFFF" fontWeight="bold" />
+            </mx:Canvas>
+            <gui:CustomLabel id="generalDistracted" left="28" right="23" top="154" textAlign="center" fontWeight="bold" color="0xFF5656" />
+        </mx:Canvas>
+        <mx:Canvas id="perfectPanel1">
+            <mx:Image id="generalImage" />
+        </mx:Canvas>
+        <mx:Canvas id="failPanel" styleName="specialPanel" width="300" height="270" backgroundSize="100%">
+            <mx:Canvas styleName="detailsHeader" height="144" left="29" right="26" top="40">
+                <gui:CustomText id="specialDescription" selectable="false" width="210" height="105" bottom="7" color="0xFFFFFF" fontSize="10" fontWeight="normal" horizontalCenter="0" />
+            </mx:Canvas>
+            <mx:Canvas styleName="hr" height="3" left="18" right="16" top="192" />
+            <mx:Image id="specialFeedbackIcon" left="116" top="2" />
+            <gui:CustomLabel id="generalDistractedSpecial" left="20" right="18" top="200" textAlign="center" fontWeight="bold" color="0xFF5656" />
+        </mx:Canvas>
+    </mx:Canvas>
+</mx:Canvas>

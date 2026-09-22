@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:CustomText xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*">
+    <mx:Script><![CDATA[
+        import GUI.Components.CustomText;
+        import mx.styles.CSSStyleDeclaration;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("paddingLeft", -2);
+            this.setStyle("paddingTop", -2);
+            this.setStyle("paddingBottom", -5);
+
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+
+</ui:CustomText>

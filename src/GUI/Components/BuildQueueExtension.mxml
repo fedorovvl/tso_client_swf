@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    styleName="buildQueueItem" horizontalScrollPolicy="off" verticalScrollPolicy="off"
+    width="122" height="50">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import mx.events.ToolTipEvent;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import ShopSystem.cShopItem;
+        import Enums.ONE_CLICK_SHOPITEM;
+        import global;
+
+        private var expandedHeight:int;
+        private var offset:int;
+        private var resizing:Boolean = false;
+
+        public function onResizeWindow_mouseDown(event:MouseEvent):void
+        {
+            StartResizing(event);
+        }
+
+        private function StartResizing(event:MouseEvent):void
+        {
+            resizing = true;
+            offset = event.localY;
+            global.getApplication().addEventListener(MouseEvent.MOUSE_UP, StopResizing);
+            global.getApplication().addEventListener(MouseEvent.ROLL_OUT, StopResizing);
+            global.getApplication().addEventListener(MouseEvent.MOUSE_MOVE, Resize);
+        }
+
+        private function Resize(event:MouseEvent):void
+        {
+            var appHeight:int = ((global.getApplication().height + event.stageY) + (parent as mx.containers.Canvas).getConstraintValue("bottom")) - offset;
+            var minY:* = 350;
+            if (event.stageY > minY)
+            {
+                if (event.stageY < (global.getApplication().screen.height - 200))
+                {
+                    parent.height = event.stageY;
+                }
+                else
+                {
+                    parent.height = (global.getApplication().screen.height - 200);
+                };
+            };
+        }
+
+        private function StopResizing(event:MouseEvent):void
+        {
+            resizing = false;
+            expandedHeight = height;
+            global.getApplication().removeEventListener(MouseEvent.MOUSE_UP, StopResizing);
+            global.getApplication().removeEventListener(MouseEvent.ROLL_OUT, StopResizing);
+            global.getApplication().removeEventListener(MouseEvent.MOUSE_MOVE, Resize);
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            updateEnabled();
+            addEventListener("toolTipCreate", onToolTipCreate);
+            btnBuyTempSlot.addEventListener("toolTipCreate", onBtnBuyTempSlot_toolTipCreate);
+            resizeWindow.addEventListener("mouseDown", onResizeWindow_mouseDown);
+            global.staticEventDispatcher.addEventListener("propertyChange", onGlobalChanged, false, 0, true);
+            connectUiBindable();
+        }
+
+        private var uiBindableSource:flash.events.IEventDispatcher;
+
+        private function onGlobalChanged(event:mx.events.PropertyChangeEvent):void
+        {
+            if (event.property == "ui_bindable")
+            {
+                connectUiBindable();
+                updateEnabled();
+            };
+        }
+
+        private function connectUiBindable():void
+        {
+            var dispatcher:flash.events.IEventDispatcher = global.ui_bindable as flash.events.IEventDispatcher;
+            if (uiBindableSource === dispatcher)
+            {
+                return;
+            };
+            if (uiBindableSource != null)
+            {
+                uiBindableSource.removeEventListener("propertyChange", onUiBindableChanged);
+            };
+            uiBindableSource = dispatcher;
+            if (uiBindableSource != null)
+            {
+                uiBindableSource.addEventListener("propertyChange", onUiBindableChanged, false, 0, true);
+            };
+        }
+
+        private function onUiBindableChanged(event:mx.events.PropertyChangeEvent):void
+        {
+            if (event.property == "mPacketLost")
+            {
+                updateEnabled();
+            };
+        }
+
+        private function updateEnabled():void
+        {
+            btnBuyTempSlot.enabled = global.ui_bindable ? (!(global.ui_bindable.mPacketLost)) : true;
+        }
+
+        public function onToolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event, data);
+        }
+
+        public function onBtnBuyTempSlot_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SHOP_ITEM_WITH_COSTS_string, event, cShopItem.GetShopItem(ONE_CLICK_SHOPITEM.BUY_TEMP_BUILD_QUEUE_SLOT));
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="background" percentWidth="100" percentHeight="100" backgroundSize="100%" backgroundImage="{gAssetManager.GetClass('BuildQueueExtensionBar')}">
+        <gui:StandardButton id="btnBuyTempSlot" width="65" height="25" verticalCenter="-4" horizontalCenter="0" icon="{gAssetManager.GetClass('BuyTempSlot')}" />
+        <mx:Button id="resizeWindow" styleName="chatScaleButton"  bottom="3" horizontalCenter="-2" />
+    </mx:Canvas>
+</mx:Canvas>

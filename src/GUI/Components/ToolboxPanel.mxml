@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="354" height="92" implements="GUI.Components.IGUIList">
+    <mx:Script><![CDATA[
+        import flash.display.DisplayObject;
+        import __AS3__.vec.Vector;
+        import mx.collections.ArrayCollection;
+        import mx.core.ClassFactory;
+        import GUI.Components.ItemRenderer.ToolboxItemRenderer;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import flash.events.Event;
+
+        public function getAllItems(_arg_1:String):Vector.<DisplayObject>
+        {
+            if (_arg_1 == null)
+            {
+                return (null);
+            };
+            var _local_2:Vector.<DisplayObject> = new Vector.<DisplayObject>();
+            var _local_3:ArrayCollection = ArrayCollection(this.buttonBar.dataProvider);
+            var _local_4:int;
+            while (_local_4 < _local_3.length)
+            {
+                if (_local_3[_local_4].id == _arg_1)
+                {
+                    _local_2.push(this.buttonBar.getChildAt(_local_4));
+                };
+                _local_4++;
+            };
+            if (this.tileList.dataProvider != null)
+            {
+                _local_3 = ArrayCollection(this.tileList.dataProvider);
+                _local_4 = 0;
+                while (_local_4 < _local_3.length)
+                {
+                    if (_local_3[_local_4].label == _arg_1)
+                    {
+                        _local_2.push((this.tileList.indexToItemRenderer(_local_4) as DisplayObject));
+                    };
+                    _local_4++;
+                };
+            };
+            return (_local_2);
+        }
+
+        public function getFirstItem(_arg_1:String):DisplayObject
+        {
+            if (_arg_1 == null)
+            {
+                return (null);
+            };
+            var _local_2:ArrayCollection = ArrayCollection(this.buttonBar.dataProvider);
+            var _local_3:int;
+            while (_local_3 < _local_2.length)
+            {
+                if (_local_2[_local_3].id == _arg_1)
+                {
+                    return (this.buttonBar.getChildAt(_local_3));
+                };
+                _local_3++;
+            };
+            if (this.tileList.dataProvider != null)
+            {
+                _local_2 = ArrayCollection(this.tileList.dataProvider);
+                _local_3 = 0;
+                while (_local_3 < _local_2.length)
+                {
+                    if (_local_2[_local_3].label == _arg_1)
+                    {
+                        return (this.tileList.indexToItemRenderer(_local_3) as DisplayObject);
+                    };
+                    _local_3++;
+                };
+            };
+            return (null);
+        }
+
+        public function __buttonBar_toolTipCreate(_arg_1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, _arg_1);
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            setStyle("backgroundImage", gAssetManager.GetClass("BuildingMenuBG"));
+            tileList.itemRenderer = new ClassFactory(ToolboxItemRenderer);
+            buttonBar.addEventListener("toolTipCreate", __buttonBar_toolTipCreate);
+            updateLabel();
+            cLocaManager.GetInstance().addEventListener("languageChanged", updateLabel, false, 0, true);
+        }
+
+        private function updateLabel(event:Event = null):void
+        {
+            label = cLocaManager.GetInstance().getLabel("BuildingMenu");
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <gui:CustomTileList id="tileList" verticalScrollPolicy="off" styleName="buildingsList"  borderStyle="none" left="5" right="0" top="2" bottom="0" paddingTop="0" paddingBottom="0" />
+            <gui:CustomToggleButtonBar id="buttonBar"  buttonStyleName="tabBuildingMenu" selectedButtonTextStyleName="tabSelected" bottom="2" left="5" right="5" />
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

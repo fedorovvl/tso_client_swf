@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*" height="51">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        
+        [Embed(source="../../../assets/vector/CalendarPointer/UpSkinNormal.swf", symbol="GUI.Components.CalendarPointer_UpSkinNormal")]
+        private var UpSkinNormal:Class;
+        [Embed(source="../../../assets/vector/CalendarPointer/OverSkinNormal.swf", symbol="GUI.Components.CalendarPointer_OverSkinNormal")]
+        private var OverSkinNormal:Class;
+        [Embed(source="../../../assets/vector/CalendarPointer/UpSkinCompleted.swf", symbol="GUI.Components.CalendarPointer_UpSkinCompleted")]
+        private var UpSkinCompleted:Class;
+        [Embed(source="../../../assets/vector/CalendarPointer/OverSkinCompleted.swf", symbol="GUI.Components.CalendarPointer_OverSkinCompleted")]
+        private var OverSkinCompleted:Class;
+        private var pointerType:String = "normal";
+        private var hovering:Boolean = false;
+
+        public function get type():String { return pointerType; }
+        public function set type(value:String):void
+        {
+            pointerType = value;
+            updateBackground();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundSize", "100%");
+            addEventListener("labelChanged", updateLabel);
+            addEventListener("click", canvas1_clickHandler);
+            addEventListener("rollOver", onRollOver);
+            addEventListener("rollOut", onRollOut);
+            
+            updateLabel();
+            updateBackground();
+        }
+
+        private function updateLabel(event:Event = null):void
+        {
+            _CalendarPointer_CustomLabel1.text = label;
+        }
+
+        private function updateBackground():void
+        {
+            if (pointerType == "normal")
+                setStyle("backgroundImage", hovering ? OverSkinNormal : UpSkinNormal);
+            else if (pointerType == "completed")
+                setStyle("backgroundImage", hovering ? OverSkinCompleted : UpSkinCompleted);
+        }
+
+        protected function onRollOver(event:MouseEvent):void
+        {
+            hovering = true;
+            updateBackground();
+        }
+
+        protected function onRollOut(event:MouseEvent):void
+        {
+            hovering = false;
+            updateBackground();
+        }
+
+        protected function canvas1_clickHandler(event:MouseEvent):void
+        {
+            globalFlash.gui.mAdventWindow.Show();
+        }
+        
+    ]]></mx:Script>
+    <gui:CustomLabel id="_CalendarPointer_CustomLabel1"  left="30" right="15" verticalCenter="-3" color="0xFFFFFF" />
+</mx:Canvas>

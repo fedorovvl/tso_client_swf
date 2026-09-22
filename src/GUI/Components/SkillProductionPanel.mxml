@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="580" height="410">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.events.FlexEvent;
+        import mx.events.PropertyChangeEvent;
+        import mx.events.ToolTipEvent;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Components.ToolTips.cToolTipUtil;
+
+        private var _1333946204bookSelected:Boolean = false;
+        private var _1517340865maxCostReached:Boolean = false;
+
+        [Bindable(event="propertyChange")]
+        public function get bookSelected():Boolean
+        {
+            return _1333946204bookSelected;
+        }
+
+        public function set bookSelected(value:Boolean):void
+        {
+            var old:Object = _1333946204bookSelected;
+            if (old !== value)
+            {
+                _1333946204bookSelected = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "bookSelected", old, value));
+                updateBookSelected();
+            }
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get maxCostReached():Boolean
+        {
+            return _1517340865maxCostReached;
+        }
+
+        public function set maxCostReached(value:Boolean):void
+        {
+            var old:Object = _1517340865maxCostReached;
+            if (old !== value)
+            {
+                _1517340865maxCostReached = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "maxCostReached", old, value));
+                updateMaxCost();
+            }
+        }
+
+        [Bindable]
+        public var instantBuildCost:int;
+
+        [Bindable]
+        public var instantBuildCostUnmodified:int;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(detailsHeader);
+            LegacyMxmlContent.createChildren(upgradeBox);
+            LegacyMxmlContent.createChildren(mainBox);
+            LegacyMxmlContent.createChildren(production);
+            LegacyMxmlContent.createChildren(control);
+            LegacyMxmlContent.createChildren(pickUp);
+            orderBtn0.addEventListener("creationComplete", __orderBtn0_creationComplete);
+            orderBtn1.addEventListener("creationComplete", __orderBtn1_creationComplete);
+            orderBtn2.addEventListener("creationComplete", __orderBtn2_creationComplete);
+            btnInstantFinish.addEventListener("toolTipCreate", __btnInstantFinish_toolTipCreate);
+            LegacyMxmlContent.createChildren(busyOverlay);
+            payshopItemIndicator.source = gAssetManager.GetBitmap("PayshopIndicator");
+            _SkillProductionPanel_Image7.source = gAssetManager.GetClass("ProductionArrow");
+            _SkillProductionPanel_Image8.source = gAssetManager.GetClass("ProductionArrow");
+            btnInstantFinish.setStyle("upSkin", gAssetManager.GetClass("HalfTime"));
+            btnInstantFinish.setStyle("downSkin", gAssetManager.GetClass("HalfTimeHighlight"));
+            btnInstantFinish.setStyle("overSkin", gAssetManager.GetClass("HalfTimeHighlight"));
+            btnInstantFinish.setStyle("disabledSkin", gAssetManager.GetClass("HalfTimeDisabled"));
+            btnProduce.setStyle("icon", gAssetManager.GetClass("OKIcon"));
+            btnPickUp.setStyle("icon", gAssetManager.GetClass("OKIcon"));
+            orderBtn0.setStyle("backgroundImage", gAssetManager.GetClass("BackgroundNormal"));
+            orderBtn1.setStyle("backgroundImage", gAssetManager.GetClass("BackgroundNormal"));
+            orderBtn2.setStyle("backgroundImage", gAssetManager.GetClass("BackgroundNormal"));
+            updateBookSelected();
+            updateMaxCost();
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function updateBookSelected():void
+        {
+            if (durationHead) durationHead.visible = _1333946204bookSelected;
+            if (duration) duration.visible = _1333946204bookSelected;
+            if (cost0) cost0.visible = _1333946204bookSelected;
+            if (cost1) cost1.visible = _1333946204bookSelected;
+            if (cost2) cost2.visible = _1333946204bookSelected;
+            if (_SkillProductionPanel_Image7) _SkillProductionPanel_Image7.visible = _1333946204bookSelected;
+            if (orderBook) orderBook.visible = _1333946204bookSelected;
+            if (nextDurationHead) nextDurationHead.visible = _1333946204bookSelected;
+            if (nextDuration) nextDuration.visible = _1333946204bookSelected;
+            if (nextCost0) nextCost0.visible = _1333946204bookSelected;
+            if (nextCost1) nextCost1.visible = _1333946204bookSelected;
+            if (nextCost2) nextCost2.visible = _1333946204bookSelected;
+            if (_SkillProductionPanel_Image8) _SkillProductionPanel_Image8.visible = _1333946204bookSelected;
+            if (nextOrderBook) nextOrderBook.visible = _1333946204bookSelected;
+        }
+
+        private function updateMaxCost():void
+        {
+            if (_SkillProductionPanel_HBox3)
+            {
+                _SkillProductionPanel_HBox3.visible = !_1517340865maxCostReached;
+                _SkillProductionPanel_HBox3.includeInLayout = !_1517340865maxCostReached;
+            }
+            if (_SkillProductionPanel_HBox4)
+            {
+                _SkillProductionPanel_HBox4.visible = _1517340865maxCostReached;
+                _SkillProductionPanel_HBox4.includeInLayout = _1517340865maxCostReached;
+            }
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            _SkillProductionPanel_Label1.text = loca("Select");
+            _SkillProductionPanel_Label2.text = loca("ProductionDetails");
+            durationHead.text = loca("Duration");
+            nextDurationHead.text = loca("Duration");
+            _SkillProductionPanel_Label5.text = loca("NextBook");
+            _SkillProductionPanel_Label8.text = loca("MaxSkillCostReached");
+            btnProduce.toolTip = loca("Produce");
+        }
+
+        private function loca(key:String):String
+        {
+            var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key);
+            return value == undefined ? null : String(value);
+        }
+
+        public function __orderBtn0_creationComplete(event:FlexEvent):void
+        {
+            orderBtn0.setStyle("backgroundImage", gAssetManager.GetClass("BackgroundNormal"));
+        }
+
+        public function __orderBtn1_creationComplete(event:FlexEvent):void
+        {
+            orderBtn1.setStyle("backgroundImage", gAssetManager.GetClass("BackgroundNormal"));
+        }
+
+        public function __orderBtn2_creationComplete(event:FlexEvent):void
+        {
+            orderBtn2.setStyle("backgroundImage", gAssetManager.GetClass("BackgroundNormal"));
+        }
+
+        public function __btnInstantFinish_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.INSTANT_BUILD_string, event, [instantBuildCost, instantBuildCostUnmodified]);
+        }
+
+        public function set busy(value:Boolean):void
+        {
+            busyOverlay.visible = value;
+            busyAnim.visible = value;
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <mx:Canvas id="detailsHeader" styleName="detailsHeader" height="60" horizontalScrollPolicy="off" verticalScrollPolicy="off" clipContent="false" left="2" right="2">
+                <mx:Image id="payshopItemIndicator" top="3" left="11"/>
+                <mx:Image id="image" left="10" verticalCenter="1"/>
+                <mx:Text id="description" selectable="false" left="70" right="30" top="6" bottom="2" color="0xFFFFFF" fontWeight="normal"/>
+                <mx:VBox horizontalAlign="center" verticalGap="1" bottom="4" right="2">
+                    <mx:Image id="buffIndicator"/>
+                    <mx:Text id="buffTimer" width="75" height="14" selectable="false" textAlign="center" color="0xFFFFFF" fontWeight="normal"/>
+                </mx:VBox>
+            </mx:Canvas>
+            <mx:Canvas id="upgradeBox" height="284" top="62" left="8">
+                <gui:BuildingUpgrade id="upgradeColumn"/>
+            </mx:Canvas>
+            <mx:VBox id="mainBox" height="230" horizontalScrollPolicy="off" verticalScrollPolicy="off" top="62" left="166" right="4">
+                <mx:Canvas>
+                    <mx:Canvas styleName="detailsSubHeader" width="400" height="18">
+                        <mx:Label id="_SkillProductionPanel_Label1" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold"/>
+                    </mx:Canvas>
+                    <mx:HBox id="productionOrdersBox" styleName="detailsContentBox" width="400" top="18" paddingBottom="5" paddingTop="5" paddingLeft="5" horizontalGap="2">
+                        <mx:Canvas id="orderBtn0" width="54" height="42" backgroundAlpha="1" backgroundSize="100%">
+                            <mx:Image id="orderImage0" horizontalCenter="0" verticalCenter="0"/>
+                        </mx:Canvas>
+                        <mx:Canvas id="orderBtn1" width="54" height="42" backgroundAlpha="1" backgroundSize="100%">
+                            <mx:Image id="orderImage1" horizontalCenter="0" verticalCenter="0"/>
+                        </mx:Canvas>
+                        <mx:Canvas id="orderBtn2" width="54" height="42" backgroundAlpha="1" backgroundSize="100%">
+                            <mx:Image id="orderImage2" horizontalCenter="0" verticalCenter="0"/>
+                        </mx:Canvas>
+                    </mx:HBox>
+                </mx:Canvas>
+                <mx:VBox verticalGap="0">
+                    <mx:Canvas styleName="detailsSubHeader" width="400" height="18">
+                        <mx:Label id="_SkillProductionPanel_Label2" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold"/>
+                    </mx:Canvas>
+                    <mx:HBox styleName="detailsContentBox" width="400" paddingTop="5" paddingBottom="5" paddingLeft="5" verticalAlign="middle">
+                        <mx:Label id="durationHead" fontThickness="4"/>
+                        <mx:Label id="duration" text="123"/>
+                        <renderer:ResourceVerticalRender id="cost0"/>
+                        <renderer:ResourceVerticalRender id="cost1"/>
+                        <renderer:ResourceVerticalRender id="cost2"/>
+                        <mx:Image id="_SkillProductionPanel_Image7"/>
+                        <renderer:ResourceVerticalRender id="orderBook"/>
+                    </mx:HBox>
+                </mx:VBox>
+                <mx:VBox verticalGap="0">
+                    <mx:Canvas styleName="detailsSubHeader" width="400" height="18">
+                        <mx:Label id="_SkillProductionPanel_Label5" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold"/>
+                    </mx:Canvas>
+                    <mx:HBox id="_SkillProductionPanel_HBox3" styleName="detailsContentBox" width="400" paddingTop="5" paddingBottom="5" paddingLeft="5" verticalAlign="middle">
+                        <mx:Label id="nextDurationHead" fontThickness="4" verticalCenter="0"/>
+                        <mx:Label id="nextDuration" text="123"/>
+                        <renderer:ResourceVerticalRender id="nextCost0"/>
+                        <renderer:ResourceVerticalRender id="nextCost1"/>
+                        <renderer:ResourceVerticalRender id="nextCost2"/>
+                        <mx:Image id="_SkillProductionPanel_Image8"/>
+                        <renderer:ResourceVerticalRender id="nextOrderBook"/>
+                    </mx:HBox>
+                    <mx:HBox id="_SkillProductionPanel_HBox4" styleName="detailsContentBox" width="400" height="55" verticalAlign="middle" horizontalAlign="center">
+                        <mx:Label id="_SkillProductionPanel_Label8" verticalCenter="0"/>
+                    </mx:HBox>
+                </mx:VBox>
+            </mx:VBox>
+            <mx:HBox id="production" height="54" visible="false" horizontalGap="2" verticalAlign="middle" top="292" left="166" right="2">
+                <mx:Canvas height="50" width="70">
+                    <mx:Canvas id="productionItem" styleName="skillColorBG" height="50" width="70"/>
+                    <mx:Image id="productionIcon" horizontalCenter="0" verticalCenter="0"/>
+                </mx:Canvas>
+                <mx:Canvas percentWidth="100" percentHeight="100" styleName="skillTimeline">
+                    <gui:ProgressBar id="progressBar" top="10" left="8" right="8"/>
+                    <mx:Canvas percentWidth="100" top="23">
+                        <mx:Label id="progressTime" textAlign="left" left="100"/>
+                        <gui:StandardButton id="btnInstantFinish" toolTip="InstantFinishProduction" width="25" height="23" top="5" right="8"/>
+                    </mx:Canvas>
+                </mx:Canvas>
+            </mx:HBox>
+            <mx:HBox id="control" styleName="detailsSpecialContentBox" height="54" visible="false" horizontalAlign="center" verticalAlign="middle" top="292" left="166" right="2">
+                <gui:StandardButton id="btnProduce" width="64" height="32"/>
+            </mx:HBox>
+            <mx:HBox id="pickUp" styleName="detailsContentBox" height="54" visible="false" horizontalAlign="center" verticalAlign="middle" top="292" left="166" right="2">
+                <mx:Canvas height="50" width="70">
+                    <mx:Canvas id="pickUpItem" styleName="skillColorBG" height="50" width="70"/>
+                    <mx:Image id="pickUpIcon" horizontalCenter="0" verticalCenter="0"/>
+                </mx:Canvas>
+                <gui:StandardButton id="btnPickUp" width="70" height="32"/>
+            </mx:HBox>
+            <mx:Canvas id="busyOverlay" styleName="detailsContentBox" height="285" visible="false" top="62" left="166" right="4">
+                <gui:SpriteLibAnimation id="busyAnim" animationName="guianim_hourglass" loop="true" visible="false" width="48" height="48" horizontalCenter="0" verticalCenter="0"/>
+            </mx:Canvas>
+            <mx:Canvas id="ruler" styleName="hr" height="3" left="2" right="0" bottom="27"/>
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

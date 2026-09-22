@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="230">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.containers.VBox;
+        import mx.effects.Sequence;
+        import GUI.Components.SpecialButton;
+        import mx.effects.Resize;
+        import mx.effects.Fade;
+        import flash.utils.Dictionary;
+        import GUI.Loca.cLocaManager;
+        import mx.events.EffectEvent;
+        import flash.events.MouseEvent;
+        import mx.events.ItemClickEvent;
+        import GUI.Assets.gAssetManager;
+        import Communication.VO.dQuestElementVO;
+        import Communication.VO.Guild.dGuildVO;
+        import Communication.VO.Guild.dGuildPlayerListItemVO;
+        import Communication.VO.Guild.dGuildRankListItemVO;
+        import AdventureSystem.cAdventureDefinition;
+        import mx.events.FlexEvent;
+        import converted.bluebyte.tso.quests.logic.QuestManagerStatic;
+        import Communication.VO.dUniqueID;
+        import Enums.LOCA_GROUP;
+        import Communication.VO.UpdateVO.dAdventureClientInfoVO;
+        import flash.events.Event;
+        import GUI.Events.TrackMissionEvent;
+        import flash.display.Bitmap;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        public var subQuests:Array = new Array();
+
+        private var _itemRendererMap:Dictionary = new Dictionary();
+
+        private var lm:cLocaManager;
+
+        [Bindable]
+        public var subQuest:Boolean = false;
+
+        [Bindable]
+        public var collapsed:Boolean = false;
+
+        [Bindable]
+        private var trackable:Boolean;
+
+        [Bindable]
+        private var tracked:Boolean;
+
+        [Bindable]
+        public var mainQuest:Boolean = false;
+
+        [Bindable]
+        public var expandToHeight:int;
+
+        [Embed(source="../../../../../../../../assets/vector/embedded/quest/quest_quest_sidebar_arrow_790.swf", symbol="com.bluebyte.tso.quests.view.ui.itemrenderer.QuestListItemRenderer__embed_mxml_____data_src_gfx_embedded_quest_quest_sidebar_arrow_png_1630766314")]
+        private var _embed_mxml_____data_src_gfx_embedded_quest_quest_sidebar_arrow_png_1630766314:Class;
+
+        private function onExpandStart(event:EffectEvent):void
+        {
+            this.expandParent();
+        }
+
+        private function onCollapseStart(event:EffectEvent):void
+        {
+            this.collapseParent();
+        }
+
+        private function collapseParent():void
+        {
+            var group:QuestListGroupItemRenderer = (parentDocument as QuestListGroupItemRenderer);
+            group.expandToHeight = (group.expandToHeight - (this.list.numChildren * (int(this.list.getStyle("verticalGap")) + 29)));
+            group.collapse.end();
+            group.expand.end();
+            group.expand.play();
+        }
+
+        private function questClickHandler(event:MouseEvent):void
+        {
+            var clickEvent:ItemClickEvent = new ItemClickEvent(ItemClickEvent.ITEM_CLICK, true);
+            clickEvent.item = data;
+            dispatchEvent(clickEvent);
+        }
+
+        private function display(event:Event=null):void
+        {
+            var subMap:Dictionary;
+            var subQuestVO:dQuestElementVO;
+            var subRenderer:QuestListItemRenderer;
+            var key:String;
+            var questVO:dQuestElementVO;
+            var cancelable:Boolean;
+            var rankPosition:int;
+            var readyToSubmit:Boolean;
+            var failed:Boolean;
+            var lastPartial:Boolean;
+            var guildVO:dGuildVO;
+            var memberRankId:int;
+            var member:dGuildPlayerListItemVO;
+            var rank:dGuildRankListItemVO;
+            var adventureDef:cAdventureDefinition;
+            var quality:int;
+            removeEventListener(FlexEvent.CREATION_COMPLETE, this.display);
+            this.expandToHeight = 29;
+            if (this.subQuests.length == 0)
+            {
+                this.btnItem.normalStyle = "QuestItemBgNormal";
+                this.btnItem.hoverStyle = "QuestItemBgNormal";
+                this.btnItem.selectedStyle = "QuestItemBgSelected";
+                this.mainQuest = false;
+                for (key in this._itemRendererMap)
+                {
+                    this.list.removeChild(this._itemRendererMap[key]);
+                    delete this._itemRendererMap[key];
+                };
+            }
+            else
+            {
+                this.btnItem.normalStyle = "QuestItemBgHead";
+                this.btnItem.hoverStyle = "QuestItemBgHead";
+                this.btnItem.selectedStyle = "QuestItemBgHeadSelected";
+                this.mainQuest = true;
+                subMap = new Dictionary();
+                this.subQuests.sort(this.compareQuest);
+                for each (subQuestVO in this.subQuests)
+                {
+                    key = (subQuestVO.getQuestName_string() + subQuestVO.GetUniqueId().toKeyString());
+                    if (this._itemRendererMap[key])
+                    {
+                        subRenderer = this._itemRendererMap[key];
+                    }
+                    else
+                    {
+                        subRenderer = new QuestListItemRenderer();
+                        this._itemRendererMap[key] = subRenderer;
+                        this.list.addChild(subRenderer);
+                    };
+                    this.expandToHeight = (this.expandToHeight + (int(this.list.getStyle("verticalGap")) + 29));
+                    subRenderer.data = subQuestVO;
+                    subRenderer.subQuest = true;
+                    subRenderer.callLater(subRenderer.refresh);
+                    subMap[key] = subQuestVO;
+                };
+                for (key in this._itemRendererMap)
+                {
+                    if (!subMap[key])
+                    {
+                        this.list.removeChild(this._itemRendererMap[key]);
+                        delete this._itemRendererMap[key];
+                    }
+                    else
+                    {
+                        this._itemRendererMap[key].refresh();
+                    };
+                };
+            };
+            if ((data is dQuestElementVO))
+            {
+                questVO = (data as dQuestElementVO);
+                if (questVO.mQuestDefinition.specialType_string == QuestManagerStatic.SPECIAL_TYPE_GUILD_QUEST)
+                {
+                    questVO.SetUniqueId(new dUniqueID());
+                };
+                questVO = global.ui.mNewQuestManager.getQuestByUID(questVO.GetUniqueId());
+                if (questVO == null)
+                {
+                    questVO = (data as dQuestElementVO);
+                };
+                super.data = questVO;
+                this.btnItem.labelText = this.lm.GetText(LOCA_GROUP.QUEST_LABELS, questVO.getQuestName_string());
+                this.btnItem.iconImage = gAssetManager.GetResourceIcon(questVO.mQuestDefinition.icon_string);
+                cancelable = questVO.mQuestDefinition.cancelable;
+                rankPosition = -1;
+                if (((!(cancelable)) && (questVO.mQuestDefinition.specialType_string == QuestManagerStatic.SPECIAL_TYPE_GUILD_QUEST)))
+                {
+                    guildVO = global.ui.GetCurrentPlayerGuild();
+                    if (guildVO != null)
+                    {
+                        for each (member in guildVO.members)
+                        {
+                            if (member.id == global.ui.mCurrentPlayer.GetPlayerId())
+                            {
+                                memberRankId = member.rankID;
+                                break;
+                            };
+                        };
+                        for each (rank in guildVO.ranks)
+                        {
+                            if (rank.id == memberRankId)
+                            {
+                                rankPosition = rank.position;
+                                break;
+                            };
+                        };
+                    };
+                };
+                this.btnItem.deleteVisible = cancelable;
+                this.tracked = questVO.mIsTrackedMission;
+                readyToSubmit = false;
+                failed = (questVO.mQuestMode == QuestManagerStatic.QUEST_MODE_QUEST_FAILED);
+                if (questVO.mQuestDefinition.specialType_string == QuestManagerStatic.SPECIAL_TYPE_GUILD_QUEST)
+                {
+                    this.trackable = false;
+                }
+                else
+                {
+                    this.trackable = ((!(questVO.mQuestMode == QuestManagerStatic.QUEST_MODE_PENDING_NEXT_RANDOM_DAILY_QUEST)) && ((globalFlash.gui.mTrackedMissionList.trackedCount < 8) || (this.tracked)));
+                    readyToSubmit = QuestManagerStatic.IsQuestReadyForSubmit(questVO, false);
+                };
+                lastPartial = QuestManagerStatic.IsLastPartialGuildQuest(questVO.mQuestDefinition);
+                if (((readyToSubmit) && (!(questVO.mQuestMode == QuestManagerStatic.QUEST_MODE_PENDING_NEXT_RANDOM_DAILY_QUEST))))
+                {
+                    this.btnItem.normalStyle = "QuestItemBgWon";
+                    this.btnItem.hoverStyle = "QuestItemBgWon";
+                    this.btnItem.selectedStyle = "QuestItemBgWonSelected";
+                };
+                if (failed)
+                {
+                    this.btnItem.normalStyle = "QuestItemBgFail";
+                    this.btnItem.hoverStyle = "QuestItemBgFail";
+                    this.btnItem.selectedStyle = "QuestItemBgFailSelected";
+                };
+            }
+            else
+            {
+                if ((data is dAdventureClientInfoVO))
+                {
+                    this.btnItem.labelText = this.lm.GetText(LOCA_GROUP.ADVENTURE_NAME, data.adventureName);
+                    adventureDef = cAdventureDefinition.FindAdventureDefinition(data.adventureName);
+                    quality = ((adventureDef) ? adventureDef.GetQuality() : 1);
+                    if (adventureDef.GetName().charAt(0) == "$")
+                    {
+                        this.btnItem.iconImage = gAssetManager.GetBitmap(("AdventureQuality" + quality));
+                    }
+                    else
+                    {
+                        this.btnItem.iconImage = gAssetManager.ColorFilterImage(gAssetManager.GetBitmap(("adventureType" + adventureDef.GetType_string())), cAdventureDefinition.GetDifficultyColor(adventureDef.GetDifficulty()));
+                    };
+                    this.btnItem.deleteVisible = false;
+                    this.tracked = data.isTrackedMission;
+                    this.trackable = ((globalFlash.gui.mTrackedMissionList.trackedCount < 8) || (this.tracked));
+                }
+                else
+                {
+                    this.btnItem.labelText = "";
+                    this.btnItem.iconImage = null;
+                    this.btnItem.deleteVisible = false;
+                    this.tracked = false;
+                    this.trackable = false;
+                };
+            };
+            if (!this.collapsed)
+            {
+                this.height = this.expandToHeight;
+            };
+        }
+
+        public function refresh():void
+        {
+            if (this.btnItem)
+            {
+                this.display();
+            }
+            else
+            {
+                addEventListener(FlexEvent.CREATION_COMPLETE, this.display);
+            };
+        }
+
+        private function checkboxClicked(event:MouseEvent):void
+        {
+            event.stopImmediatePropagation();
+            var trackEvent:TrackMissionEvent = new TrackMissionEvent(TrackMissionEvent.TRACK_MISSION, true);
+            trackEvent.item = data;
+            trackEvent.track = this.btnItem.checkboxSelected;
+            dispatchEvent(trackEvent);
+        }
+
+        private function expandParent():void
+        {
+            var group:QuestListGroupItemRenderer = (parentDocument as QuestListGroupItemRenderer);
+            group.expandToHeight = (group.expandToHeight + (this.list.numChildren * (int(this.list.getStyle("verticalGap")) + 29)));
+            group.collapse.end();
+            group.expand.end();
+            group.expand.play();
+        }
+
+        private function collapseClickHandler(event:MouseEvent):void
+        {
+            if (!this.collapsed)
+            {
+                this.expand.end();
+                this.collapse.play();
+            }
+            else
+            {
+                this.collapse.end();
+                this.expand.play();
+            };
+            this.collapsed = (!(this.collapsed));
+            event.stopImmediatePropagation();
+            if (!this.collapsed)
+            {
+                dispatchEvent(new EffectEvent(EffectEvent.EFFECT_START, true));
+            };
+        }
+
+        private function deleteClicked(event:MouseEvent):void
+        {
+            event.stopImmediatePropagation();
+            var cancelEvent:ItemClickEvent = new ItemClickEvent("cancelQuest", true);
+            cancelEvent.item = data;
+            dispatchEvent(cancelEvent);
+        }
+
+        private function compareQuest(first:dQuestElementVO, second:dQuestElementVO):int
+        {
+            if (first.mUniqueID.greater(second.mUniqueID))
+            {
+                return (1);
+            };
+            if (first.mUniqueID.eq(second.mUniqueID))
+            {
+                return (0);
+            };
+            return (-1);
+        }
+
+        private function onBtnItemClick(event:MouseEvent):void
+        {
+            questClickHandler(event);
+        }
+
+        private function onBtnCollapseClick(event:MouseEvent):void
+        {
+            collapseClickHandler(event);
+        }
+
+        override public function set data(value:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = value;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = value;
+            refresh();
+            refreshRendererPresentation();
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.width = 230;
+            this.clipContent = false;
+            this.lm = cLocaManager.GetInstance();
+            arrowCanvas.setStyle("backgroundImage", _embed_mxml_____data_src_gfx_embedded_quest_quest_sidebar_arrow_png_1630766314);
+            btnItem.addEventListener(MouseEvent.CLICK, onBtnItemClick);
+            btnCollapse.addEventListener(MouseEvent.CLICK, onBtnCollapseClick);
+            expandResize.addEventListener(EffectEvent.EFFECT_START, onExpandStart);
+            collapseResize.addEventListener(EffectEvent.EFFECT_START, onCollapseStart);
+            btnItem.checkboxClicked = checkboxClicked;
+            btnItem.deleteClicked = deleteClicked;
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            else
+            {
+                refresh();
+            };
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[btnItem, "xChanged"],
+                [btnItem, "heightChanged"]]);
+                expandResize.heightTo = expandToHeight;
+                expandResize.target = this;
+                expandFade.target = list;
+                collapseFade.target = list;
+                collapseResize.target = this;
+                collapseResize.heightTo = btnItem.x + btnItem.height;
+                arrowCanvas.visible = subQuest;
+                btnItem.setStyle("left", ((subQuest) ? "22" : "0"));
+                btnItem.labelLeft = (38 + ((mainQuest) ? 22 : 0));
+                btnItem.iconLeft = (4 + ((mainQuest) ? 22 : 0));
+                btnItem.checkboxVisible = trackable;
+                btnItem.checkboxSelected = tracked;
+                btnCollapse.visible = mainQuest;
+                btnCollapse.iconImage = gAssetManager.GetBitmap(((collapsed) ? "ArrowSmallSUp" : "ArrowSmallNUp"));
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Sequence id="expand">
+        <mx:Resize id="expandResize" duration="300" />
+        <mx:Fade id="expandFade" alphaFrom="0" alphaTo="1" duration="300" />
+    </mx:Sequence>
+    <mx:Sequence id="collapse">
+        <mx:Fade id="collapseFade" alphaFrom="1" alphaTo="0" duration="300" />
+        <mx:Resize id="collapseResize" duration="300" />
+    </mx:Sequence>
+
+    <mx:Canvas id="arrowCanvas" width="15" left="7" top="-15" bottom="10" backgroundSize="100%" />
+    <mx:VBox id="list" left="0" right="0" top="30" bottom="0" verticalGap="1" clipContent="false" />
+    <gui:SpecialButton id="btnItem" right="0" showShadow="true" height="29" iconCenter="1" />
+    <gui:SpecialButton id="btnCollapse" left="0" top="1" normalStyle="ButtonNormalSmall" hoverStyle="ButtonHighlightSmall" selectedStyle="ButtonHighlightSmall" width="22" height="28" iconLeft="-1" iconCenter="0" />
+</mx:Canvas>

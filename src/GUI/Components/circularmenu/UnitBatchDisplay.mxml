@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:menu="GUI.Components.circularmenu.*"
+    xmlns:tpa="com.bluebyte.tso.ui.texturepacker.*"
+    height="90" clipContent="false" mouseEnabled="false"
+    horizontalScrollPolicy="off" verticalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import mx.controls.Image;
+
+        private var _plateImageSource:Object;
+        private var _plateHoveredImageSource:Object;
+
+        public function set plateImageSource(value:Object):void
+        {
+            _plateImageSource = value;
+            refreshPlates();
+        }
+
+        public function get plateImageSource():Object
+        {
+            return (_plateImageSource);
+        }
+
+        public function set plateHoveredImageSource(value:Object):void
+        {
+            _plateHoveredImageSource = value;
+            refreshPlates();
+        }
+
+        public function get plateHoveredImageSource():Object
+        {
+            return (_plateHoveredImageSource);
+        }
+
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+            refreshPlates();
+        }
+
+        private function plateImage(index:int):Image
+        {
+            return (this["plate" + index] as Image);
+        }
+
+        private function refreshPlates():void
+        {
+            if (!plate1 || !unitSlot)
+            {
+                return;
+            };
+            for (var i:int = 1; i <= 9; i++)
+            {
+                var img:Image = plateImage(i);
+                img.source = _plateImageSource;
+                img.visible = (data && data.amount > global.batchUnitsPerDisc * i);
+            };
+            unitSlot.imageNormal = _plateImageSource;
+            unitSlot.imageHovered = _plateHoveredImageSource;
+            if (data)
+            {
+                unitSlot.setStyle("bottom", String(Math.min(9, (Math.ceil((data.amount / global.batchUnitsPerDisc)) - 1)) * 4));
+                unitSlot.data = data;
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            var bottoms:Array = [0, 4, 8, 12, 16, 20, 24, 28, 32];
+            for (var i:int = 1; i <= 9; i++)
+            {
+                var img:Image = plateImage(i);
+                img.setStyle("bottom", bottoms[i - 1]);
+                img.setStyle("horizontalCenter", 0);
+            };
+            refreshPlates();
+        }
+    ]]></mx:Script>
+    <mx:Image id="plate1" smoothBitmapContent="true" mouseEnabled="false" />
+    <mx:Image id="plate2" smoothBitmapContent="true" mouseEnabled="false" />
+    <mx:Image id="plate3" smoothBitmapContent="true" mouseEnabled="false" />
+    <mx:Image id="plate4" smoothBitmapContent="true" mouseEnabled="false" />
+    <mx:Image id="plate5" smoothBitmapContent="true" mouseEnabled="false" />
+    <mx:Image id="plate6" smoothBitmapContent="true" mouseEnabled="false" />
+    <mx:Image id="plate7" smoothBitmapContent="true" mouseEnabled="false" />
+    <mx:Image id="plate8" smoothBitmapContent="true" mouseEnabled="false" />
+    <mx:Image id="plate9" smoothBitmapContent="true" mouseEnabled="false" />
+    <menu:UnitDisplay id="unitSlot" />
+    <tpa:TPAnimation id="deathAnim" animation="combat_unit_death.png" x="-13" y="-30" />
+</mx:Canvas>

@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:q="com.bluebyte.tso.quests.view.ui.component.*"
+    width="900" height="500" cacheAsBitmap="true" clipContent="false">
+    <mx:Script><![CDATA[
+        import com.bluebyte.tso.quests.view.ui.itemrenderer.QuestTriggerListItemRenderer;
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import flash.filters.BevelFilter;
+        import flash.filters.BitmapFilterQuality;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.LegacyMxmlContent;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Loca.cLocaManager;
+        import mx.core.ClassFactory;
+        import mx.events.EffectEvent;
+        import mx.events.ToolTipEvent;
+
+        [Embed(source="../../../../../../../../assets/embedded/quest/quest_quest_ornamental_top1.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_quest_quest_ornamental_top1_png_2046304949:Class;
+
+        public var _QuestBook_BevelFilter1:BevelFilter;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(detailsHeader);
+            LegacyMxmlContent.createChildren(contentContainer);
+            LegacyMxmlContent.createChildren(listContainer);
+            LegacyMxmlContent.createChildren(detailsContainer);
+            LegacyMxmlContent.createChildren(triggerContainer);
+            LegacyMxmlContent.createChildren(adventureOptions);
+            LegacyMxmlContent.createChildren(footerButtons);
+            LegacyMxmlContent.createChildren(backgroundFooter);
+            topImage.source = _embed_mxml_____data_src_gfx_embedded_quest_quest_ornamental_top1_png_2046304949;
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            _QuestBook_BevelFilter1 = new BevelFilter();
+            _QuestBook_BevelFilter1.distance = 1;
+            _QuestBook_BevelFilter1.angle = 225;
+            _QuestBook_BevelFilter1.highlightColor = 0xFFFFFF;
+            _QuestBook_BevelFilter1.highlightAlpha = 0.5;
+            _QuestBook_BevelFilter1.shadowColor = 0;
+            _QuestBook_BevelFilter1.shadowAlpha = 0.5;
+            _QuestBook_BevelFilter1.blurX = 4;
+            _QuestBook_BevelFilter1.blurY = 4;
+            _QuestBook_BevelFilter1.strength = 1;
+            _QuestBook_BevelFilter1.quality = BitmapFilterQuality.MEDIUM;
+            bevelCanvas.filters = [_QuestBook_BevelFilter1];
+            triggers.itemRenderer = new ClassFactory(QuestTriggerListItemRenderer);
+            fadeOut.addEventListener("effectEnd", __fadeOut_effectEnd);
+            btnCloseBook.addEventListener("toolTipCreate", __btnCloseBook_toolTipCreate);
+            effects.addEventListener("rollOver", __effects_rollOver);
+            effects.addEventListener("rollOut", __effects_rollOut);
+            effects.addEventListener("toolTipCreate", __effects_toolTipCreate);
+            questionmark.addEventListener("rollOver", __questionmark_rollOver);
+            questionmark.addEventListener("rollOut", __questionmark_rollOut);
+            questionmark.addEventListener("toolTipCreate", __questionmark_toolTipCreate);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function loca(key:String):String
+        {
+            var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key);
+            return (value == undefined) ? null : String(value);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            if (!cLocaManager.GetInstance().IsInitialized())
+            {
+                return;
+            }
+            headline.text = loca("QuestBook");
+            rewardHeadLabel.text = loca("Rewards");
+            btnVisit.label = loca("Visit");
+            btnShowDetails.label = loca("ShowAdventureDetails");
+            btnInvite.label = loca("AdventureInvitePlayer");
+            btnCancelExpedition.label = loca("CancelExpedition");
+            btnCancelAdventure.label = loca("CancelAdventure");
+            btnLeaveAdventure.label = loca("LeaveAdventure");
+            btnCloseFailedQuest.toolTip = loca("ButtonRemoveFailedQuest");
+            btnCloseBook.toolTip = loca("Close");
+            effects.toolTip = loca("ShowEffects");
+            questionmark.toolTip = loca("ShowHelp");
+        }
+
+        public function __fadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+
+        public function __btnCloseBook_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __effects_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __effects_rollOver(event:MouseEvent):void
+        {
+            this.effects.source = gAssetManager.GetResourceIcon("CandleHighlighted");
+        }
+
+        public function __effects_rollOut(event:MouseEvent):void
+        {
+            this.effects.source = gAssetManager.GetResourceIcon("Candle");
+        }
+
+        public function __questionmark_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __questionmark_rollOver(event:MouseEvent):void
+        {
+            this.questionmark.source = gAssetManager.GetResourceIcon("QuestionmarkHighlighted");
+        }
+
+        public function __questionmark_rollOut(event:MouseEvent):void
+        {
+            this.questionmark.source = gAssetManager.GetResourceIcon("Questionmark");
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <mx:Canvas id="background" styleName="basicPanel" top="5" left="5" right="9" bottom="0" />
+    <mx:Image id="topImage" horizontalCenter="0" top="-42" />
+    <gui:CustomLabel id="headline" left="46" top="15" right="46" fontWeight="bold" textAlign="center" color="0xFFFFFF" />
+    <mx:Canvas id="detailsHeader" styleName="detailsHeader" left="14" right="16" top="33" bottom="10">
+        <mx:HBox id="contentContainer" left="13" right="15" top="8" bottom="3" horizontalGap="2">
+            <mx:Canvas id="listContainer" width="262" height="446">
+                <mx:Canvas id="bevelCanvas" width="245" height="446" left="0" top="0" backgroundColor="0x31281E" />
+                <gui:GroupedQuestList id="list" width="259" height="440" left="3" top="3" />
+            </mx:Canvas>
+            <mx:Canvas styleName="vr" width="3" height="387" />
+            <mx:Canvas id="detailsContainer" width="560" height="399" clipContent="false" backgroundColor="0x625640">
+                <mx:Canvas styleName="vr" width="3" height="387" right="-5" top="0" />
+                <mx:Canvas styleName="economyTitleBg" height="31" left="0" right="0" top="0" />
+                <mx:Canvas id="questWonBg" left="-9" right="-9" top="-3" bottom="-1" backgroundSize="100%" visible="false"
+                    backgroundImage="{gAssetManager.GetClass('QuestBgWon')}" />
+                <mx:Canvas id="backgroundFooter" styleName="questPanelFooter" height="60" left="-6" right="-8" bottom="-50" clipContent="false">
+                    <gui:TSOImage id="questNPC" right="-173" bottom="25" />
+                </mx:Canvas>
+                <gui:CustomLabel id="questHeadline" left="15" right="117" top="6" color="0x000000" fontWeight="bold" textAlign="center" fontSize="14" />
+                <mx:Canvas left="15" right="97" top="40" height="85" clipContent="false">
+                    <mx:Canvas id="descBG" styleName="detailsSubHeader" left="0" right="19" top="0" bottom="0" visible="false">
+                        <mx:Canvas styleName="detailsContentBox" left="5" right="5" top="5" bottom="5" />
+                    </mx:Canvas>
+                    <mx:Canvas left="5" right="0" top="5" bottom="5">
+                        <gui:CustomText id="description" left="0" right="26" top="0" color="0xFFFFFF" selectable="false" />
+                    </mx:Canvas>
+                </mx:Canvas>
+                <mx:Canvas id="triggerContainer" left="15" right="97" top="135" height="150" clipContent="false" visible="true">
+                    <mx:Canvas id="triggerHeadBG" styleName="detailsSubHeader" left="0" right="19" top="0" height="19" />
+                    <gui:CustomLabel id="triggerHeadLabel" top="1" horizontalCenter="-8" color="0xFFFFFF" fontWeight="bold" />
+                    <mx:Canvas id="triggerBG" styleName="detailsContentBox" left="0" right="19" top="19" bottom="0" />
+                    <mx:Canvas id="triggerCanvas" left="0" right="0" top="20" bottom="2" horizontalScrollPolicy="off">
+                        <gui:CustomTileList id="triggers" left="3" right="0" top="0" paddingTop="0" paddingBottom="0"
+                            backgroundAlpha="0" borderStyle="none" useRollOver="false"
+                            rowHeight="81" columnWidth="213" selectable="false" horizontalScrollPolicy="off" />
+                    </mx:Canvas>
+                    <mx:Canvas id="adventureTextContainer" left="2" right="0" top="21" bottom="2" visible="false">
+                        <gui:CustomText id="adventureText" left="0" right="21" top="0" color="0xFFFFFF" selectable="false" />
+                    </mx:Canvas>
+                </mx:Canvas>
+                <gui:DonationProgressContainer id="donationProgressContainer" left="15" top="135" visible="false" />
+                <gui:GuildQuestProgressContainer id="guildQuestProgressContainer" left="15" top="135" label="Guild Progression" visible="false" />
+                <mx:Canvas id="rewardInfo" left="15" right="117" top="295">
+                    <gui:CustomLabel id="rewardHeadLabel" left="0" right="0" top="0" color="0xFFFFFF" fontWeight="bold" textAlign="center" />
+                    <q:QuestRewardList id="rewards" left="0" right="0" top="25" />
+                </mx:Canvas>
+                <mx:Canvas id="adventureOptions" left="10" right="16" top="287" height="103" visible="false" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+                    <gui:StandardButton id="btnVisit" left="45" verticalCenter="-32" width="150" />
+                    <gui:StandardButton id="btnSendArmy" left="45" verticalCenter="2" width="150" />
+                    <gui:StandardButton id="btnShowDetails" left="215" verticalCenter="-32" width="150" />
+                    <gui:StandardButton id="btnInvite" left="215" verticalCenter="2" width="150" />
+                    <gui:StandardButton id="btnCancelExpedition" left="123" verticalCenter="39" width="165" visible="false"
+                        icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+                    <gui:StandardButton id="btnCancelAdventure" left="123" verticalCenter="37" width="165"
+                        icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+                    <gui:StandardButton id="btnLeaveAdventure" left="123" verticalCenter="37" width="165"
+                        icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+                </mx:Canvas>
+                <gui:ReversableHBox id="footerButtons" bottom="-41" horizontalCenter="0">
+                    <gui:StandardButton id="btnInstantFinish" height="32"
+                        icon="{gAssetManager.GetClass('ButtonIconInstant')}" toolTip="InstantFinishQuest" />
+                    <gui:StandardButton id="btnPayQuest" height="32" width="150"
+                        icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+                    <gui:StandardButton id="btnCloseQuest" height="32" width="150"
+                        icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+                    <gui:StandardButton id="btnCloseFailedQuest" height="32" width="150"
+                        icon="{gAssetManager.GetClass('ButtonIconThrowAway')}" />
+                    <gui:StandardButton id="btnCloseBook" height="32" width="100"
+                        icon="{gAssetManager.GetClass('Close')}" />
+                </gui:ReversableHBox>
+                <mx:Image id="effects" width="26" height="25" bottom="-38" right="43"
+                    source="{gAssetManager.GetResourceIcon('Candle')}" />
+                <mx:Image id="questionmark" width="26" height="25" bottom="-38" right="13"
+                    source="{gAssetManager.GetResourceIcon('Questionmark')}" />
+            </mx:Canvas>
+        </mx:HBox>
+    </mx:Canvas>
+    <gui:CloseButton id="btnClose" top="10" right="24" />
+    <gui:BatchedSpriteLibAnimation id="sparkleAnim" left="296" top="22" width="600" height="483"
+        mouseChildren="false" mouseEnabled="false" animationName="guianim_sparkle" numInstances="20" offsetFrames="2" visible="false" />
+</mx:Canvas>

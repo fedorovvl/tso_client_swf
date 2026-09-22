@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="mx.controls.listClasses.IListItemRenderer">
+    <mx:Script><![CDATA[
+        import flash.display.DisplayObjectContainer;
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import GUI.Assets.gAssetManager;
+        import mx.controls.List;
+
+        public static var selectedItem:StarMenuComboBoxItem = null;
+        public var normalStyle:String = "StarMenuComboboxItemUpSkin";
+        public var hoverStyle:String = "StarMenuComboboxItemOverSkin";
+        public var selectedStyle:String = "StarMenuComboboxItemDownSkin";
+        private var currentSelected:Boolean = false;
+        private var hovering:Boolean = false;
+        private var contentReady:Boolean = false;
+        private var combobox:List;
+
+        public function get selected():Boolean { return currentSelected; }
+        public function set selected(value:Boolean):void
+        {
+            currentSelected = value;
+            updateSelection();
+        }
+
+        override public function get data():Object { return super.data; }
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+            updateData();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundSize", "100%");
+            addEventListener("rollOver", rollOverHandler);
+            addEventListener("rollOut", rollOutHandler);
+            addEventListener("addedToStage", addedHandler);
+            addEventListener("removedFromStage", removedHandler);
+            contentReady = true;
+            updateData();
+        }
+
+        private function updateData():void
+        {
+            if (!contentReady) return;
+            buttonLabel.text = data && data.label != null ? String(data.label) : "";
+            connectList();
+            updateFromList();
+        }
+
+        private function connectList():void
+        {
+            var candidate:DisplayObjectContainer = parent;
+            while (candidate && !(candidate is List)) candidate = candidate.parent;
+            var owner:List = candidate as List;
+            if (owner == combobox) return;
+            disconnectList();
+            combobox = owner;
+            if (combobox) combobox.addEventListener(Event.CHANGE, updateFromList, false, 0, true);
+        }
+
+        private function disconnectList():void
+        {
+            if (combobox) combobox.removeEventListener(Event.CHANGE, updateFromList);
+            combobox = null;
+        }
+
+        private function updateFromList(event:Event = null):void
+        {
+            if (combobox)
+                currentSelected = data != null && combobox.selectedItem != null && data.data == combobox.selectedItem.data;
+            updateSelection();
+        }
+
+        private function updateSelection():void
+        {
+            if (!contentReady) return;
+            setStyle("backgroundImage", gAssetManager.GetClass(currentSelected ? selectedStyle : (hovering ? hoverStyle : normalStyle)));
+            radioButton.selected = currentSelected;
+        }
+
+        private function addedHandler(event:Event):void
+        {
+            connectList();
+            updateFromList();
+        }
+
+        private function removedHandler(event:Event):void
+        {
+            disconnectList();
+        }
+
+        private function rollOverHandler(event:MouseEvent):void
+        {
+            hovering = true;
+            updateSelection();
+        }
+
+        private function rollOutHandler(event:MouseEvent):void
+        {
+            hovering = false;
+            updateSelection();
+        }
+    ]]></mx:Script>
+    <gui:CustomLabel id="buttonLabel"  textAlign="left" />
+    <gui:StandardRadioButton id="radioButton"  right="5" />
+</mx:Canvas>

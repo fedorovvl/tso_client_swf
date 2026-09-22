@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    percentWidth="100" creationPolicy="all">
+    <mx:Script><![CDATA[
+        import mx.controls.Button;
+        import mx.core.UIComponent;
+        import mx.events.PropertyChangeEvent;
+        import flash.events.Event;
+
+        private var observedChat:UIComponent;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("verticalAlign", "bottom");
+            this.setStyle("horizontalGap", 0);
+            global.getApplication().addEventListener("propertyChange", applicationPropertyChanged, false, 0, true);
+            observeChatWidth();
+        }
+
+        private function applicationPropertyChanged(event:PropertyChangeEvent):void
+        {
+            if (event.property == "blueFireComponent")
+                observeChatWidth();
+        }
+
+        private function observeChatWidth():void
+        {
+            if (observedChat)
+                observedChat.removeEventListener("widthChanged", updateBackgroundWidth);
+            observedChat = global.getApplication().blueFireComponent;
+            if (observedChat)
+            {
+                observedChat.addEventListener("widthChanged", updateBackgroundWidth, false, 0, true);
+                updateBackgroundWidth();
+            }
+        }
+
+        private function updateBackgroundWidth(event:Event = null):void
+        {
+            backgroundLeft.minWidth = observedChat.width - 30;
+        }
+
+        [Bindable(event="enterFrame")]
+        public function getAnchorX(button:Button):uint
+        {
+            return actionBarLeft.x + button.x + button.width / 2;
+        }
+
+        [Bindable(event="enterFrame")]
+        public function getAnchorY(button:Button):uint
+        {
+            return actionBarLeft.y;
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="backgroundLeft" percentHeight="100" percentWidth="100" styleName="actionBarBackground" />
+    <gui:ActionBarLeft id="actionBarLeft" />
+    <gui:ActionBarCenter id="actionBarCenter" />
+    <gui:ActionBarRight id="actionBarRight" />
+    <mx:Canvas minWidth="0" percentHeight="100" percentWidth="100" styleName="actionBarBackground" />
+</mx:HBox>

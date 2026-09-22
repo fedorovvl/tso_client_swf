@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    percentWidth="100" percentHeight="100">
+    <mx:Script><![CDATA[
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            updateTexts();
+            cLocaManager.GetInstance().addEventListener("languageChanged", updateTexts, false, 0, true);
+        }
+
+        private function updateTexts(event:Event = null):void
+        {
+            titleLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "PacketLossReconnect");
+            message.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, "PacketLossReconnect");
+			setStyle("backgroundColor", "0xFFFFFF");
+			setStyle("backgroundAlpha", "0.3");
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="dialog" styleName="basicPanel" width="450" height="260" horizontalCenter="50" verticalCenter="-100">
+        <mx:Label id="titleLabel" maxWidth="400"  top="8" horizontalCenter="0" textAlign="center" color="0xFFFFFF" fontWeight="bold" />
+        <mx:Canvas id="animationBackground" styleName="lightBackground" height="168" left="8" right="8" top="27">
+            <gui:SpriteLibAnimation id="busyAnim" animationName="guianim_reconnect"
+                loop="true" visible="false" width="195" height="148"  horizontalCenter="-15" verticalCenter="0" />
+        </mx:Canvas>
+        <mx:Text id="message" selectable="false" maxWidth="420" maxHeight="60"  horizontalCenter="0" verticalCenter="95" color="0xFFFFFF" />
+    </mx:Canvas>
+</mx:Canvas>

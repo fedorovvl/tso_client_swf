@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="640" height="400">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+        import flash.events.MouseEvent;
+        import mx.core.ClassFactory;
+        import mx.events.PropertyChangeEvent;
+        import mx.events.ToolTipEvent;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Components.ItemRenderer.BankTabItemRenderer;
+        import GUI.Components.ToolTips.cToolTipUtil;
+
+        private var uiSource:IEventDispatcher;
+        private var bankSource:IEventDispatcher;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(header);
+            LegacyMxmlContent.createChildren(mainContent);
+            LegacyMxmlContent.createChildren(resourceBox);
+            LegacyMxmlContent.createChildren(busyOverlay);
+            LegacyMxmlContent.createChildren(footer);
+            _GuildBank_Image1.source = gAssetManager.GetClass("PanelOrnamentalTop");
+            _GuildBank_Image2.source = gAssetManager.GetClass("GuildBankIcon");
+            payshopItemIndicator.source = gAssetManager.GetBitmap("PayshopIndicator");
+            questionmark.source = gAssetManager.GetResourceIcon("Questionmark");
+            questionmark.addEventListener("rollOver", __questionmark_rollOver);
+            questionmark.addEventListener("rollOut", __questionmark_rollOut);
+            questionmark.addEventListener("toolTipCreate", __questionmark_toolTipCreate);
+            configureButton(btnPay, 10); configureButton(btnEnlarge, 45); configureButton(btnBuyTab, 80);
+            configureButton(btnTransactionHistory, 115);
+            resourceList.itemRenderer = new ClassFactory(BankTabItemRenderer);
+            buttonBar.itemRenderer = new ClassFactory(GuildBankTab);
+            setupArrow(buttonLeft, true); setupArrow(buttonRight, false);
+            refreshLabels(); connectUi();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+            global.staticEventDispatcher.addEventListener("propertyChange", onGlobalChanged, false, 0, true);
+        }
+
+        private function configureButton(button:StandardButton, top:int):void
+        { button.setStyle("left", 3); button.setStyle("top", top); }
+
+        private function setupArrow(button:mx.controls.Button, left:Boolean):void
+        {
+            var prefix:String = left ? "ArrowLeft" : "ArrowRight";
+            button.setStyle("upSkin", gAssetManager.GetClass(prefix));
+            button.setStyle("overSkin", gAssetManager.GetClass(prefix + "Highlight"));
+            button.setStyle("downSkin", gAssetManager.GetClass(prefix + "Highlight"));
+            button.setStyle("disabledSkin", gAssetManager.GetClass(prefix + "Disabled"));
+            button.setStyle("top", 2); button.setStyle("right", left ? 45 : 10);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            questionmark.toolTip = loca("ShowHelp"); btnPay.label = loca("GuildBankPay");
+            btnEnlarge.label = loca("GuildBankEnlarge"); btnBuyTab.label = loca("GuildBankBuyTab");
+            btnTransactionHistory.label = loca("GuildBankTransactionHistory"); btnRefresh.label = loca("GuildBankRefresh");
+        }
+        private function loca(key:String):String
+        { var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key); return value == undefined ? null : String(value); }
+
+        private function onGlobalChanged(event:PropertyChangeEvent):void
+        { if (event.property == "ui_bindable") connectUi(); }
+        private function connectUi():void
+        {
+            var next:IEventDispatcher = global.ui_bindable as IEventDispatcher;
+            if (uiSource !== next) { if (uiSource) uiSource.removeEventListener("propertyChange", onUiChanged); uiSource = next; if (uiSource) uiSource.addEventListener("propertyChange", onUiChanged, false, 0, true); }
+            connectBank(); refreshEnabled();
+        }
+        private function onUiChanged(event:PropertyChangeEvent):void
+        { if (event.property == "mCurrentPlayerGuildBank") { connectBank(); refreshEnabled(); } }
+        private function connectBank():void
+        {
+            var next:IEventDispatcher = global.ui_bindable ? global.ui_bindable.mCurrentPlayerGuildBank as IEventDispatcher : null;
+            if (bankSource !== next) { if (bankSource) bankSource.removeEventListener("propertyChange", onBankChanged); bankSource = next; if (bankSource) bankSource.addEventListener("propertyChange", onBankChanged, false, 0, true); }
+        }
+        private function onBankChanged(event:PropertyChangeEvent):void
+        { if (event.property == "mRefreshButtonEnabled") refreshEnabled(); }
+        private function refreshEnabled():void
+        { btnRefresh.enabled = global.ui_bindable && global.ui_bindable.mCurrentPlayerGuildBank ? global.ui_bindable.mCurrentPlayerGuildBank.mRefreshButtonEnabled : false; }
+
+        public function __questionmark_toolTipCreate(event:ToolTipEvent):void { cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event); }
+        public function __questionmark_rollOver(event:MouseEvent):void { questionmark.source = gAssetManager.GetResourceIcon("QuestionmarkHighlighted"); }
+        public function __questionmark_rollOut(event:MouseEvent):void { questionmark.source = gAssetManager.GetResourceIcon("Questionmark"); }
+        public function set busy(value:Boolean):void { busyOverlay.visible = value; busyAnim.visible = value; }
+    ]]></mx:Script>
+    <gui:subComponents><mx:Array>
+        <mx:Image id="_GuildBank_Image1" horizontalCenter="0" top="-87"/><mx:Image id="_GuildBank_Image2" horizontalCenter="0" top="-75"/>
+        <mx:Image id="questionmark" width="26" height="25" top="-25" right="28"/>
+        <mx:Canvas id="header" styleName="detailsHeader" height="60" horizontalScrollPolicy="off" verticalScrollPolicy="off" clipContent="false" left="2" right="2">
+            <mx:Image id="payshopItemIndicator" visible="false" top="3" left="11"/><mx:Image id="image" left="10" verticalCenter="1"/><mx:Text id="description" selectable="false" left="70" top="6" bottom="2" color="0xFFFFFF" fontWeight="normal"/>
+        </mx:Canvas>
+        <mx:Canvas id="mainContent" percentWidth="100" percentHeight="100">
+            <mx:Canvas id="controls" width="146" top="65" bottom="30" left="8"><gui:StandardButton id="btnPay" width="140"/><gui:StandardButton id="btnEnlarge" width="140"/><gui:StandardButton id="btnBuyTab" width="140"/><gui:StandardButton id="btnTransactionHistory" width="140"/><gui:StandardButton id="btnRefresh" width="140" left="3" bottom="10"/></mx:Canvas>
+            <mx:Canvas id="resourceBox" percentWidth="100" percentHeight="100" styleName="listBackgroundShadow" horizontalScrollPolicy="off" verticalScrollPolicy="off" left="157" right="7" top="65" bottom="40"><gui:CustomTileList id="resourceList" horizontalCenter="0" right="2" left="35" top="8" bottom="0" backgroundAlpha="0" borderThickness="0" paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0" useRollOver="false"/></mx:Canvas>
+            <mx:Canvas id="busyOverlay" styleName="detailsContentBox" visible="false" right="7" left="8" top="65" bottom="33"><gui:SpriteLibAnimation id="busyAnim" animationName="guianim_hourglass" loop="true" visible="false" width="48" height="48" horizontalCenter="0" verticalCenter="0"/></mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas id="ruler" styleName="hr" height="3" left="2" right="0" bottom="30"/>
+        <mx:Canvas id="footer" percentWidth="100" height="30" bottom="0"><gui:CustomHorizontalList id="buttonBar" columnWidth="170" horizontalScrollPolicy="off" focusEnabled="false" bottom="0" left="8" right="87" useRollOver="false" backgroundAlpha="0" borderStyle="none" focusAlpha="0"/><mx:Button id="buttonLeft" width="25" height="23"/><mx:Button id="buttonRight" width="25" height="23"/></mx:Canvas>
+    </mx:Array></gui:subComponents>
+</gui:BasicPanel>

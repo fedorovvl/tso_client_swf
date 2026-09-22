@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+    width="54" height="9">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.events.FlexEvent;
+        import mx.events.PropertyChangeEvent;
+
+        [Embed(source="../../../assets/vector/ProgressBar/_embed_mxml__1879877934.swf", symbol="GUI.Components.ProgressBar__embed_mxml__1879877934")]
+        private var backgroundSymbol:Class;
+
+        [Embed(source="../../../assets/vector/ProgressBar/_embed_mxml__590486979.swf", symbol="GUI.Components.ProgressBar__embed_mxml__590486979")]
+        private var greenBarSymbol:Class;
+
+        [Embed(source="../../../assets/embedded/progressbar/progressbar_bar_small_div.png")]
+        private var dividerImage:Class;
+
+        private var _value:Number = 0;
+        private var _showDeviders:Boolean = false;
+
+        public function set value(newValue:Number):void
+        {
+            if (newValue < 0)
+            {
+                _value = 0;
+            }
+            else
+            {
+                if (newValue > 1)
+                {
+                    _value = 1;
+                }
+                else
+                {
+                    _value = newValue;
+                    updateBarMask();
+                };
+            };
+        }
+
+        public function get value():Number
+        {
+            return (_value);
+        }
+
+        public function set showDeviders(newValue:Boolean):void
+        {
+            var oldValue:Object = _showDeviders;
+            if (oldValue !== newValue)
+            {
+                _showDeviders = newValue;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "showDeviders", oldValue, newValue));
+                updateDividers();
+            };
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get showDeviders():Boolean
+        {
+            return (_showDeviders);
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundSize", "100%");
+            setStyle("backgroundImage", backgroundSymbol);
+            greenBar.setStyle("backgroundImage", greenBarSymbol);
+            div1.setStyle("backgroundImage", dividerImage);
+            div2.setStyle("backgroundImage", dividerImage);
+            greenBar.mask = barMask;
+            updateDividers();
+            updateBarMask();
+            updateDividerPositions();
+            addEventListener("widthChanged", updateDividerPositions);
+            barMask.addEventListener("creationComplete", onBarMask_creationComplete);
+        }
+
+        private function updateDividerPositions(event:Event = null):void
+        {
+            div1.x = (width / 3);
+            div2.x = ((2 * width) / 3);
+        }
+
+        private function updateDividers():void
+        {
+            if (div1 == null || div2 == null)
+            {
+                return;
+            };
+            div1.visible = _showDeviders;
+            div2.visible = _showDeviders;
+        }
+
+        private function updateBarMask():void
+        {
+            if (barMask)
+            {
+                barMask.width = (greenBar.width * _value);
+            };
+        }
+
+        public function onBarMask_creationComplete(event:FlexEvent):void
+        {
+            updateBarMask();
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="greenBar"  backgroundSize="100%" top="2" bottom="2" left="2" right="2" />
+    <mx:Canvas id="barMask" x="2" width="0"  backgroundColor="0xFFFFFF" top="2" bottom="2" />
+    <mx:Canvas id="div1" height="4" width="1"  top="2" backgroundSize="100%" />
+    <mx:Canvas id="div2" height="4" width="1"  top="2" backgroundSize="100%" />
+</mx:Canvas>

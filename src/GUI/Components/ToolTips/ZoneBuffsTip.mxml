@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="mx.core.IToolTip"
+    width="325" minHeight="40" styleName="toolTip">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.events.TimerEvent;
+        import flash.utils.Timer;
+        import mx.collections.ArrayCollection;
+        import GUI.Components.CustomText;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import Communication.VO.dPersistedBuffApplianceVO;
+        import BuffSystem.cBuffDefinition;
+
+        private var timer:Timer;
+        private var _text:String;
+
+        public function set text(_arg_1:String):void
+        {
+            this._text = _arg_1;
+            invalidateProperties();
+        }
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        override protected function commitProperties():void
+        {
+            super.commitProperties();
+            if (!timer)
+            {
+                timer = new Timer(500, 0);
+                timer.addEventListener(TimerEvent.TIMER, timerTickHandler);
+                timer.start();
+            };
+            refresh();
+        }
+
+        private function timerTickHandler(_arg_1:TimerEvent):void
+        {
+            this.refresh();
+        }
+
+        private function refresh():void
+        {
+            var _local_2:dPersistedBuffApplianceVO;
+            var _local_3:CustomText;
+            var _local_4:cBuffDefinition;
+            var _local_5:CustomText;
+            var _local_6:String;
+            var _local_7:String;
+            var _local_8:Number;
+            var _local_9:Number;
+            var _local_1:ArrayCollection = global.ui.mZoneBuffManager.getZoneBuffsForPersistence();
+            this.container.removeAllChildren();
+            if ((((global.ui.mCurrentViewedZoneID == global.ui.mCurrentPlayer.getPlayerID()) || (global.ui.mCurrentViewedZoneID < 0)) && (global.ui.mCurrentPlayer.GetPremiumDuration() > 0)))
+            {
+                _local_3 = new CustomText();
+                _local_3.setStyle("color", "0xFFFFFF");
+                _local_3.height = 15;
+                _local_3.width = (this.width - 20);
+                _local_3.setStyle("textAlign", "left");
+                _local_3.text = (((cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "PremiumWindowTitle") + " (") + cLocaManager.GetInstance().FormatDuration(global.ui.mCurrentPlayer.GetPremiumDuration())) + ")");
+                this.container.addChild(_local_3);
+            };
+            for each (_local_2 in _local_1)
+            {
+                _local_4 = cBuffDefinition.GetById(_local_2.buffID);
+                _local_5 = new CustomText();
+                _local_5.setStyle("color", "0xFFFFFF");
+                _local_5.height = 15;
+                _local_5.width = (this.width - 20);
+                _local_5.setStyle("textAlign", "left");
+                _local_6 = ((_local_2.resourceName_string.length > 0) ? ((_local_4.GetName_string() + "_") + _local_2.resourceName_string) : _local_4.GetName_string());
+                _local_7 = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, _local_6);
+                _local_8 = _local_4.getDuration(_local_2.applianceMode);
+                _local_9 = ((_local_2.startTime + _local_8) - global.ui.GetClientTime());
+                if (_local_8 > 0)
+                {
+                    _local_7 = (_local_7 + ((" (" + cLocaManager.GetInstance().FormatDuration(_local_9)) + ")"));
+                };
+                _local_5.text = _local_7;
+                this.container.addChild(_local_5);
+            };
+            this.height = (40 + (_local_1.length * 25));
+        }
+
+        private function refreshTitle(event:Event = null):void
+        {
+            var label:* = cLocaManager.GetInstance().getLabel("ZoneWideBuffs");
+            title.text = ((label == undefined) ? null : String(label));
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            refreshTitle();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshTitle, false, 0, true);
+        }
+    ]]></mx:Script>
+    <gui:CustomText id="title" height="15"  color="0xFFFFFF" top="4" left="4" right="4" fontWeight="bold" textAlign="left" />
+    <mx:VBox id="container"  left="4" right="4" top="20" bottom="4" backgroundAlpha="0" />
+</mx:Canvas>

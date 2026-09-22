@@ -1,0 +1,285 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" xmlns:core="mx.core.*" width="164" height="112">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Image;
+        import GUI.Components.CustomLabel;
+        import GUI.Components.Frame;
+        import mx.core.mx_internal;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import mx.events.PropertyChangeEvent;
+        import ShopSystem.cShopItem;
+        import GUI.Assets.gAssetManager;
+        import flash.events.MouseEvent;
+        import mx.core.ClassFactory;
+        import AdventureSystem.cAdventureDefinition;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Effects.gHintManager;
+        import Enums.SPECIALIST_TYPE;
+        import Interface.cGameInterface;
+        import flash.events.Event;
+        import GUI.Components.CustomAlert;
+        import Specialists.cSpecialist;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        private var toolTipFunction:Function = ShowShopTooltip;
+
+        public function onLockedIcon_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_ERROR_string, argument1, true);
+        }
+
+        private function ShowAdventureTooltip(argument1:ToolTipEvent):void
+        {
+            var localValue2:String = (data as cShopItem).GetShopItemContent_vector()[0].GetResourceName_string();
+            if (localValue2.charAt(0) == "$")
+            {
+                cToolTipUtil.createToolTip(cToolTipUtil.SHOP_ITEM_string, argument1, data);
+            }
+            else
+            {
+                cToolTipUtil.createToolTip(cToolTipUtil.ADVENTURE_string, argument1, localValue2);
+            };
+        }
+
+        public function onNameLabel_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        public function onShopItemRenderer_Canvas1_rollOver(argument1:MouseEvent):void
+        {
+            this.background.setStyle("backgroundImage", gAssetManager.GetClass("ShopItemBackgroundHighlight"));
+        }
+
+        private function createToolTip(argument1:ToolTipEvent):void
+        {
+            if (this.toolTipFunction != null)
+            {
+                this.toolTipFunction(argument1);
+            };
+        }
+
+        private function ShowShopTooltip(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SHOP_ITEM_string, argument1, data);
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            var localValue2:cShopItem;
+            var localValue3:cAdventureDefinition;
+            var localValue4:String;
+            super.data = argument1;
+            this.background.setStyle("backgroundImage", gAssetManager.GetClass("ShopItemBackground"));
+            localValue2 = (argument1 as cShopItem);
+            if (localValue2 != null)
+            {
+                id = localValue2.GetName_string();
+                localValue3 = cAdventureDefinition.FindAdventureDefinition(localValue2.GetShopItemContent_vector()[0].GetResourceName_string());
+                if (localValue3)
+                {
+                    this.frame.adventureType = localValue3.GetType_string();
+                    this.frame.adventureDifficulty = localValue3.GetDifficulty();
+                }
+                else
+                {
+                    this.frame.adventureType = "";
+                    this.frame.adventureDifficulty = 0;
+                };
+                this.frame.content = localValue2.GetName_string();
+                this.frame.type = localValue2.GetFrameType_string();
+                this.nameLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.SHOP_ITEMS, localValue2.GetName_string());
+                this.costsList.dataProvider = localValue2.GetCosts_vector();
+                this.lockedIcon.visible = (global.ui.mCurrentPlayer.GetPlayerLevel() < localValue2.GetPlayerLevel());
+                if (this.lockedIcon.visible)
+                {
+                    this.lockedIcon.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "LevelRequired", [localValue2.GetPlayerLevel()]);
+                }
+                else
+                {
+                    this.lockedIcon.visible = (global.ui.mCurrentPlayer.GetPlayerPvPLevel() < localValue2.GetPvPLevel());
+                    if (this.lockedIcon.visible)
+                    {
+                        this.lockedIcon.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "PvPLevelRequired", [localValue2.GetPvPLevel()]);
+                    }
+                    else
+                    {
+                        if (((!(global.ui.shopManager.GetRemainingShopItemCount(localValue2) == defines.NO_LIMIT)) && (global.ui.shopManager.GetRemainingShopItemCount(localValue2) < 1)))
+                        {
+                            this.lockedIcon.visible = true;
+                            this.lockedIcon.toolTip = cLocaManager.GetInstance().getLabel("LimitPerPlayerReached");
+                        }
+                        else
+                        {
+                            this.lockedIcon.toolTip = "";
+                        };
+                    };
+                };
+                gHintManager.HideHintsForParent(this, true);
+                this.toolTipFunction = this.ShowShopTooltip;
+                if (localValue2.enabled)
+                {
+                    this.filters = [];
+                    localValue4 = localValue2.GetShopItemContent_vector()[0].GetName_string();
+                    if (((SPECIALIST_TYPE.isNameValid(localValue4)) && (SPECIALIST_TYPE.IsGeneral(SPECIALIST_TYPE.parse(localValue4)))))
+                    {
+                        this.toolTipFunction = this.ShowGeneralTooltip;
+                    }
+                    else
+                    {
+                        if (localValue4 == "Adventure")
+                        {
+                            this.toolTipFunction = this.ShowAdventureTooltip;
+                        };
+                    };
+                    toolTip = localValue2.GetName_string();
+                }
+                else
+                {
+                    this.filters = [gAssetManager.GetShaderFilter()];
+                    if ((global.ui as cGameInterface).mSpecificShopItems)
+                    {
+                        toolTip = "DeactivatedItem";
+                    }
+                    else
+                    {
+                        toolTip = localValue2.GetName_string();
+                    };
+                };
+                callLater(gHintManager.TryRemainingHints);
+            };
+            refreshRendererPresentation();
+        }
+
+        protected function ShowDetails():void
+        {
+            if (data.enabled)
+            {
+                dispatchEvent(new Event("ShowItemDetails", true));
+            }
+            else
+            {
+                if (toolTip == "DeactivatedItem")
+                {
+                    CustomAlert.show("ShopItemDeactivated", "ShopItemDeactivated");
+                }
+                else
+                {
+                    CustomAlert.show("GiftShopItem", "ShopItemDeactivated");
+                };
+            };
+        }
+
+        public function onShopItemRenderer_Canvas1_click(argument1:MouseEvent):void
+        {
+            this.ShowDetails();
+        }
+
+        public function onShopItemRenderer_Canvas1_rollOut(argument1:MouseEvent):void
+        {
+            this.background.setStyle("backgroundImage", gAssetManager.GetClass("ShopItemBackground"));
+        }
+
+        private function ShowGeneralTooltip(argument1:ToolTipEvent):void
+        {
+            var localValue2:int = SPECIALIST_TYPE.parse((data as cShopItem).GetShopItemContent_vector()[0].GetName_string());
+            var localValue3:cSpecialist = new cSpecialist(false).InitSpecialistFromType(localValue2, null, global.ui.mHomePlayer.getPlayerID(), global.ui.mHomePlayer.getPlayerID(), global.ui);
+            cToolTipUtil.createToolTip(cToolTipUtil.MILITARY_UNIT_GENERAL_string, argument1, localValue3);
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            nameLabel.addEventListener("toolTipCreate", onNameLabel_toolTipCreate);
+            viewClassFactory1.generator = ResourceItemRenderer;
+            costsList.itemRenderer = viewClassFactory1;
+            lockedIcon.addEventListener("toolTipCreate", onLockedIcon_toolTipCreate);
+            configuredImage1.source = gAssetManager.GetBitmap("ProductionArrow");
+            lockedIcon.source = gAssetManager.GetBitmap("IconPadlock");
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.width = 164;
+            this.height = 112;
+            this.addEventListener("click", this.onShopItemRenderer_Canvas1_click);
+            this.addEventListener("rollOver", this.onShopItemRenderer_Canvas1_rollOver);
+            this.addEventListener("rollOut", this.onShopItemRenderer_Canvas1_rollOut);
+            this.addEventListener("toolTipCreate", this.createToolTip);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="background" percentWidth="100" percentHeight="100"  backgroundSize="100%" />
+    <ui:CustomLabel id="nameLabel" width="150"  textAlign="center" color="0" fontWeight="bold" left="4" top="3" />
+    <ui:Frame id="frame" type="specialist" contentType="shopitem"  right="10" verticalCenter="7" />
+    <mx:Image id="configuredImage1"  horizontalCenter="5" verticalCenter="7" />
+    <local:RendererPoolBox id="costsList" direction="vertical" width="80" horizontalScrollPolicy="off" left="2" verticalCenter="7" horizontalAlign="center" verticalGap="0">
+        <local:itemRenderer>
+            <core:ClassFactory id="viewClassFactory1" />
+        </local:itemRenderer>
+    </local:RendererPoolBox>
+    <mx:Image id="lockedIcon"  right="0" bottom="7" />
+</mx:Canvas>

@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="mx.core.IDataRenderer" creationPolicy="all" mouseChildren="false"
+    horizontalScrollPolicy="off" verticalScrollPolicy="off" currentState="resource">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+        import flash.events.MouseEvent;
+        import mx.events.PropertyChangeEvent;
+        import mx.events.ToolTipEvent;
+        import ServerState.dResource;
+        import ServerState.IResourceContainer;
+        import Communication.VO.dResourceVO;
+        import Communication.VO.dBuffVO;
+        import BuffSystem.cBuff;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import AdventureSystem.cAdventureDefinition;
+        import Enums.LOCA_GROUP;
+
+        public var enableAmountCheck:Boolean = true;
+        public var formatAsNumber:Boolean = true;
+        public var errorColor:uint = 0xFF0000;
+        public var useRollOver:Boolean = true;
+        public var includeBackground:Boolean = false;
+        public var valueIsCorrectFunction:Function = checkWarehouseContainsAmount;
+        public var resourceContainerFunction:Function = GetResourceContainer;
+
+        private var fontSize:int = 12;
+        private var textColor:uint = 0xFFFFFF;
+        private var showCapacity:Boolean = false;
+        private var contentReady:Boolean = false;
+        private var boundResource:Object;
+        private var observedResource:IEventDispatcher;
+        private var amount:int = 0;
+        private var limit:int = 1;
+        private var amountText:String = "";
+
+        [Bindable(event="propertyChange")]
+        public function get size():int { return fontSize; }
+        public function set size(value:int):void
+        {
+            if (fontSize == value) return;
+            var previous:int = fontSize;
+            fontSize = value;
+            updateAppearance();
+            dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "size", previous, value));
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get color():uint { return textColor; }
+        public function set color(value:uint):void
+        {
+            if (textColor == value) return;
+            var previous:uint = textColor;
+            textColor = value;
+            updateAppearance();
+            dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "color", previous, value));
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get includeBar():Boolean { return showCapacity; }
+        public function set includeBar(value:Boolean):void
+        {
+            if (showCapacity == value) return;
+            var previous:Boolean = showCapacity;
+            showCapacity = value;
+            updateAppearance();
+            dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "includeBar", previous, value));
+        }
+
+        override public function get data():Object { return super.data; }
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+            refreshData();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("textAlign", "right");
+            addEventListener("mouseOver", mouseOverHandler);
+            addEventListener("mouseOut", mouseOutHandler);
+            addEventListener("toolTipCreate", createToolTip);
+            addEventListener("currentStateChange", stateChanged);
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshData, false, 0, true);
+            contentReady = true;
+            refreshData();
+        }
+
+        private function observeResource(resource:Object):void
+        {
+            if (observedResource) observedResource.removeEventListener("propertyChange", resourceChanged);
+            boundResource = resource;
+            observedResource = resource as IEventDispatcher;
+            if (observedResource)
+                observedResource.addEventListener("propertyChange", resourceChanged, false, 0, true);
+        }
+
+        private function resourceChanged(event:PropertyChangeEvent):void
+        {
+            if (event.property == "amount" || event.property == "name_string" || event.property == "maxLimit")
+                refreshData();
+        }
+
+        private function refreshData(event:Event = null):void
+        {
+            if (!contentReady) return;
+            observeResource(null);
+            backdropNormal.visible = includeBackground;
+            backdrop.visible = false;
+            background.source = null;
+            resourceIcon.source = null;
+            resourceIcon.visible = false;
+            itemTextLabel.text = "";
+            amountText = "";
+            amount = 0;
+            limit = 0;
+
+            if (data is dResource)
+                displayResource(data, dResource(data).maxLimit);
+            else if (data is dResourceVO)
+                displayResource(data, 0);
+            else if (data is dBuffVO || data is cBuff)
+                displayBuff(data);
+            else if (data != null && data.hasOwnProperty("name_string"))
+                displayResource(data, 0);
+
+            updateAppearance();
+        }
+
+        private function displayResource(resource:Object, maximum:int):void
+        {
+            currentState = "resource";
+            observeResource(resource);
+            limit = maximum;
+            amount = int(resource.amount);
+            resourceIcon.source = gAssetManager.GetResourceIcon(resource.name_string);
+            resourceIcon.visible = resourceIcon.source != null;
+            toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, resource.name_string);
+            if (amount >= 0)
+            {
+                if (limit > 0) toolTip += ": " + amount + "/" + limit;
+                amountText = formatAsNumber ? cLocaManager.GetInstance().FormatNumber(amount)
+                    : cLocaManager.GetInstance().FormatAmount(amount);
+            }
+        }
+
+        private function displayBuff(buff:Object):void
+        {
+            currentState = "buff";
+            var available:Boolean = true;
+            var type:String;
+            var resourceName:String;
+            if (buff is dBuffVO)
+            {
+                type = dBuffVO(buff).buffName_string;
+                resourceName = dBuffVO(buff).resourceName_string;
+                amount = limit = dBuffVO(buff).getAmount();
+            }
+            else
+            {
+                var localBuff:cBuff = cBuff(buff);
+                type = localBuff.GetType();
+                resourceName = localBuff.GetResourceName_string();
+                limit = localBuff.getAmount();
+                amount = limit - localBuff.GetWaitingForServerCount();
+                available = !localBuff.GetWaitingForServer();
+            }
+            toolTip = type;
+            if (type.indexOf(defines.ADD_RESOURCE_BUFF) == 0 || type.indexOf(defines.FILL_DEPOSIT_BUFF) == 0)
+            {
+                if (resourceName != "") resourceIcon.source = gAssetManager.GetResourceIcon(resourceName, available);
+                background.source = gAssetManager.GetBuffIcon(type, available);
+                itemTextLabel.text = amount.toString();
+            }
+            // Preserve the selector used by the working reconstructed client.
+            else if ((type == defines.BUILD_BUILDING_BUFF) == (type == defines.BUILD_DEFENSE_MODE_BUILDING_BUFF))
+                background.source = gAssetManager.GetBuildingIcon(resourceName, available);
+            else if (type == defines.ADVENTURE_BUFF)
+            {
+                background.source = cAdventureDefinition.GetAdventureIcon(resourceName, available);
+                toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.ADVENTURE_NAME, resourceName);
+            }
+            else if (type == defines.HIRED_MILITARY_BUFF)
+            {
+                background.source = gAssetManager.GetBuffIcon(defines.HIRED_MILITARY_BUFF + "_" + resourceName, available);
+                itemTextLabel.text = amount.toString();
+            }
+            else if (type.indexOf(defines.CHANGE_COLOR_SCHEME_BUFF) == 0)
+            {
+                toolTip = defines.CHANGE_COLOR_SCHEME_BUFF + "_" + resourceName;
+                background.source = gAssetManager.GetBuffIcon(toolTip, available);
+                itemTextLabel.text = amount.toString();
+            }
+            else
+                background.source = gAssetManager.GetBuffIcon(type, available);
+            resourceIcon.visible = resourceIcon.source != null;
+        }
+
+        private function stateChanged(event:Event):void
+        {
+            updateAppearance();
+        }
+
+        private function updateAppearance():void
+        {
+            if (!contentReady) return;
+            var buffLayout:Boolean = currentState == "buff";
+            if (buffLayout && resourceIcon.parent != this) addChild(resourceIcon);
+            else if (!buffLayout && resourceIcon.parent != hbox1) hbox1.addChildAt(resourceIcon, 0);
+            background.visible = buffLayout;
+            hbox1.setStyle("left", buffLayout ? null : (includeBar ? 12 : 2));
+            if (buffLayout)
+            {
+                hbox1.setStyle("horizontalCenter", 0);
+                hbox1.setStyle("bottom", 12);
+                resourceIcon.setStyle("left", null);
+                amountTextLabel.percentWidth = NaN;
+                amountTextLabel.width = NaN;
+            }
+            else
+            {
+                hbox1.clearStyle("horizontalCenter");
+                hbox1.clearStyle("bottom");
+                resourceIcon.clearStyle("left");
+                amountTextLabel.percentWidth = 100;
+            }
+            amountTextLabel.setStyle("textAlign", buffLayout ? "center" : "right");
+            amountTextLabel.text = amountText;
+            amountTextLabel.visible = amountText != "";
+            itemTextLabel.includeInLayout = itemTextLabel.text != "";
+            var displayColor:uint = textColor;
+            if (boundResource && enableAmountCheck && valueIsCorrectFunction != null &&
+                !valueIsCorrectFunction(boundResource.name_string, amount)) displayColor = errorColor;
+            amountTextLabel.setStyle("fontSize", fontSize);
+            itemTextLabel.setStyle("fontSize", fontSize);
+            amountTextLabel.setStyle("color", displayColor);
+            itemTextLabel.setStyle("color", displayColor);
+            _ResourceItemRenderer_HBox1.includeInLayout = includeBar;
+            capacitybar.visible = includeBar && amount >= 0 && limit > 0 && limit < int.MAX_VALUE && !buffLayout;
+            capacitybar.maximum = Math.max(0, limit);
+            capacitybar.value = Math.max(0, amount);
+        }
+
+        protected function GetResourceContainer():IResourceContainer
+        {
+            if (!global.ui || !global.ui.mCurrentPlayerZone) return null;
+            if (global.ui.mIsDefenseMode) return global.ui.mCurrentPlayerZone.getResourcesFromCurrentZone();
+            if (!global.ui.mCurrentPlayer) return null;
+            return global.ui.mCurrentPlayerZone.GetResources(global.ui.mCurrentPlayer);
+        }
+
+        private function checkWarehouseContainsAmount(resourceName:String, required:int):Boolean
+        {
+            if (!resourceName || required <= 0 || resourceContainerFunction == null) return true;
+            var container:IResourceContainer = resourceContainerFunction.call();
+            // Windows can assign data before the zone's resources have loaded.
+            if (!container) return true;
+            if (!container.GetPlayerResource(resourceName)) return true;
+            return container.HasPlayerResource(resourceName, required);
+        }
+
+        private function mouseOverHandler(event:MouseEvent):void
+        {
+            backdrop.visible = includeBackground && useRollOver;
+        }
+
+        private function mouseOutHandler(event:MouseEvent):void
+        {
+            backdrop.visible = false;
+        }
+
+        private function createToolTip(event:ToolTipEvent):void
+        {
+            if ((data is cBuff && cBuff(data).GetType() != defines.ADVENTURE_BUFF) ||
+                (data is dBuffVO && dBuffVO(data).buffName_string != defines.ADVENTURE_BUFF))
+                cToolTipUtil.createToolTip(cToolTipUtil.BUFF_string, event, data);
+            else
+                cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+    <mx:states>
+        <mx:State name="resource" />
+        <mx:State name="buff" />
+    </mx:states>
+    <mx:Canvas id="backdropNormal" percentWidth="100" percentHeight="100" styleName="backgroundNormal" />
+    <mx:Canvas id="backdrop" percentWidth="100" percentHeight="100" styleName="backgroundHighlight" visible="false" />
+    <mx:HBox id="_ResourceItemRenderer_HBox1" x="0" width="10" percentHeight="100" paddingBottom="5" paddingLeft="2" paddingTop="2">
+        <gui:CapacityBar id="capacitybar" width="8" percentHeight="100" />
+    </mx:HBox>
+    <mx:HBox id="backgroundHost" percentWidth="100" percentHeight="100" horizontalAlign="center" verticalAlign="middle">
+        <mx:Image id="background" visible="false" />
+    </mx:HBox>
+    <mx:HBox id="hbox1" horizontalScrollPolicy="off" right="6" horizontalGap="0" verticalAlign="middle" verticalCenter="0">
+        <mx:Image id="resourceIcon"  horizontalCenter="0" verticalCenter="0" />
+        <gui:CustomLabel id="amountTextLabel" percentWidth="100"  fontWeight="bold" verticalCenter="0" horizontalCenter="0" />
+    </mx:HBox>
+    <gui:CustomLabel id="itemTextLabel"  horizontalCenter="0" bottom="4" fontWeight="bold" />
+</mx:Canvas>

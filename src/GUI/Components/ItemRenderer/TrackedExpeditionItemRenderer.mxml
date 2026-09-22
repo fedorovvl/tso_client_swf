@@ -1,0 +1,295 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="180" height="73">
+    <mx:Script><![CDATA[
+        import mx.containers.HBox;
+        import mx.controls.Image;
+        import GUI.Components.CustomLabel;
+        import mx.containers.Canvas;
+        import mx.states.State;
+        import mx.states.SetProperty;
+        import GUI.Components.CustomText;
+        import Interface.cGameInterface;
+        import GUI.Loca.cLocaManager;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import mx.events.PropertyChangeEvent;
+        import flash.events.MouseEvent;
+        import Communication.VO.dPlayerListItemVO;
+        import Communication.VO.UpdateVO.dAdventureClientInfoVO;
+        import Colony.cColony;
+        import mx.events.FlexEvent;
+        import flash.events.Event;
+        import AdventureSystem.cAdventureDefinition;
+        import GUI.helpers.PVPClientUtil;
+        import ServerState.dResource;
+        import Utils.PVPUtil;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        private var rewardID:int = 0;
+
+        private var mode:String = "";
+
+        private var colonyState:int = -1;
+
+        private var adventureLevel:int = -1;
+
+        private var timeLeft:Number = 0;
+
+        private var mGI:cGameInterface = (global.ui as cGameInterface);
+
+        private var lm:cLocaManager = cLocaManager.GetInstance();
+
+        private function clickHandler(argument1:MouseEvent):void
+        {
+            var localValue3:dPlayerListItemVO;
+            var localValue2:dAdventureClientInfoVO = (data.adventureVO as dAdventureClientInfoVO);
+            if (localValue2 != null)
+            {
+                if ((((localValue2.IsColony()) && (cColony.IsAssignableState(localValue2.colonyStatus))) && (this.mGI.isOnHomzone())))
+                {
+                    globalFlash.gui.ToggleColonyWindow();
+                }
+                else
+                {
+                    localValue3 = new dPlayerListItemVO();
+                    localValue3.adventureVO = (data.adventureVO as dAdventureClientInfoVO);
+                    localValue3.id = localValue3.adventureVO.zoneID;
+                    globalFlash.gui.ShowFriendListMenu(argument1, localValue3);
+                };
+            };
+            this.display();
+        }
+
+        protected function onDataChange(argument1:Event):void
+        {
+            invalidateProperties();
+        }
+
+        public function display(argument1:Event=null):void
+        {
+            var localValue2:cAdventureDefinition;
+            var localValue3:dAdventureClientInfoVO;
+            this.removeEventListener(FlexEvent.CREATION_COMPLETE, this.display);
+            currentState = data.state;
+            localValue3 = (data.adventureVO as dAdventureClientInfoVO);
+            var localValue4:int;
+            this.colonyState = -1;
+            this.mode = "";
+            this.adventureLevel = 0;
+            this.rewardID = 0;
+            if (localValue3 != null)
+            {
+                localValue4 = localValue3.ownerPlayerID;
+                localValue2 = cAdventureDefinition.FindAdventureDefinition(localValue3.adventureName);
+                this.timeLeft = (localValue3.totalDuration - localValue3.collectedTime);
+                if (this.timeLeft < 0)
+                {
+                    this.timeLeft = 0;
+                };
+                if (((!(localValue2 == null)) && ((localValue2.IsExpedition()) || (localValue2.IsColony()))))
+                {
+                    this.colonyState = localValue3.colonyStatus;
+                    this.adventureLevel = localValue3.mapLevel;
+                    this.rewardID = localValue3.rewardId;
+                    if (localValue2.IsPvE())
+                    {
+                        currentState = "PvE";
+                    }
+                    else
+                    {
+                        if (localValue2.IsPvP())
+                        {
+                            currentState = "PvP";
+                        };
+                    };
+                };
+            };
+            if (this.timeLeft >= 0)
+            {
+                this.lblTimeLeft.text = this.lm.FormatDuration(this.timeLeft, cLocaManager.DURATION_FORMAT_NUMERIC);
+            };
+            var localValue5:Boolean;
+            if (localValue3 != null)
+            {
+                localValue5 = localValue3.IsFromMapPool();
+            };
+            var localValue6:dResource = PVPClientUtil.getColonyYieldPerTick(this.rewardID, localValue2, localValue5);
+            if (localValue6.amount > 0)
+            {
+                this.incomeResourceRendererBottom.resourceName = localValue6.name_string;
+                if (PVPUtil.GetActiveColonyYieldBonusForPvPLevel(global.ui.mCurrentPlayer.GetClaimedPvPLevel()) > 0)
+                {
+                    this.incomeRateAmount.setStyle("color", 0xFF00);
+                }
+                else
+                {
+                    this.incomeRateAmount.setStyle("color", 0xFFFFFF);
+                };
+                this.incomeRateAmount.text = ("+" + localValue6.amount.toString());
+                this.incomeRateDescription.text = this.lm.getLabel("IncomePerHour", [(global.colonyYieldTickTime / 3600)]);
+            };
+            if (((this.adventureLevel > 0) && (localValue3.colonyStatus > 0)))
+            {
+                this.itemRankImage.source = gAssetManager.GetClass(("ColonyWindowIconRank" + PVPUtil.getColonyTier(localValue3.getLevelRange()).toString()));
+            };
+            this.lblTimeLeft.visible = true;
+            toolTip = "data";
+            switch (this.colonyState)
+            {
+                case cColony.STATUS_WAIT_FOR_ASSIGNMENT:
+                case cColony.STATUS_READY_FOR_DEFENSE_MODE:
+                if (localValue3.colonyStatus > 0)
+                {
+                    this.stateImage.source = gAssetManager.GetClass("ExpeditionStateDefense");
+                    this.lblTimeLeft.visible = false;
+                };
+                toolTip = null;
+                return;
+                case cColony.STATUS_NPC_OWNED:
+                this.stateImage.source = gAssetManager.GetClass("ExpeditionStateExplore");
+                return;
+                case cColony.STATUS_ASSIGNED:
+                this.stateImage.source = gAssetManager.GetClass("ExpeditionStateWorking");
+                return;
+                case cColony.STATUS_UNDER_PVP_ATTACK:
+                this.stateImage.source = gAssetManager.GetClass("ExpeditionStateFighting");
+                return;
+            };
+        }
+
+        public function onTrackedExpeditionItemRenderer_HBox1_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.EXPEDITION_ITEM_string, argument1, data);
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            if (this.itemImage)
+            {
+                this.display();
+            }
+            else
+            {
+                addEventListener(FlexEvent.CREATION_COMPLETE, this.display);
+            };
+            refreshRendererPresentation();
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundSize", "100%");
+            this.setStyle("backgroundImage", gAssetManager.GetClass("TrackedAdventureBackground"));
+            itemImageSourceOverride1.value = gAssetManager.GetClass("ExpeditionItemBackground");
+            itemImageSourceOverride2.value = gAssetManager.GetClass("ExpeditionPvEItemBackground");
+            itemImageSourceOverride3.value = gAssetManager.GetClass("ColonyWindowIconHighlight");
+            this.width = 180;
+            this.height = 73;
+
+            this.addEventListener("click", this.clickHandler);
+            this.addEventListener("toolTipCreate", this.onTrackedExpeditionItemRenderer_HBox1_toolTipCreate);
+            this.addEventListener("dataChange", this.onDataChange);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+                itemImageSourceOverride1.target = itemImage;
+                itemImageSourceOverride2.target = itemImage;
+                itemImageSourceOverride3.target = itemImage;
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:states>
+        <mx:State id="activeState" name="active">
+            <mx:overrides>
+                <mx:SetProperty id="itemImageSourceOverride1" name="source" />
+            </mx:overrides>
+        </mx:State>
+        <mx:State id="pveState" name="PvE">
+            <mx:overrides>
+                <mx:SetProperty id="itemImageSourceOverride2" name="source" />
+            </mx:overrides>
+        </mx:State>
+        <mx:State id="pvpState" name="PvP">
+            <mx:overrides>
+                <mx:SetProperty id="itemImageSourceOverride3" name="source" />
+            </mx:overrides>
+        </mx:State>
+    </mx:states>
+    <mx:Canvas id="bg" percentWidth="100" percentHeight="100" verticalScrollPolicy="off" horizontalScrollPolicy="off" bottom="0" top="0">
+        <mx:Canvas id="viewCanvas1" verticalScrollPolicy="off" horizontalScrollPolicy="off" percentWidth="100" percentHeight="100" horizontalCenter="0" verticalCenter="0">
+            <mx:Image id="imageBG" maintainAspectRatio="false" top="0" bottom="0" left="0" right="0" />
+        </mx:Canvas>
+        <mx:Image id="itemImage" left="22" top="8" />
+        <mx:Image id="itemRankImage" left="33" top="21" />
+        <mx:Image id="lockImage" width="40" height="40" right="2" bottom="0" />
+        <mx:Image id="stateImage" width="26" height="25" right="25" top="10" />
+        <ui:CustomLabel id="lblTimeLeft" mouseEnabled="false" color="0xFFFFFF" left="74" top="22" fontWeight="bold" />
+        <local:ResourceIconRenderer id="incomeResourceRendererBottom" bottom="-3" left="56" />
+        <mx:HBox id="viewHBox1" bottom="2" left="86" horizontalGap="-4">
+            <ui:CustomText id="incomeRateAmount" selectable="false" mouseEnabled="false" color="0xFFFFFF" fontWeight="bold" />
+            <ui:CustomText id="incomeRateDescription" selectable="false" mouseEnabled="false" color="0xFFFFFF" fontWeight="bold" />
+        </mx:HBox>
+    </mx:Canvas>
+</mx:HBox>

@@ -1,0 +1,322 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" width="45" height="43">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Image;
+        import BuffSystem.cBuff;
+        import BuffSystem.cBuffDefinition;
+        import mx.controls.Label;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import Communication.VO.dUniqueID;
+        import flash.events.MouseEvent;
+        import MilitarySystem.cMilitaryUnitProductionOrder;
+        import Skill.cSkillList;
+        import Skill.cSkill;
+        import __AS3__.vec.Vector;
+        import Modifier.ModifierVO;
+        import Communication.VO.dTimedProductionVO;
+        import MilitarySystem.cMilitaryUnitDescription;
+        import Enums.TIMED_PRODUCTION_TYPE;
+        import Interface.cGameInterface;
+        import MilitarySystem.cMilitaryUnitData;
+        import TimedProduction.EffectTimedProductionDefinition;
+        import Modifier.Modifiers.Productions.ProductionTimes;
+        import GO.cBuilding;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import Communication.VO.EffectVO;
+        import Effects.Effects.ApplyBuff;
+        import Communication.VO.dRequirementsVO;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private var tmpBuff:cBuff = null;
+
+        private var skillBonus:int = 0;
+
+        [Bindable]
+        private var amountInProduction:int = 0;
+
+        private var itemEnabled:Boolean;
+
+        private var areaBuffDefinition:cBuffDefinition;
+
+        protected function canvas1_rollOverHandler(argument1:MouseEvent):void
+        {
+            this.styleName = "backgroundHighlight";
+            if (((this.areaBuffDefinition) && (!(this.getBuilding() == null))))
+            {
+                if (!this.tmpBuff)
+                {
+                    this.tmpBuff = new cBuff(this.areaBuffDefinition, new dUniqueID(), 1);
+                };
+                global.ui.mCurrentCursor.mCurrentBuff = null;
+                global.ui.mCurrentCursor.setAreaBuffToRender(this.tmpBuff, this.getBuilding());
+            };
+        }
+
+        private function GetBonusPercentage():Number
+        {
+            var localValue2:cMilitaryUnitProductionOrder;
+            var localValue3:cMilitaryUnitProductionOrder;
+            var localValue4:cSkillList;
+            var localValue5:Number;
+            var localValue6:cSkill;
+            var localValue7:Vector.<ModifierVO>;
+            var localValue8:ModifierVO;
+            var localValue9:String;
+            var localValue10:int;
+            var localValue1:dTimedProductionVO = new dTimedProductionVO();
+            localValue1.type_string = id;
+            if ((data[0] is cMilitaryUnitDescription))
+            {
+                localValue1.productionType = (((data[0] as cMilitaryUnitDescription).GetIsElite()) ? TIMED_PRODUCTION_TYPE.ELITE_UNITS : TIMED_PRODUCTION_TYPE.MILITARY_UNIT);
+                localValue2 = new cMilitaryUnitProductionOrder(localValue1, (global.ui as cGameInterface));
+                return (localValue2.GetProductionMultiplierInPercentage());
+            };
+            if ((data[0] is cMilitaryUnitData))
+            {
+                localValue1.productionType = TIMED_PRODUCTION_TYPE.COMBAT_THREE_UNITS;
+                localValue3 = new cMilitaryUnitProductionOrder(localValue1, (global.ui as cGameInterface));
+                return (localValue3.GetProductionMultiplierInPercentage());
+            };
+            if (((data[0] is cBuffDefinition) || (data[0] is EffectTimedProductionDefinition)))
+            {
+                localValue4 = global.ui.mCurrentPlayer.getSkills();
+                localValue5 = 1;
+                for each (localValue6 in localValue4.getItems_vector())
+                {
+                    for each (localValue7 in localValue6.getDefinition().level_vector)
+                    {
+                        for each (localValue8 in localValue7)
+                        {
+                            if (localValue8.modifier_string == ProductionTimes.xml_string)
+                            {
+                                if ((data[0] is cBuffDefinition))
+                                {
+                                    localValue10 = new int((data[0] as cBuffDefinition).GetGroup_string());
+                                    localValue9 = TIMED_PRODUCTION_TYPE.toString((((localValue10 == 11) || (localValue10 == 5)) ? TIMED_PRODUCTION_TYPE.COMBAT_THREE_WEAPONS : TIMED_PRODUCTION_TYPE.BUFF));
+                                }
+                                else
+                                {
+                                    if (((!(data[2] == null)) && (data[2] is cBuilding)))
+                                    {
+                                        localValue9 = TIMED_PRODUCTION_TYPE.toString((data[2] as cBuilding).productionQueue.mProductionType);
+                                    }
+                                    else
+                                    {
+                                        localValue9 = TIMED_PRODUCTION_TYPE.toString(TIMED_PRODUCTION_TYPE.RARE_BUFFS);
+                                    };
+                                };
+                                if ((((localValue8.type_string == "") || (localValue8.type_string == localValue9)) && ((localValue8.item_string == "") || (localValue8.item_string == data[0].GetType()))))
+                                {
+                                    return (Math.round(((1 - localValue8.multiplier) * 100)));
+                                };
+                            };
+                        };
+                    };
+                };
+                return (0);
+            };
+            return (0);
+        }
+
+        private function CreateTooltip(argument1:ToolTipEvent):void
+        {
+            var localValue2:EffectTimedProductionDefinition;
+            if (this.itemEnabled)
+            {
+                if ((data[0] is cMilitaryUnitDescription))
+                {
+                    cToolTipUtil.createToolTip(cToolTipUtil.MILITARY_UNIT_SKILL_string, argument1);
+                }
+                else
+                {
+                    if ((data[0] is cMilitaryUnitData))
+                    {
+                        cToolTipUtil.createToolTip(cToolTipUtil.MILITARY_UNIT_VERBOSE_string, argument1, this.skillBonus);
+                    }
+                    else
+                    {
+                        if ((data[0] is EffectTimedProductionDefinition))
+                        {
+                            localValue2 = (data[0] as EffectTimedProductionDefinition);
+                            if (((localValue2.effects_vector) && (localValue2.effects_vector.length)))
+                            {
+                                cToolTipUtil.createToolTip(cToolTipUtil.BUFF_string, argument1, localValue2.effects_vector[0]);
+                            }
+                            else
+                            {
+                                cToolTipUtil.createToolTip(cToolTipUtil.BUFF_string, argument1, localValue2);
+                            };
+                        }
+                        else
+                        {
+                            cToolTipUtil.createToolTip(cToolTipUtil.BUFF_string, argument1, data[0]);
+                        };
+                    };
+                };
+            }
+            else
+            {
+                cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_ERROR_string, argument1, true);
+            };
+        }
+
+        private function getAreaBuffDefinitionToApply(argument1:EffectTimedProductionDefinition):cBuffDefinition
+        {
+            var localValue2:EffectVO;
+            if (argument1 != null)
+            {
+                for each (localValue2 in argument1.effects_vector)
+                {
+                    if (localValue2.effect_string == ApplyBuff.XML_string)
+                    {
+                        if (cBuff.getIsAreaBuff(localValue2.name_string))
+                        {
+                            return (cBuff.getBuffDefinitionByName(localValue2.name_string));
+                        };
+                    };
+                };
+            };
+            return (null);
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            if (!(styleName is String))
+            {
+                styleName = "backgroundNormal";
+            };
+            super.data = argument1;
+            this.amountInProduction = argument1[1];
+            var localValue2:dRequirementsVO = (global.ui as cGameInterface).mRequirements.timedProductionRequirements_vector[data[0].GetType()];
+            this.itemEnabled = localValue2.isFulfilledForSkillList((global.ui as cGameInterface).mCurrentPlayer.getSkills());
+            this.unitIcon.source = gAssetManager.GetResourceIcon(data[0].GetType(), this.itemEnabled);
+            id = data[0].GetType();
+            if (this.itemEnabled)
+            {
+                toolTip = data[0].GetType();
+            }
+            else
+            {
+                toolTip = localValue2.locaString;
+            };
+            this.skillBonus = this.GetBonusPercentage();
+            this.StarIcon.visible = (this.skillBonus > 0);
+            this.StarIcon.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "TimedInfoPanelOrderBonus", [this.skillBonus]);
+            this.areaBuffDefinition = this.getAreaBuffDefinitionToApply((data[0] as EffectTimedProductionDefinition));
+            this.tmpBuff = null;
+            refreshRendererPresentation();
+        }
+
+        protected function canvas1_rollOutHandler(argument1:MouseEvent):void
+        {
+            this.styleName = "backgroundNormal";
+            if (this.areaBuffDefinition)
+            {
+                global.ui.mCurrentCursor.setAreaBuffToRender(null, null);
+            };
+            this.tmpBuff = null;
+        }
+
+        private function getBuilding():cBuilding
+        {
+            if ((((!(data == null)) && (data is Array)) && ((data as Array).length > 2)))
+            {
+                return (data[2] as cBuilding);
+            };
+            return (null);
+        }
+
+        private function readPresentationValue2():String
+        {
+            var localValue1:* = amountInProduction;
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundAlpha", 1);
+            this.setStyle("backgroundSize", "100%");
+            StarIcon.source = gAssetManager.GetBitmap("SmallIconStar");
+            this.width = 45;
+            this.height = 43;
+            this.addEventListener("rollOver", this.canvas1_rollOverHandler);
+            this.addEventListener("rollOut", this.canvas1_rollOutHandler);
+            this.addEventListener("toolTipCreate", this.CreateTooltip);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+                configuredLabel1.text = readPresentationValue2();
+                configuredLabel1.visible = !(amountInProduction == 0);
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Image id="unitIcon"  horizontalCenter="0" verticalCenter="0" />
+    <mx:Image id="StarIcon"  right="2" />
+    <mx:Label id="configuredLabel1"  color="15455937" bottom="0" right="0" fontWeight="normal" fontSize="10" />
+</mx:Canvas>

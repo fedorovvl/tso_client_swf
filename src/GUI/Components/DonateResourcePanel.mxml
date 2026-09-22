@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="450" height="165" styleName="specialPanel">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import GUI.Assets.gAssetManager;
+        import GUI.GAME.cDonateResourcePanel;
+
+        public var controller:cDonateResourcePanel = new cDonateResourcePanel();
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(headerBox);
+            LegacyMxmlContent.createChildren(buttonBox);
+            updateInputEnabled();
+            updateDonateEnabled();
+            amountSlider.addEventListener("enabledChanged", updateInputEnabled);
+            amountSlider.addEventListener("change", updateDonateEnabled);
+            amountSlider.addEventListener("valueCommit", updateDonateEnabled);
+            selectedAmount.addEventListener("textChanged", updateDonateEnabled);
+            busyOverlay.addEventListener("show", updateDonateEnabled);
+            busyOverlay.addEventListener("hide", updateDonateEnabled);
+            addEventListener("creationComplete", onCreationComplete);
+        }
+
+        private function updateInputEnabled(event:Event = null):void
+        {
+            selectedAmount.enabled = amountSlider.enabled;
+        }
+
+        private function updateDonateEnabled(event:Event = null):void
+        {
+            btnDonate.enabled = (((int(selectedAmount.text) <= amountSlider.maximum) && (amountSlider.value > 0)) && (!(busyOverlay.visible)));
+            anim.visible = busyOverlay.visible;
+        }
+
+        private function onCreationComplete(event:Event):void
+        {
+            controller.Init(this);
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <mx:Canvas id="headerBox" height="76" clipContent="false" left="20" right="20" top="2"
+                horizontalScrollPolicy="off" verticalScrollPolicy="off" styleName="detailsHeader">
+                <renderer:ResourceIconRenderer id="resourceRenderer" top="23" left="15" />
+                <gui:CustomText id="resourceName" selectable="false" left="71" top="15" bottom="2" color="0xFFFFFF" />
+                <gui:CustomTextInput id="selectedAmount" width="42" height="17" text="" left="73" top="33" textAlign="right" color="0xFFFFFF" fontSize="10"
+                    restrict="0-9" styleName="standardInput" />
+                <gui:CustomLabel id="maximumCount" left="117" top="34" color="0xFFFFFF" fontWeight="normal" fontSize="10" />
+                <gui:ExtendedHSlider id="amountSlider" percentWidth="100" top="51" left="59" right="10" />
+                <mx:Canvas id="hrBox" height="3" styleName="hr" left="6" right="5" bottom="0" />
+                <mx:Canvas id="busyOverlay" styleName="detailsContentBox" visible="false" left="0" right="0" top="0" bottom="0">
+                    <gui:SpriteLibAnimation id="anim" animationName="guianim_hourglass" loop="true" horizontalCenter="0" verticalCenter="0"
+                        width="48" height="48" />
+                </mx:Canvas>
+            </mx:Canvas>
+            <mx:HBox id="buttonBox" horizontalCenter="0" horizontalGap="10" bottom="17">
+                <gui:StandardButton id="btnDonate" width="120" height="26" icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+                <gui:StandardButton id="btnCancel" width="120" height="26" icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+            </mx:HBox>
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

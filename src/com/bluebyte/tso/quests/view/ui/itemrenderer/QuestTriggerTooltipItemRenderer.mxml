@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*" height="54">
+    <mx:Script><![CDATA[
+        import Communication.VO.dQuestTriggerVO;
+        import Communication.VO.dQuestDefinitionTriggerVO;
+        import Communication.VO.TriggerVO;
+        import mx.events.FlexEvent;
+        import GUI.Assets.gAssetManager;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.verticalScrollPolicy = "off";
+            this.horizontalScrollPolicy = "off";
+        }
+
+        private function SetData(_arg_1:FlexEvent = null):void
+        {
+            var _local_3:dQuestTriggerVO;
+            var _local_4:dQuestDefinitionTriggerVO;
+            var _local_5:TriggerVO;
+            var _local_6:String;
+            removeEventListener(FlexEvent.CREATION_COMPLETE, this.SetData);
+            var _local_2:Boolean;
+            if (data.isLegacyTrigger)
+            {
+                _local_3 = (data.trigger as dQuestTriggerVO);
+                _local_4 = (data.definition as dQuestDefinitionTriggerVO);
+                _local_2 = (_local_3.status > 0);
+                this.image.source = gAssetManager.GetQuestTriggerIcon(_local_4, (!(_local_2)));
+                this.title.text = global.ui.mQuestClientCallbacks.GetTriggerText(_local_4, data.total);
+            }
+            else
+            {
+                _local_5 = (data.definition as TriggerVO);
+                _local_6 = (data.loca as String);
+                _local_2 = (data.remaining <= 0);
+                this.image.source = gAssetManager.GetNewQuestTriggerIcon(_local_5, (!(_local_2)));
+                if (_local_6 != null)
+                {
+                    this.title.text = global.ui.mQuestClientCallbacks.getNewTriggerText(_local_5);
+                };
+            };
+            this.title.setStyle("color", ((_local_2) ? 0x999999 : 0xFFFFFF));
+        }
+
+        override public function set data(_arg_1:Object):void
+        {
+            super.data = _arg_1;
+            if (_arg_1 == null)
+            {
+                return;
+            };
+            if (((this.image) && (this.title)))
+            {
+                this.SetData();
+            }
+            else
+            {
+                addEventListener(FlexEvent.CREATION_COMPLETE, this.SetData);
+            };
+        }
+    ]]></mx:Script>
+
+    <gui:TSOImage id="image" width="59" height="51" scaleContent="false" left="0" verticalCenter="-1" horizontalAlign="center" verticalAlign="middle" />
+    <gui:CustomText id="title" width="250" selectable="false" left="58" verticalCenter="0" fontWeight="normal" />
+</mx:Canvas>

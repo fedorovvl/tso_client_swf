@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="460" height="800">
+    <mx:Script><![CDATA[
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Loca.cLocaManager;
+        import mx.events.EffectEvent;
+        import mx.events.ToolTipEvent;
+
+        [Embed(source="../../../assets/embedded/adventure/adventure_adventure_ornamental_top.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_adventure_adventure_ornamental_top_png_1012954421:Class;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(content);
+            ornament.source = _embed_mxml_____data_src_gfx_embedded_adventure_adventure_ornamental_top_png_1012954421;
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            durationBar.addEventListener("toolTipCreate", __durationBar_toolTipCreate);
+            btnStart.addEventListener("toolTipCreate", __btnStart_toolTipCreate);
+            fadeOut.addEventListener("effectEnd", __fadeOut_effectEnd);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function labelToTitle(value:String):String
+        {
+            var local:* = value;
+            return ((local == undefined) ? null : String(local));
+        }
+
+        private function loca(key:String):String
+        {
+            var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key);
+            return (value == undefined) ? null : String(value);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            if (!cLocaManager.GetInstance().IsInitialized())
+            {
+                return;
+            }
+            _AdventurePanel_CustomLabel3.text = loca("Mission");
+            _AdventurePanel_CustomLabel4.text = loca("Stats");
+            _AdventurePanel_CustomLabel6.text = loca("AttendingPlayers");
+            _AdventurePanel_Label1.text = loca("CooperationRequest");
+            btnReturnHome.label = loca("ReturnHome");
+        }
+
+        public function __durationBar_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnStart_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_ERROR_string, event, (!(this.btnStart.enabled)));
+        }
+
+        public function __fadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <mx:Canvas id="content" left="18" right="18" top="88" bottom="0"
+        clipContent="false" horizontalScrollPolicy="off" verticalScrollPolicy="off" styleName="basicPanel">
+        <gui:CloseButton id="btnClose" top="5" right="15" />
+        <gui:CustomLabel id="_AdventurePanel_CustomLabel1" left="42" top="8" right="46"
+            fontWeight="bold" textAlign="center" text="{labelToTitle(label)}" />
+        <gui:TSOImage id="teaserImage" top="33" left="15" width="396" height="167" scaleContent="false" />
+        <mx:Image id="resourceIncomeImage" top="41" left="24" width="26" height="25" scaleContent="false" visible="false" />
+        <gui:CustomLabel id="resourceIncomeDescription" top="70" left="23" color="0xFFFFFF" fontWeight="bold" />
+        <mx:Canvas left="160" right="13" top="33" height="166">
+            <mx:Canvas left="10" top="11" right="5" bottom="12" horizontalScrollPolicy="off" verticalScrollPolicy="auto">
+                <gui:CustomText id="opener" percentWidth="100" selectable="false" paddingRight="15" color="0xFFFFFF" fontWeight="normal" />
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas id="missionHeader" left="15" right="13" top="202" styleName="detailsSubHeader" height="18">
+            <gui:CustomLabel id="_AdventurePanel_CustomLabel3" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+        </mx:Canvas>
+        <mx:Canvas id="missionPanel" left="16" right="14" top="220" styleName="detailsContentBox" height="125">
+            <mx:Canvas id="difficultyCanvas" left="0" backgroundColor="5720887" width="124" horizontalScrollPolicy="off" verticalScrollPolicy="auto">
+                <gui:AdventureDifficultyIndicator id="difficultIndicator" verticalCenter="0" horizontalCenter="0" width="124" height="125" />
+                <gui:PvPTierIndicator id="pvpTierIndicator" verticalCenter="0" horizontalCenter="0" width="124" height="125" visible="false" />
+            </mx:Canvas>
+            <mx:Canvas id="objectives" left="130" top="7" right="5" bottom="7" horizontalScrollPolicy="off" verticalScrollPolicy="auto">
+                <gui:CustomText id="todo" percentWidth="100" selectable="false" paddingRight="10" color="0xFFFFFF" fontWeight="normal" />
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas id="colonyHeader" left="15" right="13" top="237" styleName="detailsSubHeader" height="18">
+            <gui:CustomLabel id="_AdventurePanel_CustomLabel4" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+        </mx:Canvas>
+        <mx:Canvas id="colonyContent" left="16" right="14" top="255" bottom="67" styleName="detailsContentBox" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+            <mx:Canvas left="10" top="7" right="5" bottom="7">
+                <gui:CustomLabel id="colonyTitle" top="0" textAlign="center" fontWeight="bold" percentWidth="100" height="14" />
+                <gui:CustomText id="colonyTextLeft" top="20" left="0" textAlign="left" fontWeight="normal" percentWidth="50" wordWrap="true" />
+                <gui:CustomText id="colonyTextRight" top="20" right="0" textAlign="left" fontWeight="normal" percentWidth="50" wordWrap="true" />
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas id="fetchingData" backgroundColor="6970177" backgroundAlpha="0.7" left="16" right="14" top="255" bottom="67" visible="false">
+            <gui:SpriteLibAnimation id="fetchingDataBusy" horizontalCenter="0" verticalCenter="0" animationName="guianim_hourglass" loop="true" visible="false" width="48" height="48" />
+        </mx:Canvas>
+        <mx:Canvas id="playerListHeader" left="15" right="13" top="347" styleName="detailsSubHeader" height="18">
+            <gui:CustomLabel id="_AdventurePanel_CustomLabel6" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+        </mx:Canvas>
+        <mx:Canvas id="playerListPanel" left="16" right="14" top="365" styleName="detailsContentBox" height="95">
+            <mx:HBox id="playerList" horizontalCenter="0" verticalCenter="5" horizontalGap="15" />
+        </mx:Canvas>
+        <mx:Canvas id="playerCountPanel" left="16" right="14" bottom="44" styleName="detailsContentBox" height="25">
+            <mx:Canvas bottom="0" styleName="detailsSubContentBox" percentWidth="100" percentHeight="100">
+                <gui:CustomLabel id="playerCount1" left="10" bottom="2" />
+                <gui:CustomLabel id="playerCount2" right="10" bottom="2" textAlign="right" />
+                <gui:CustomLabel id="unitInfo" right="10" bottom="2" />
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas id="requestHelpPanel" left="16" right="14" top="345" styleName="detailsContentBox" height="25">
+            <mx:Canvas bottom="0" styleName="detailsSubContentBox" percentWidth="100" height="25">
+                <mx:Label id="_AdventurePanel_Label1" left="10" verticalCenter="0" color="0xFFFFFF" />
+                <gui:StandardCheckBox id="cooperationCheckBox" bottom="0" verticalCenter="0" textAlign="right" right="10" />
+            </mx:Canvas>
+        </mx:Canvas>
+        <gui:HealthBar id="durationBar" left="8" right="6" top="460" />
+        <gui:ReversableHBox id="buttonsInitialized" horizontalCenter="0" bottom="7">
+            <gui:StandardButton id="btnStart" width="150" height="32" icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+            <gui:StandardButton id="btnCancel" width="150" height="32" icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+        </gui:ReversableHBox>
+        <mx:HBox id="buttonsActive" horizontalCenter="0" bottom="7" visible="false">
+            <gui:StandardButton id="btnOK" width="70" height="32" icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+        </mx:HBox>
+        <mx:HBox id="buttonsFinished" horizontalCenter="0" bottom="7" visible="false">
+            <gui:StandardButton id="btnReturnHome" height="32" />
+        </mx:HBox>
+    </mx:Canvas>
+    <mx:Image id="ornament" top="0" horizontalCenter="0" />
+</mx:Canvas>

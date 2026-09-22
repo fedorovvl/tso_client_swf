@@ -1,0 +1,234 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="130" height="61">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import GUI.Components.TSOImage;
+        import mx.effects.AnimateProperty;
+        import GUI.Components.CustomLabel;
+        import mx.states.SetProperty;
+        import mx.core.mx_internal;
+        import mx.effects.Parallel;
+        import mx.events.PropertyChangeEvent;
+        import mx.states.State;
+        import flash.events.MouseEvent;
+        import GUI.Assets.gAssetManager;
+        import mx.events.FlexEvent;
+        import mx.states.Transition;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private const STATE_MOUSEOVER:String = "stateMouseOver";
+
+        private const STATE_SELECTED:String = "stateSelected";
+
+        private const STATE_NORMAL:String = "stateNormal";
+
+        protected function mouseOutHandler(argument1:MouseEvent):void
+        {
+            if (currentState != this.STATE_SELECTED)
+            {
+                currentState = this.STATE_NORMAL;
+            };
+        }
+
+        protected function enterSelectedStateHandler(argument1:FlexEvent):void
+        {
+            this.backgroundImage.source = gAssetManager.GetClass("SideTabBackGroundSelected");
+        }
+
+        protected function enterMouseOverStateHandler(argument1:FlexEvent):void
+        {
+            this.backgroundImage.source = gAssetManager.GetClass("SideTabBackGroundMouseOver");
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            if (argument1 != null)
+            {
+                super.data = argument1;
+                if (((!(data.selected == null)) && (data.selected)))
+                {
+                    currentState = this.STATE_SELECTED;
+                };
+                if (((!(data.selected == null)) && (!(data.selected))))
+                {
+                    currentState = this.STATE_NORMAL;
+                };
+                if (data.label != null)
+                {
+                    this.lblText.text = data.label;
+                };
+                if (data.icon != null)
+                {
+                    this.iconImage.source = data.icon;
+                };
+            };
+            refreshRendererPresentation();
+        }
+
+        protected function mouseClickHandler(argument1:MouseEvent):void
+        {
+            if (currentState != this.STATE_SELECTED)
+            {
+                currentState = this.STATE_SELECTED;
+            };
+        }
+
+        protected function mouseOverHandler(argument1:MouseEvent):void
+        {
+            if (currentState != this.STATE_SELECTED)
+            {
+                currentState = this.STATE_MOUSEOVER;
+            };
+        }
+
+        protected function creationCompleteHandler(argument1:FlexEvent):void
+        {
+            this.addEventListener(MouseEvent.MOUSE_OVER, this.mouseOverHandler);
+            this.addEventListener(MouseEvent.MOUSE_OUT, this.mouseOutHandler);
+        }
+
+        protected function enterNormalStateHandler(argument1:FlexEvent):void
+        {
+            this.backgroundImage.source = gAssetManager.GetClass("SideTabBackGroundNormal");
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            viewState1.addEventListener("enterState", enterNormalStateHandler);
+            viewState2.addEventListener("enterState", enterMouseOverStateHandler);
+            viewState3.addEventListener("enterState", enterSelectedStateHandler);
+            this.width = 130;
+            this.height = 61;
+            this.horizontalScrollPolicy = "off";
+
+            this.addEventListener("creationComplete", this.creationCompleteHandler);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+                lblTextVisibleOverride1.target = lblText;
+                contentContainerXOverride2.target = contentContainer;
+                lblTextVisibleOverride3.target = lblText;
+                contentContainerXOverride4.target = contentContainer;
+                lblTextVisibleOverride5.target = lblText;
+                contentContainerXOverride6.target = contentContainer;
+                configuredAnimateProperty1.target = contentContainer;
+                configuredAnimateProperty2.target = contentContainer;
+                configuredAnimateProperty3.target = contentContainer;
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:states>
+        <mx:State id="viewState1" name="stateNormal">
+            <mx:overrides>
+                <mx:SetProperty id="lblTextVisibleOverride1" name="visible" value="false" />
+                <mx:SetProperty id="contentContainerXOverride2" name="x" value="45" />
+            </mx:overrides>
+        </mx:State>
+        <mx:State id="viewState2" name="stateMouseOver">
+            <mx:overrides>
+                <mx:SetProperty id="lblTextVisibleOverride3" name="visible" value="false" />
+                <mx:SetProperty id="contentContainerXOverride4" name="x" value="45" />
+            </mx:overrides>
+        </mx:State>
+        <mx:State id="viewState3" name="stateSelected">
+            <mx:overrides>
+                <mx:SetProperty id="lblTextVisibleOverride5" name="visible" value="true" />
+                <mx:SetProperty id="contentContainerXOverride6" name="x" value="0" />
+            </mx:overrides>
+        </mx:State>
+    </mx:states>
+    <mx:transitions>
+        <mx:Transition id="viewTransition1" fromState="stateSelected" toState="stateNormal">
+            <mx:effect>
+                <mx:Parallel id="viewParallel1">
+                    <mx:children>
+                        <mx:AnimateProperty id="configuredAnimateProperty1" property="x" fromValue="0" toValue="45" />
+                    </mx:children>
+                </mx:Parallel>
+            </mx:effect>
+        </mx:Transition>
+        <mx:Transition id="viewTransition2" fromState="stateNormal" toState="stateSelected">
+            <mx:effect>
+                <mx:Parallel id="viewParallel2">
+                    <mx:children>
+                        <mx:AnimateProperty id="configuredAnimateProperty2" property="x" fromValue="45" toValue="0" />
+                    </mx:children>
+                </mx:Parallel>
+            </mx:effect>
+        </mx:Transition>
+        <mx:Transition id="viewTransition3" fromState="stateMouseOver" toState="stateSelected">
+            <mx:effect>
+                <mx:Parallel id="viewParallel3">
+                    <mx:children>
+                        <mx:AnimateProperty id="configuredAnimateProperty3" property="x" fromValue="45" toValue="0" />
+                    </mx:children>
+                </mx:Parallel>
+            </mx:effect>
+        </mx:Transition>
+    </mx:transitions>
+    <mx:Canvas id="contentContainer" width="130" height="61" x="0" y="0" horizontalScrollPolicy="off">
+        <ui:TSOImage id="backgroundImage"  top="0" bottom="0" left="0" right="0" />
+        <ui:TSOImage id="iconImage" width="40" height="48" scaleContent="false"  left="8" top="7" />
+        <ui:CustomLabel id="lblText"  fontSize="10" fontWeight="bold" left="38" top="22" bottom="4" right="35" textAlign="center" />
+    </mx:Canvas>
+</mx:Canvas>

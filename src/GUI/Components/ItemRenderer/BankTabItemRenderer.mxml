@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" height="68" width="80">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Image;
+        import mx.controls.Label;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import flash.events.MouseEvent;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import ServerState.dResource;
+        import BuffSystem.cBuff;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import AdventureSystem.cAdventureDefinition;
+        import Communication.VO.dBuffVO;
+        import mx.events.FlexEvent;
+        import mx.events.PropertyChangeEvent;
+        import flash.filters.GlowFilter;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        public var maxBuffLimit:int;
+
+        public var maxLimit:int;
+
+        public function onBankTabItemRenderer_Canvas1_rollOver(argument1:MouseEvent):void
+        {
+            this.rollOver();
+        }
+
+        private function createToolTip(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        private function displayData():void
+        {
+            var localValue1:dResource;
+            var localValue2:int;
+            var localValue3:String;
+            var localValue4:String;
+            var localValue5:Boolean;
+            var localValue6:int;
+            var localValue7:cBuff;
+            this.setStyle("backgroundImage", gAssetManager.GetClass("BackgroundNormal"));
+            if (data == null)
+            {
+                visible = false;
+                return;
+            };
+            if ((data is dResource))
+            {
+                localValue1 = (data as dResource);
+                toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, localValue1.name_string);
+                if (data.amount > -1)
+                {
+                    toolTip = (toolTip + (((": " + data.amount) + "/") + this.maxLimit));
+                };
+                this.capacity.visible = (data.amount > -1);
+                localValue2 = int(((59 * data.amount) / this.maxLimit));
+                this.capacityBar.height = localValue2;
+                this.capacityBar.y = (59 - localValue2);
+                this.amountLabel.visible = (data.amount > -1);
+                this.amountLabel.text = cLocaManager.GetInstance().FormatAmount(data.amount);
+                this.backgroundIcon.source = gAssetManager.GetResourceIcon(localValue1.name_string);
+                this.foregroundIcon.visible = false;
+                this.depositAmount.text = "";
+            }
+            else
+            {
+                this.capacity.visible = false;
+                this.amountLabel.text = "";
+                if ((data is cBuff))
+                {
+                    localValue7 = (data as cBuff);
+                    localValue3 = localValue7.GetBuffDefinition().GetName_string();
+                    localValue4 = localValue7.GetResourceName_string();
+                    localValue5 = true;
+                    localValue6 = localValue7.GetAmount();
+                };
+                toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildBankItems");
+                toolTip = (toolTip + (((": " + global.ui.mCurrentPlayerGuildBank.GetGuildBankTab(globalFlash.gui.mGuildBankWindow.GetCurrentTabId()).GetSortedBuffs().length) + "/") + this.maxBuffLimit));
+                if (((localValue3.indexOf(defines.ADD_RESOURCE_BUFF) == 0) || (localValue3.indexOf(defines.FILL_DEPOSIT_BUFF) == 0)))
+                {
+                    if (localValue4 != "")
+                    {
+                        this.foregroundIcon.visible = true;
+                        this.foregroundIcon.source = gAssetManager.GetResourceIcon(localValue4, localValue5);
+                    }
+                    else
+                    {
+                        this.foregroundIcon.visible = false;
+                    };
+                    this.backgroundIcon.source = gAssetManager.GetBuffIcon(localValue3, localValue5);
+                    this.depositAmount.text = localValue6.toString();
+                }
+                else
+                {
+                    if (((localValue3 == defines.BUILD_BUILDING_BUFF) || (localValue3 == defines.BUILD_DEFENSE_MODE_BUILDING_BUFF)))
+                    {
+                        this.foregroundIcon.visible = false;
+                        this.backgroundIcon.source = gAssetManager.GetBuildingIcon(localValue4, localValue5);
+                        this.depositAmount.text = "";
+                    }
+                    else
+                    {
+                        if (localValue3 == defines.ADVENTURE_BUFF)
+                        {
+                            this.foregroundIcon.visible = false;
+                            this.backgroundIcon.source = cAdventureDefinition.GetAdventureIcon(localValue4, localValue5);
+                            this.depositAmount.text = localValue6.toString();
+                        }
+                        else
+                        {
+                            if (localValue3 == defines.HIRED_MILITARY_BUFF)
+                            {
+                                this.foregroundIcon.visible = false;
+                                this.backgroundIcon.source = gAssetManager.GetBuffIcon(((defines.HIRED_MILITARY_BUFF + "_") + localValue4), localValue5);
+                                this.depositAmount.text = localValue6.toString();
+                            }
+                            else
+                            {
+                                if (localValue3.indexOf(defines.CHANGE_COLOR_SCHEME_BUFF) == 0)
+                                {
+                                    this.foregroundIcon.visible = false;
+                                    this.backgroundIcon.source = gAssetManager.GetBuffIcon(((defines.CHANGE_COLOR_SCHEME_BUFF + "_") + localValue4), localValue5);
+                                    this.depositAmount.text = localValue6.toString();
+                                }
+                                else
+                                {
+                                    if (localValue3.indexOf("PremiumAccount") == 0)
+                                    {
+                                        this.foregroundIcon.visible = false;
+                                        this.backgroundIcon.source = gAssetManager.GetBuffIcon(localValue3, localValue5);
+                                        localValue7 = cBuff.CreateBuffFromVO((data as dBuffVO));
+                                        this.depositAmount.text = "";
+                                    }
+                                    else
+                                    {
+                                        this.foregroundIcon.visible = false;
+                                        this.backgroundIcon.source = gAssetManager.GetBuffIcon(localValue3, localValue5);
+                                        this.depositAmount.text = localValue6.toString();
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        }
+
+        public function onBankTabItemRenderer_Canvas1_creationComplete(argument1:FlexEvent):void
+        {
+            this.displayData();
+        }
+
+        private function rollOut():void
+        {
+            this.setStyle("backgroundImage", gAssetManager.GetClass("BackgroundNormal"));
+        }
+
+        public function onBankTabItemRenderer_Canvas1_rollOut(argument1:MouseEvent):void
+        {
+            this.rollOut();
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            if (this.capacity)
+            {
+                this.displayData();
+            };
+            refreshRendererPresentation();
+        }
+
+        private function rollOver():void
+        {
+            this.setStyle("backgroundImage", gAssetManager.GetClass("BackgroundHighlight"));
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundAlpha", 1);
+            this.setStyle("backgroundSize", "100%");
+            amountLabel.filters = [viewGlowFilter1];
+            this.height = 68;
+            this.width = 80;
+            this.addEventListener("creationComplete", this.onBankTabItemRenderer_Canvas1_creationComplete);
+            this.addEventListener("rollOver", this.onBankTabItemRenderer_Canvas1_rollOver);
+            this.addEventListener("rollOut", this.onBankTabItemRenderer_Canvas1_rollOut);
+            this.addEventListener("toolTipCreate", this.createToolTip);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="capacity" width="8" height="61" x="2" y="2" borderStyle="solid" borderThickness="1" borderColor="9535066" backgroundColor="4470822">
+        <mx:Canvas id="capacityBar" width="6" height="59"  backgroundColor="8880699" />
+    </mx:Canvas>
+    <mx:Image id="backgroundIcon" x="10"  verticalCenter="0" />
+    <mx:Image id="foregroundIcon"  horizontalCenter="0" verticalCenter="0" />
+    <mx:Label id="depositAmount" percentWidth="90" height="18"  bottom="5" color="0xFFFFFF" fontWeight="bold" horizontalCenter="-2" textAlign="center" />
+    <mx:Label id="amountLabel" color="0xFFFFFF" fontWeight="bold" left="15" right="6" verticalCenter="-1" textAlign="right">
+        <mx:filters>
+            <mx:GlowFilter id="viewGlowFilter1" color="0" alpha="0.8" blurX="3" blurY="3" strength="5" quality="2" />
+        </mx:filters>
+    </mx:Label>
+</mx:Canvas>

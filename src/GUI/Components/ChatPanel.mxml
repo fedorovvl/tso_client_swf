@@ -1,0 +1,474 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:gui="GUI.Components.*"
+    xmlns:chat="com.bluebyte.bluefire.flex3.defaultClient.*"
+    implements="com.bluebyte.bluefire.puremvc.view.IChatPanel"
+    styleName="chatPanel" cacheAsBitmap="true" label="Chat"
+    percentWidth="100" percentHeight="100" visible="false">
+    <mx:Script><![CDATA[
+    import mx.containers.Canvas;
+    import com.bluebyte.bluefire.puremvc.view.IChatPanel;
+    import mx.binding.IBindingClient;
+    import mx.binding.IWatcherSetupUtil;
+    import mx.effects.Fade;
+    import mx.effects.Rotate;
+    import mx.controls.Button;
+    import mx.controls.Image;
+    import flash.text.StyleSheet;
+    import mx.containers.HBox;
+    import com.bluebyte.bluefire.flex3.defaultClient.CustomInput;
+    import mx.states.RemoveChild;
+    import mx.containers.VBox;
+    import mx.states.SetStyle;
+    import com.bluebyte.bluefire.api.model.vo.ChannelVO;
+    import mx.states.SetProperty;
+    import mx.core.UIComponentDescriptor;
+    import GUI.Assets.gAssetManager;
+    import mx.core.mx_internal;
+    import mx.styles.CSSStyleDeclaration;
+    import mx.events.PropertyChangeEvent;
+    import com.bluebyte.bluefire.puremvc.view.IBFTextInput;
+    import mx.events.ListEvent;
+    import com.bluebyte.bluefire.puremvc.view.IBFList;
+    import GUI.Components.ItemRenderer.CustomChatMessage;
+    import flash.events.MouseEvent;
+    import com.bluebyte.tso.chat.SWMMOChatMessage;
+    import com.bluebyte.tso.chat.DelayExtension;
+    import mx.core.ClassFactory;
+    import GUI.Components.ItemRenderer.ChannelBarItemRenderer;
+    import mx.events.FlexEvent;
+    import Interface.cGameInterface;
+    import flash.events.Event;
+    import GUI.Components.ItemRenderer.ChatTabPrivateListItemRenderer;
+    import mx.binding.Binding;
+    import Tracks.TrackManager;
+    import mx.binding.BindingManager;
+    import mx.controls.CheckBox;
+    import mx.collections.ArrayCollection;
+        import GUI.Loca.cLocaManager;
+    import Enums.LOCA_GROUP;
+    import mx.effects.easing.Linear;
+    import flash.display.DisplayObject;
+    import mx.styles.IStyleClient;
+    import mx.core.Application;
+    import mx.states.State;
+    import flash.utils.setTimeout;
+    import flash.events.*;
+    import flash.display.*;
+    import flash.geom.*;
+    import mx.styles.*;
+    import flash.text.*;
+    import flash.media.*;
+    import mx.binding.*;
+    import flash.filters.*;
+    import flash.utils.*;
+    import flash.net.*;
+    import flash.system.*;
+    import flash.accessibility.*;
+    import flash.xml.*;
+    import flash.ui.*;
+    import flash.external.*;
+    import flash.desktop.*;
+    import flash.data.*;
+    import flash.debugger.*;
+    import flash.errors.*;
+    import flash.filesystem.*;
+    import flash.html.*;
+    import flash.html.script.*;
+    import flash.printing.*;
+    import flash.profiler.*;
+        import mx.core.UIComponent;
+
+        [Embed(source="../../../assets/ChatPanel/CSSFile_default.bin", mimeType="application/octet-stream")]
+        public static var CSSFile_default:Class;
+
+        [Embed(source="../../../assets/ChatPanel/CSSFile_white.bin", mimeType="application/octet-stream")]
+        public static var CSSFile_white:Class;
+        [Embed('../../../assets/embedded/chat/chat_connect_server.png')]
+        private var connectingIcon:Class;
+        public var WaitingIcon:Class;
+        private var whiteStyleSheet:StyleSheet;
+        private var defaultStyleSheet:StyleSheet;
+        private var expandedHeight:int = 270;
+        private var savedHeight:int = 270;
+        private var resizing:Boolean = false;
+        private var offset:int;
+        private var _isCollapsed:Boolean = false;
+        private var isCollapsedChanged:Boolean = true;
+        private var mSelectedChannel:ChannelVO;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundSize", "100%");
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            setStyle("backgroundImage", gAssetManager.GetClass("ChatTab"));
+            setConstraints(historyContainer, 10, 4, 12, 58);
+            setConstraints(privatedetailsHeader, -1, 17, NaN, 0);
+            updateWhisperLayout();
+            privateList.addEventListener("propertyChange", updateWhisperLayout);
+            setConstraints(buttonBar, 5, 5, NaN, 24);
+            setConstraints(chatInput, 5, 35, NaN, 2);
+            setConstraints(lockedIndicator, NaN, 35, NaN, 2);
+            messageHistory.itemRenderer = new ClassFactory(CustomChatMessage);
+            privateList.itemRenderer = new ClassFactory(ChatTabPrivateListItemRenderer);
+            buttonBar.itemRenderer = new ClassFactory(ChannelBarItemRenderer);
+            privateList.dataProvider = new ArrayCollection();
+            buttonBar.dataProvider = new ArrayCollection();
+            chatstatusboxicon.source = connectingIcon;
+            chatstatusboxlabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.CHAT_MESSAGES, "ClientServerConnecting");
+            messageColorBox.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ChatForceWhite");
+            autoScrollBox.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ChatAutoScroll");
+            chatInput.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.CHAT_MESSAGES, "ChatUnlockInputMessage");
+            chatInput.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "ChatUnlock");
+            lockedIndicator.source = gAssetManager.GetBitmap("IconPadlock");
+            rotate.target = chatstatusboxicon;
+            rotate.easingFunction = Linear.easeNone;
+            chatstatusboxicon.addEventListener("resize", updateRotateOrigin);
+            chatstatusboxicon.addEventListener("move", updateRotateOrigin);
+            updateRotateOrigin();
+            scaleButton.addEventListener(MouseEvent.MOUSE_DOWN, __scaleButton_mouseDown);
+            maximizeButton.addEventListener(MouseEvent.CLICK, __maximizeButton_click);
+            minimizeButton.addEventListener(MouseEvent.CLICK, __minimizeButton_click);
+            buttonBar.addEventListener("itemClick", __buttonBar_itemClick);
+            messageColorBox.addEventListener(Event.CHANGE, __messageColorBox_change);
+            autoScrollBox.addEventListener(MouseEvent.CLICK, __autoScrollBox_click);
+            messageHistory.addEventListener("autoscrollChanged", syncAutoScrollBox);
+            syncAutoScrollBox();
+            addEventListener("creationComplete", onCreationComplete);
+            var state:State = new State();
+            state.name = "minimized";
+            var remove:RemoveChild = new RemoveChild();
+            remove.target = chatstatusbox;
+            var hide:SetProperty = new SetProperty();
+            hide.target = minimizeButton; hide.name = "visible"; hide.value = false;
+            var show:SetProperty = new SetProperty();
+            show.target = maximizeButton; show.name = "visible"; show.value = true;
+            var background:SetStyle = new SetStyle();
+            background.target = this; background.name = "backgroundImage";
+            background.value = gAssetManager.GetClass("ChatTabMinimized");
+            state.overrides = [remove, hide, show, background];
+            states = [state];
+        }
+
+        private function updateRotateOrigin(event:Event = null):void
+        {
+            rotate.originX = chatstatusboxicon.x + chatstatusboxicon.width / 2;
+            rotate.originY = chatstatusboxicon.x + chatstatusboxicon.height / 2;
+        }
+
+        private function updateWhisperLayout(event:Event = null):void
+        {
+            privatedetailsHeader.visible = privateList.visible;
+            privateList.includeInLayout = privateList.visible;
+            privateList.height = privateList.visible ? 51 : 0;
+            autoScrollBox.setStyle("bottom", privateList.visible ? 50 : 0);
+        }
+
+        private function setConstraints(component:UIComponent, left:Number, right:Number,
+                                        top:Number, bottom:Number):void
+        {
+            if (!isNaN(left)) component.setStyle("left", left);
+            if (!isNaN(right)) component.setStyle("right", right);
+            if (!isNaN(top)) component.setStyle("top", top);
+            if (!isNaN(bottom)) component.setStyle("bottom", bottom);
+        }
+        private function doExpand():void
+        {
+            cSettingsManager.getInstance().chatVisible = true;
+            cSettingsManager.getInstance().saveToServer();
+        }
+
+        public function get messageInput():IBFTextInput
+        {
+            return (this.chatInput);
+        }
+
+        public function activateWhisper():void
+        {
+            this.privateList.visible = true;
+            this.privatedetailsHeader.visible = true;
+            this.privateList.height = 51;
+            updateWhisperLayout();
+        }
+
+        public function __buttonBar_itemClick(_arg_1:ListEvent):void
+        {
+            if (this.currentState == "minimized")
+            {
+                this.doExpand();
+            };
+        }
+
+        public function get mucs():IBFList
+        {
+            return (this.buttonBar);
+        }
+
+        private function changeChatColor():void
+        {
+            CustomChatMessage.setStyleSheet(((this.messageColorBox.selected) ? this.whiteStyleSheet : this.defaultStyleSheet));
+            this.messageHistory.itemRenderer = this.messageHistory.itemRenderer;
+            cSettingsManager.getInstance().forceChatColorWhite = this.messageColorBox.selected;
+            cSettingsManager.getInstance().saveToServer();
+        }
+
+        public function __maximizeButton_click(_arg_1:MouseEvent):void
+        {
+            this.MinMaxClickHandler();
+        }
+
+        private function Init():void
+        {
+            SWMMOChatMessage.enable();
+            DelayExtension.enable();
+            this.defaultStyleSheet = new StyleSheet();
+            this.defaultStyleSheet.parseCSS(new CSSFile_default().toString());
+            this.whiteStyleSheet = new StyleSheet();
+            this.whiteStyleSheet.parseCSS(new CSSFile_white().toString());
+            CustomChatMessage.setStyleSheet(this.defaultStyleSheet);
+            this.savedHeight = (this.expandedHeight = 270);
+            this.addEventListener(MouseEvent.MOUSE_DOWN, this.StartResizing);
+            invalidateProperties();
+            this.isCollapsed = (!(cSettingsManager.getInstance().chatVisible));
+            this.messageColorBox.selected = cSettingsManager.getInstance().forceChatColorWhite;
+            if (this.messageColorBox.selected)
+            {
+                this.changeChatColor();
+            };
+            this.rotate.play();
+        }
+
+        private function set _174067176selectedChannel(_arg_1:ChannelVO):void
+        {
+            this.mSelectedChannel = _arg_1;
+            this.messageHistory.dataProvider = _arg_1 ? _arg_1.messages : null;
+            if (this.mucs.dataProvider.getItemIndex(this.mSelectedChannel) != -1)
+            {
+                this.mucs.selectedItem = this.mSelectedChannel;
+            };
+        }
+
+        public function get whispers():IBFList
+        {
+            return (this.privateList);
+        }
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            Init();
+        }
+
+        public function handleClick(_arg_1:MouseEvent):void
+        {
+            this.messageInput.setFocus();
+            (global.ui as cGameInterface).ActivateChatWindow(true);
+        }
+
+        public function get isCollapsed():Boolean
+        {
+            return (this._isCollapsed);
+        }
+
+        private function syncAutoScrollBox(event:Event = null):void
+        {
+            autoScrollBox.selected = messageHistory.autoscroll;
+        }
+
+        public function __autoScrollBox_click(_arg_1:MouseEvent):void
+        {
+            this.button1_clickHandler(_arg_1);
+        }
+
+        private function doCollapse():void
+        {
+            cSettingsManager.getInstance().chatVisible = false;
+            cSettingsManager.getInstance().saveToServer();
+        }
+
+        public function get editable():Boolean
+        {
+            return (this.chatInput.editable);
+        }
+
+        public function deactivateWhisper():void
+        {
+            this.privateList.visible = false;
+            this.privatedetailsHeader.visible = false;
+            this.privateList.height = 0;
+            updateWhisperLayout();
+        }
+
+        public function __messageColorBox_change(_arg_1:Event):void
+        {
+            this.changeChatColor();
+        }
+
+        private function MinMaxClickHandler():void
+        {
+            cSettingsManager.getInstance().chatVisible = (!(cSettingsManager.getInstance().chatVisible));
+            cSettingsManager.getInstance().saveToServer();
+            TrackManager.getInstance().trackUI(global.ui.mCurrentPlayer.GetPlayerId(), "Chat Window", ((this.isCollapsed) ? "minimized" : "expanded"), 0, false);
+        }
+
+        public function set isCollapsed(_arg_1:Boolean):void
+        {
+            this.isCollapsedChanged = (!(this._isCollapsed == _arg_1));
+            this._isCollapsed = _arg_1;
+            invalidateProperties();
+        }
+
+        protected function button1_clickHandler(_arg_1:MouseEvent):void
+        {
+            this.messageHistory.autoscroll = (_arg_1.target as CheckBox).selected;
+        }
+
+        public function __scaleButton_mouseDown(_arg_1:MouseEvent):void
+        {
+            this.StartResizing(_arg_1);
+        }
+
+        public function Expand():void
+        {
+            this.isCollapsed = false;
+        }
+
+        private function StopResizing(_arg_1:MouseEvent):void
+        {
+            this.resizing = false;
+            this.expandedHeight = this.height;
+            Application.application.removeEventListener(MouseEvent.MOUSE_UP, this.StopResizing);
+            Application.application.removeEventListener(MouseEvent.ROLL_OUT, this.StopResizing);
+            Application.application.removeEventListener(MouseEvent.MOUSE_MOVE, this.Resize);
+        }
+
+        override protected function commitProperties():void
+        {
+            super.commitProperties();
+            if (this.isCollapsedChanged)
+            {
+                if (this.isCollapsed)
+                {
+                    this.currentState = "minimized";
+                    this.savedHeight = this.expandedHeight;
+                    this.expandedHeight = 270;
+                    this.parent.height = 70;
+                    this.historyContainer.visible = false;
+                }
+                else
+                {
+                    this.currentState = "";
+                    this.parent.height = this.savedHeight;
+                    this.historyContainer.visible = true;
+                    this.Resize();
+                };
+                this.isCollapsedChanged = false;
+            };
+        }
+
+        private function StartResizing(_arg_1:MouseEvent):void
+        {
+            if ((((_arg_1.stageY > this.parent.y) && (_arg_1.stageY < (this.parent.y + 11))) && (!(this.currentState == "minimized"))))
+            {
+                this.resizing = true;
+                this.offset = _arg_1.localY;
+                Application.application.addEventListener(MouseEvent.MOUSE_UP, this.StopResizing);
+                Application.application.addEventListener(MouseEvent.ROLL_OUT, this.StopResizing);
+                Application.application.addEventListener(MouseEvent.MOUSE_MOVE, this.Resize);
+            };
+        }
+
+        private function Resize(_arg_1:MouseEvent=null):void
+        {
+            var _local_2:* = 222;
+            var _local_3:int = stage.stageHeight;
+            var _local_4:int = ((_arg_1) ? _arg_1.stageY : 10);
+            var _local_5:int = (((_local_3 - _local_4) - (this.parent as Canvas).getConstraintValue("bottom")) + this.offset);
+            if ((((!(_arg_1)) && (this.expandedHeight > _local_5)) || ((_arg_1) && ((_local_4 - this.offset) > 0))))
+            {
+                if ((_local_4 - this.offset) < ((_local_3 - (this.parent as Canvas).getConstraintValue("bottom")) - _local_2))
+                {
+                    this.parent.height = _local_5;
+                }
+                else
+                {
+                    this.parent.height = _local_2;
+                };
+            };
+        }
+
+        [Bindable(event="propertyChange")]
+        public function set selectedChannel(_arg_1:ChannelVO):void
+        {
+            var _local_2:Object = this.selectedChannel;
+            if (_local_2 !== _arg_1)
+            {
+                this._174067176selectedChannel = _arg_1;
+                this.dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "selectedChannel", _local_2, _arg_1));
+            };
+        }
+
+        public function __minimizeButton_click(_arg_1:MouseEvent):void
+        {
+            this.MinMaxClickHandler();
+        }
+
+        public function Collapse():void
+        {
+            this.isCollapsed = true;
+        }
+
+        public function get selectedChannel():ChannelVO
+        {
+            return (this.mSelectedChannel);
+        }
+
+        private function resizeHandler(_arg_1:Event):void
+        {
+            if (!this.isCollapsed)
+            {
+                setTimeout(this.Resize, 1000);
+            };
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+    <mx:Fade id="fadeInRollOver" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOutRollOut" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Rotate id="rotate" angleFrom="0" angleTo="360" duration="1000" repeatCount="0" />
+
+    <mx:Button id="scaleButton" styleName="chatScaleButton" top="0" horizontalCenter="1" />
+    <mx:Button id="maximizeButton" styleName="chatMaximizeButton" visible="false" top="2" right="4" />
+    <mx:Button id="minimizeButton" styleName="chatMinimizeButton" top="0" right="4" />
+    <mx:Canvas id="historyContainer" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+        <mx:Canvas id="privatedetailsHeader" styleName="detailsSubHeader" height="51"
+            percentWidth="100" visible="false" />
+        <mx:VBox id="vbox" percentWidth="100" percentHeight="100" top="2" verticalGap="0" horizontalAlign="right" paddingRight="2">
+            <gui:CustomText id="channelInfoDisplay" maxWidth="300" text=""
+                visible="false" includeInLayout="false" color="0xE5E500" horizontalCenter="0" verticalCenter="0" />
+            <gui:ChatHistory id="messageHistory" percentWidth="100" percentHeight="100"
+                verticalScrollBarShrink="44" autoscroll="true" maxEntries="500" paddingRight="3" paddingBottom="2"
+                />
+            <gui:CustomTileList id="privateList" percentWidth="100" columnCount="4" rowCount="2"
+                visible="false" verticalScrollPolicy="on" height="0"
+                includeInLayout="false" color="0xFFFFFF" backgroundAlpha="0" borderThickness="0" useRollOver="false" bottom="0" />
+        </mx:VBox>
+        <mx:HBox id="chatstatusbox" visible="false" horizontalCenter="1" verticalCenter="1">
+            <mx:Image id="chatstatusboxicon" />
+            <gui:CustomLabel id="chatstatusboxlabel" color="0xFFFFFF" />
+        </mx:HBox>
+        <gui:ColorCheckBox id="messageColorBox" selected="false" bottom="18" right="0" />
+        <gui:StandardCheckBox id="autoScrollBox" right="0" />
+    </mx:Canvas>
+    <gui:ChannelBar id="buttonBar" focusEnabled="false" rowCount="1" columnWidth="35"
+        height="31" labelField="label" color="0xFFFFFF" backgroundAlpha="0" borderThickness="0" useRollOver="false" />
+    <chat:CustomInput id="chatInput" maxChars="500" styleName="chatInput" height="20"
+        restrict="^\&lt;" editable="false" />
+        <mx:Image id="lockedIndicator" width="20" height="20" visible="false" />
+</mx:Canvas>
+
+
+
+

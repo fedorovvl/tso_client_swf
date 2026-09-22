@@ -1,0 +1,264 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" height="31">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Image;
+        import flash.display.Bitmap;
+        import GUI.Components.CustomLabel;
+        import ServerState.dResource;
+        import GUI.Loca.cLocaManager;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import mx.events.ItemClickEvent;
+        import flash.events.MouseEvent;
+        import ServerState.cEconomyOverviewData;
+        import ServerState.dResourceDefaultDefinition;
+        import Enums.LOCA_GROUP;
+        import mx.events.FlexEvent;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        [Bindable]
+        private var statusImage:Bitmap;
+
+        [Bindable]
+        private var statusArrow:Bitmap;
+
+        [Bindable]
+        private var currentResource:dResource;
+
+        private var _finished:Boolean = false;
+
+        private var _selected:Boolean = false;
+
+        private var lm:cLocaManager = cLocaManager.GetInstance();
+
+        private function RollOver():void
+        {
+            if (!this._selected)
+            {
+                this.setStyle("backgroundImage", gAssetManager.GetClass("EconomyResourceListBGOver"));
+            };
+        }
+
+        public function get selected():Boolean
+        {
+            return (this._selected);
+        }
+
+        public function onLbl_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        private function clickHandler(argument1:MouseEvent):void
+        {
+            var localValue2:ItemClickEvent = new ItemClickEvent(ItemClickEvent.ITEM_CLICK, true);
+            localValue2.item = data;
+            dispatchEvent(localValue2);
+        }
+
+        public function onResourceListItemRenderer_Canvas1_rollOver(argument1:MouseEvent):void
+        {
+            this.RollOver();
+        }
+
+        public function set selected(argument1:Boolean):void
+        {
+            this._selected = argument1;
+            if (argument1)
+            {
+                this.setStyle("backgroundImage", gAssetManager.GetClass("EconomyResourceListBGOver"));
+            }
+            else
+            {
+                this.setStyle("backgroundImage", gAssetManager.GetClass("EconomyResourceListBGNormal"));
+            };
+        }
+
+        public function onResourceListItemRenderer_Canvas1_rollOut(argument1:MouseEvent):void
+        {
+            this.RollOut();
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            var localValue2:cEconomyOverviewData = new cEconomyOverviewData();
+            this.currentResource = localValue2.GetPlayerSpecificResource(data.resourceName_string);
+            this.resourceIcon.source = gAssetManager.GetResourceIcon((data as dResourceDefaultDefinition).resourceName_string);
+            var localValue3:int = globalFlash.gui.mEconomyOverview.mResourceProductionData[data.resourceName_string];
+            this.maxArrowImage.source = gAssetManager.GetBitmap("MaxResourceArrow");
+            this.maxArrowImage.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, "EconomyMaxIndicator");
+            this.maxArrowImage.visible = false;
+            this.statusArrowClip.visible = true;
+            if (this.currentResource.amount >= this.currentResource.maxLimit)
+            {
+                if (localValue3 == 0)
+                {
+                    this.statusImage = gAssetManager.GetBitmap("ResourceListItemGrey");
+                }
+                else
+                {
+                    this.statusImage = gAssetManager.GetBitmap("ResourceListItemGreen");
+                };
+                this.statusArrowClip.visible = false;
+                this.maxArrowImage.visible = true;
+            }
+            else
+            {
+                if (localValue3 > 0)
+                {
+                    this.statusImage = gAssetManager.GetBitmap("ResourceListItemGreen");
+                    this.statusArrow = gAssetManager.GetBitmap("EconomyHighArrow");
+                }
+                else
+                {
+                    if (localValue3 < 0)
+                    {
+                        this.statusImage = gAssetManager.GetBitmap("ResourceListItemRed");
+                        this.statusArrow = gAssetManager.GetBitmap("EconomyLowArrow");
+                    }
+                    else
+                    {
+                        if (localValue3 == 0)
+                        {
+                            this.statusImage = gAssetManager.GetBitmap("ResourceListItemGrey");
+                            this.statusArrow = gAssetManager.GetBitmap("EconomyNeutralArrow");
+                        };
+                    };
+                };
+            };
+            if (((localValue3 > 0) || (localValue3 < 0)))
+            {
+                if (!localValue2.IsStableResourceChain(data.resourceName_string))
+                {
+                    this.statusImage = gAssetManager.GetBitmap("ResourceListItemYellow");
+                };
+            };
+            refreshRendererPresentation();
+        }
+
+        public function set finished(argument1:Boolean):void
+        {
+            this._finished = argument1;
+        }
+
+        private function RollOut():void
+        {
+            if (!this._selected)
+            {
+                this.setStyle("backgroundImage", gAssetManager.GetClass("EconomyResourceListBGNormal"));
+            };
+        }
+
+        public function get finished():Boolean
+        {
+            return (this._finished);
+        }
+
+        public function onResourceListItemRenderer_Canvas1_creationComplete(argument1:FlexEvent):void
+        {
+            this.setStyle("backgroundImage", gAssetManager.GetClass("EconomyResourceListBGNormal"));
+        }
+
+        private function readPresentationValue1():String
+        {
+            var localValue1:* = String(currentResource.amount);
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundAlpha", 1);
+            this.setStyle("backgroundSize", "100%");
+            lbl.addEventListener("toolTipCreate", onLbl_toolTipCreate);
+            this.clipContent = false;
+            this.percentWidth = 100;
+            this.height = 31;
+            this.addEventListener("creationComplete", this.onResourceListItemRenderer_Canvas1_creationComplete);
+            this.addEventListener("rollOver", this.onResourceListItemRenderer_Canvas1_rollOver);
+            this.addEventListener("rollOut", this.onResourceListItemRenderer_Canvas1_rollOut);
+            this.addEventListener("click", this.clickHandler);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"],
+                [currentResource, "propertyChange"]]);
+                if (currentResource != null)
+                {
+                    lbl.text = readPresentationValue1();
+                }
+                configuredImage2.source = statusImage;
+                statusArrowClip.source = statusArrow;
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Image id="resourceIcon"  left="10" verticalCenter="-1" />
+    <ui:CustomLabel id="lbl" width="102"  right="33" verticalCenter="0" color="0xFFFFFF" fontWeight="bold" textAlign="right" />
+    <mx:Image id="configuredImage2"  right="0" verticalCenter="0" />
+    <mx:Image id="statusArrowClip"  right="2" verticalCenter="0" />
+    <mx:Image id="maxArrowImage"  right="3" verticalCenter="0" />
+    <ui:CustomLabel id="maxLabel"  right="3" verticalCenter="0" color="0xFFFFFF" />
+</mx:Canvas>

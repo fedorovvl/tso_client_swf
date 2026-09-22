@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*" width="180" height="21">
+    <mx:Script><![CDATA[
+        import GUI.Assets.gAssetManager;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("horizontalGap", 4);
+            backgroundImage.source = gAssetManager.GetClass("AttackBonusSlot");
+        }
+    ]]></mx:Script>
+    <mx:Canvas width="21" height="21">
+        <mx:Image id="backgroundImage" width="21" height="21"  left="0" top="0" />
+        <mx:Image id="image" scaleContent="false" width="19" height="19"  left="1" top="1" />
+    </mx:Canvas>
+    <gui:CustomText id="description" width="150"  color="0xFFFFFF" />
+</mx:HBox>

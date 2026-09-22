@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<renderers:RendererPoolBox xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:renderers="GUI.Components.ItemRenderer.*"
+    height="42" direction="horizontal" styleName="infoBarBoth"
+    horizontalScrollPolicy="off" verticalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import GUI.Components.ItemRenderer.InfoBarResourceItemRenderer;
+        import mx.core.ClassFactory;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("horizontalGap", 5);
+            this.setStyle("paddingLeft", 80);
+            this.setStyle("paddingRight", 80);
+            this.setStyle("paddingTop", 0);
+            this.setStyle("paddingBottom", 0);
+            this.setStyle("verticalAlign", "middle");
+            itemRenderer = new ClassFactory(InfoBarResourceItemRenderer);
+        }
+    ]]></mx:Script>
+</renderers:RendererPoolBox>

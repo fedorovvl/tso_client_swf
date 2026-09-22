@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:detail="GUI.Components.achievement.detail.*">
+    <mx:Script><![CDATA[
+        import mx.events.ResizeEvent;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            syncLeft();
+            playerViewComponent.addEventListener(ResizeEvent.RESIZE, syncLeft, false, 0, true);
+        }
+
+        private function syncLeft(event:ResizeEvent = null):void
+        {
+            categoryViewComponent.setStyle("left", String(playerViewComponent.width));
+        }
+    ]]></mx:Script>
+    <detail:DetailHeaderPlayerViewComponent id="playerViewComponent"  top="0" left="0" />
+    <detail:DetailHeaderCategoryViewComponent id="categoryViewComponent"  top="0" />
+</mx:Canvas>

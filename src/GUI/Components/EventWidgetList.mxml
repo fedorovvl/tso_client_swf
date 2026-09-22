@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" clipContent="false">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.core.UIComponent;
+        import mx.events.PropertyChangeEvent;
+
+        private var observedChat:UIComponent;
+
+        [Bindable(event="propertyChange")]
+        public function get chat():UIComponent
+        {
+            return observedChat;
+        }
+
+        public function set chat(value:UIComponent):void
+        {
+            if (observedChat == value) return;
+            var previous:UIComponent = observedChat;
+            if (observedChat) observedChat.removeEventListener("yChanged", updatePosition);
+            observedChat = value;
+            if (observedChat) observedChat.addEventListener("yChanged", updatePosition, false, 0, true);
+            updatePosition();
+            dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "chat", previous, value));
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            updatePosition();
+        }
+
+        private function updatePosition(event:Event = null):void
+        {
+            if (observedChat) y = observedChat.y - 72;
+        }
+    ]]></mx:Script>
+    <mx:HBox id="list"  horizontalGap="3" />
+</mx:Canvas>

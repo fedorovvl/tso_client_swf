@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tip:BasicDescriptionTip xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:tip="GUI.Components.ToolTips.*"
+    implements="GUI.Components.ToolTips.IDataToolTip">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import MilitarySystem.cMilitaryUnitData;
+        import MilitarySystem.cMilitaryUnitAbility;
+        import MilitarySystem.cMilitaryUnitDescription;
+        import MilitarySystem.cMilitaryUnitSkill;
+        import MilitarySystem.cMilitaryUnitBase;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import Enums.MILITARY_UNIT_ARMORTYPE;
+        import Enums.MILITARY_UNIT_ABILITY;
+        import Enums.MILLITARY_UNIT_SKILLS;
+
+        private var skillBonusPercentage:int = 0;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this.skillBonusPercentage = (_arg_1 as int);
+        }
+
+        override protected function commitProperties():void
+        {
+            var _local_2:String;
+            var _local_3:cMilitaryUnitData;
+            var _local_4:cMilitaryUnitAbility;
+            var _local_5:cMilitaryUnitDescription;
+            var _local_6:String;
+            var _local_7:String;
+            var _local_8:cMilitaryUnitSkill;
+            super.commitProperties();
+            if (!cLocaManager.GetInstance().IsInitialized())
+            {
+                return;
+            };
+            var _local_1:cMilitaryUnitBase = cMilitaryUnitBase.GetUnitBaseForType(text);
+            if (_local_1.IsCombatThree())
+            {
+                _local_3 = (_local_1 as cMilitaryUnitData);
+                headline.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, text);
+                if (_local_3.IsBoss())
+                {
+                    headline.text = (headline.text + (" " + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsIsBoss")));
+                };
+                headline.text = (headline.text + ("\t" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsTier", [_local_3.GetTier().toString()])));
+                switch (_local_3.GetArmorType())
+                {
+                    case MILITARY_UNIT_ARMORTYPE.LIGHT:
+                        headline.text = (headline.text + ("\t\t" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsTypeLight")));
+                        break;
+                    case MILITARY_UNIT_ARMORTYPE.MEDIUM:
+                        headline.text = (headline.text + ("\t\t" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsTypeMedium")));
+                        break;
+                    case MILITARY_UNIT_ARMORTYPE.HEAVY:
+                        headline.text = (headline.text + ("\t\t" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsTypeHeavy")));
+                        break;
+                    case MILITARY_UNIT_ARMORTYPE.TANK:
+                        headline.text = (headline.text + ("\t\t" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsTypeTank")));
+                        break;
+                };
+                _local_2 = (("\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, text)) + "\n");
+                _local_2 = (_local_2 + ("\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsHitpoints", [_local_3.GetHitPoints().toString()])));
+                _local_2 = (_local_2 + ("\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsDamageCombat3", [_local_3.GetBaseDamage().toString()])));
+                for each (_local_4 in _local_3.GetAbilities())
+                {
+                    switch (_local_4.GetType())
+                    {
+                        case MILITARY_UNIT_ABILITY.DAMAGE_BONUS_PERCENT_LIGHT_ARMOR:
+                            _local_2 = (_local_2 + ("\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsBonusVsLight", [_local_4.GetValue().toString()])));
+                            break;
+                        case MILITARY_UNIT_ABILITY.DAMAGE_BONUS_PERCENT_MEDIUM_ARMOR:
+                            _local_2 = (_local_2 + ("\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsBonusVsMedium", [_local_4.GetValue().toString()])));
+                            break;
+                        case MILITARY_UNIT_ABILITY.DAMAGE_BONUS_PERCENT_HEAVY_ARMOR:
+                            _local_2 = (_local_2 + ("\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsBonusVsHeavy", [_local_4.GetValue().toString()])));
+                            break;
+                        case MILITARY_UNIT_ABILITY.DAMAGE_BONUS_PERCENT_TANK_ARMOR:
+                            _local_2 = (_local_2 + ("\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsBonusVsTank", [_local_4.GetValue().toString()])));
+                            break;
+                    };
+                };
+                if (_local_3.IsProducible())
+                {
+                    _local_2 = (_local_2 + ("\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsAttackPriority", [_local_3.GetCombatPriority().toString()])));
+                };
+            }
+            else
+            {
+                _local_5 = (_local_1 as cMilitaryUnitDescription);
+                headline.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, text);
+                if (_local_5.GetSkill(MILLITARY_UNIT_SKILLS.FIRST_STRIKE))
+                {
+                    _local_6 = MILLITARY_UNIT_SKILLS.toString(MILLITARY_UNIT_SKILLS.FIRST_STRIKE);
+                }
+                else
+                {
+                    if (_local_5.GetSkill(MILLITARY_UNIT_SKILLS.LAST_STRIKE))
+                    {
+                        _local_6 = MILLITARY_UNIT_SKILLS.toString(MILLITARY_UNIT_SKILLS.LAST_STRIKE);
+                    }
+                    else
+                    {
+                        _local_6 = "InitiativeNormal";
+                    };
+                };
+                _local_2 = (("\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, text)) + "\n");
+                if (((_local_5.IsAttackable()) && (_local_5.CanAttack())))
+                {
+                    _local_2 = (_local_2 + ("\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsHitpoints", [_local_5.GetHitPoints().toString()])));
+                    _local_2 = (_local_2 + ("\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsDamage", [_local_5.GetMissDamage().toString(), _local_5.GetHitDamage().toString()])));
+                    _local_2 = (_local_2 + ("\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsAccuracy", [_local_5.GetHitPercentage().toString()])));
+                    _local_2 = (_local_2 + ("\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsInitiative", [("UnitSkill" + _local_6)])));
+                    _local_7 = "";
+                    for each (_local_8 in _local_5.GetSkills())
+                    {
+                        if (((!(_local_8.GetType() == MILLITARY_UNIT_SKILLS.FIRST_STRIKE)) && (!(_local_8.GetType() == MILLITARY_UNIT_SKILLS.LAST_STRIKE))))
+                        {
+                            _local_7 = (_local_7 + ("\n- " + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, ("UnitSkill" + MILLITARY_UNIT_SKILLS.toString(_local_8.GetType())))));
+                        };
+                    };
+                    if (_local_7.length > 0)
+                    {
+                        _local_2 = (_local_2 + (("\n\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsSkills")) + _local_7));
+                    };
+                };
+            };
+            if (this.skillBonusPercentage != 0)
+            {
+                _local_2 = (_local_2 + ("\n\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "MilitarySkillBonus", [this.skillBonusPercentage])));
+            };
+            description.text = _local_2;
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            if (!cLocaManager.GetInstance().IsInitialized())
+            {
+                return;
+            };
+            invalidateProperties();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+    ]]></mx:Script>
+</tip:BasicDescriptionTip>

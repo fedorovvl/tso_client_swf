@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="480" height="324">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.LegacyMxmlContent;
+        import GUI.Loca.cLocaManager;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.styleName = "contentGeneratorRewardPanel";
+            this.minHeight = 324;
+            LegacyMxmlContent.createChildren(buttonCanvas);
+            var contentTargets:Array = [contentBox, buttonCanvas];
+            hideContent.targets = contentTargets;
+            hideContent.value = false;
+            fadeContent.targets = contentTargets;
+            fadeContent.value = 0;
+            resizeEffect.target = this;
+            fadeIn.target = this;
+            showContent.targets = contentTargets;
+            showContent.value = true;
+            fadeContentIn.targets = contentTargets;
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            if (!cLocaManager.GetInstance().IsInitialized()) return;
+            var label:* = cLocaManager.GetInstance().getLabel("ClaimReward");
+            claimRewardsLabel.text = ((label == undefined) ? null : String(label));
+        }
+    ]]></mx:Script>
+
+    <mx:Sequence id="showEffect">
+        <mx:SetPropertyAction id="hideContent" name="visible" />
+        <mx:SetPropertyAction id="fadeContent" name="alpha" />
+        <mx:Parallel>
+            <mx:Resize id="resizeEffect" heightFrom="0" heightTo="328" widthFrom="0" widthTo="480" />
+            <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" />
+        </mx:Parallel>
+        <mx:SetPropertyAction id="showContent" name="visible" />
+        <mx:Fade id="fadeContentIn" alphaFrom="0" alphaTo="1" />
+    </mx:Sequence>
+
+    <mx:VBox id="contentBox" top="70" left="25" right="25" bottom="80" />
+    <mx:Canvas id="buttonCanvas" left="25" right="25" bottom="35" height="50">
+        <mx:HBox id="buttonContainer" horizontalAlign="center" left="40" right="40" percentHeight="100">
+            <gui:TSOImage id="leftButtonDeco" width="49" height="42" source="{gAssetManager.GetClass('ContentGeneratorButtonDecoLeft')}" />
+            <mx:Canvas id="claimRewards" horizontalCenter="0" verticalCenter="0" height="42" width="112" styleName="contentGeneratorCategoryButton">
+                <gui:CustomLabel id="claimRewardsLabel" color="0xFFFFFF" horizontalCenter="-3" textAlign="center" verticalCenter="-2" />
+            </mx:Canvas>
+            <gui:TSOImage id="rightButtonDeco" width="49" height="42" source="{gAssetManager.GetClass('ContentGeneratorButtonDecoRight')}" />
+        </mx:HBox>
+    </mx:Canvas>
+</mx:Canvas>

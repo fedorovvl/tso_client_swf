@@ -1,0 +1,18 @@
+<flex-config>
+  <compiler>
+    <external-library-path>
+      <path-element>sdk/3.6.0/frameworks/libs/player/10/playerglobal.swc</path-element>
+    </external-library-path>
+    <library-path>
+      <path-element>sdk/3.6.0/frameworks/libs/framework.swc</path-element>
+      <path-element>sdk/3.6.0/frameworks/locale/en_US/framework_rb.swc</path-element>
+      <path-element>sdk/3.6.0/frameworks/locale/en_US/rpc_rb.swc</path-element>
+    </library-path>
+    <keep-all-type-selectors>true</keep-all-type-selectors>
+    <locale>
+      <locale-element>en_US</locale-element>
+    </locale>
+    <show-actionscript-warnings>false</show-actionscript-warnings>
+  </compiler>
+  <target-player>10.0.0</target-player>
+</flex-config>

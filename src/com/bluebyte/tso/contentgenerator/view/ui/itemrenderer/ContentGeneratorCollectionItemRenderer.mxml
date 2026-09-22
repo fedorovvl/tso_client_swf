@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="68" height="85">
+    <mx:Script><![CDATA[
+        import flash.events.MouseEvent;
+        import flash.filters.GlowFilter;
+        import converted.bluebyte.tso.contentgenerator.logic.ContentGeneratorContent;
+        import GUI.Assets.gAssetManager;
+        import GUI.greyFilter;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+
+        private var collection:ContentGeneratorContent;
+
+        protected function canvas1_mouseOverHandler(event:MouseEvent):void
+        {
+            if (this.collection.GetIsEnabled())
+            {
+                this.bgImage.source = gAssetManager.GetClass("congen_collection_mouseover");
+            };
+        }
+
+        protected function canvas1_mouseOutHandler(event:MouseEvent):void
+        {
+            if (this.collection.GetIsEnabled())
+            {
+                if (!this.collection.selected)
+                {
+                    this.bgImage.source = gAssetManager.GetClass("congen_collection");
+                }
+                else
+                {
+                    this.bgImage.source = gAssetManager.GetClass("congen_collection_pushed");
+                };
+            };
+        }
+
+        override public function set data(value:Object):void
+        {
+            var filters:Array;
+            super.data = value;
+            this.collection = (value as ContentGeneratorContent);
+            if (this.collection == null)
+            {
+                return;
+            };
+            filters = new Array();
+            if (this.collection.selected)
+            {
+                this.bgImage.source = gAssetManager.GetClass("congen_collection_pushed");
+            }
+            else
+            {
+                this.bgImage.source = gAssetManager.GetClass("congen_collection");
+            };
+            this.bgImage.filters = [];
+            if (!this.collection.GetIsEnabled())
+            {
+                filters.push(greyFilter(0.5));
+                if (cLocaManager.GetInstance().IsInitialized())
+                {
+                    toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "disabledCollection", [this.collection.getPlayerLevel()]);
+                };
+            }
+            else
+            {
+                if (cLocaManager.GetInstance().IsInitialized())
+                {
+                    toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, this.collection.getName());
+                };
+            };
+            if (((!(globalFlash.gui.mContentGeneratorPanel.WasItemEnabled(this.collection.getName()))) && (this.collection.GetIsEnabled())))
+            {
+                filters.push(new GlowFilter(16441444, 1, 10, 10, 4));
+            };
+            this.bgImage.filters = filters;
+            this.iconImage.source = gAssetManager.GetBuffIcon(this.collection.getIcon());
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            addEventListener(MouseEvent.MOUSE_OVER, canvas1_mouseOverHandler);
+            addEventListener(MouseEvent.MOUSE_OUT, canvas1_mouseOutHandler);
+        }
+    ]]></mx:Script>
+
+    <gui:TSOImage id="bgImage" width="62" height="62" top="6" left="4" />
+    <gui:TSOImage id="iconImage" width="54" height="65" top="5" left="8" />
+</mx:Canvas>

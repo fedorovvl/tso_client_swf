@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="169" height="283">
+    <mx:Script><![CDATA[
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import flash.events.Event;
+
+        [Embed(source="../../../assets/embedded/camera/camera_x_mouseover.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_camera_x_mouseover_png_1943825131:Class;
+
+        [Embed(source="../../../assets/embedded/camera/camera_x_push.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_camera_x_push_png_1286838069:Class;
+
+        [Embed(source="../../../assets/embedded/camera/camera_x_standard.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_camera_x_standard_png_1640939189:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_animals_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_animals_mo_png_813373771:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_animals_off_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_animals_off_mo_png_991284757:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_animals_off_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_animals_off_std_png_2059927829:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_animals_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_animals_std_png_642129589:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_bolder_stones_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_bolder_stones_mo_png_1446953781:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_bolder_stones_off_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_bolder_stones_off_mo_png_1448622891:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_bolder_stones_off_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_bolder_stones_off_std_png_968484053:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_bolder_stones_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_bolder_stones_std_png_1006104885:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_buff_animation_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_buff_animation_mo_png_552071477:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_buff_animation_off_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_buff_animation_off_mo_png_951951573:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_buff_animation_off_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_buff_animation_off_std_png_1394086347:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_buff_animation_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_buff_animation_std_png_320678251:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_full_warehouse_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_full_warehouse_mo_png_803730069:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_full_warehouse_off_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_full_warehouse_off_mo_png_12444981:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_full_warehouse_off.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_full_warehouse_off_png_218474443:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_full_warehouse_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_full_warehouse_std_png_1811633813:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_missing_resources_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_resources_mo_png_1218954005:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_missing_resources_off_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_resources_off_mo_png_59066187:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_missing_resources_off.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_resources_off_png_969030475:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_missing_resources_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_resources_std_png_943565013:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_missing_settler_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_settler_mo_png_1945425621:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_missing_settler_off_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_settler_off_mo_png_1273482293:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_missing_settler_off.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_settler_off_png_850169675:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_missing_settler_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_settler_std_png_1399685611:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_smoke_animation_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_smoke_animation_mo_png_2095239349:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_smoke_animation_off_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_smoke_animation_off_mo_png_1142427435:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_smoke_animation_off_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_smoke_animation_off_std_png_1570559669:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_smoke_animation_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_smoke_animation_std_png_1296236053:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_stopped_production_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_stopped_production_mo_png_568187605:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_stopped_production_off_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_stopped_production_off_mo_png_1648895307:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_stopped_production_off.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_stopped_production_off_png_1075331883:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_stopped_production_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_stopped_production_std_png_1930957099:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_text_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_text_mo_png_745747669:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_text_off_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_text_off_mo_png_645275317:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_text_off_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_text_off_std_png_1600518965:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_text_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_text_std_png_65539285:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_walking_general_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_general_mo_png_1947969867:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_walking_general_off_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_general_off_mo_png_1075329003:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_walking_general_off_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_general_off_std_png_1644669227:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_walking_general_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_general_std_png_850855627:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_walking_settler_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_settler_mo_png_15673163:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_walking_settler_off_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_settler_off_mo_png_1125745131:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_walking_settler_off_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_settler_off_std_png_1646571371:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_display_walking_settler_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_settler_std_png_1115095499:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_loading_graphics_halfsize_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_loading_graphics_halfsize_mo_png_1163375819:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_loading_graphics_halfsize_off_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_loading_graphics_halfsize_off_mo_png_865813867:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_loading_graphics_halfsize_off_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_loading_graphics_halfsize_off_std_png_1379410731:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_loading_graphics_halfsize_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_loading_graphics_halfsize_std_png_574478517:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_minus_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_mo_png_1223703189:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_minus_off_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_off_mo_png_604830923:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_minus_off_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_off_std_png_4285621:Class;
+
+        [Embed(source="../../../assets/gAssetManager/OptionsButtonMinus.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_std_png_45568533:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_plus_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_mo_png_1059700555:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_plus_off_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_off_mo_png_1749577429:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_plus_off_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_off_std_png_399181013:Class;
+
+        [Embed(source="../../../assets/gAssetManager/OptionsButtonPlus.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_std_png_1994400565:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_volume_music_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_music_mo_png_1013069365:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_volume_music_off_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_music_off_mo_png_968479083:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_volume_music_off_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_music_off_std_png_1620690283:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_volume_music_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_music_std_png_484905781:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_volume_sounds_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_sounds_mo_png_556332011:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_volume_sounds_off_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_sounds_off_mo_png_1534718645:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_volume_sounds_off_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_sounds_off_std_png_367684971:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_volume_sounds_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_sounds_std_png_333972171:Class;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.verticalScrollPolicy = "off";
+            this.horizontalScrollPolicy = "off";
+            this.styleName = "optionsPanel";
+            LegacyMxmlContent.createChildren(mainBox);
+            btnClose.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_camera_x_standard_png_1640939189);
+            btnClose.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_camera_x_push_png_1286838069);
+            btnClose.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_camera_x_mouseover_png_1943825131);
+            btnClose.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_camera_x_standard_png_1640939189);
+            musicMute.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_music_std_png_484905781);
+            musicMute.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_music_mo_png_1013069365);
+            musicMute.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_music_mo_png_1013069365);
+            musicMute.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_music_std_png_484905781);
+            musicMute.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_music_off_std_png_1620690283);
+            musicMute.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_music_off_mo_png_968479083);
+            musicMute.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_music_off_mo_png_968479083);
+            musicMute.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_music_off_std_png_1620690283);
+            musicMinus.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_std_png_45568533);
+            musicMinus.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_mo_png_1223703189);
+            musicMinus.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_mo_png_1223703189);
+            musicMinus.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_std_png_45568533);
+            musicMinus.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_off_std_png_4285621);
+            musicMinus.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_off_mo_png_604830923);
+            musicMinus.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_off_mo_png_604830923);
+            musicMinus.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_off_std_png_4285621);
+            musicPlus.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_std_png_1994400565);
+            musicPlus.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_mo_png_1059700555);
+            musicPlus.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_mo_png_1059700555);
+            musicPlus.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_std_png_1994400565);
+            musicPlus.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_off_std_png_399181013);
+            musicPlus.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_off_mo_png_1749577429);
+            musicPlus.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_off_mo_png_1749577429);
+            musicPlus.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_off_std_png_399181013);
+            sfxMute.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_sounds_std_png_333972171);
+            sfxMute.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_sounds_mo_png_556332011);
+            sfxMute.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_sounds_mo_png_556332011);
+            sfxMute.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_sounds_std_png_333972171);
+            sfxMute.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_sounds_off_std_png_367684971);
+            sfxMute.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_sounds_off_mo_png_1534718645);
+            sfxMute.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_sounds_off_mo_png_1534718645);
+            sfxMute.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_volume_sounds_off_std_png_367684971);
+            sfxMinus.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_std_png_45568533);
+            sfxMinus.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_mo_png_1223703189);
+            sfxMinus.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_mo_png_1223703189);
+            sfxMinus.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_std_png_45568533);
+            sfxMinus.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_off_std_png_4285621);
+            sfxMinus.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_off_mo_png_604830923);
+            sfxMinus.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_off_mo_png_604830923);
+            sfxMinus.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_minus_off_std_png_4285621);
+            sfxPlus.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_std_png_1994400565);
+            sfxPlus.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_mo_png_1059700555);
+            sfxPlus.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_mo_png_1059700555);
+            sfxPlus.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_std_png_1994400565);
+            sfxPlus.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_off_std_png_399181013);
+            sfxPlus.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_off_mo_png_1749577429);
+            sfxPlus.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_off_mo_png_1749577429);
+            sfxPlus.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_plus_off_std_png_399181013);
+            halfSizeImagesButton.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_loading_graphics_halfsize_std_png_574478517);
+            halfSizeImagesButton.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_loading_graphics_halfsize_mo_png_1163375819);
+            halfSizeImagesButton.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_loading_graphics_halfsize_mo_png_1163375819);
+            halfSizeImagesButton.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_loading_graphics_halfsize_std_png_574478517);
+            halfSizeImagesButton.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_loading_graphics_halfsize_off_std_png_1379410731);
+            halfSizeImagesButton.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_loading_graphics_halfsize_off_mo_png_865813867);
+            halfSizeImagesButton.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_loading_graphics_halfsize_off_mo_png_865813867);
+            halfSizeImagesButton.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_loading_graphics_halfsize_off_std_png_1379410731);
+            buffAnimationButton.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_buff_animation_std_png_320678251);
+            buffAnimationButton.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_buff_animation_mo_png_552071477);
+            buffAnimationButton.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_buff_animation_mo_png_552071477);
+            buffAnimationButton.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_buff_animation_std_png_320678251);
+            buffAnimationButton.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_buff_animation_off_std_png_1394086347);
+            buffAnimationButton.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_buff_animation_off_mo_png_951951573);
+            buffAnimationButton.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_buff_animation_off_mo_png_951951573);
+            buffAnimationButton.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_buff_animation_off_std_png_1394086347);
+            sectorMarkersButton.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_bolder_stones_std_png_1006104885);
+            sectorMarkersButton.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_bolder_stones_mo_png_1446953781);
+            sectorMarkersButton.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_bolder_stones_mo_png_1446953781);
+            sectorMarkersButton.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_bolder_stones_std_png_1006104885);
+            sectorMarkersButton.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_bolder_stones_off_std_png_968484053);
+            sectorMarkersButton.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_bolder_stones_off_mo_png_1448622891);
+            sectorMarkersButton.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_bolder_stones_off_mo_png_1448622891);
+            sectorMarkersButton.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_bolder_stones_off_std_png_968484053);
+            generalMarkerButton.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_general_std_png_850855627);
+            generalMarkerButton.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_general_mo_png_1947969867);
+            generalMarkerButton.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_general_mo_png_1947969867);
+            generalMarkerButton.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_general_std_png_850855627);
+            generalMarkerButton.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_general_off_std_png_1644669227);
+            generalMarkerButton.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_general_off_mo_png_1075329003);
+            generalMarkerButton.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_general_off_mo_png_1075329003);
+            generalMarkerButton.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_general_off_std_png_1644669227);
+            generalTextButton.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_text_std_png_65539285);
+            generalTextButton.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_text_mo_png_745747669);
+            generalTextButton.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_text_mo_png_745747669);
+            generalTextButton.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_text_std_png_65539285);
+            generalTextButton.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_text_off_std_png_1600518965);
+            generalTextButton.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_text_off_mo_png_645275317);
+            generalTextButton.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_text_off_mo_png_645275317);
+            generalTextButton.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_text_off_std_png_1600518965);
+            settlersButton.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_settler_std_png_1115095499);
+            settlersButton.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_settler_mo_png_15673163);
+            settlersButton.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_settler_mo_png_15673163);
+            settlersButton.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_settler_std_png_1115095499);
+            settlersButton.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_settler_off_std_png_1646571371);
+            settlersButton.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_settler_off_mo_png_1125745131);
+            settlersButton.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_settler_off_mo_png_1125745131);
+            settlersButton.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_walking_settler_off_std_png_1646571371);
+            animalsButton.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_animals_std_png_642129589);
+            animalsButton.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_animals_mo_png_813373771);
+            animalsButton.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_animals_mo_png_813373771);
+            animalsButton.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_animals_std_png_642129589);
+            animalsButton.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_animals_off_std_png_2059927829);
+            animalsButton.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_animals_off_mo_png_991284757);
+            animalsButton.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_animals_off_mo_png_991284757);
+            animalsButton.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_animals_off_std_png_2059927829);
+            smokeButton.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_smoke_animation_std_png_1296236053);
+            smokeButton.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_smoke_animation_mo_png_2095239349);
+            smokeButton.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_smoke_animation_mo_png_2095239349);
+            smokeButton.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_smoke_animation_std_png_1296236053);
+            smokeButton.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_smoke_animation_off_std_png_1570559669);
+            smokeButton.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_smoke_animation_off_mo_png_1142427435);
+            smokeButton.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_smoke_animation_off_mo_png_1142427435);
+            smokeButton.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_smoke_animation_off_std_png_1570559669);
+            showMissingSettlerButton.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_settler_std_png_1399685611);
+            showMissingSettlerButton.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_settler_mo_png_1945425621);
+            showMissingSettlerButton.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_settler_mo_png_1945425621);
+            showMissingSettlerButton.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_settler_std_png_1399685611);
+            showMissingSettlerButton.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_settler_off_png_850169675);
+            showMissingSettlerButton.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_settler_off_mo_png_1273482293);
+            showMissingSettlerButton.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_settler_off_mo_png_1273482293);
+            showMissingSettlerButton.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_settler_off_png_850169675);
+            showMissingResourcesButton.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_resources_std_png_943565013);
+            showMissingResourcesButton.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_resources_mo_png_1218954005);
+            showMissingResourcesButton.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_resources_mo_png_1218954005);
+            showMissingResourcesButton.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_resources_std_png_943565013);
+            showMissingResourcesButton.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_resources_off_png_969030475);
+            showMissingResourcesButton.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_resources_off_mo_png_59066187);
+            showMissingResourcesButton.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_resources_off_mo_png_59066187);
+            showMissingResourcesButton.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_missing_resources_off_png_969030475);
+            showFullWarehouseButton.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_full_warehouse_std_png_1811633813);
+            showFullWarehouseButton.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_full_warehouse_mo_png_803730069);
+            showFullWarehouseButton.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_full_warehouse_mo_png_803730069);
+            showFullWarehouseButton.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_full_warehouse_std_png_1811633813);
+            showFullWarehouseButton.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_full_warehouse_off_png_218474443);
+            showFullWarehouseButton.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_full_warehouse_off_mo_png_12444981);
+            showFullWarehouseButton.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_full_warehouse_off_mo_png_12444981);
+            showFullWarehouseButton.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_full_warehouse_off_png_218474443);
+            showStoppedProductionButton.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_stopped_production_std_png_1930957099);
+            showStoppedProductionButton.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_stopped_production_mo_png_568187605);
+            showStoppedProductionButton.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_stopped_production_mo_png_568187605);
+            showStoppedProductionButton.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_stopped_production_std_png_1930957099);
+            showStoppedProductionButton.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_stopped_production_off_png_1075331883);
+            showStoppedProductionButton.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_stopped_production_off_mo_png_1648895307);
+            showStoppedProductionButton.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_stopped_production_off_mo_png_1648895307);
+            showStoppedProductionButton.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_display_stopped_production_off_png_1075331883);
+            _PlayerOptionsPanel_TSOImage1.source = gAssetManager.GetClass("OptionsPanelSeparator");
+            _PlayerOptionsPanel_TSOImage2.source = gAssetManager.GetClass("OptionsPanelSeparator");
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            if (!cLocaManager.GetInstance().IsInitialized()) return;
+            var value:*;
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "OptionButtonMuteMusic");
+            musicMute.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "OptionButtonMusicMinus");
+            musicMinus.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "OptionButtonMusicPlus");
+            musicPlus.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "OptionButtonMuteSfx");
+            sfxMute.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "OptionButtonSfxMinus");
+            sfxMinus.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "OptionButtonSfxPlus");
+            sfxPlus.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "OptionButtonHalfSizeGraphics");
+            halfSizeImagesButton.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "OptionButtonBuffAnimations");
+            buffAnimationButton.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "OptionButtonSectorMarkers");
+            sectorMarkersButton.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "OptionButtonGeneralMarkers");
+            generalMarkerButton.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "OptionButtonGeneralText");
+            generalTextButton.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "OptionButtonSettlers");
+            settlersButton.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "OptionButtonAnimals");
+            animalsButton.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "OptionButtonSmoke");
+            smokeButton.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "OptionButtonMissingSettler");
+            showMissingSettlerButton.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "OptionButtonMissingResources");
+            showMissingResourcesButton.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "OptionButtonFullWarehouse");
+            showFullWarehouseButton.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "OptionButtonStoppedProduction");
+            showStoppedProductionButton.toolTip = ((value == undefined) ? null : String(value));
+        }
+    ]]></mx:Script>
+
+    <mx:Button id="btnClose" width="13" height="13" right="5" top="4" />
+    <mx:VBox id="mainBox" left="12" right="10" top="22" bottom="15">
+        <mx:HBox horizontalGap="1">
+            <mx:Button id="musicMute" width="30" height="31" toggle="true" />
+            <gui:StandardButton id="musicMinus" width="30" height="31" />
+            <gui:VolumeControl id="musicVolume" width="50" height="32" />
+            <gui:StandardButton id="musicPlus" width="30" height="31" />
+        </mx:HBox>
+        <mx:HBox horizontalGap="1">
+            <gui:StandardButton id="sfxMute" width="30" height="31" />
+            <gui:StandardButton id="sfxMinus" width="30" height="31" />
+            <gui:VolumeControl id="sfxVolume" width="50" height="32" />
+            <gui:StandardButton id="sfxPlus" width="30" height="31" />
+        </mx:HBox>
+        <mx:Canvas height="20" percentWidth="100" backgroundAlpha="0" />
+        <mx:HBox horizontalAlign="right" horizontalGap="5">
+            <gui:StandardButton id="halfSizeImagesButton" width="30" height="31" toggle="false" />
+            <gui:StandardButton id="buffAnimationButton" width="30" height="31" toggle="true" />
+            <gui:StandardButton id="sectorMarkersButton" width="30" height="31" toggle="true" />
+            <gui:StandardButton id="generalMarkerButton" width="30" height="31" toggle="true" />
+        </mx:HBox>
+        <mx:HBox horizontalAlign="right" horizontalGap="5">
+            <gui:StandardButton id="generalTextButton" width="30" height="31" toggle="true" />
+            <gui:StandardButton id="settlersButton" width="30" height="31" toggle="true" />
+            <gui:StandardButton id="animalsButton" width="30" height="31" toggle="true" />
+            <gui:StandardButton id="smokeButton" width="30" height="31" toggle="true" />
+        </mx:HBox>
+        <mx:Canvas height="20" percentWidth="100" backgroundAlpha="0" />
+        <mx:HBox horizontalAlign="right" horizontalGap="5">
+            <gui:StandardButton id="showMissingSettlerButton" width="30" height="31" toggle="true" />
+            <gui:StandardButton id="showMissingResourcesButton" width="30" height="31" toggle="true" />
+            <gui:StandardButton id="showFullWarehouseButton" width="30" height="31" toggle="true" />
+            <gui:StandardButton id="showStoppedProductionButton" width="30" height="31" toggle="true" />
+        </mx:HBox>
+    </mx:VBox>
+    <gui:TSOImage id="_PlayerOptionsPanel_TSOImage1" left="4" top="96" width="163" height="20" />
+    <gui:TSOImage id="_PlayerOptionsPanel_TSOImage2" left="4" top="197" width="163" height="20" />
+</mx:Canvas>

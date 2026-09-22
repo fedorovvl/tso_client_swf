@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="504" height="317">
+    <mx:Script><![CDATA[
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import flash.events.TextEvent;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ItemRenderer.TradeDetailsItemRenderer;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Loca.cLocaManager;
+        import mx.containers.Canvas;
+        import mx.containers.HBox;
+        import mx.containers.VBox;
+        import mx.controls.Image;
+        import mx.core.ClassFactory;
+        import mx.core.DeferredInstanceFromFunction;
+        import mx.events.FlexEvent;
+        import mx.events.SliderEvent;
+        import mx.events.ToolTipEvent;
+        import mx.states.AddChild;
+        import mx.states.RemoveChild;
+        import mx.states.SetProperty;
+        import mx.states.SetStyle;
+        import mx.states.State;
+
+        public var stateSelect:State;
+        public var resourceList:CustomTileList;
+        public var searchColumn:TradeSearchColumn;
+        public var buffIcon:StarMenuItemRenderer;
+        public var resourceIcon:Image;
+        public var resourceName:CustomLabel;
+        public var selectedCount:CustomTextInput;
+        public var maximumCount:CustomLabel;
+        public var amountSlider:ExtendedHSlider;
+        public var btnOK:StandardButton;
+        public var cancelBtn:StandardButton;
+        public var buttonBox:ReversableHBox;
+
+        private var selectDescTextProp:SetProperty;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            setStyle("horizontalCenter", 0);
+            setStyle("verticalCenter", 0);
+            styleName = "specialPanel";
+            imgArrowRight.source = gAssetManager.GetBitmap("ArrowRightGreen");
+            imgArrowLeft.source = gAssetManager.GetBitmap("ArrowLeftGreen");
+            imgOfferPlaceholder.source = gAssetManager.GetBitmap("QuestionMark");
+            imgCostPlaceholder.source = gAssetManager.GetBitmap("QuestionMark");
+            offerResourceRenderer.addEventListener("show", updateOfferPlaceholder);
+            offerResourceRenderer.addEventListener("hide", updateOfferPlaceholder);
+            offerBuffRenderer.addEventListener("show", updateOfferPlaceholder);
+            offerBuffRenderer.addEventListener("hide", updateOfferPlaceholder);
+            costResourceRenderer.addEventListener("show", updateCostPlaceholder);
+            costResourceRenderer.addEventListener("hide", updateCostPlaceholder);
+            costBuffVORenderer.addEventListener("show", updateCostPlaceholder);
+            costBuffVORenderer.addEventListener("hide", updateCostPlaceholder);
+            updateOfferPlaceholder();
+            updateCostPlaceholder();
+            addEventListener("show", resetBaseState, false, 0, true);
+            playerName.addEventListener("toolTipCreate", __playerName_toolTipCreate, false, 0, true);
+            labelMiddleColumn.addEventListener("toolTipCreate", __labelMiddleColumn_toolTipCreate, false, 0, true);
+            reciepientName.addEventListener("toolTipCreate", __reciepientName_toolTipCreate, false, 0, true);
+            lotAmountSlider.addEventListener("change", __lotAmountSlider_change, false, 0, true);
+            btnUnlimitedLots.addEventListener("toolTipCreate", __btnUnlimitedLots_toolTipCreate, false, 0, true);
+            btnSendTrade.addEventListener("toolTipCreate", __btnSendTrade_toolTipCreate, false, 0, true);
+            buildStates();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+            refreshLabels();
+        }
+
+        private function loca(key:String):String
+        {
+            var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key);
+            return value == undefined ? null : String(value);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            if (!cLocaManager.GetInstance().IsInitialized())
+            {
+                return;
+            }
+            titleLabel.text = loca("Trade");
+            offerHeaderLabel.text = loca("WareToDeliver");
+            costHeaderLabel.text = loca("WareToRecieve");
+            btnSelectOffer.label = loca("Select");
+            btnSelectCost.label = loca("Select");
+            btnUnlimitedLots.label = loca("UnlimitLots");
+            if (selectDescTextProp != null)
+            {
+                selectDescTextProp.value = loca("Select");
+                if (currentState == "select")
+                {
+                    description.text = loca("Select");
+                }
+            }
+        }
+
+        private function updateOfferPlaceholder(event:Event = null):void
+        {
+            imgOfferPlaceholder.visible = !(offerResourceRenderer.visible || offerBuffRenderer.visible);
+        }
+
+        private function updateCostPlaceholder(event:Event = null):void
+        {
+            imgCostPlaceholder.visible = !(costResourceRenderer.visible || costBuffVORenderer.visible);
+        }
+
+        private function updateEnabled(event:Event = null):void
+        {
+            if (selectedCount != null && amountSlider != null)
+            {
+                selectedCount.enabled = amountSlider.enabled;
+            }
+        }
+
+        private function buildStates():void
+        {
+            var selectState:State = new State();
+            selectState.name = "select";
+            var addSelect:AddChild = new AddChild();
+            addSelect.position = "firstChild";
+            addSelect.targetFactory = new DeferredInstanceFromFunction(createSelectHBox);
+            var dropTradeContent:RemoveChild = new RemoveChild();
+            dropTradeContent.target = tradeContent;
+            var growWidth:SetProperty = new SetProperty();
+            growWidth.target = this;
+            growWidth.name = "width";
+            growWidth.value = 730;
+            var growHeight:SetProperty = new SetProperty();
+            growHeight.target = this;
+            growHeight.name = "height";
+            growHeight.value = 492;
+            var widenHeader:SetProperty = new SetProperty();
+            widenHeader.target = header;
+            widenHeader.name = "width";
+            widenHeader.value = 474;
+            var shrinkHeader:SetProperty = new SetProperty();
+            shrinkHeader.target = header;
+            shrinkHeader.name = "height";
+            shrinkHeader.value = 30;
+            selectDescTextProp = new SetProperty();
+            selectDescTextProp.target = description;
+            selectDescTextProp.name = "text";
+            selectDescTextProp.value = loca("Select");
+            var dropDescRight:SetStyle = new SetStyle();
+            dropDescRight.target = description;
+            dropDescRight.name = "right";
+            var dropHeaderRight:SetStyle = new SetStyle();
+            dropHeaderRight.target = header;
+            dropHeaderRight.name = "right";
+            var pinHeaderLeft:SetStyle = new SetStyle();
+            pinHeaderLeft.target = header;
+            pinHeaderLeft.name = "left";
+            pinHeaderLeft.value = 26;
+            var centerDesc:SetStyle = new SetStyle();
+            centerDesc.target = description;
+            centerDesc.name = "horizontalCenter";
+            centerDesc.value = 0;
+            var addButtons:AddChild = new AddChild();
+            addButtons.position = "lastChild";
+            addButtons.targetFactory = new DeferredInstanceFromFunction(createButtonBox);
+            var addRuler:AddChild = new AddChild();
+            addRuler.position = "lastChild";
+            addRuler.targetFactory = new DeferredInstanceFromFunction(createStateHr);
+            selectState.overrides = [addSelect, dropTradeContent, growWidth, growHeight, widenHeader,
+                shrinkHeader, selectDescTextProp, dropDescRight, dropHeaderRight, pinHeaderLeft,
+                centerDesc, addButtons, addRuler];
+            stateSelect = selectState;
+            states = [selectState];
+        }
+
+        private function createSelectHBox():HBox
+        {
+            var selectHBox:HBox = new HBox();
+            selectHBox.height = 396;
+            selectHBox.setStyle("left", "32");
+            selectHBox.setStyle("top", "34");
+            selectHBox.setStyle("verticalAlign", "bottom");
+            selectHBox.setStyle("horizontalGap", 2);
+            if (!selectHBox.document)
+            {
+                selectHBox.document = this;
+            }
+            var listColumn:VBox = new VBox();
+            listColumn.percentHeight = 100;
+            listColumn.setStyle("paddingTop", 30);
+            if (!listColumn.document)
+            {
+                listColumn.document = this;
+            }
+            var listCanvas:Canvas = new Canvas();
+            listCanvas.styleName = "detailsContentBox";
+            listCanvas.width = 473;
+            listCanvas.percentHeight = 100;
+            listCanvas.horizontalScrollPolicy = "off";
+            listCanvas.verticalScrollPolicy = "off";
+            if (!listCanvas.document)
+            {
+                listCanvas.document = this;
+            }
+            resourceList = new CustomTileList();
+            resourceList.itemRenderer = new ClassFactory(TradeDetailsItemRenderer);
+            resourceList.setStyle("horizontalCenter", "0");
+            resourceList.setStyle("right", "2");
+            resourceList.setStyle("left", "35");
+            resourceList.setStyle("top", "8");
+            resourceList.setStyle("bottom", "0");
+            resourceList.setStyle("backgroundAlpha", 0);
+            resourceList.setStyle("borderThickness", 0);
+            resourceList.setStyle("paddingBottom", 0);
+            resourceList.setStyle("paddingLeft", 0);
+            resourceList.setStyle("paddingRight", 0);
+            resourceList.setStyle("paddingTop", 0);
+            resourceList.setStyle("useRollOver", false);
+            resourceList.id = "resourceList";
+            if (!resourceList.document)
+            {
+                resourceList.document = this;
+            }
+            listCanvas.addChild(resourceList);
+            listColumn.addChild(listCanvas);
+            var detailCanvas:Canvas = new Canvas();
+            detailCanvas.styleName = "detailsSubHeader";
+            detailCanvas.width = 473;
+            detailCanvas.height = 69;
+            detailCanvas.verticalScrollPolicy = "off";
+            detailCanvas.horizontalScrollPolicy = "off";
+            detailCanvas.setStyle("bottom", "0");
+            if (!detailCanvas.document)
+            {
+                detailCanvas.document = this;
+            }
+            buffIcon = new StarMenuItemRenderer();
+            buffIcon.visible = false;
+            buffIcon.showAmount = false;
+            buffIcon.setStyle("left", "2");
+            buffIcon.setStyle("verticalCenter", "0");
+            buffIcon.id = "buffIcon";
+            if (!buffIcon.document)
+            {
+                buffIcon.document = this;
+            }
+            detailCanvas.addChild(buffIcon);
+            resourceIcon = new Image();
+            resourceIcon.visible = false;
+            resourceIcon.width = 26;
+            resourceIcon.height = 25;
+            resourceIcon.setStyle("left", "15");
+            resourceIcon.setStyle("verticalCenter", "0");
+            resourceIcon.id = "resourceIcon";
+            if (!resourceIcon.document)
+            {
+                resourceIcon.document = this;
+            }
+            detailCanvas.addChild(resourceIcon);
+            var detailBox:VBox = new VBox();
+            detailBox.width = 380;
+            detailBox.setStyle("left", "57");
+            detailBox.setStyle("bottom", "10");
+            detailBox.setStyle("verticalGap", 1);
+            if (!detailBox.document)
+            {
+                detailBox.document = this;
+            }
+            resourceName = new CustomLabel();
+            resourceName.setStyle("color", 0xFFFFFF);
+            resourceName.setStyle("fontWeight", "bold");
+            resourceName.id = "resourceName";
+            if (!resourceName.document)
+            {
+                resourceName.document = this;
+            }
+            detailBox.addChild(resourceName);
+            var countRow:HBox = new HBox();
+            countRow.setStyle("paddingLeft", 14);
+            countRow.setStyle("horizontalGap", 0);
+            countRow.setStyle("verticalAlign", "middle");
+            if (!countRow.document)
+            {
+                countRow.document = this;
+            }
+            selectedCount = new CustomTextInput();
+            selectedCount.height = 17;
+            selectedCount.width = 12;
+            selectedCount.styleName = "standardInput";
+            selectedCount.text = "";
+            selectedCount.restrict = "0-9";
+            selectedCount.setStyle("color", 0xFFFFFF);
+            selectedCount.setStyle("fontSize", 10);
+            selectedCount.setStyle("textAlign", "right");
+            selectedCount.id = "selectedCount";
+            if (!selectedCount.document)
+            {
+                selectedCount.document = this;
+            }
+            countRow.addChild(selectedCount);
+            maximumCount = new CustomLabel();
+            maximumCount.setStyle("fontSize", 10);
+            maximumCount.setStyle("color", 0xFFFFFF);
+            maximumCount.id = "maximumCount";
+            if (!maximumCount.document)
+            {
+                maximumCount.document = this;
+            }
+            countRow.addChild(maximumCount);
+            detailBox.addChild(countRow);
+            amountSlider = new ExtendedHSlider();
+            amountSlider.enabled = false;
+            amountSlider.minimum = 1;
+            amountSlider.percentWidth = 100;
+            amountSlider.id = "amountSlider";
+            if (!amountSlider.document)
+            {
+                amountSlider.document = this;
+            }
+            detailBox.addChild(amountSlider);
+            detailCanvas.addChild(detailBox);
+            listColumn.addChild(detailCanvas);
+            selectHBox.addChild(listColumn);
+            searchColumn = new TradeSearchColumn();
+            searchColumn.percentHeight = 100;
+            searchColumn.id = "searchColumn";
+            if (!searchColumn.document)
+            {
+                searchColumn.document = this;
+            }
+            selectHBox.addChild(searchColumn);
+            updateEnabled();
+            amountSlider.addEventListener("enabledChanged", updateEnabled, false, 0, true);
+            return selectHBox;
+        }
+
+        private function createButtonBox():ReversableHBox
+        {
+            buttonBox = new ReversableHBox();
+            buttonBox.setStyle("horizontalCenter", "0");
+            buttonBox.setStyle("bottom", "17");
+            buttonBox.id = "buttonBox";
+            if (!buttonBox.document)
+            {
+                buttonBox.document = this;
+            }
+            btnOK = new StandardButton();
+            btnOK.enabled = false;
+            btnOK.width = 120;
+            btnOK.height = 26;
+            btnOK.id = "btnOK";
+            btnOK.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            if (!btnOK.document)
+            {
+                btnOK.document = this;
+            }
+            buttonBox.addChild(btnOK);
+            cancelBtn = new StandardButton();
+            cancelBtn.width = 120;
+            cancelBtn.height = 26;
+            cancelBtn.addEventListener("click", resetBaseState, false, 0, true);
+            cancelBtn.id = "cancelBtn";
+            cancelBtn.setStyle("icon", gAssetManager.GetClass("ButtonIconAbort"));
+            if (!cancelBtn.document)
+            {
+                cancelBtn.document = this;
+            }
+            buttonBox.addChild(cancelBtn);
+            return buttonBox;
+        }
+
+        private function createStateHr():Canvas
+        {
+            var ruler:Canvas = new Canvas();
+            ruler.height = 3;
+            ruler.styleName = "hr";
+            ruler.setStyle("horizontalCenter", "0");
+            ruler.setStyle("bottom", "55");
+            ruler.setStyle("left", "19");
+            ruler.setStyle("right", "16");
+            if (!ruler.document)
+            {
+                ruler.document = this;
+            }
+            return ruler;
+        }
+
+        public function setFilters(value:Array):void
+        {
+            if (currentState == "select")
+            {
+                searchColumn.filterList.dataProvider = value;
+            }
+        }
+
+        protected function lotAmountInput_changeHandler(event:TextEvent):void
+        {
+            lotAmountSlider.value = Number(lotsCount.text);
+        }
+
+        protected function lotAmountSlider_changeHandler(event:SliderEvent):void
+        {
+            lotsCount.text = String(lotAmountSlider.value);
+        }
+
+        public function __lotAmountSlider_change(event:SliderEvent):void
+        {
+            lotAmountSlider_changeHandler(event);
+        }
+
+        private function resetBaseState(event:Event = null):void
+        {
+            currentState = "";
+        }
+
+        public function __playerName_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __reciepientName_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __labelMiddleColumn_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnUnlimitedLots_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.COST_string, event, {
+                "text":"UnlimitLots",
+                "HardCurrency":global.costOfUnlimitingLots
+            });
+        }
+
+        public function __btnSendTrade_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_ERROR_string, event, (!(btnSendTrade.enabled)));
+        }
+    ]]></mx:Script>
+    <gui:CustomLabel id="titleLabel" y="10" fontWeight="bold" color="0xFFFFFF" textAlign="center" horizontalCenter="0" />
+    <gui:CloseButton id="close" top="7" right="22" />
+    <mx:Canvas id="header" styleName="detailsHeader" height="60" left="26" right="24" top="32">
+        <gui:CustomText id="description" left="18" right="15" top="6" bottom="2" color="0xFFFFFF" selectable="false" />
+    </mx:Canvas>
+    <mx:HBox id="tradeContent" left="32" right="27" top="96" bottom="14" horizontalGap="3">
+        <mx:VBox percentWidth="100" percentHeight="100" verticalGap="0">
+            <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                <gui:CustomLabel id="offerHeaderLabel" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+            </mx:Canvas>
+            <mx:Canvas styleName="detailsContentBox" percentWidth="100" percentHeight="100">
+                <mx:Image id="imgArrowRight" right="0" verticalCenter="39" />
+                <mx:Canvas verticalCenter="0" left="5" styleName="tradeDetailsBoxLeft" width="100" height="180">
+                    <gui:TSOImage id="playerAvatar" top="3" horizontalCenter="-1" width="60" height="60" />
+                    <gui:CustomLabel id="playerName" width="100" horizontalCenter="0" top="52" color="0x322000" fontWeight="bold" textAlign="center" />
+            <mx:Image id="imgOfferPlaceholder" width="22" height="29" horizontalCenter="0" top="98" />
+                    <renderer:StarMenuItemRenderer id="offerBuffRenderer" horizontalCenter="0" top="75" visible="false" />
+                    <renderer:ResourceItemRenderer id="offerResourceRenderer" horizontalCenter="0" top="100" textAlign="center" visible="false" enableAmountCheck="false" />
+                    <gui:StandardButton id="btnSelectOffer" left="5" right="7" bottom="7" height="26" />
+                </mx:Canvas>
+            </mx:Canvas>
+        </mx:VBox>
+        <mx:VBox width="150" percentHeight="100" verticalGap="0">
+            <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                <gui:CustomLabel id="labelMiddleColumn" width="130" horizontalCenter="0" textAlign="center" color="0xFFFFFF" fontWeight="bold" />
+            </mx:Canvas>
+            <mx:Canvas styleName="detailsContentBox" percentWidth="100" percentHeight="100">
+                <mx:VBox id="lotSection" left="3" right="3" top="17" horizontalAlign="center">
+                    <mx:HBox horizontalGap="1">
+                        <gui:CustomTextInput id="lotsCount" styleName="standardInput" text="1" height="18" restrict="0-9" fontSize="10" color="0xFFFFFF" />
+                        <gui:CustomLabel id="maxLotLabel" fontSize="10" color="0xFFFFFF" />
+                    </mx:HBox>
+                    <gui:ExtendedHSlider id="lotAmountSlider" width="140" horizontalCenter="0" minimum="1" maximum="4" />
+                </mx:VBox>
+                <gui:StandardButton id="btnUnlimitedLots" width="140" height="26" horizontalCenter="0" enabled="false"
+                    icon="{gAssetManager.GetClass('IconMailTypeHardCurrency')}" />
+                <gui:StandardButton id="btnSendTrade" width="140" height="50" horizontalCenter="0" bottom="40" enabled="false" />
+                <gui:StandardButton id="btnBackToWindow" width="100" height="26" horizontalCenter="0" bottom="2"
+                    icon="{gAssetManager.GetClass('LoopBackward')}" />
+            </mx:Canvas>
+        </mx:VBox>
+        <mx:VBox percentWidth="100" percentHeight="100" verticalGap="0">
+            <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                <gui:CustomLabel id="costHeaderLabel" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+            </mx:Canvas>
+            <mx:Canvas styleName="detailsContentBox" percentWidth="100" percentHeight="100">
+                <mx:Image id="imgArrowLeft" left="0" verticalCenter="39" />
+                <mx:Canvas verticalCenter="0" right="3" styleName="tradeDetailsBoxLeft" width="100" height="180">
+                    <gui:TSOImage id="reciepientAvatar" top="3" horizontalCenter="-1" width="60" height="60" />
+                    <gui:CustomLabel id="reciepientName" width="100" horizontalCenter="0" top="52" color="0x322000" fontWeight="bold" textAlign="center" />
+            <mx:Image id="imgCostPlaceholder" width="22" height="29" horizontalCenter="0" top="96" />
+                    <renderer:StarMenuItemRenderer id="costBuffVORenderer" horizontalCenter="0" top="75" visible="false" />
+                    <renderer:ResourceItemRenderer id="costResourceRenderer" height="30" horizontalCenter="0" top="100" textAlign="center" visible="false" enableAmountCheck="false" />
+                    <gui:StandardButton id="btnSelectCost" left="5" right="7" bottom="7" height="26" />
+                </mx:Canvas>
+            </mx:Canvas>
+        </mx:VBox>
+    </mx:HBox>
+</mx:Canvas>

@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" height="12" clipContent="false">
+    <mx:Script><![CDATA[
+        import flash.events.MouseEvent;
+        import flash.utils.Timer;
+        import mx.events.FlexEvent;
+        import mx.events.PropertyChangeEvent;
+        import mx.events.SliderEvent;
+
+        private static const START_RATE:int = 200;
+
+        private var _autoTickTimer:Timer = new Timer(START_RATE, 0);
+        private var _buttonSide:int;
+        private var _handleMax:int = 1;
+        private var _handleMin:int = 0;
+        private var _handleRange:int = 1;
+        private var _intervalWidth:Number = 1;
+        private var _ticksSinceStart:int = 0;
+        private var _limit:Number = 10;
+        private var _maximum:Number = 10;
+        private var _minimum:Number = 0;
+        private var _value:Number = 0;
+
+        private function init():void
+        {
+            this.value = 0;
+        }
+
+        private function startSliderDrag(event:MouseEvent):void
+        {
+            global.getApplication().addEventListener(MouseEvent.MOUSE_UP, this.stopSliderDrag);
+            global.getApplication().addEventListener(MouseEvent.MOUSE_MOVE, this.moveSliderOnDrag);
+        }
+
+        private function stopSliderDrag(event:MouseEvent):void
+        {
+            global.getApplication().removeEventListener(MouseEvent.MOUSE_MOVE, this.moveSliderOnDrag);
+            global.getApplication().removeEventListener(MouseEvent.MOUSE_UP, this.stopSliderDrag);
+        }
+
+        private function moveSliderOnClick():void
+        {
+            this.moveSliderOnDrag();
+        }
+
+        private function moveSliderOnDrag(event:MouseEvent = null):void
+        {
+            var _local_2:Number = (this.contentMouseX / (this.sliderBar.width - this.handle.width));
+            var _local_3:Number = Math.round((this.minimum + (this.maximum * _local_2)));
+            _local_3 = Math.max(_local_3, this._minimum);
+            this.value = Math.min(_local_3, this.limit);
+        }
+
+        private function moveHandle():void
+        {
+            var _local_1:Number = (this.value / (this.maximum - this.minimum));
+            this.handle.x = ((this.sliderBar.width - this.handle.width) * _local_1);
+        }
+
+        public function set handleX(value:Number):void
+        {
+            this.handle.x = (value + this.handle.width);
+        }
+
+        public function set slideBarwidth(value:Number):void
+        {
+            this.sliderBar.scaleX = (value / this.sliderBar.width);
+        }
+
+        [Bindable("change")]
+        [Bindable("valueCommit")]
+        public function get value():Number
+        {
+            return (_value);
+        }
+
+        public function set value(newValue:Number):void
+        {
+            if (newValue != this._value)
+            {
+                newValue = Math.min(newValue, this.maximum);
+                this._value = newValue;
+                dispatchEvent(new SliderEvent(SliderEvent.CHANGE, false, false, -1, newValue));
+                this.moveHandle();
+            };
+        }
+
+        [Bindable("change")]
+        public function get minimum():Number
+        {
+            return (this._minimum);
+        }
+
+        public function set minimum(value:Number):void
+        {
+            dispatchEvent(new SliderEvent(SliderEvent.CHANGE));
+        }
+
+        [Bindable("change")]
+        public function get maximum():Number
+        {
+            return (this._maximum);
+        }
+
+        public function set maximum(value:Number):void
+        {
+            this._maximum = value;
+            this.value = this.maximum;
+            dispatchEvent(new SliderEvent(SliderEvent.CHANGE));
+        }
+
+        public function get limit():Number
+        {
+            return (this._limit);
+        }
+
+        public function set limit(value:Number):void
+        {
+            this._limit = value;
+        }
+
+        public function onSliderBar_click(event:MouseEvent):void
+        {
+            moveSliderOnClick();
+        }
+
+        public function onHandle_mouseDown(event:MouseEvent):void
+        {
+            startSliderDrag(event);
+        }
+
+        public function onCreationComplete(event:FlexEvent):void
+        {
+            init();
+            handle.visible = enabled;
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("disabledOverlayAlpha", 0);
+            sliderBar.source = lineEmbed;
+            handle.source = handleEmbed;
+            sliderBar.addEventListener("click", onSliderBar_click);
+            handle.addEventListener("mouseDown", onHandle_mouseDown);
+            addEventListener("creationComplete", onCreationComplete);
+        }
+
+        [Embed(source="../../../../assets/embedded/slider/slider_slider_handle_small.png")]
+        private var handleEmbed:Class;
+
+        [Embed(source="../../../../assets/vector/embedded/slider/slider_slider_line_empty_787.swf", symbol="GUI.Components.circularmenu.ScenarioUISlider__embed_mxml_____data_src_gfx_embedded_slider_slider_line_empty_png_1614557011")]
+        private var lineEmbed:Class;
+    ]]></mx:Script>
+    <mx:Image id="sliderBar" smoothBitmapContent="true" width="68" height="12" />
+    <mx:Image id="handle" smoothBitmapContent="true" y="-2" height="15" width="18" />
+</mx:Canvas>

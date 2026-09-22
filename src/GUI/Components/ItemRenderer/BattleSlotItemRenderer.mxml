@@ -1,0 +1,281 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="99" height="108">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Image;
+        import mx.effects.Parallel;
+        import GUI.Components.CustomLabel;
+        import GUI.Components.BattleHealthBar;
+        import Communication.VO.dSquadVO;
+        import GUI.Components.ToolTips.MilitaryUnitSkillTipData;
+        import mx.core.mx_internal;
+        import GUI.Assets.gAssetManager;
+        import flash.filters.GlowFilter;
+        import mx.effects.Fade;
+        import mx.collections.ArrayCollection;
+        import mx.effects.Move;
+        import mx.effects.easing.Cubic;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private var mDisabled:Boolean = false;
+
+        [Bindable]
+        public var showDeadUnits:Parallel;
+
+        private var mUnitIcon:String;
+
+        private var mCurrentAmount:int;
+
+        private var mSquad:dSquadVO;
+
+        private var mPlayerColor:String;
+
+        private var tipData:MilitaryUnitSkillTipData;
+
+        [Embed(source="../../../../assets/embedded/battlewindow/battlewindow_battle_card00.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_battlewindow_battle_card00_png_286793579:Class;
+
+        [Embed(source="../../../../assets/embedded/battlewindow/battlewindow_battle_card_attack01.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_battlewindow_battle_card_attack01_png_1629286251:Class;
+
+        [Embed(source="../../../../assets/gAssetManager/BattleSlotHighlightAttacker.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_battlewindow_battle_card_selected01_png_857265483:Class;
+
+        public function get damageHighlight():Boolean
+        {
+            return (this.damageHighlightOverlay.visible);
+        }
+
+        public function set damageHighlight(argument1:Boolean):void
+        {
+            this.damageHighlightOverlay.visible = argument1;
+            if (((!(argument1)) && (this.deadUnits.visible)))
+            {
+                this.deadUnits.visible = false;
+                this.deadUnits.y = 35;
+            };
+        }
+
+        public function set highlightAttacker(argument1:Boolean):void
+        {
+            if (argument1)
+            {
+                this.inCombatHighlight.source = gAssetManager.GetBitmap("BattleSlotHighlightAttacker");
+            };
+            this.inCombatHighlight.visible = argument1;
+        }
+
+        public function MakeDamage(argument1:int):void
+        {
+            this.health.value1 = (this.health.value1 - argument1);
+        }
+
+        private function createFade1():Fade
+        {
+            var localValue1:Fade = new Fade();
+            localValue1.alphaFrom = 0;
+            localValue1.alphaTo = 1;
+            localValue1.duration = 200;
+            return (localValue1);
+        }
+
+        public function SetSquad(argument1:dSquadVO, argument2:int=0, argument3:ArrayCollection=null, argument4:ArrayCollection=null):void
+        {
+            this.mSquad = argument1;
+            toolTip = this.mSquad.GetType();
+            this.mUnitIcon = this.mSquad.GetType();
+            this.unit.source = gAssetManager.GetMilitaryIcon(this.mUnitIcon);
+            var localValue5:int = this.mSquad.GetUnitBase().GetHitPoints();
+            this.health.maxValue = this.mSquad.mTotalHealth;
+            this.mCurrentAmount = this.mSquad.GetAmount();
+            this.amountLabel.text = ((this.mCurrentAmount + " / ") + this.mSquad.GetAmount());
+            this.background.visible = true;
+            this.emptyBackground.visible = false;
+            this.amountLabel.visible = true;
+            this.health.visible = true;
+            this.unit.visible = true;
+            this.playerColor.visible = true;
+            this.mPlayerColor = ((argument2 < 10) ? ("BattlePlayerColor0" + argument2) : ("BattlePlayerColor" + argument2));
+            this.playerColor.source = gAssetManager.GetBitmap(this.mPlayerColor);
+            this.tipData = new MilitaryUnitSkillTipData(argument4, argument3);
+        }
+
+        public function Clear():void
+        {
+            this.mSquad = null;
+            this.inCombatHighlight.visible = false;
+            this.selected.visible = false;
+            this.background.visible = false;
+            this.emptyBackground.visible = true;
+            this.amountLabel.visible = false;
+            this.health.visible = false;
+            this.damageHighlightOverlay.visible = false;
+            this.unit.visible = false;
+            this.playerColor.visible = false;
+            this.deadUnits.visible = false;
+            toolTip = "";
+            this.background.source = gAssetManager.GetBitmap("BattleSlotBackground");
+        }
+
+        private function createMove1():Move
+        {
+            var localValue1:Move = new Move();
+            localValue1.yBy = -20;
+            localValue1.easingFunction = Cubic.easeOut;
+            localValue1.duration = 500;
+            return (localValue1);
+        }
+
+        public function DisplayCasualties(argument1:int, argument2:int):void
+        {
+            if (!this.mSquad)
+            {
+                trace((("mUnitIcon = " + this.mUnitIcon) + " not found"));
+                return;
+            };
+            this.health.value2 = argument2;
+            this.mCurrentAmount = (this.mCurrentAmount - argument1);
+            this.amountLabel.text = ((this.mCurrentAmount + " / ") + this.mSquad.GetAmount());
+            if (argument1 < 1)
+            {
+                return;
+            };
+            this.deadUnits.text = ("-" + argument1);
+            this.deadUnits.visible = true;
+            if (this.mCurrentAmount < 1)
+            {
+                this.mUnitIcon = "Skull";
+                this.unit.source = gAssetManager.GetMilitaryIcon(this.mUnitIcon);
+            };
+        }
+
+        public function get highlightDefender():Boolean
+        {
+            return (this.inCombatHighlight.visible);
+        }
+
+        private function createParallel1():Parallel
+        {
+            var localValue1:Parallel = new Parallel();
+            this.showDeadUnits = localValue1;
+            localValue1.children = [this.createFade1(), this.createMove1()];
+            return (localValue1);
+        }
+
+        public function get highlightAttacker():Boolean
+        {
+            return (this.inCombatHighlight.visible);
+        }
+
+        public function onBattleSlotItemRenderer_Canvas1_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.MILITARY_UNIT_SKILL_string, argument1, this.tipData);
+        }
+
+        public function set highlightDefender(argument1:Boolean):void
+        {
+            if (argument1)
+            {
+                this.inCombatHighlight.source = gAssetManager.GetBitmap("BattleSlotHighlightDefender");
+            };
+            this.inCombatHighlight.visible = argument1;
+        }
+
+        public function set disabled(argument1:Boolean):void
+        {
+        }
+
+        public function get disabled():Boolean
+        {
+            return (this.mDisabled);
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            selected.source = _embed_mxml_____data_src_gfx_embedded_battlewindow_battle_card_selected01_png_857265483;
+            emptyBackground.source = _embed_mxml_____data_src_gfx_embedded_battlewindow_battle_card00_png_286793579;
+            damageHighlightOverlay.source = _embed_mxml_____data_src_gfx_embedded_battlewindow_battle_card_attack01_png_1629286251;
+            deadUnits.filters = [viewGlowFilter1, viewGlowFilter2];
+            this.width = 99;
+            this.height = 108;
+            this.createParallel1();
+            this.addEventListener("toolTipCreate", this.onBattleSlotItemRenderer_Canvas1_toolTipCreate);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+                deadUnits.setStyle("showEffect", showDeadUnits);
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Image id="inCombatHighlight" width="99" height="108" visible="false" />
+    <mx:Image id="selected" visible="false" />
+    <mx:Image id="emptyBackground" x="3" y="1" />
+    <mx:Image id="background" x="3" y="1" />
+    <mx:Image id="playerColor" x="23" y="10" />
+    <mx:Image id="damageHighlightOverlay" visible="false" x="3" y="1" />
+    <ui:CustomLabel id="amountLabel"  horizontalCenter="0" color="0xFFFFFF" fontWeight="normal" top="58" />
+    <ui:BattleHealthBar id="health" x="14" y="75" />
+    <mx:Image id="unit" x="21" y="1" width="54" height="64" />
+    <ui:CustomLabel id="deadUnits" selectable="false" visible="false" y="35" fontWeight="bold" color="12784146" fontSize="16" horizontalCenter="20">
+        <ui:filters>
+            <mx:GlowFilter id="viewGlowFilter1" color="0xFFFFFF" blurX="3" blurY="3" quality="1" alpha="1" strength="5" />
+            <mx:GlowFilter id="viewGlowFilter2" color="12784146" blurX="5" blurY="5" quality="1" alpha="0.7" strength="2" />
+        </ui:filters>
+    </ui:CustomLabel>
+</mx:Canvas>

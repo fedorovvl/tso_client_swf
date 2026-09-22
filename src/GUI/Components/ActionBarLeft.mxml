@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" styleName="actionBarLeft"
+    creationPolicy="all">
+    <mx:Script><![CDATA[
+        private var updates:ActionBarUpdates;
+        
+        private function configureButtons():void
+        {
+            updates = new ActionBarUpdates(updateEnabled);
+            updates.configureButton(btnActionBar01, "ActionBarIcon01", "BuildingMenu");
+            updates.configureButton(btnActionBar02, "ActionBarIcon02", "ProductionOverview");
+            updates.configureButton(btnActionBar03, "ActionBarIcon03", "BranchOffice");
+            updates.configureButton(btnActionBar09, "ActionBarIcon09", "Rankings");
+        }
+        
+        private function updateEnabled():void
+        {
+            var ui:Object = global.ui_bindable;
+            var player:Object = ui ? ui.mCurrentPlayer : null;
+            var connected:Boolean = ui != null && !ui.mPacketLost;
+            var home:Boolean = player != null && player.mIsPlayerZone;
+            var normalZone:Boolean = home && !player.mIsAdventureZone;
+            btnActionBar01.enabled = connected && home && (!player.mIsAdventureZone || ui.mIsDefenseMode || player.mIsColony);
+            btnActionBar02.enabled = connected && normalZone;
+            btnActionBar03.enabled = connected && normalZone;
+        }
+        
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("bottom", 0);
+            this.setStyle("horizontalGap", 0);
+            configureButtons();
+        }
+    ]]></mx:Script>
+    <mx:Button id="btnActionBar01" width="66" height="86" />
+    <mx:Button id="btnActionBar02" width="66" height="86" />
+    <mx:Button id="btnActionBar03" width="66" height="86" />
+    <mx:Button id="btnActionBar09" width="66" height="86" />
+</mx:HBox>
+
+
+

@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    mouseEnabled="false" mouseChildren="false"
+    minHeight="130" minWidth="220" styleName="buildingListToolTip">
+    <mx:Script><![CDATA[
+        import mx.core.ClassFactory;
+        import mx.collections.ArrayCollection;
+        import __AS3__.vec.Vector;
+        import ServerState.dResource;
+        import ServerState.gEconomics;
+        import ServerState.dResourceCreationDefinition;
+        import Interface.cGameInterface;
+        import Communication.VO.dRequirementsVO;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ItemRenderer.ResourceItemRenderer;
+
+        private var _data:Object;
+        private var _text:String;
+        private var _rawKey:String;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this._data = _arg_1;
+        }
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this._rawKey = _arg_1;
+            this._text = cLocaManager.GetInstance().GetText(LOCA_GROUP.BUILDINGS, _arg_1);
+            if (!outputIcon || !inputList || !costsList)
+            {
+                return;
+            };
+            refreshContent(_arg_1);
+        }
+
+        private function refreshContent(_arg_1:String):void
+        {
+            var _local_2:dResource;
+            var _local_6:dResource;
+            var _local_8:dResource;
+            var _local_9:Number;
+            var _local_10:cGameInterface;
+            var _local_11:dRequirementsVO;
+            _BuildingsListTip_CustomLabel1.text = this._text;
+            this.outputIcon.source = null;
+            var _local_3:ArrayCollection = new ArrayCollection();
+            var _local_4:dResourceCreationDefinition = gEconomics.GetResourcesCreationDefinitionForBuilding(_arg_1);
+            if (_local_4)
+            {
+                if (_local_4.amountRemoved > 0)
+                {
+                    this.outputIcon.source = gAssetManager.GetResourceIcon(_local_4.defaultSetting.resourceName_string);
+                    if (_local_4.externalResource_string == "")
+                    {
+                        for each (_local_2 in _local_4.necessaryResources_vector)
+                        {
+                            _local_3.addItem(gAssetManager.GetResourceIcon(_local_2.name_string));
+                        };
+                    }
+                    else
+                    {
+                        _local_3.addItem(gAssetManager.GetResourceIcon(_local_4.externalResourceDeposit_string));
+                    };
+                }
+                else
+                {
+                    this.outputIcon.source = gAssetManager.GetResourceIcon(_local_4.externalResourceDeposit_string);
+                    if (_arg_1.indexOf("Forester") > -1)
+                    {
+                        _local_3.addItem(gAssetManager.GetResourceIcon("Seed"));
+                    };
+                };
+                this.productionArrow.visible = true;
+            }
+            else
+            {
+                this.productionArrow.visible = false;
+            };
+            this.inputList.dataProvider = _local_3;
+            var _local_5:Vector.<dResource> = new Vector.<dResource>();
+            for each (_local_6 in global.buildingGroup.GetCostListFromName_vector(_arg_1))
+            {
+                _local_5.push(_local_6);
+            };
+            if (((!(_local_5 == null)) && (!(global.buildingDefaultParameterDoNotCountList_dictionary.Contains(_arg_1)))))
+            {
+                _local_8 = new dResource();
+                _local_8.amount = 1;
+                _local_8.name_string = "Building";
+                _local_5.push(_local_8);
+            };
+            var _local_7:int = ((_local_5) ? _local_5.length : 0);
+            this.costsList.dataProvider = _local_5;
+            this.costsList.visible = (this.costsList.includeInLayout = true);
+            if (_local_7 > 0)
+            {
+                this.costsLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Costs");
+            }
+            else
+            {
+                if (_arg_1 == "MoveBuilding")
+                {
+                    this.costsLabel.text = "";
+                    _local_9 = globalFlash.gui.mToolboxPanel.getMoveBuildingBlockedTime();
+                    if (_local_9 > 0)
+                    {
+                        this.costsLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, "MoveBuildingBlocked", [_local_9]);
+                    };
+                }
+                else
+                {
+                    this.costsLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "CostsFree");
+                };
+                this.costsList.visible = (this.costsList.includeInLayout = false);
+            };
+            if (this._data.disabled)
+            {
+                _local_10 = (global.ui as cGameInterface);
+                _local_11 = _local_10.mRequirements.buildingRequirements_vector[this._data.label];
+                if (global.ui.mCurrentPlayer.mBuildQueue.IsFull())
+                {
+                    this.description.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "FullBuildQueue");
+                    this.description.setStyle("color", 0xFF0000);
+                }
+                else
+                {
+                    if (((!(_local_11 == null)) && (!(_local_11.isFulfilled()))))
+                    {
+                        this.description.text = _local_11.locaString;
+                        this.description.setStyle("color", 0xFF0000);
+                    }
+                    else
+                    {
+                        if (global.ui.mCurrentPlayer.IsMaximumPlacedBuildingCountReached(_arg_1))
+                        {
+                            this.description.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "MaxBuildingCountReached");
+                            this.description.setStyle("color", 0xFF0000);
+                        }
+                        else
+                        {
+                            if (global.ui.mCombatPersitedPreview.isLimitReached())
+                            {
+                                this.description.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "MaxPlanningPathsReached");
+                                this.description.setStyle("color", 0xFF0000);
+                            }
+                            else
+                            {
+                                this.description.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, _arg_1);
+                                this.description.setStyle("color", 0xFFFFFF);
+                            };
+                        };
+                    };
+                };
+            }
+            else
+            {
+                this.description.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, _arg_1);
+                this.description.setStyle("color", 0xFFFFFF);
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            costsList.itemRenderer = new ClassFactory(ResourceItemRenderer);
+            var inputFactory:ClassFactory = new ClassFactory(BuildingsListTip_inlineComponent1);
+            inputFactory.properties = {"outerDocument":this};
+            inputList.itemRenderer = inputFactory;
+            productionArrow.source = gAssetManager.GetBitmap("ProductionArrowDown");
+            if (this._rawKey != null)
+            {
+                refreshContent(this._rawKey);
+            };
+        }
+    ]]></mx:Script>
+    <gui:CustomLabel id="_BuildingsListTip_CustomLabel1"  top="9" left="13" right="60" fontWeight="bold" color="0xFFFFFF" textAlign="center" />
+    <mx:HBox id="costBox" height="26" verticalAlign="middle" left="10" right="50" bottom="8" paddingLeft="5" paddingRight="5">
+        <gui:CustomLabel id="costsLabel"  fontWeight="bold" color="0xFFFFFF" />
+        <renderer:RendererPoolBox id="costsList" direction="horizontal" />
+    </mx:HBox>
+    <gui:CustomText id="description"  left="14" right="56" top="26" bottom="35" color="0xFFFFFF" />
+    <mx:VBox id="ioBox" right="8" top="10" bottom="10" horizontalAlign="center" verticalAlign="middle">
+        <renderer:RendererPoolBox id="inputList" direction="vertical" />
+        <mx:Image id="productionArrow" />
+        <mx:Image id="outputIcon" height="25" />
+    </mx:VBox>
+</mx:Canvas>

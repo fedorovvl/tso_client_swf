@@ -1,0 +1,239 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="110" height="50">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Image;
+        import GUI.Components.CustomLabel;
+        import mx.core.mx_internal;
+        import GUI.Assets.gAssetManager;
+        import mx.events.PropertyChangeEvent;
+        import mx.events.FlexEvent;
+        import flash.events.MouseEvent;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import flash.filters.GlowFilter;
+        import ServerState.cEconomyOverviewData;
+        import ServerState.dEconomyOverviewDataResult;
+        import GO.cBuilding;
+        import flash.events.Event;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        private var _selected:Boolean = false;
+
+        private var useRollOver:Boolean = false;
+
+        private var bgColorPressed:String;
+
+        private var bgColorStd:String;
+
+        private function RollOver():void
+        {
+            if (this.useRollOver)
+            {
+                this.styleName = "economyProductionBgPrsd";
+                this.productionBg.styleName = this.bgColorPressed;
+            };
+        }
+
+        public function get selected():Boolean
+        {
+            return (this._selected);
+        }
+
+        public function onEconomyProductionItemRenderer_Canvas1_creationComplete(argument1:FlexEvent):void
+        {
+            this.DisplayData();
+        }
+
+        public function set selected(argument1:Boolean):void
+        {
+            this._selected = argument1;
+            if (argument1)
+            {
+                this.styleName = "economyProductionBgPrsd";
+                this.productionBg.styleName = this.bgColorPressed;
+            }
+            else
+            {
+                this.styleName = "economyProductionBgStd";
+                this.productionBg.styleName = this.bgColorStd;
+            };
+        }
+
+        public function onEconomyProductionItemRenderer_Canvas1_rollOut(argument1:MouseEvent):void
+        {
+            this.RollOut();
+        }
+
+        public function onProductionCount_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        private function FormatAmount(argument1:Number):String
+        {
+            if (argument1 > 999)
+            {
+                return (Math.floor((argument1 / 1000)).toString() + "k");
+            };
+            return (argument1.toString());
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            this.DisplayData();
+            refreshRendererPresentation();
+        }
+
+        public function onEconomyProductionItemRenderer_Canvas1_rollOver(argument1:MouseEvent):void
+        {
+            this.RollOver();
+        }
+
+        private function DisplayData(argument1:Event=null):void
+        {
+            var localValue5:int;
+            if ((((data == null) || (this.productionBg == null)) || (this.productionCount == null)))
+            {
+                return;
+            };
+            this.styleName = "economyProductionBgStd";
+            this.useRollOver = true;
+            var localValue2:cEconomyOverviewData = new cEconomyOverviewData();
+            var localValue3:dEconomyOverviewDataResult = localValue2.GetResourceProductionAndConsumptionValues(data.GetBuildingName_string(), null);
+            var localValue4:int = localValue3.mProductionValue;
+            localValue5 = localValue3.mBuffedProductionValue;
+            this.productionCount.text = ((localValue4 == 0) ? ("" + this.FormatAmount(localValue4)) : ("+" + this.FormatAmount(localValue4)));
+            this.productionCount.toolTip = ((localValue4 == 0) ? ("" + localValue4) : ("+" + localValue4));
+            if (localValue5 > localValue4)
+            {
+                this.productionCount.y = 7;
+                this.productionCountExtra.visible = true;
+                this.productionCountExtra.text = ("+" + this.FormatAmount(localValue5));
+                this.productionCountExtra.toolTip = ("+" + localValue5);
+                this.buffIndicator.visible = true;
+            }
+            else
+            {
+                this.productionCount.y = 16;
+                this.productionCountExtra.visible = false;
+                this.buffIndicator.visible = false;
+            };
+            this.buildingIcon.source = gAssetManager.GetBuildingIcon((data as cBuilding).getProductionBuildingName());
+            if (localValue4 != 0)
+            {
+                this.bgColorStd = "economyProductionBgStdGreen";
+                this.bgColorPressed = "economyProductionBgPrsdGreen";
+            }
+            else
+            {
+                this.bgColorStd = "economyProductionBgStdGrey";
+                this.bgColorPressed = "economyProductionBgPrsdGrey";
+            };
+            this.productionBg.styleName = this.bgColorStd;
+        }
+
+        private function RollOut():void
+        {
+            if (this.useRollOver)
+            {
+                this.styleName = "economyProductionBgStd";
+                this.productionBg.styleName = this.bgColorStd;
+            };
+        }
+
+        public function onProductionCountExtra_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            productionCount.addEventListener("toolTipCreate", onProductionCount_toolTipCreate);
+            productionCountExtra.filters = [viewGlowFilter1];
+            productionCountExtra.addEventListener("toolTipCreate", onProductionCountExtra_toolTipCreate);
+            buffIndicator.source = gAssetManager.GetBitmap("BuffStarIndicator2");
+            this.width = 110;
+            this.height = 50;
+            this.clipContent = false;
+            this.addEventListener("rollOut", this.onEconomyProductionItemRenderer_Canvas1_rollOut);
+            this.addEventListener("rollOver", this.onEconomyProductionItemRenderer_Canvas1_rollOver);
+            this.addEventListener("creationComplete", this.onEconomyProductionItemRenderer_Canvas1_creationComplete);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="productionBg" width="55" percentHeight="100" styleName="economyProductionBgStdGreen" right="0">
+        <ui:CustomLabel id="productionCount" y="7" width="37"  right="5" color="0xFFFFFF" />
+        <ui:CustomLabel id="productionCountExtra" y="25" width="37" right="5" color="1763398" fontWeight="bold">
+            <ui:filters>
+                <mx:GlowFilter id="viewGlowFilter1" color="0" blurX="2" blurY="2" quality="2" strength="25" />
+            </ui:filters>
+        </ui:CustomLabel>
+        <mx:Image id="buffIndicator" x="3" y="28" width="11" height="11" />
+    </mx:Canvas>
+    <mx:Image id="buildingIcon" x="0"  verticalCenter="0" />
+</mx:Canvas>

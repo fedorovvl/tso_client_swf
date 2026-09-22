@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:quest="com.bluebyte.tso.quests.view.ui.component.*"
+    width="735" height="422" cacheAsBitmap="true" clipContent="false">
+    <mx:Script><![CDATA[
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import flash.events.Event;
+        import mx.events.EffectEvent;
+        import mx.events.FlexEvent;
+
+        [Embed(source="../../../assets/vector/LevelUpWindow/_embed_mxml__1928435040.swf", symbol="GUI.Components.LevelUpWindow__embed_mxml__1928435040")]
+        private var _embed_mxml__1928435040:Class;
+
+        [Embed(source="../../../assets/vector/LevelUpWindow/_embed_mxml__1941464464.swf", symbol="GUI.Components.LevelUpWindow__embed_mxml__1941464464")]
+        private var _embed_mxml__1941464464:Class;
+
+        [Embed(source="../../../assets/embedded/levelupwindow/levelupwindow_levelup_character01.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_levelupwindow_levelup_character01_png_739238091:Class;
+
+        [Embed(source="../../../assets/embedded/levelupwindow/levelupwindow_levelup_header_bg01.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_levelupwindow_levelup_header_bg01_png_1730670571:Class;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            _LevelUpWindow_Canvas1.setStyle("backgroundImage", _embed_mxml__1928435040);
+            _LevelUpWindow_Canvas2.setStyle("backgroundImage", _embed_mxml__1941464464);
+            _LevelUpWindow_Canvas3.setStyle("backgroundImage", _embed_mxml_____data_src_gfx_embedded_levelupwindow_levelup_header_bg01_png_1730670571);
+            _LevelUpWindow_Image1.source = _embed_mxml_____data_src_gfx_embedded_levelupwindow_levelup_character01_png_739238091;
+            addEventListener("show", onShow);
+            fadeOut.addEventListener("effectEnd", onFadeOut_effectEnd);
+            digit1.addEventListener("show", updateDigit2);
+            digit1.addEventListener("hide", updateDigit2);
+            updateDigit2();
+        }
+
+        private function loca(key:String):String
+        { var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key); return value == undefined ? null : String(value); }
+
+        private function digit2Left(visible:Boolean):String
+        { var value:* = visible ? 337 : 327; return value == undefined ? null : String(value); }
+
+        private function updateDigit2(event:Event = null):void
+        { digit2.setStyle("left", digit2Left(digit1.visible)); }
+
+        private function onShow(event:FlexEvent):void
+        {
+            this.sparkleAnim.visible = true;
+        }
+
+        public function onFadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <mx:Canvas id="background" styleName="basicPanel" top="5" left="5" right="9" bottom="0" />
+    <mx:Canvas id="detailsHeader" styleName="detailsHeader" clipContent="false" left="14" right="16" top="33" bottom="10">
+        <mx:Canvas id="_LevelUpWindow_Canvas1" top="38" left="12" right="12" bottom="39" backgroundSize="100%" />
+        <mx:Canvas id="_LevelUpWindow_Canvas2" top="60" bottom="140" left="104" right="120" backgroundSize="100%" />
+        <mx:Canvas id="_LevelUpWindow_Canvas3" width="683" height="212" top="-69" left="-7" backgroundSize="100%" />
+        <mx:Image id="digit1" top="-23" left="316" />
+        <mx:Image id="digit2" top="-23" />
+        <gui:CustomTextArea id="description" selectable="false" styleName="noBackground" top="73" bottom="162" left="118" right="144" color="0" />
+        <quest:QuestRewardList id="unlockings" left="0" right="0" bottom="148" />
+        <gui:CustomLabel id="rewardHeadLabel" text="{loca('Rewards')}" left="0" right="0" bottom="122" color="0" fontWeight="bold" textAlign="center" />
+        <quest:QuestRewardList id="rewards" left="0" right="0" bottom="38" />
+        <mx:Image id="_LevelUpWindow_Image1" top="35" left="-48" />
+        <mx:Canvas id="_LevelUpWindow_Canvas4" styleName="questPanelFooterReward" height="60" left="-4" right="-4" bottom="-10" />
+        <gui:StandardButton id="btnCloseQuest" width="100" height="32" bottom="-2" horizontalCenter="0" icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+    </mx:Canvas>
+    <gui:CloseButton id="btnClose" top="10" right="24" />
+    <gui:BatchedSpriteLibAnimation id="sparkleAnim" width="650" height="400" left="14" top="33" mouseChildren="false" mouseEnabled="false" animationName="guianim_sparkle" numInstances="20" offsetFrames="2" visible="false" />
+</mx:Canvas>

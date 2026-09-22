@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu:MenuSlot xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:menu="GUI.Components.circularmenu.*"
+    clipContent="false" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import flash.filters.GlowFilter;
+        import mx.events.ToolTipEvent;
+        import GUI.Components.ToolTips.cToolTipUtil;
+
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+            refreshFromData();
+        }
+
+        private function refreshFromData():void
+        {
+            if (!_UnitDisplay_Image1 || !data)
+            {
+                return;
+            };
+            var tip:* = data.toolTip;
+            this.toolTip = ((tip == undefined) ? null : String(tip));
+            _UnitDisplay_Image1.source = data.icon;
+            _UnitDisplay_CustomLabel1.visible = (int(data.amount) > 0);
+            var amount:* = data.amount;
+            _UnitDisplay_CustomLabel1.text = ((amount == undefined) ? null : String(amount));
+        }
+
+        public function onToolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.MILITARY_UNIT_CONDENSED_string, event);
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            var glow:GlowFilter = new GlowFilter();
+            glow.alpha = 0.8;
+            glow.blurX = 2;
+            glow.blurY = 2;
+            glow.color = 0;
+            glow.quality = 1;
+            glow.strength = 5;
+            _UnitDisplay_CustomLabel1.filters = [glow];
+            addEventListener("toolTipCreate", onToolTipCreate);
+            refreshFromData();
+        }
+    ]]></mx:Script>
+    <mx:Image id="_UnitDisplay_Image1"  bottom="15" horizontalCenter="-2" />
+    <gui:CustomLabel id="_UnitDisplay_CustomLabel1"  bottom="10" color="0xFFFFFF" fontWeight="bold" horizontalCenter="0" textAlign="center" />
+</menu:MenuSlot>

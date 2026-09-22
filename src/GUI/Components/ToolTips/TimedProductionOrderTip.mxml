@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    mouseEnabled="false" mouseChildren="false"
+    horizontalScrollPolicy="off" verticalScrollPolicy="off"
+    styleName="toolTip" width="250">
+    <mx:Script><![CDATA[
+        import GUI.Components.CustomText;
+        import TimedProduction.cTimedProduction;
+        import TimedProduction.cTimedProductionQueue;
+        import Communication.VO.dPersistedBuffApplianceVO;
+        import BuffSystem.cBuffDefinition;
+        import GUI.Loca.cLocaManager;
+        import Enums.TIMED_PRODUCTION_TYPE;
+        import Enums.LOCA_GROUP;
+        import GO.cBuilding;
+
+        private var _text:String;
+        private var _production:cTimedProduction;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this._production = (_arg_1 as cTimedProduction);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            var _local_5:String;
+            var _local_13:Object;
+            var _local_15:cTimedProduction;
+            var _local_16:dPersistedBuffApplianceVO;
+            var _local_17:cBuffDefinition;
+            var _local_18:Number;
+            var _local_19:Number;
+            this._text = _arg_1;
+            var _local_2:cLocaManager = cLocaManager.GetInstance();
+            var _local_3:Number = 0;
+            var _local_4:Number = 0;
+            var _local_6:cTimedProductionQueue = global.ui.mCurrentPlayerZone.GetProductionQueue(this._production.GetProductionType());
+            if ((((this._production.GetProductionType() == TIMED_PRODUCTION_TYPE.MILITARY_UNIT) || (this._production.GetProductionType() == TIMED_PRODUCTION_TYPE.ELITE_UNITS)) || (this._production.GetProductionType() == TIMED_PRODUCTION_TYPE.COMBAT_THREE_UNITS)))
+            {
+                _local_5 = "NextUnit";
+            }
+            else
+            {
+                _local_5 = "NextBuff";
+            };
+            var _local_7:Number = 1;
+            var _local_8:Number = 0;
+            var _local_9:Number = 0;
+            var _local_10:Number = (global.ui.mGlobalTimeScale * _local_7);
+            var _local_11:Number = 0;
+            var _local_12:cBuilding = _local_6.productionBuilding;
+            var _local_14:Array = new Array();
+            if (_local_12 != null)
+            {
+                if (_local_12.GetUpgradeLevelBonuses() != null)
+                {
+                    _local_7 = (_local_12.GetUpgradeLevelBonuses().getRecruitingTime() / 100);
+                    _local_10 = (_local_10 * _local_7);
+                };
+                if (_local_12.productionBuff != null)
+                {
+                    _local_13 = {
+                        "endTime":Number,
+                        "factor":Number
+                    };
+                    _local_13.endTime = ((_local_12.productionBuff.GetStartTime() - global.ui.GetClientTime()) + _local_12.productionBuff.GetBuffDefinition().getDuration(_local_12.productionBuff.GetApplicanceMode()));
+                    _local_13.factor = ((_local_12.productionBuff.GetBuffDefinition().getRecruitingTime() - 100) / 100);
+                    _local_14.push(_local_13);
+                    _local_11 = _local_13.factor;
+                    _local_8 = _local_13.endTime;
+                };
+                for each (_local_16 in global.ui.mZoneBuffManager.getBuffAppliancesForBuilding(_local_12.GetBuildingName_string()))
+                {
+                    _local_17 = cBuffDefinition.GetById(_local_16.buffID);
+                    if (_local_17 != null)
+                    {
+                        _local_18 = ((_local_17.getDuration(_local_16.applianceMode) >= 0) ? _local_17.getDuration(_local_16.applianceMode) : Number.MAX_VALUE);
+                        _local_13 = {
+                            "endTime":Number,
+                            "factor":Number
+                        };
+                        _local_13.endTime = ((_local_16.startTime - global.ui.GetClientTime()) + _local_18);
+                        _local_13.factor = ((_local_17.getRecruitingTime() - 100) / 100);
+                        _local_14.push(_local_13);
+                        _local_11 = (_local_11 + _local_13.factor);
+                    };
+                };
+                if (_local_14.length > 0)
+                {
+                    _local_14.sort(this.orderActiveBuffs);
+                    _local_8 = _local_14[0].endTime;
+                };
+                _local_10 = (_local_10 * (_local_11 + 1));
+            };
+            for each (_local_15 in _local_6.mTimedProductions_vector)
+            {
+                if (_local_15.HasStarted())
+                {
+                    _local_3 = ((_local_15.GetProductionTime() - _local_15.GetCollectedTime()) / _local_10);
+                    _local_9 = ((_local_15.GetProductionTime() - _local_15.GetCollectedTime()) + (((_local_15.GetAmount() - _local_15.GetProducedItems()) - 1) * _local_15.GetProductionTime()));
+                }
+                else
+                {
+                    _local_9 = (_local_15.GetAmount() * _local_15.GetProductionTime());
+                };
+                if ((((_local_10 == 1) || (_local_8 == 0)) || (_local_8 >= (_local_4 + (_local_9 / _local_10)))))
+                {
+                    _local_4 = (_local_4 + (_local_9 / _local_10));
+                }
+                else
+                {
+                    _local_19 = (_local_8 - _local_4);
+                    while (_local_8 < (_local_4 + (_local_9 / _local_10)))
+                    {
+                        _local_19 = (_local_8 - _local_4);
+                        _local_4 = (_local_4 + _local_19);
+                        _local_9 = (_local_9 - (_local_10 * _local_19));
+                        _local_11 = (_local_11 - _local_14[0].factor);
+                        _local_10 = (_local_7 * (_local_11 + 1));
+                        _local_14.shift();
+                        _local_8 = ((_local_14.length > 0) ? _local_14[0].endTime : 0);
+                        if (_local_8 == 0)
+                        {
+                            _local_10 = _local_7;
+                            break;
+                        };
+                    };
+                    _local_4 = (_local_4 + (_local_9 / ((_local_10 < 1) ? (_local_10 + 1) : _local_10)));
+                };
+                if (_local_15 == this._production)
+                {
+                    this.durationLabel.text = "";
+                    if (_local_15.HasStarted())
+                    {
+                        this.durationLabel.text = _local_2.GetText(LOCA_GROUP.LABELS, _local_5, [_local_2.FormatDuration(_local_3)]);
+                    };
+                    this.durationLabel.text = (this.durationLabel.text + (((this.durationLabel.text) ? "\n" : "") + _local_2.GetText(LOCA_GROUP.LABELS, "OrderCompleted", [_local_2.FormatDuration(_local_4)])));
+                    break;
+                };
+            };
+            invalidateDisplayList();
+        }
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        private function orderActiveBuffs(_arg_1:Object, _arg_2:Object):int
+        {
+            if (_arg_1.endTime > _arg_2.endTime)
+            {
+                return (1);
+            };
+            if (_arg_1.endTime < _arg_2.endTime)
+            {
+                return (-1);
+            };
+            return (0);
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("paddingBottom", 5);
+            this.setStyle("paddingLeft", 5);
+            this.setStyle("paddingRight", 5);
+            this.setStyle("paddingTop", 5);
+        }
+    ]]></mx:Script>
+    <gui:CustomText id="durationLabel" percentWidth="100" fontWeight="normal" color="0xFFFFFF" />
+</mx:VBox>

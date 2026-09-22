@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*" xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="640" height="420" creationPolicy="all" currentState="manageOrders" implements="GUI.Components.IGUIList">
+    <mx:Script><![CDATA[
+        import __AS3__.vec.Vector;
+        import BuffSystem.cBuffDefinition;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ItemRenderer.OrderCostsItemRenderer;
+        import GUI.Components.ItemRenderer.OrderItemRenderer;
+        import GUI.Components.ItemRenderer.TimedProductionTypeItemRenderer;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Loca.cLocaManager;
+        import flash.display.DisplayObject;
+        import flash.events.Event;
+        import mx.collections.ArrayCollection;
+        import mx.core.ClassFactory;
+        import mx.events.FlexEvent;
+        import mx.events.ToolTipEvent;
+        import mx.states.AddChild;
+        import mx.states.RemoveChild;
+        import mx.states.SetProperty;
+        import mx.states.State;
+
+        public var stateManageOrders:State;
+        public var defaultState:State;
+        public var stateNormalWithBonus:State;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(subcontent);
+            subcontent.removeChild(rightColumnRecruite);
+            availableOrdersList.itemRenderer = new ClassFactory(TimedProductionTypeItemRenderer);
+            currentOrdersList.itemRenderer = new ClassFactory(OrderItemRenderer);
+            orderCostsList.itemRenderer = new ClassFactory(OrderCostsItemRenderer);
+            orderProductList.itemRenderer = new ClassFactory(OrderCostsItemRenderer);
+            _TimedProductionInfoPanel_Image3.source = gAssetManager.GetResourceIcon("Clock");
+            _TimedProductionInfoPanel_Image4.source = gAssetManager.GetResourceIcon("Clock");
+            bonusStar.source = gAssetManager.GetBitmap("SmallIconStar");
+            _TimedProductionInfoPanel_Image6.source = gAssetManager.GetClass("ProductionArrow");
+            btnOK.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            btnCancel.setStyle("icon", gAssetManager.GetClass("ButtonIconAbort"));
+            selectedUnitIcon.addEventListener("toolTipCreate", __selectedUnitIcon_toolTipCreate);
+            selectedUnitIcon2.addEventListener("toolTipCreate", __selectedUnitIcon2_toolTipCreate);
+            buttonBar.addEventListener("toolTipCreate", __buttonBar_toolTipCreate);
+            amountInput.addEventListener("change", __amountInput_change);
+            stackInput.addEventListener("change", __stackInput_change);
+            refreshLabels();
+            updateSliderDependents();
+            amountSlider.addEventListener("enabledChanged", updateSliderDependents, false, 0, true);
+            amountSlider.addEventListener("change", updateSliderDependents, false, 0, true);
+            amountSlider.addEventListener("valueCommit", updateSliderDependents, false, 0, true);
+            stackSlider.addEventListener("enabledChanged", updateSliderDependents, false, 0, true);
+            stackSlider.addEventListener("change", updateSliderDependents, false, 0, true);
+            stackSlider.addEventListener("valueCommit", updateSliderDependents, false, 0, true);
+            buildStates();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+            addEventListener("creationComplete", basicpanel1_creationCompleteHandler);
+        }
+
+        private function buildStates():void
+        {
+            var normal:State = new State();
+            normal.name = "stateNormalWithBonus";
+            var setX:SetProperty = new SetProperty();
+            setX.target = buildingStacksCanvas;
+            setX.name = "x";
+            setX.value = 166;
+            var setVisible:SetProperty = new SetProperty();
+            setVisible.target = buildingStacksCanvas;
+            setVisible.name = "visible";
+            setVisible.value = true;
+            normal.overrides = [setX, setVisible];
+            stateNormalWithBonus = normal;
+            var def:State = new State();
+            def.name = "defaultState";
+            var hideStacks:SetProperty = new SetProperty();
+            hideStacks.target = buildingStacksCanvas;
+            hideStacks.name = "visible";
+            hideStacks.value = false;
+            def.overrides = [hideStacks];
+            defaultState = def;
+            var manage:State = new State();
+            manage.name = "manageOrders";
+            var disableOK:SetProperty = new SetProperty();
+            disableOK.target = btnOK;
+            disableOK.name = "enabled";
+            disableOK.value = false;
+            var dropMiddle:RemoveChild = new RemoveChild();
+            dropMiddle.target = middleColumn;
+            var dropStacks:RemoveChild = new RemoveChild();
+            dropStacks.target = buildingStacksCanvas;
+            var dropListBg:RemoveChild = new RemoveChild();
+            dropListBg.target = listBackground;
+            var dropEmpty:RemoveChild = new RemoveChild();
+            dropEmpty.target = emptyQueue;
+            var dropOrders:RemoveChild = new RemoveChild();
+            dropOrders.target = currentOrdersList;
+            var addRight:AddChild = new AddChild();
+            addRight.relativeTo = subcontent;
+            addRight.position = "lastChild";
+            addRight.target = rightColumnRecruite;
+            manage.overrides = [disableOK, dropMiddle, dropStacks, dropListBg, dropEmpty, dropOrders, addRight];
+            stateManageOrders = manage;
+            states = [normal, def, manage];
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var text:*;
+            text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Select");
+            _TimedProductionInfoPanel_Label1.text = ((text == undefined) ? null : String(text));
+            text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Select");
+            _TimedProductionInfoPanel_CustomLabel1.text = ((text == undefined) ? null : String(text));
+            text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "EmptyProduction");
+            emptyQueue.text = ((text == undefined) ? null : String(text));
+            text = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, "ProductionStacks");
+            _TimedProductionInfoPanel_Image3.toolTip = ((text == undefined) ? null : String(text));
+        }
+
+        private function updateSliderDependents(event:Event = null):void
+        {
+            if (stackSlider.enabled != amountSlider.enabled)
+            {
+                stackSlider.enabled = amountSlider.enabled;
+            }
+            _TimedProductionInfoPanel_HBox4.visible = amountSlider.enabled;
+            amountInput.enabled = amountSlider.enabled;
+            var amountValue:* = amountSlider.value;
+            amountInput.text = ((amountValue == undefined) ? null : String(amountValue));
+            var amountMax:* = ("/ " + amountSlider.maximum);
+            _TimedProductionInfoPanel_Label3.text = ((amountMax == undefined) ? null : String(amountMax));
+            _TimedProductionInfoPanel_HBox6.visible = stackSlider.enabled;
+            stackInput.enabled = stackSlider.enabled;
+            var stackValue:* = stackSlider.value;
+            stackInput.text = ((stackValue == undefined) ? null : String(stackValue));
+            var stackMax:* = ("/ " + stackSlider.maximum);
+            _TimedProductionInfoPanel_Label4.text = ((stackMax == undefined) ? null : String(stackMax));
+        }
+
+        protected function basicpanel1_creationCompleteHandler(event:FlexEvent):void
+        {
+            currentState = "defaultState";
+        }
+
+        public function __amountInput_change(event:Event):void
+        {
+            onAmountInputChanged();
+        }
+
+        public function __stackInput_change(event:Event):void
+        {
+            onStackInputChanged();
+        }
+
+        public function onStackInputChanged():void
+        {
+            var value:Number = Math.min(int(stackInput.text), stackSlider.maximum);
+            value = Math.max(1, value);
+            stackInput.text = value.toString();
+            stackSlider.value = value;
+        }
+
+        public function onAmountInputChanged():void
+        {
+            var value:Number = Math.min(int(amountInput.text), amountSlider.maximum);
+            value = Math.max(1, value);
+            amountInput.text = value.toString();
+            amountSlider.value = value;
+        }
+
+        public function __buttonBar_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __selectedUnitIcon_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.MILITARY_UNIT_SKILL_string, event);
+        }
+
+        public function __selectedUnitIcon2_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.MILITARY_UNIT_SKILL_string, event);
+        }
+
+        public function set busy(value:Boolean):void
+        {
+            busyOverlay.visible = value;
+            busyAnim.visible = value;
+        }
+
+        public function getAllItems(id:String):Vector.<DisplayObject>
+        {
+            var list:ArrayCollection;
+            var index:int;
+            var type:String;
+            if (id == null)
+            {
+                return (null);
+            };
+            var found:Vector.<DisplayObject> = new Vector.<DisplayObject>();
+            if (buttonBar.dataProvider != null)
+            {
+                list = ArrayCollection(buttonBar.dataProvider);
+                index = 0;
+                while (index < list.length)
+                {
+                    if (list[index].group == id)
+                    {
+                        found.push(buttonBar.getChildAt(index));
+                    };
+                    index++;
+                };
+            };
+            if (availableOrdersList.dataProvider != null)
+            {
+                list = ArrayCollection(availableOrdersList.dataProvider);
+                index = 0;
+                while (index < list.length)
+                {
+                    if ((list[index][0] is cBuffDefinition))
+                    {
+                        type = list[index][0].GetName_string();
+                    }
+                    else
+                    {
+                        type = list[index][0].GetType();
+                    };
+                    if (type == id)
+                    {
+                        found.push((availableOrdersList.indexToItemRenderer(index) as DisplayObject));
+                    };
+                    index++;
+                };
+            };
+            if (((!(orderCostsList == null)) && (!(orderCostsList.dataProvider == null))))
+            {
+                list = ArrayCollection(orderCostsList.dataProvider);
+                index = 0;
+                while (index < list.length)
+                {
+                    if (("Costs" + list[index].resource.name_string) == id)
+                    {
+                    };
+                    index++;
+                };
+            };
+            if (hasOwnProperty(id))
+            {
+                found.push(this[id]);
+            };
+            return (found);
+        }
+
+        public function getFirstItem(id:String):DisplayObject
+        {
+            var list:ArrayCollection;
+            var index:int;
+            var type:String;
+            if (id == null)
+            {
+                return (null);
+            };
+            if (buttonBar.dataProvider != null)
+            {
+                list = ArrayCollection(buttonBar.dataProvider);
+                index = 0;
+                while (index < list.length)
+                {
+                    if (list[index].group == id)
+                    {
+                        return (buttonBar.getChildAt(index));
+                    };
+                    index++;
+                };
+            };
+            if (availableOrdersList.dataProvider != null)
+            {
+                list = ArrayCollection(availableOrdersList.dataProvider);
+                index = 0;
+                while (index < list.length)
+                {
+                    if ((list[index][0] is cBuffDefinition))
+                    {
+                        type = list[index][0].GetName_string();
+                    }
+                    else
+                    {
+                        type = list[index][0].GetType();
+                    };
+                    if (type == id)
+                    {
+                        return (availableOrdersList.indexToItemRenderer(index) as DisplayObject);
+                    };
+                    index++;
+                };
+            };
+            if (((!(orderCostsList == null)) && (!(orderCostsList.dataProvider == null))))
+            {
+                list = ArrayCollection(orderCostsList.dataProvider);
+                index = 0;
+                while (index < list.length)
+                {
+                    if (("Costs" + list[index].resource.name_string) == id)
+                    {
+                    };
+                    index++;
+                };
+            };
+            if (hasOwnProperty(id))
+            {
+                return (this[id]);
+            };
+            return (null);
+        }
+    ]]></mx:Script>
+    <gui:subComponents><mx:Array>
+        <mx:Canvas id="subcontent" percentWidth="100" percentHeight="100" creationPolicy="all">
+            <gui:BuildingWindowHeader id="buildingHeader" />
+            <mx:Canvas id="upgradeColumnCanvas" height="294" top="62" left="8">
+                <gui:BuildingUpgrade id="upgradeColumn" />
+            </mx:Canvas>
+            <mx:Canvas id="middleColumn" width="160" height="294" x="166" y="62">
+                <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                    <gui:CustomLabel id="_TimedProductionInfoPanel_CustomLabel1" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                </mx:Canvas>
+                <mx:Canvas id="middleColumnDefault" styleName="detailsContentBox" percentWidth="100" top="18" bottom="0" left="1" right="1">
+                    <gui:CustomTileList id="availableOrdersList" borderThickness="0" backgroundAlpha="0" useRollOver="false" left="2" right="0" top="1" bottom="0" />
+                </mx:Canvas>
+            </mx:Canvas>
+            <mx:Canvas id="buildingStacksCanvas" width="160" height="80" x="8" y="276" visible="false">
+                <gui:BuildingStacks id="buildingStacks" height="80" percentWidth="100" />
+            </mx:Canvas>
+            <mx:Canvas id="listBackground" styleName="listBackgroundShadow" width="282" right="17" top="63" bottom="33" />
+            <gui:CustomText id="emptyQueue" width="281" selectable="false" right="23" top="90" textAlign="center" color="0xFFFFFF" fontWeight="normal" />
+            <mx:TileList id="currentOrdersList" selectable="false" width="289" useRollOver="false" backgroundAlpha="0" borderThickness="0" right="6" top="67" bottom="34" />
+            <mx:Canvas id="busyOverlay" styleName="detailsContentBox" width="282" visible="false" right="17" top="63" bottom="33">
+                <gui:SpriteLibAnimation id="busyAnim" animationName="guianim_hourglass" loop="true" visible="false" width="48" height="48" horizontalCenter="0" verticalCenter="0" />
+            </mx:Canvas>
+            <mx:Canvas id="rightColumnRecruite" left="166" right="7" top="62" bottom="33">
+                <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                    <mx:Label id="_TimedProductionInfoPanel_Label1" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                </mx:Canvas>
+                <mx:Canvas styleName="detailsContentBox" left="1" right="1" top="18" bottom="0">
+                    <mx:HBox styleName="detailsSubContentBox" height="62" horizontalAlign="left" verticalAlign="middle" left="5" right="5" top="5">
+                        <mx:Image id="selectedUnitIcon" width="26" height="25" />
+                        <mx:Label id="selectedUnitName" color="0xFFFFFF" />
+                        <mx:Canvas percentHeight="100" percentWidth="100" horizontalScrollPolicy="off">
+                            <mx:Text id="selectedUnitDescription" percentWidth="100" selectable="false" fontWeight="normal" paddingLeft="0" paddingTop="0" paddingBottom="0" paddingRight="12" />
+                        </mx:Canvas>
+                    </mx:HBox>
+                    <mx:HBox height="55" top="70" left="5" right="5">
+                        <mx:VBox width="200" verticalGap="5">
+                            <mx:HBox percentWidth="100" horizontalAlign="center" verticalAlign="middle">
+                                <mx:Image id="selectedUnitIcon2" width="26" height="25" />
+                                <mx:HBox id="_TimedProductionInfoPanel_HBox4" horizontalAlign="center" verticalAlign="middle">
+                                    <gui:CustomTextInput id="amountInput" height="18" width="50" tabIndex="0" styleName="standardInput" restrict="0-9" color="0xFFFFFF" fontSize="10" textAlign="right" />
+                                    <mx:Label id="_TimedProductionInfoPanel_Label3" horizontalCenter="0" color="0xFFFFFF" />
+                                </mx:HBox>
+                            </mx:HBox>
+                            <mx:Canvas percentWidth="100">
+                                <gui:ExtendedHSlider id="amountSlider" enabled="false" value="1" minimum="1" right="5" left="5" />
+                            </mx:Canvas>
+                        </mx:VBox>
+                        <mx:Spacer percentWidth="100" />
+                        <mx:VBox width="200" verticalGap="5">
+                            <mx:HBox percentWidth="100" horizontalAlign="center" verticalAlign="middle">
+                                <mx:Image id="_TimedProductionInfoPanel_Image3" width="26" height="25" />
+                                <mx:HBox id="_TimedProductionInfoPanel_HBox6" horizontalAlign="center" verticalAlign="middle">
+                                    <gui:CustomTextInput id="stackInput" height="18" width="50" tabIndex="1" styleName="standardInput" restrict="0-9" color="0xFFFFFF" fontSize="10" textAlign="right" />
+                                    <mx:Label id="_TimedProductionInfoPanel_Label4" horizontalCenter="0" color="0xFFFFFF" />
+                                </mx:HBox>
+                            </mx:HBox>
+                            <mx:Canvas percentWidth="100">
+                                <gui:ExtendedHSlider id="stackSlider" value="1" minimum="1" right="5" left="5" />
+                            </mx:Canvas>
+                        </mx:VBox>
+                    </mx:HBox>
+                    <mx:VBox styleName="detailsSubContentBox" right="5" left="5" top="120" verticalGap="0" horizontalAlign="center">
+                        <mx:Spacer height="8" />
+                        <mx:HBox percentWidth="100" horizontalAlign="center" verticalAlign="middle">
+                            <mx:Canvas>
+                                <mx:Image id="_TimedProductionInfoPanel_Image4" width="26" height="25" />
+                                <mx:Image id="bonusStar" width="15" height="15" left="13" top="-3" />
+                            </mx:Canvas>
+                            <mx:Label id="orderTime" horizontalCenter="0" color="0xFFFFFF" />
+                        </mx:HBox>
+                        <mx:Spacer height="8" />
+                        <mx:HBox>
+                            <renderer:RendererPoolBox id="orderCostsList" direction="horizontal" backgroundAlpha="0" borderThickness="0" />
+                            <mx:Image id="_TimedProductionInfoPanel_Image6" />
+                            <renderer:RendererPoolBox id="orderProductList" direction="horizontal" backgroundAlpha="0" borderThickness="0" />
+                        </mx:HBox>
+                        <mx:Spacer height="8" />
+                    </mx:VBox>
+                    <mx:HBox percentWidth="100" horizontalAlign="center" bottom="5">
+                        <gui:StandardButton id="btnOK" enabled="false" width="70" height="32" />
+                        <gui:StandardButton id="btnCancel" width="70" height="32" />
+                    </mx:HBox>
+                    <mx:Spacer height="8" />
+                </mx:Canvas>
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas styleName="hr" height="3" left="2" right="0" bottom="27" />
+        <gui:CustomToggleButtonBar id="buttonBar" buttonStyleName="tab" selectedButtonTextStyleName="tabSelected" bottom="0" left="2" right="0" />
+    </mx:Array></gui:subComponents>
+</gui:BasicPanel>

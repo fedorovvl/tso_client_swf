@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<renderer:GuildBankItemRenderer xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:renderer="GUI.Components.ItemRenderer.*">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.events.FlexEvent;
+        import GUI.Components.GuildWindow;
+
+        [Bindable]
+        public var outerDocument:GuildWindow;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            refreshEditable();
+            addEventListener("creationComplete", refreshEditable);
+        }
+
+        private function refreshEditable(event:Event = null):void
+        {
+            if (parentDocument != null)
+            {
+                editable = parentDocument.editPermissionsAllowed;
+            };
+        }
+    ]]></mx:Script>
+</renderer:GuildBankItemRenderer>

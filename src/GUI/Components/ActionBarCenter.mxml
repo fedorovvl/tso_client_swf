@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="84" styleName="actionBarCenter" clipContent="false" creationPolicy="all"
+    horizontalScrollPolicy="off" verticalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import GUI.Assets.gAssetManager;
+        import flash.events.MouseEvent;
+        private var updates:ActionBarUpdates;
+        private var arrowDown:Boolean = true;
+        
+        private function toggleFriendsArrow(event:MouseEvent):void
+        {
+            arrowDown = !arrowDown;
+            applyFriendsArrow();
+        }
+        
+        private function applyFriendsArrow():void
+        {
+            var icon:String = arrowDown ? "ArrowDown" : "ArrowUp";
+            toggleFrindsList.setStyle("upSkin", gAssetManager.GetClass(icon));
+            toggleFrindsList.setStyle("overSkin", gAssetManager.GetClass(icon + "Highlight"));
+            toggleFrindsList.setStyle("downSkin", gAssetManager.GetClass(icon + "Highlight"));
+        }
+        
+        private function configureButtons():void
+        {
+            updates = new ActionBarUpdates(updateEnabled);
+            updates.configureButton(btnActionBar04, "ActionBarIcon04", "StarMenu");
+            applyFriendsArrow();
+        }
+        
+        private function updateEnabled():void
+        {
+            var ui:Object = global.ui_bindable;
+            var connected:Boolean = ui != null && !ui.mPacketLost;
+            btnActionBar04.enabled = connected;
+        }
+        
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("bottom", 0);
+            toggleFrindsList.addEventListener("click", toggleFriendsArrow);
+            configureButtons();
+        }
+    ]]></mx:Script>
+    <gui:SpriteLibAnimation id="animStar" alpha="0.5" visible="false" width="98" height="98"
+        loop="true" animationName="guianim_star"  horizontalCenter="2" top="-17" />
+    <mx:Button id="btnActionBar04" width="66" height="95"  horizontalCenter="0" />
+    <mx:Button id="toggleFrindsList" width="25" height="23"  horizontalCenter="0" bottom="3" />
+</mx:Canvas>
+
+
+

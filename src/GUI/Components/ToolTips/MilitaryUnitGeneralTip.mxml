@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    mouseEnabled="false" mouseChildren="false" styleName="toolTip">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.collections.ArrayCollection;
+        import __AS3__.vec.Vector;
+        import mx.core.ClassFactory;
+        import mx.events.ResizeEvent;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import Enums.SPECIALIST_TYPE;
+        import Enums.COMBAT_MODIFIER_SIDE;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.GeneralStatDetails;
+        import GUI.Components.ItemRenderer.SkillIconRenderer;
+        import GUI.Components.ItemRenderer.BuffIconRenderer;
+        import MilitarySystem.cMilitaryUnitDescription;
+        import Modifier.ModifierVO;
+        import Modifier.Modifiers.Combat.CombatModifier;
+        import Modifier.Modifiers.Common.ZoneTravelSpeed;
+        import Modifier.Modifiers.Combat.CombatRoundDuration;
+        import Modifier.Modifiers.Common.GeneralRecoverySpeed;
+        import Specialists.cSpecialist;
+        import Specialists.cSpecialistDescription;
+        import Skill.cSkill;
+        import Utils.StringUtils;
+        import Communication.VO.dPersistedBuffApplianceVO;
+
+        private var unitType:String;
+        private var unitDescription:cMilitaryUnitDescription;
+
+        public function get text():String
+        {
+            return (this.unitType);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this.unitType = _arg_1;
+        }
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this.data = _arg_1;
+        }
+
+        override protected function commitProperties():void
+        {
+            super.commitProperties();
+            var _local_1:cSpecialist = (data as cSpecialist);
+            var _local_2:cSpecialistDescription = _local_1.GetSpecialistDescription();
+            this.unitDescription = cMilitaryUnitDescription.GetUnitDescriptionForType(_local_1.getMilitaryUnitType());
+            this.unitType = this.unitDescription.GetType();
+            this.unitName.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.SPECIALISTS, _local_2.getName_string());
+            this.combatantTypeIcon.source = gAssetManager.GetBitmap((this.unitDescription.GetCombatantType() + ".png"));
+            this.description.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, SPECIALIST_TYPE.toString(_local_1.GetType()));
+            this.generalStats.setData(_local_1);
+            var _local_3:ArrayCollection = new ArrayCollection();
+            _local_3.addAll(this.getApplicableSkillsFrom(_local_1.skills.getItems_vector()));
+            _local_3.addAll(this.getApplicableSkillsFrom(_local_1.getSkillTree().getItems_vector()));
+            this.skillList.dataProvider = _local_3;
+            this.skillList.rowCount = Math.ceil((_local_3.length / this.skillList.columnCount));
+            this.skillList.visible = (this.skillList.includeInLayout = (_local_3.length > 0));
+            this.skillLabel.visible = (this.skillLabel.includeInLayout = this.skillList.visible);
+            var _local_4:ArrayCollection = this.getApplicableZoneBuffs();
+            this.buffList.dataProvider = _local_4;
+            this.buffList.rowCount = Math.ceil((_local_4.length / this.buffList.columnCount));
+            this.buffList.visible = (this.buffList.includeInLayout = (_local_4.length > 0));
+            this.buffsLabel.visible = (this.buffsLabel.includeInLayout = this.buffList.visible);
+        }
+
+        private function getApplicableSkillsFrom(_arg_1:Vector.<cSkill>):ArrayCollection
+        {
+            var _local_3:cSkill;
+            var _local_4:ModifierVO;
+            var _local_2:ArrayCollection = new ArrayCollection();
+            for each (_local_3 in _arg_1)
+            {
+                if (!((_local_3.getLevel() == 0) || (_local_3.isTrait())))
+                {
+                    for each (_local_4 in _local_3.getDefinition().level_vector[(_local_3.getLevel() - 1)])
+                    {
+                        if (((StringUtils.isEmpty(_local_4.name_string)) || ((StringUtils.equalsIgnoreCase(_local_4.modifier_string, CombatModifier.xml_string)) && (StringUtils.equalsIgnoreCase(_local_4.name_string, COMBAT_MODIFIER_SIDE.PLAYER_string)))))
+                        {
+                            if (((((((StringUtils.isEmpty(_local_4.type_string)) || (StringUtils.equalsIgnoreCase(this.unitDescription.GetCombatantType(), _local_4.type_string))) || (StringUtils.equalsIgnoreCase(this.unitDescription.GetType(), _local_4.type_string))) || (StringUtils.equalsIgnoreCase(_local_4.modifier_string, GeneralRecoverySpeed.xml_string))) || (StringUtils.equalsIgnoreCase(_local_4.modifier_string, CombatRoundDuration.xml_string))) || (StringUtils.equalsIgnoreCase(_local_4.modifier_string, ZoneTravelSpeed.xml_string))))
+                            {
+                                _local_2.addItem(_local_3);
+                                break;
+                            };
+                        };
+                    };
+                };
+            };
+            return (_local_2);
+        }
+
+        private function getApplicableZoneBuffs():ArrayCollection
+        {
+            var _local_2:dPersistedBuffApplianceVO;
+            var _local_1:ArrayCollection = new ArrayCollection();
+            for each (_local_2 in global.ui.mZoneBuffManager.getBuffAppliancesForMilitaryUnit_vector(this.unitDescription))
+            {
+                _local_1.addItem(_local_2);
+            };
+            for each (_local_2 in global.ui.mZoneBuffManager.getBuffInExclusivityGroup_vector("GeneralSpeed"))
+            {
+                _local_1.addItem(_local_2);
+            };
+            return (_local_1);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var t:*;
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Skills");
+            skillLabel.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Buffs");
+            buffsLabel.text = ((t == undefined) ? null : String(t));
+            if (headline)
+            {
+                description.width = headline.width;
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("paddingBottom", 5);
+            this.setStyle("paddingLeft", 5);
+            this.setStyle("paddingRight", 5);
+            this.setStyle("paddingTop", 5);
+            this.setStyle("verticalGap", 4);
+            skillList.itemRenderer = new ClassFactory(SkillIconRenderer);
+            buffList.itemRenderer = new ClassFactory(BuffIconRenderer);
+            headline.addEventListener(ResizeEvent.RESIZE, refreshLabels, false, 0, true);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+    ]]></mx:Script>
+    <mx:HBox id="headline">
+        <gui:CustomText id="unitName" minWidth="390"  color="0xFFFFFF" fontWeight="bold" />
+        <gui:TSOImage id="combatantTypeIcon" />
+    </mx:HBox>
+    <gui:CustomText id="description"  color="0xFFFFFF" />
+    <gui:GeneralStatDetails id="generalStats" percentWidth="100" />
+    <mx:Label id="skillLabel"  horizontalCenter="0" fontWeight="bold" color="0xFFFFFF" />
+    <gui:CustomTileList id="skillList" rowHeight="30" columnWidth="30" columnCount="13"  backgroundAlpha="0" borderThickness="0" />
+    <mx:Label id="buffsLabel"  horizontalCenter="0" fontWeight="bold" color="0xFFFFFF" />
+    <gui:CustomTileList id="buffList" rowHeight="36" columnWidth="36" columnCount="5"  paddingTop="-5" backgroundAlpha="0" borderThickness="0" />
+</mx:VBox>

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*">
+    <mx:Script><![CDATA[
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Decorator.GUIDecorator;
+        import global;
+        import mx.events.FlexEvent;
+        import mx.events.ToolTipEvent;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("horizontalGap", 0);
+            population.addEventListener("toolTipCreate", __population_toolTipCreate);
+            buildings.addEventListener("toolTipCreate", __buildings_toolTipCreate);
+            zoneBuffs.addEventListener("toolTipCreate", __zoneBuffs_toolTipCreate);
+            resource1.addEventListener("toolTipCreate", __resource1_toolTipCreate);
+            resource2.addEventListener("toolTipCreate", __resource2_toolTipCreate);
+            resource3.addEventListener("toolTipCreate", __resource3_toolTipCreate);
+            resource4.addEventListener("toolTipCreate", __resource4_toolTipCreate);
+            resource5.addEventListener("toolTipCreate", __resource5_toolTipCreate);
+            resource6.addEventListener("toolTipCreate", __resource6_toolTipCreate);
+            hardCurrency.addEventListener("toolTipCreate", __hardCurrency_toolTipCreate);
+            addEventListener("creationComplete", onCreationComplete);
+        }
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            creationComplete();
+        }
+
+        private function creationComplete():void
+        {
+            GUIDecorator.setToolTipDelays(this.population, 0, Infinity);
+        }
+
+        private function populationToolTipCreateHandler(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.POPULATION_OVERVIEW_string, event);
+            global.ui.mQuestClientCallbacks.InitiateWindowOpen("PopulationTooltip");
+            global.getApplication().inputNotifier.notifyClick("PopulationTooltip");
+        }
+
+        public function __population_toolTipCreate(event:ToolTipEvent):void
+        {
+            this.populationToolTipCreateHandler(event);
+        }
+
+        public function __buildings_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.MULTILINE_string, event);
+        }
+
+        public function __zoneBuffs_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.ZONE_BUFF_string, event);
+        }
+
+        public function __resource1_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __resource2_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __resource3_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __resource4_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __resource5_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __resource6_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __hardCurrency_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+
+    <mx:HBox id="infoBarLeft" height="42" styleName="infoBarLeft">
+        <mx:HBox id="population" toolTip="Population" verticalAlign="middle">
+            <mx:Image id="resourceIconPopulation" />
+            <gui:CustomLabel id="resourceLabelPopulation" color="0xFFFFFF" fontWeight="bold" />
+        </mx:HBox>
+        <mx:HBox id="buildings" verticalAlign="middle">
+            <mx:Image id="resourceIconBuildings" />
+            <gui:CustomLabel id="resourceLabelBuildings" color="0xFFFFFF" fontWeight="bold" />
+        </mx:HBox>
+    </mx:HBox>
+    <mx:HBox id="infoBarBuffs" height="42" styleName="infoBarMiddle">
+        <mx:HBox id="zoneBuffs" toolTip="ZoneBuffs" verticalAlign="middle">
+            <mx:Image id="resourceIconZoneBuff" />
+            <gui:CustomLabel id="resourceLabelZoneBuff" color="0xFFFFFF" fontWeight="bold" />
+        </mx:HBox>
+    </mx:HBox>
+    <mx:HBox id="infoBarMiddle" height="42" styleName="infoBarMiddle">
+        <mx:HBox id="resource1" horizontalGap="2" verticalAlign="middle">
+            <mx:Image id="resourceIcon1" />
+            <gui:CustomLabel id="resourceLabel1" text="0" color="0xFFFFFF" fontWeight="bold" />
+        </mx:HBox>
+        <mx:HBox id="resource2" horizontalGap="2" verticalAlign="middle">
+            <mx:Image id="resourceIcon2" />
+            <gui:CustomLabel id="resourceLabel2" text="0" color="0xFFFFFF" fontWeight="bold" />
+        </mx:HBox>
+        <mx:HBox id="resource3" horizontalGap="2" verticalAlign="middle">
+            <mx:Image id="resourceIcon3" />
+            <gui:CustomLabel id="resourceLabel3" text="0" color="0xFFFFFF" fontWeight="bold" />
+        </mx:HBox>
+        <mx:HBox id="resource4" horizontalGap="2" verticalAlign="middle">
+            <mx:Image id="resourceIcon4" />
+            <gui:CustomLabel id="resourceLabel4" text="0" color="0xFFFFFF" fontWeight="bold" />
+        </mx:HBox>
+        <mx:HBox id="resource5" horizontalGap="2" verticalAlign="middle">
+            <mx:Image id="resourceIcon5" />
+            <gui:CustomLabel id="resourceLabel5" text="0" color="0xFFFFFF" fontWeight="bold" />
+        </mx:HBox>
+        <mx:HBox id="resource6" horizontalGap="2" verticalAlign="middle">
+            <mx:Image id="resourceIcon6" />
+            <gui:CustomLabel id="resourceLabel6" text="0" color="0xFFFFFF" fontWeight="bold" />
+        </mx:HBox>
+    </mx:HBox>
+    <mx:HBox id="infoBarRight" height="42" styleName="infoBarRight" paddingTop="6">
+        <mx:HBox id="hardCurrency" verticalAlign="middle" paddingTop="2">
+            <mx:Image id="resourceIconHardCurrency" />
+            <gui:CustomLabel id="resourceLabelHardCurrency" color="0xFFFFFF" fontWeight="bold" />
+        </mx:HBox>
+        <mx:Button id="btnAddCash" width="56" height="31"
+            icon="{gAssetManager.GetClass('ButtonIconHardCurrency')}"
+            upSkin="{gAssetManager.GetClass('ButtonAddCashUp')}"
+            downSkin="{gAssetManager.GetClass('ButtonAddCashOver')}"
+            overSkin="{gAssetManager.GetClass('ButtonAddCashOver')}"
+            disabledSkin="{gAssetManager.GetClass('ButtonAddCashDisabled')}" />
+    </mx:HBox>
+</mx:HBox>

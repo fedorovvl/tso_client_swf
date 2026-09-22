@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="175" height="375">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import GUI.Components.Frame;
+        import mx.controls.Label;
+        import ShopSystem.PromotionVO;
+        import GUI.Components.StandardButton;
+        import mx.controls.Text;
+        import ShopSystem.cShopItem;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import mx.events.PropertyChangeEvent;
+        import flash.events.MouseEvent;
+        import ServerState.dResource;
+        import GUI.Assets.gAssetManager;
+        import ShopSystem.cItemContent;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import mx.controls.Alert;
+        import GUI.FloatingItemsManager;
+        import mx.events.CloseEvent;
+        import GUI.Components.CustomAlert;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private var promotion:PromotionVO;
+
+        private var shopItem:cShopItem;
+
+        protected function item_clickHandler(argument1:MouseEvent):void
+        {
+            if (this.shopItem)
+            {
+                global.ui.shopManager.showDetails(this.shopItem);
+            };
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            var localValue3:dResource;
+            super.data = argument1;
+            visible = true;
+            includeInLayout = true;
+            this.promotion = (argument1 as PromotionVO);
+            if (!this.promotion)
+            {
+                visible = false;
+                includeInLayout = false;
+                return;
+            };
+            this.shopItem = cShopItem.GetShopItem(this.promotion.shopItemID);
+            if (!this.shopItem)
+            {
+                visible = false;
+                includeInLayout = false;
+                return;
+            };
+            this.item.setStyle("backgroundImage", gAssetManager.GetClass(("PromotionBG" + int((Math.random() * 4)))));
+            var localValue2:cItemContent = this.shopItem.GetShopItemContent_vector()[0];
+            if (((localValue2.GetName_string().indexOf("BuildBuilding") > -1) || (localValue2.GetName_string().indexOf("BuildDefenseModeBuilding") > -1)))
+            {
+                this.frame.visible = false;
+                this.frame.content = this.shopItem.GetName_string();
+                this.frame.type = this.shopItem.GetFrameType_string();
+                this.mapItem.visible = true;
+                this.mapItem.data = localValue2.GetResourceName_string();
+            }
+            else
+            {
+                this.mapItem.visible = false;
+                this.frame.visible = true;
+                this.frame.content = this.shopItem.GetName_string();
+                this.frame.type = this.shopItem.GetFrameType_string();
+            };
+            this.headline.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.SHOP_ITEMS, this.shopItem.GetName_string());
+            if (((!(this.promotion.locaExtension_string == null)) && (this.promotion.locaExtension_string.length > 0)))
+            {
+                this.desc.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.SHOP_ITEM_DESCRIPTIONS_3, this.promotion.locaExtension_string);
+            }
+            else
+            {
+                this.desc.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.SHOP_ITEM_DESCRIPTIONS_3, this.shopItem.GetName_string());
+            };
+            for each (localValue3 in this.shopItem.GetCosts_vector())
+            {
+                this.btnBuy.label = localValue3.amount.toString();
+                this.btnBuy.setBitmapIcon(gAssetManager.GetResourceIcon(localValue3.name_string));
+            };
+            this.btnBuy.enabled = global.ui.shopManager.buyable(this.shopItem);
+            refreshRendererPresentation();
+        }
+
+        private function alertBuyHandler(argument1:CloseEvent):void
+        {
+            if (argument1.detail == Alert.OK)
+            {
+                if (this.shopItem)
+                {
+                    if (global.ui.shopManager.buy(this.shopItem, defines.TRANSACTION_FROM_PROMOTION))
+                    {
+                        if (this.frame.visible)
+                        {
+                            FloatingItemsManager.createJumpFlyDestroy(this.frame, "GAMESTATE_ID_ACTIONBAR.actionBarCenter.btnActionBar04");
+                        };
+                        if (this.mapItem.visible)
+                        {
+                            FloatingItemsManager.createJumpFlyDestroy(this.frame, "GAMESTATE_ID_ACTIONBAR.actionBarCenter.btnActionBar04");
+                        };
+                        this.btnBuy.enabled = global.ui.shopManager.buyable(this.shopItem);
+                    };
+                };
+            };
+        }
+
+        protected function btnBuy_clickHandler(argument1:MouseEvent):void
+        {
+            CustomAlert.show("ConfirmTransaction", "ConfirmTransaction", (Alert.OK | Alert.CANCEL), null, this.alertBuyHandler, null, Alert.OK, true);
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundColor", 4077097);
+            item.addEventListener("click", item_clickHandler);
+            btnBuy.addEventListener("click", btnBuy_clickHandler);
+            this.width = 175;
+            this.height = 375;
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.clipContent = false;
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="item" y="0" x="1" width="173" height="153">
+        <ui:Frame id="frame" type="specialist" contentType="shopitem"  horizontalCenter="0" verticalCenter="10" />
+        <local:MapItemRenderer id="mapItem" width="162" height="120"  horizontalCenter="0" verticalCenter="10" />
+    </mx:Canvas>
+    <mx:Label id="headline" y="2" maxWidth="165"  horizontalCenter="0" color="2958616" />
+    <mx:Text id="desc" x="5" y="160" width="165" height="195" />
+    <ui:StandardButton id="btnBuy" label="0" width="100" height="30"  bottom="-15" horizontalCenter="0" />
+</mx:Canvas>

@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:CustomText xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*">
+    <mx:Script><![CDATA[
+        import GUI.Components.CustomText;
+        import flash.text.StyleSheet;
+        import mx.formatters.DateFormatter;
+        import mx.styles.CSSStyleDeclaration;
+        import flash.text.TextFormat;
+        import com.bluebyte.tso.chat.CustomMessageVO;
+        import GUI.Loca.cLocaManager;
+        import com.bluebyte.tso.chat.CustomOccupantVO;
+        import GUI.Components.ChatPanel;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private static var STYLESHEET:StyleSheet;
+
+        private static var STYLE_CACHE:Object = new Object();
+
+        private static var formatter:DateFormatter = new DateFormatter();
+
+        public static function setStyleSheet(argument1:StyleSheet):void
+        {
+            STYLESHEET = argument1;
+            STYLE_CACHE = new Object();
+        }
+
+        override public function set data(_value:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = _value;
+                hasPendingRendererData = true;
+                return;
+            }
+            var styleName:String;
+            var usrTF:TextFormat;
+            var msgTF:TextFormat;
+            if (this.data == _value)
+            {
+                return;
+            };
+            super.data = _value;
+            if (_value == null)
+            {
+                return;
+            };
+            var msg:CustomMessageVO = (_value as CustomMessageVO);
+            styleName = "whisper";
+            if (msg.groupMessage)
+            {
+                styleName = msg.room.split(globalFlash.gui.mChatPanel.roomSeperator)[0];
+            };
+            formatter.formatString = "JJ:NN";
+            var senderStart:int;
+            var msgStart:int;
+            var midnight:Date = new Date();
+            midnight.setHours(0, 0, 0, 0);
+            if (((!(msg.time == null)) && (msg.time.getTime() < midnight.getTime())))
+            {
+                text = (("[" + cLocaManager.GetInstance().FormatDateAndTime(msg.time.getTime())) + "] ");
+            }
+            else
+            {
+                if (msg.time != null)
+                {
+                    text = (("[" + formatter.format(msg.time)) + "] ");
+                }
+                else
+                {
+                    text = "[--:--] ";
+                };
+            };
+            senderStart = this.text.length;
+            var sender:String = msg.sender.name;
+            if ((msg.sender as CustomOccupantVO).tag)
+            {
+                sender = ((("[" + (msg.sender as CustomOccupantVO).tag) + "] ") + sender);
+            };
+            text = (text + (sender + ":"));
+            msgStart = this.text.length;
+            text = (text + (" " + msg.text));
+            this.validateNow();
+            try
+            {
+                if (styleName.indexOf("gc_") == 0)
+                {
+                    styleName = "guild";
+                }
+                else
+                {
+                    if (styleName.indexOf("gco_") == 0)
+                    {
+                        styleName = "officers";
+                    }
+                    else
+                    {
+                        if (styleName.indexOf(defines.COOP_ADVENTURE_CHATROOM_PREFIX) == 0)
+                        {
+                            styleName = defines.COOP_ADVENTURE_CHATROOM_PREFIX;
+                        };
+                    };
+                };
+                this.textField.setTextFormat(this.getTextStyle((("." + styleName) + "tstamp")), 0, senderStart);
+                usrTF = this.getTextStyle((("." + styleName) + "sender"));
+                if (msg.clickable)
+                {
+                    usrTF.url = ((("event:action=whisper?fname=" + msg.sender.name) + "|") + msg.sender.id);
+                };
+                this.textField.setTextFormat(usrTF, senderStart, msgStart);
+                usrTF.url = null;
+                msgTF = this.getTextStyle((("." + styleName) + "msg"));
+                if (msg.important)
+                {
+                    msgTF = this.getTextStyle((("." + styleName) + "important"));
+                };
+                if (msg.ownname)
+                {
+                    msgTF = this.getTextStyle((("." + styleName) + "ownname"));
+                };
+                if (msg.moderator)
+                {
+                    msgTF = this.getTextStyle(".modmsg");
+                };
+                if (msg.bluebyte)
+                {
+                    msgTF = this.getTextStyle(".bbmsg");
+                };
+                if (msg.communityLead)
+                {
+                    msgTF = this.getTextStyle(".communityleadmsg");
+                };
+                this.textField.setTextFormat(msgTF, msgStart, this.textField.text.length);
+            }
+            catch(e:Error)
+            {
+                invalidateProperties();
+            };
+            refreshRendererPresentation();
+        }
+
+        private function getTextStyle(argument1:String):TextFormat
+        {
+            var localValue2:TextFormat;
+            var localValue4:String;
+            localValue2 = STYLE_CACHE[argument1];
+            if (localValue2)
+            {
+                return (localValue2);
+            };
+            if (STYLESHEET == null)
+            {
+                CustomChatMessage.STYLESHEET = new StyleSheet();
+                CustomChatMessage.STYLESHEET.parseCSS(new ChatPanel.CSSFile_default().toString());
+            };
+            var localValue3:Object = CustomChatMessage.STYLESHEET.getStyle(argument1);
+            if (localValue3 != null)
+            {
+                localValue4 = localValue3.color;
+                if (((!(localValue4 == null)) && (localValue4.indexOf("#") == 0)))
+                {
+                    localValue3.color = ("0x" + localValue4.substr(1));
+                };
+                localValue2 = new TextFormat(localValue3.fontFamily, defines.CHAT_FONT_SIZE, localValue3.color, (localValue3.fontWeight == "bold"), (localValue3.fontStyle == "italic"), (localValue3.textDecoration == "underline"), localValue3.url, localValue3.target, localValue3.textAlign, localValue3.marginLeft, localValue3.marginRight, localValue3.indent, localValue3.leading);
+                if (localValue3.hasOwnProperty("letterSpacing"))
+                {
+                    localValue2.letterSpacing = localValue3.letterSpacing;
+                };
+            };
+            STYLE_CACHE[argument1] = localValue2;
+            return (localValue2);
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("paddingLeft", -2);
+            this.setStyle("paddingTop", -2);
+            this.setStyle("paddingBottom", -5);
+            this.percentWidth = 100;
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+
+</ui:CustomText>

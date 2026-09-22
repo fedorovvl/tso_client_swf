@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import GUI.Components.StandardCheckBox;
+        import mx.containers.VBox;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import flash.events.MouseEvent;
+        import mx.events.PropertyChangeEvent;
+        import Communication.VO.Mail.dMailVO;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import mx.events.ListEvent;
+        import GUI.GAME.cMailWindow;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        public function onBtnSelect_click(argument1:MouseEvent):void
+        {
+            this.selectMail();
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            var localValue2:dMailVO = (argument1 as dMailVO);
+            if (localValue2.isActive())
+            {
+                this.btnSelect.selected = dMailVO(data).selected;
+                this.btnSelect.enabled = true;
+            }
+            else
+            {
+                this.btnSelect.selected = false;
+                this.btnSelect.enabled = false;
+            };
+            refreshRendererPresentation();
+        }
+
+        private function selectMail():void
+        {
+            this.dispatchEvent(new ListEvent(cMailWindow.SELECT_MAIL, true, false, 0, data.id));
+        }
+
+        private function readPresentationValue2():String
+        {
+            var localValue1:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Select");
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundAlpha", 0);
+            btnSelect.addEventListener("click", onBtnSelect_click);
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+                if (data != null)
+                {
+                    btnSelect.selected = dMailVO(data).selected;
+                }
+                btnSelect.toolTip = readPresentationValue2();
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:VBox id="viewVBox1" percentWidth="100" horizontalAlign="center">
+        <ui:StandardCheckBox id="btnSelect" />
+    </mx:VBox>
+</mx:Canvas>

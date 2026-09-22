@@ -1,0 +1,206 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" width="60" height="75">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Image;
+        import mx.collections.ArrayCollection;
+        import mx.core.mx_internal;
+        import mx.events.PropertyChangeEvent;
+        import MilitarySystem.cMilitaryUnitBase;
+        import MilitarySystem.cMilitaryUnitDescription;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import MilitarySystem.cMilitaryUnitData;
+        import mx.events.ToolTipEvent;
+        import GUI.Components.data.dCombatUnitData;
+        import GUI.Assets.gAssetManager;
+        import Enums.MILITARY_UNIT_ARMORTYPE;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private var dataProvider:ArrayCollection;
+
+        private function CreateTooltip(argument1:ToolTipEvent):void
+        {
+            var localValue2:cMilitaryUnitBase = cMilitaryUnitBase.GetUnitBaseForType(data.name_string);
+            if (localValue2 != null)
+            {
+                if ((localValue2 is cMilitaryUnitDescription))
+                {
+                    cToolTipUtil.createToolTip(cToolTipUtil.MILITARY_UNIT_SKILL_string, argument1);
+                }
+                else
+                {
+                    if ((localValue2 is cMilitaryUnitData))
+                    {
+                        cToolTipUtil.createToolTip(cToolTipUtil.MILITARY_UNIT_VERBOSE_string, argument1);
+                    };
+                };
+            };
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            var localValue2:dCombatUnitData;
+            super.data = argument1;
+            localValue2 = (argument1 as dCombatUnitData);
+            if (((!(localValue2 == null)) && (!(localValue2.isEmpty))))
+            {
+                this.unitIcon.toolTip = localValue2.name_string;
+                if (!localValue2.isNonUnitWinCondition)
+                {
+                    switch (data.armorType)
+                    {
+                        case MILITARY_UNIT_ARMORTYPE.LIGHT:
+                        this.armorTypeIcon.source = gAssetManager.GetClass("IconMeleeSmall");
+                        break;
+                        case MILITARY_UNIT_ARMORTYPE.MEDIUM:
+                        this.armorTypeIcon.source = gAssetManager.GetClass("IconRangedSmall");
+                        break;
+                        case MILITARY_UNIT_ARMORTYPE.HEAVY:
+                        this.armorTypeIcon.source = gAssetManager.GetClass("IconCombat3CavalrySmall");
+                        break;
+                        case MILITARY_UNIT_ARMORTYPE.TANK:
+                        this.armorTypeIcon.source = gAssetManager.GetClass("IconTankSmall");
+                        break;
+                    };
+                    this.armorTypeIcon.visible = true;
+                    if (data.hitPoints >= 0)
+                    {
+                        if (data.hitPoints == 0)
+                        {
+                            this.healthbarIcon.source = gAssetManager.GetClass("WinConditionHealthBar1");
+                        }
+                        else
+                        {
+                            if (data.hitPoints <= (1 / 6))
+                            {
+                                this.healthbarIcon.source = gAssetManager.GetClass("WinConditionHealthBar2");
+                            }
+                            else
+                            {
+                                if (data.hitPoints <= (2 / 6))
+                                {
+                                    this.healthbarIcon.source = gAssetManager.GetClass("WinConditionHealthBar3");
+                                }
+                                else
+                                {
+                                    if (data.hitPoints <= (3 / 6))
+                                    {
+                                        this.healthbarIcon.source = gAssetManager.GetClass("WinConditionHealthBar4");
+                                    }
+                                    else
+                                    {
+                                        if (data.hitPoints <= (4 / 6))
+                                        {
+                                            this.healthbarIcon.source = gAssetManager.GetClass("WinConditionHealthBar5");
+                                        }
+                                        else
+                                        {
+                                            if (data.hitPoints <= (5 / 6))
+                                            {
+                                                this.healthbarIcon.source = gAssetManager.GetClass("WinConditionHealthBar6");
+                                            }
+                                            else
+                                            {
+                                                this.healthbarIcon.source = gAssetManager.GetClass("WinConditionHealthBar7");
+                                            };
+                                        };
+                                    };
+                                };
+                            };
+                        };
+                        this.healthbarIcon.visible = true;
+                    };
+                };
+                this.unitIcon.source = gAssetManager.GetMilitaryIcon(data.name_string);
+                this.unitIcon.visible = true;
+                this.healthbarIcon.visible = true;
+            }
+            else
+            {
+                this.unitIcon.visible = false;
+                this.armorTypeIcon.visible = false;
+                this.healthbarIcon.visible = false;
+            };
+            refreshRendererPresentation();
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            unitIcon.addEventListener("toolTipCreate", CreateTooltip);
+            this.styleName = "buildQueueItem";
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.width = 60;
+            this.height = 75;
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="background" width="52" height="65"  top="1" horizontalCenter="0" backgroundImage="{gAssetManager.GetClass('FrameEnemy')}" />
+    <mx:Image id="unitIcon" width="52" height="65"  top="0" left="0" horizontalCenter="0" />
+    <mx:Image id="armorTypeIcon" width="19" height="19"  top="40" right="10" />
+    <mx:Image id="healthbarIcon" width="61" height="10"  left="0" bottom="0" />
+</mx:Canvas>

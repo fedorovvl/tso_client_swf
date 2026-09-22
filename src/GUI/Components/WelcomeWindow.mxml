@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="800" height="625" cacheAsBitmap="true" clipContent="false">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.events.EffectEvent;
+        import mx.events.ToolTipEvent;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Components.ToolTips.cToolTipUtil;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            _WelcomeWindow_Image1.source = gAssetManager.GetClass("NewsOrnamentalTop");
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            refreshLabels();
+            fadeOut.addEventListener("effectEnd", onFadeOut_effectEnd);
+            btnCloseWindow.addEventListener("toolTipCreate", onBtnCloseWindow_toolTipCreate);
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var header:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "WelcomeHeader");
+            _WelcomeWindow_CustomLabel1.text = ((header == undefined) ? null : String(header));
+            var close:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Close");
+            btnCloseWindow.toolTip = ((close == undefined) ? null : String(close));
+        }
+
+        public function onFadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+
+        public function onBtnCloseWindow_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <mx:Canvas id="background" styleName="basicPanel" top="5" left="5" right="9" bottom="0" />
+    <mx:Image id="_WelcomeWindow_Image1" horizontalCenter="0" top="-35" />
+    <mx:Canvas id="topDeco" styleName="shopFooterSmall" height="20" left="220" right="220" top="21" />
+    <mx:Canvas id="footerDeco" styleName="questPanelFooter" height="60" left="10" right="12" bottom="0" />
+    <gui:CustomLabel id="_WelcomeWindow_CustomLabel1" horizontalCenter="0" top="85" fontWeight="bold" fontSize="15" color="0" />
+    <gui:CustomTextArea id="welcomeText" selectable="false" styleName="noBackground" left="80" right="80" top="115" bottom="90" color="0" textAlign="center" fontSize="13" />
+    <gui:StandardButton id="btnCloseWindow" height="32" bottom="8" horizontalCenter="0" icon="{gAssetManager.GetClass('Close')}" />
+    <gui:CloseButton id="btnClose" top="10" right="24" />
+</mx:Canvas>

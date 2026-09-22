@@ -1,0 +1,212 @@
+/* This CSS file defines ONLY the outlook of all chat messages */
+
+.bbmsg {
+	color: #8CA8FF;
+	font-weight: bold;
+}
+
+.modmsg {
+	color: #E5CD2D;
+	font-weight: bold;
+}
+
+.communityleadmsg {
+	color: #99ff99;
+	font-weight: bold;
+}
+
+.globaltstamp {
+	color: #00FF33;
+}
+
+.globalsender {
+	color: #00FF33;
+	text-decoration: underline;
+}
+
+.globalmsg {
+	color: #E2E2E2;
+}
+
+.globalownname {
+	color: #FF8644;	
+	font-weight: bold;
+}
+
+.globalimportant {
+	color: #E2E2E2;	
+	font-weight: bold;
+}
+.findcooptstamp {
+	color: #00FF33;
+}
+
+.findcoopsender {
+	color: #00FF33;
+	text-decoration: underline;
+}
+
+.findcoopmsg {
+	color: #E2E2E2;
+}
+
+.findcoopownname {
+	color: #FF8644;	
+	font-weight: bold;
+}
+
+.findcoopimportant {
+	color: #E2E2E2;	
+	font-weight: bold;
+}
+.tradetstamp {
+	color: #00FF33;
+}
+
+.tradesender {
+	color: #00FF33;	
+	text-decoration: underline;
+}
+
+.trademsg {
+	color: #E2E2E2;	
+}
+
+.tradeownname {
+	color: #FF9347;	
+	font-weight: bold;
+}
+
+.tradeimportant {
+	color: #E2E2E2;	
+	font-weight: bold;
+}
+
+.helptstamp {
+	color: #00FF33;
+}
+
+.helpsender {
+	color: #00FF33;
+	text-decoration: underline;
+}
+
+.helpmsg {
+	color: #E2E2E2;	
+}
+
+.helpownname {
+	color: #FF9347;	
+	font-weight: bold;
+}
+
+.helpimportant {
+	color: #E2E2E2;	
+	font-weight: bold;
+}
+
+.newststamp {
+	color: #FFFF00;
+}
+
+.newssender {
+	color: #FFFF00;	
+	text-decoration: underline;
+}
+
+.newsmsg {
+	color: #FFFF00;	
+}
+
+.newsimportant {
+	color: #FFFF00;	
+	font-weight: bold;
+}
+
+.newsownname {
+	color: #FF9347;	
+	font-weight: bold;
+}
+
+.guildtstamp {
+	color: #7FFF7F;
+}
+
+.guildsender {
+	color: #7FFF7F;
+	text-decoration: underline;
+}
+
+.guildmsg {
+	color: #7FFF7F;
+}
+
+.guildownname {
+	color: #7FFF7F;	
+	font-weight: bold;
+}
+
+.guildimportant {
+	color: #7FFF7F;
+	font-weight: bold;
+}
+
+.officerststamp {
+	color: #7FFF7F;
+}
+
+.officerssender {
+	color: #7FFF7F;
+	text-decoration: underline;
+}
+
+.officersmsg {
+	color: #7FFF7F;
+}
+
+.officersownname {
+	color: #7FFF7F;	
+	font-weight: bold;
+}
+
+.officersimportant {
+	color: #7FFF7F;
+	font-weight: bold;
+}
+
+.whispertstamp {
+	color: #FC68FF;
+}
+
+.whispersender {
+	color: #FC68FF;
+	text-decoration: underline;
+}
+
+.whispermsg {
+	color: #FC68FF;
+}
+
+.whisperownname {
+	color: #FF9347;	
+	font-weight: bold;
+}
+
+.whisperimportant {
+	color: #FC68FF;
+	font-weight: bold;
+}
+
+.*coop*tstamp {
+	color: #00FF33;
+}
+.*coop*sender{
+	color: #00FF33;
+	text-decoration: underline;
+}
+.*coop*msg {
+	color: #E2E2E2;
+}
+.*coop*ownname {
+	color: #FF8644;	
+}

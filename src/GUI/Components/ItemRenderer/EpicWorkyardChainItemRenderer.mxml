@@ -1,0 +1,303 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*">
+    <mx:Script><![CDATA[
+        import mx.containers.HBox;
+        import mx.controls.Image;
+        import Interface.cGeneralInterface;
+        import GO.epicWorkyard.EpicWorkyardSubBuilding;
+        import Communication.VO.epicWorkyard.ChainVO;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import flash.events.MouseEvent;
+        import GUI.helpers.MovieClipHelpers;
+        import GUI.Assets.gAssetManager;
+        import EpicWorkyard.EpicWorkyardConsts;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import mx.events.FlexEvent;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import ServerState.dResource;
+        import ServerState.cResources;
+        import ServerState.gEconomics;
+        import ServerState.dResourceCreationDefinition;
+        import ServerState.cResourceCreation;
+        import flash.events.Event;
+        import EpicWorkyard.ChainItemSelectedEvent;
+        import mx.events.PropertyChangeEvent;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        public static const HEIGHT:int = 35;
+
+        public static const PADDED_HEIGHT:int = (HEIGHT + 1);
+
+        private const NORMAL_COLOUR:int = 12623724;
+
+        private const HORIZONTAL_CENTER_STYLE_NAME:String = "horizontalCenter";
+
+        private const HIGHLIGHT_COLOUR:int = 10979932;
+
+        private const DESTROY_CHAIN_ICON_HORIZONTAL_CENTER_OFFSET:int = -5;
+
+        private const BACKGROUND_COLOR_STYLE_NAME:String = "backgroundColor";
+
+        private const DISABLED_COLOUR:int = 0x333333;
+
+        private var generalInterface:cGeneralInterface;
+
+        private var building:EpicWorkyardSubBuilding;
+
+        private var chain:ChainVO;
+
+        public function getChain():ChainVO
+        {
+            return (this.chain);
+        }
+
+        private function initSelectedActiveChain():void
+        {
+            this.removeListeners();
+            this.mouseEnabled = false;
+            this.mouseChildren = false;
+        }
+
+        private function initDestroyChain():void
+        {
+            MovieClipHelpers.removeFromParent(this.inputList);
+            this.inputList.visible = false;
+            MovieClipHelpers.removeFromParent(this.outputResourceIcon);
+            this.outputResourceIcon.visible = false;
+            this.iconImage.source = gAssetManager.GetBitmap(EpicWorkyardConsts.DESTROY_PRODUCTION_CHAIN_ICON_NAME);
+            this.iconImage.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, EpicWorkyardConsts.REMOVE_PRODUCTION_CHAIN_TOOLTIP_NAME);
+            this.iconImage.setStyle(this.HORIZONTAL_CENTER_STYLE_NAME, this.DESTROY_CHAIN_ICON_HORIZONTAL_CENTER_OFFSET);
+        }
+
+        public function getEpicSubBuilding():EpicWorkyardSubBuilding
+        {
+            return (this.building);
+        }
+
+        private function removeListeners():void
+        {
+            this.removeEventListener(FlexEvent.CREATION_COMPLETE, this.init);
+            this.removeEventListener(MouseEvent.CLICK, this.handleClick);
+        }
+
+        public function setSelected(argument1:Boolean):void
+        {
+        }
+
+        private function handleIconTooltipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        private function initActiveChain():void
+        {
+            var localValue3:EpicWorkyardResourceItemRenderer;
+            var localValue4:ResourceIconRenderer;
+            var localValue6:dResource;
+            var localValue1:cResources = this.generalInterface.mCurrentPlayerZone.GetResources(this.generalInterface.mCurrentPlayer);
+            var localValue2:dResourceCreationDefinition = gEconomics.GetResourcesCreationDefinitionForBuilding(this.chain.getName());
+            var localValue5:dResource = new dResource();
+            this.chain.computeInputOutput();
+            if (localValue2)
+            {
+                if (localValue2.amountRemoved >= 0)
+                {
+                    if (localValue2.externalResource_string == "")
+                    {
+                        for each (localValue6 in localValue2.necessaryResources_vector)
+                        {
+                            localValue3 = new EpicWorkyardResourceItemRenderer();
+                            localValue5 = new dResource();
+                            localValue5.name_string = localValue6.name_string;
+                            localValue5.amount = (localValue6.amount * this.chain.getProductivityInput());
+                            localValue3.data = localValue5;
+                            this.inputList.addChild(localValue3);
+                        };
+                    }
+                    else
+                    {
+                        localValue4 = new ResourceIconRenderer();
+                        localValue4.missing = (((this.building) && (this.building.IsBuildingInfoIconDelayPassed())) && (this.building.GetResourceCreation().GetProductionState() == cResourceCreation.PRODUCTIONSTATE_ERROR_NECESSARY_RESOURCE_MISSING));
+                        localValue4.resourceName = ("Deposit" + localValue2.externalResource_string);
+                        this.inputList.addChild(localValue4);
+                    };
+                    localValue5 = new dResource();
+                    localValue5.name_string = localValue2.defaultSetting.resourceName_string;
+                    localValue5.amount = Math.abs((((localValue2.amountRemoved == 0) ? 1 : localValue2.amountRemoved) * this.chain.getProductivityOutput()));
+                    this.outputResourceIcon.data = localValue5;
+                }
+                else
+                {
+                    localValue4 = new ResourceIconRenderer();
+                    localValue4.resourceName = "Seed";
+                    this.inputList.addChild(localValue4);
+                    localValue5 = new dResource();
+                    localValue5.name_string = ("Deposit" + localValue2.externalResource_string);
+                    localValue5.amount = Math.abs((localValue2.amountRemoved * this.chain.getProductivityOutput()));
+                    this.outputResourceIcon.data = localValue5;
+                };
+            };
+        }
+
+        public function setData(argument1:ChainVO, argument2:cGeneralInterface, argument3:EpicWorkyardSubBuilding):void
+        {
+            this.chain = argument1;
+            this.generalInterface = argument2;
+            this.building = argument3;
+            if (((this.inputList) && (this.outputResourceIcon)))
+            {
+                this.init(null);
+            }
+            else
+            {
+                this.addEventListener(FlexEvent.CREATION_COMPLETE, this.init, false, 0, true);
+            };
+        }
+
+        private function highlight(argument1:Event):void
+        {
+            if (this.enabled)
+            {
+                this.setStyle(this.BACKGROUND_COLOR_STYLE_NAME, this.HIGHLIGHT_COLOUR);
+            };
+        }
+
+        private function init(argument1:FlexEvent):void
+        {
+            this.removeEventListener(FlexEvent.CREATION_COMPLETE, this.init);
+            this.addEventListener(MouseEvent.CLICK, this.handleClick, false, 0, true);
+            this.inputList.removeAllChildren();
+            if (this.chain)
+            {
+                this.initActiveChain();
+                if ((((!(this.building == null)) && (!(this.chain == null))) && (this.chain.getChainIsEquivalentToBuilding(this.building))))
+                {
+                    this.initSelectedActiveChain();
+                };
+                if (!this.chain.getIsUnlocked(this.generalInterface))
+                {
+                    this.enabled = false;
+                    this.setStyle(this.BACKGROUND_COLOR_STYLE_NAME, this.DISABLED_COLOUR);
+                    this.toolTip = this.chain.getToolTipText(this.generalInterface);
+                }
+                else
+                {
+                    this.enabled = true;
+                };
+            }
+            else
+            {
+                this.initDestroyChain();
+                this.enabled = true;
+            };
+        }
+
+        private function handleClick(argument1:MouseEvent):void
+        {
+            this.dispatchEvent(new ChainItemSelectedEvent(ChainItemSelectedEvent.ITEM_SELECTED, this));
+        }
+
+        private function normal(argument1:Event):void
+        {
+            if (this.enabled)
+            {
+                this.setStyle(this.BACKGROUND_COLOR_STYLE_NAME, this.NORMAL_COLOUR);
+            };
+        }
+
+        public function onOutputResourceIcon_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        public function destroy():void
+        {
+            this.removeListeners();
+            this.chain = null;
+            this.generalInterface = null;
+            this.building = null;
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("disabledOverlayAlpha", 0.5);
+            this.setStyle("horizontalAlign", "center");
+            this.setStyle("verticalAlign", "middle");
+            this.setStyle("paddingLeft", 25);
+            this.setStyle("paddingRight", 25);
+            iconImage.addEventListener("toolTipCreate", handleIconTooltipCreate);
+            outputResourceIcon.addEventListener("toolTipCreate", onOutputResourceIcon_toolTipCreate);
+            iconImage.source = gAssetManager.GetBitmap("ProductionArrow");
+            this.verticalScrollPolicy = "off";
+            this.enabled = false;
+            this.percentWidth = 100;
+            this.addEventListener("rollOver", this.highlight);
+            this.addEventListener("rollOut", this.normal);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+                this.setStyle("backgroundColor", NORMAL_COLOUR);
+                this.height = HEIGHT;
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:HBox id="inputList" percentWidth="100"  horizontalGap="0" verticalAlign="middle" horizontalAlign="right" />
+    <mx:Image id="iconImage"  verticalCenter="0" />
+    <local:EpicWorkyardResourceItemRenderer id="outputResourceIcon" percentWidth="100"  verticalAlign="middle" horizontalAlign="left" />
+</mx:HBox>

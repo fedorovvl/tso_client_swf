@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="460" height="520" styleName="specialPanel">
+    <mx:Script><![CDATA[
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(busyOverlay);
+            LegacyMxmlContent.createChildren(defaultBottom);
+            busyOverlay.addEventListener("show", updateBusyAnimation);
+            busyOverlay.addEventListener("hide", updateBusyAnimation);
+            updateBusyAnimation();
+            updateLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", updateLabels, false, 0, true);
+        }
+
+        private function updateBusyAnimation(event:Event = null):void
+        {
+            _DefenseBuildingPanel_SpriteLibAnimation1.visible = busyOverlay.visible;
+        }
+
+        private function updateLabels(event:Event = null):void
+        {
+            btnDefenseCommit.label = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "OK");
+            btnDefenseCancel.label = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Cancel");
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <gui:BuildingWindowHeader id="buildingHeader"  top="6" left="20" right="20" />
+            <gui:Combat3UnitManager id="unitManager"  left="24" right="24" bottom="52" top="80" />
+            <mx:Canvas id="busyOverlay" styleName="detailsContentBox" visible="false" left="25" right="25" top="98" bottom="87">
+                <gui:SpriteLibAnimation id="_DefenseBuildingPanel_SpriteLibAnimation1"
+                    animationName="guianim_hourglass" loop="true" visible="false" width="48" height="48"  horizontalCenter="0" verticalCenter="0" />
+            </mx:Canvas>
+            <mx:Canvas id="defaultBottom" height="45" styleName="detailsContentBox" left="31" right="28" bottom="0" backgroundAlpha="0">
+                <gui:ReversableHBox id="defenseButtonBox" horizontalCenter="0" top="0" left="1" right="1" bottom="0" horizontalAlign="center" verticalAlign="middle" backgroundAlpha="0">
+                    <gui:StandardButton id="btnDefenseCommit" enabled="true" width="70" height="32" />
+                    <gui:StandardButton id="btnDefenseCancel" enabled="true" height="32" />
+                </gui:ReversableHBox>
+            </mx:Canvas>
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:datagrid="GUI.Components.DataGrid.*"
+    width="340" height="360">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.controls.dataGridClasses.DataGridColumn;
+        import mx.states.RemoveChild;
+        import mx.states.SetProperty;
+        import mx.states.State;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+
+        public var stateWithdraw:State;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(headerBox);
+            LegacyMxmlContent.createChildren(contentBox);
+            LegacyMxmlContent.createChildren(tabHeader);
+            LegacyMxmlContent.createChildren(tablist);
+            LegacyMxmlContent.createChildren(buttonRow);
+            var nameColumn:DataGridColumn = new DataGridColumn();
+            nameColumn.dataField = "name";
+            nameColumn.draggable = false;
+            nameColumn.width = 60;
+            nameColumn.resizable = false;
+            guildTabsGrid.columns = [nameColumn];
+            guildTabsGrid.showHeaders = false;
+            guildTabsGrid.rowHeight = 25;
+            guildTabsGrid.setStyle("alternatingItemColors", []);
+            guildTabsGrid.addEventListener("toolTipCreate", onGridToolTipCreate);
+            var withdraw:State = new State();
+            withdraw.name = "withdraw";
+            var setHeight:SetProperty = new SetProperty();
+            setHeight.target = this;
+            setHeight.name = "height";
+            setHeight.value = 200;
+            var dropHeader:RemoveChild = new RemoveChild();
+            dropHeader.target = tabHeader;
+            var dropList:RemoveChild = new RemoveChild();
+            dropList.target = tablist;
+            withdraw.overrides = [setHeight, dropHeader, dropList];
+            stateWithdraw = withdraw;
+            states = [withdraw];
+            refreshLabels();
+            updateEnabled();
+            amountSlider.addEventListener("enabledChanged", updateEnabled);
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        public function onGridToolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var text:*;
+            text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "SelectedResource");
+            titleText.text = ((text == undefined) ? null : String(text));
+            text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "TargetBankTab");
+            tabTitle.text = ((text == undefined) ? null : String(text));
+        }
+
+        private function updateEnabled(event:Event = null):void
+        {
+            selectedCount.enabled = amountSlider.enabled;
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <mx:Canvas id="headerBox" styleName="detailsHeader" height="30" right="4" left="4">
+                <mx:Text id="titleText" selectable="false" top="6" bottom="2" color="0xFFFFFF" horizontalCenter="0" />
+            </mx:Canvas>
+            <mx:Canvas id="contentBox" styleName="detailsContentBox" height="80"
+                horizontalScrollPolicy="off" verticalScrollPolicy="off" right="11" left="11" top="25">
+                <mx:Canvas id="innerBox" styleName="detailsSubContentBox"
+                    horizontalScrollPolicy="off" verticalScrollPolicy="off" right="5" left="5" top="5" bottom="5">
+                    <mx:HBox id="resourceRow" percentHeight="100" percentWidth="100" verticalAlign="middle">
+                        <mx:Box id="iconBox" percentWidth="25" horizontalAlign="right">
+                            <mx:Image id="resourceIcon" />
+                            <mx:Image id="foregroundIcon" />
+                        </mx:Box>
+                        <mx:VBox id="formBox" percentHeight="100" percentWidth="100" horizontalAlign="center">
+                            <mx:Text id="resourceName" percentWidth="100" color="0xFFFFFF" fontWeight="bold" />
+                            <mx:HBox id="inputRow">
+                                <mx:TextInput id="selectedCount" width="12" height="17" text=""
+                                    restrict="0-9" styleName="standardInput" color="0xFFFFFF" fontSize="10" textAlign="right" />
+                                <mx:Label id="maximumCount" fontSize="10" color="0xFFFFFF" />
+                            </mx:HBox>
+                            <gui:ExtendedHSlider id="amountSlider" minimum="1" percentWidth="60" />
+                        </mx:VBox>
+                    </mx:HBox>
+                </mx:Canvas>
+            </mx:Canvas>
+            <mx:Canvas id="tabHeader" styleName="detailsSubHeader" height="30" right="10" left="10" top="110">
+                <mx:Text id="tabTitle" selectable="false" top="6" bottom="2" color="0xFFFFFF" horizontalCenter="0" />
+            </mx:Canvas>
+            <mx:Canvas id="tablist" styleName="detailsContentBox" height="130"
+                horizontalScrollPolicy="off" verticalScrollPolicy="off" right="11" left="11" top="135">
+                <datagrid:CustomDataGrid id="guildTabsGrid" left="12" right="13" top="5" bottom="0" backgroundAlpha="0" borderColor="7693901" borderThickness="0" horizontalGridLines="false" iconColor="13077059" rollOverColor="7957587" selectionColor="8482380" verticalAlign="middle" verticalGridLineColor="7693901" />
+            </mx:Canvas>
+            <mx:HBox id="buttonRow" horizontalCenter="0" bottom="17">
+                <gui:StandardButton id="btnOK" width="120" height="26" enabled="false" icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+                <gui:StandardButton id="btnCancel" width="120" height="26" icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+            </mx:HBox>
+            <mx:Canvas id="footerRuler" styleName="hr" height="3" horizontalCenter="0" bottom="55" left="0" right="0" />
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

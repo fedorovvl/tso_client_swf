@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:ach="GUI.Components.achievement.list.*"
+    clipContent="false" cacheAsBitmap="true" width="900" height="500">
+    <mx:Script><![CDATA[
+        import flash.filters.BevelFilter;
+        import flash.filters.BitmapFilterQuality;
+        import GUI.Assets.gAssetManager;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            var bevel:BevelFilter = new BevelFilter();
+            bevel.distance = 1;
+            bevel.angle = 225;
+            bevel.highlightColor = 0xFFFFFF;
+            bevel.highlightAlpha = 0.5;
+            bevel.shadowColor = 0;
+            bevel.shadowAlpha = 0.5;
+            bevel.blurX = 4;
+            bevel.blurY = 4;
+            bevel.strength = 1;
+            bevel.quality = BitmapFilterQuality.MEDIUM;
+            bevelBox.filters = [bevel];
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="background" styleName="basicPanel"
+        top="5" left="5" right="9" bottom="0" />
+    <mx:Image id="ornImage" horizontalCenter="0" top="-52"
+        source="@Embed(source='../../../assets/embedded/achievement/achievement_achievement_ornamental_top.png')" />
+    <mx:Label id="headline" left="46" right="46" top="15"
+        fontWeight="bold" textAlign="center" color="0xFFFFFF" />
+    <mx:Canvas id="detailsHeader" styleName="detailsHeader"
+        left="14" right="16" top="33" bottom="10">
+        <mx:HBox id="contentContainer" left="13" right="15" top="8" bottom="3" horizontalGap="2">
+            <mx:Canvas id="listContainer" width="262" height="446"
+                horizontalScrollPolicy="off" verticalScrollPolicy="off">
+                <gui:SpecialButton id="btnTitle" height="29" width="235" labelCenter="true" left="0" right="0" />
+                <mx:Canvas id="bevelBox" width="245" height="416" left="0" top="30" backgroundColor="0x31281E" />
+                <mx:Canvas id="listClip" width="259" height="412" left="3" top="33"
+                    horizontalScrollPolicy="off" verticalScrollPolicy="on">
+                    <ach:AchievementCategoryListViewComponent id="listViewComponent" width="242" />
+                </mx:Canvas>
+            </mx:Canvas>
+            <mx:Canvas id="vrMid" styleName="vr" width="3" height="387" />
+            <mx:Canvas id="detailsContainer" width="560" height="399" clipContent="false" backgroundColor="0xC1A776">
+                <mx:Canvas id="vrLeft" styleName="vr" width="3" height="387" right="-5" top="0" />
+                <mx:Canvas id="detailsViewContainer" width="560" height="390" top="0"
+                    horizontalScrollPolicy="off" verticalScrollPolicy="off">
+                    <mx:Canvas id="detailViewHeaderContainer" width="560" height="71" clipContent="false" top="0"
+                        verticalScrollPolicy="off" horizontalScrollPolicy="off" backgroundSize="100%"
+                        backgroundImage="{gAssetManager.GetClass('AchievementDetailHeaderBackground')}" />
+                    <mx:Canvas id="detailViewContentContainer" width="560" height="320" top="70"
+                        verticalScrollPolicy="auto" horizontalScrollPolicy="off"
+                        backgroundColor="0xFF0000" backgroundAlpha="0" />
+                    <mx:Canvas id="hourglassAnimLayer" percentWidth="100" percentHeight="100"
+                        visible="false" styleName="detailsContentBox" backgroundAlpha="0.6">
+                        <gui:SpriteLibAnimation id="hourglassAnim" animationName="guianim_hourglass"
+                            loop="true" visible="false" width="48" height="48"
+                            horizontalCenter="0" verticalCenter="0" />
+                    </mx:Canvas>
+                </mx:Canvas>
+                <mx:Canvas id="backgroundFooter" styleName="questPanelFooter" height="60" clipContent="false"
+                    left="-6" right="-8" bottom="-50">
+                    <mx:HBox id="footerButtons" bottom="9" horizontalCenter="0">
+                        <gui:StandardButton id="btnClosePanel" height="32" width="150" />
+                    </mx:HBox>
+                </mx:Canvas>
+            </mx:Canvas>
+        </mx:HBox>
+    </mx:Canvas>
+    <gui:CloseButton id="btnClose" top="10" right="24" />
+</mx:Canvas>

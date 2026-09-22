@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:cg="com.bluebyte.tso.contentgenerator.view.ui.component.*"
+    width="800" height="600" cacheAsBitmap="true" implements="GUI.Components.IGUIList">
+    <mx:Script><![CDATA[
+        import __AS3__.vec.Vector;
+        import com.bluebyte.tso.contentgenerator.view.ui.itemrenderer.ContentGeneratorCategoryItemRenderer;
+        import com.bluebyte.tso.contentgenerator.view.ui.itemrenderer.ContentGeneratorCollectionItemRenderer;
+        import com.bluebyte.tso.contentgenerator.view.ui.itemrenderer.ContentGeneratorEffectVOItemRenderer;
+        import converted.bluebyte.tso.contentgenerator.logic.ContentGeneratorCategory;
+        import converted.bluebyte.tso.contentgenerator.logic.ContentGeneratorContent;
+        import Enums.LOCA_GROUP;
+        import flash.display.DisplayObject;
+        import flash.events.Event;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.LegacyMxmlContent;
+        import GUI.Loca.cLocaManager;
+        import mx.collections.ArrayCollection;
+        import mx.core.ClassFactory;
+        import mx.events.EffectEvent;
+        import mx.events.PropertyChangeEvent;
+
+        [Embed(source="../../../../../../../../assets/embedded/contentgenerator/contentgenerator_cg_header_crystal.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_contentgenerator_cg_header_crystal_png_979580629:Class;
+
+        [Embed(source="../../../../../../../../assets/embedded/contentgenerator/contentgenerator_cg_header_gfx.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_contentgenerator_cg_header_gfx_png_1879267541:Class;
+
+        private var _mAutoRewindEnabled:Boolean = false;
+
+        [Bindable(event="propertyChange")]
+        public function get mAutoRewindEnabled():Boolean
+        {
+            return (_mAutoRewindEnabled);
+        }
+
+        public function set mAutoRewindEnabled(value:Boolean):void
+        {
+            var oldValue:Object = _mAutoRewindEnabled;
+            if (oldValue !== value)
+            {
+                _mAutoRewindEnabled = value;
+                if (ani != null)
+                {
+                    ani.autoRewind = value;
+                }
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "mAutoRewindEnabled", oldValue, value));
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            LegacyMxmlContent.createChildren(mainPanel);
+            LegacyMxmlContent.createChildren(TopBar);
+            LegacyMxmlContent.createChildren(resourcesContainer);
+            LegacyMxmlContent.createChildren(mainBackground);
+            LegacyMxmlContent.createChildren(collectionDescriptionCanvas);
+            LegacyMxmlContent.createChildren(collectionDescriptionTextCanvas);
+            LegacyMxmlContent.createChildren(collectionCountCanvas);
+            LegacyMxmlContent.createChildren(resultCanvas);
+            LegacyMxmlContent.createChildren(resultsHeader);
+            LegacyMxmlContent.createChildren(controllerCanvas);
+            headerImage.source = _embed_mxml_____data_src_gfx_embedded_contentgenerator_cg_header_gfx_png_1879267541;
+            headerCrystalImage.source = _embed_mxml_____data_src_gfx_embedded_contentgenerator_cg_header_crystal_png_979580629;
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            categoryButtonContainer.itemRenderer = new ClassFactory(ContentGeneratorCategoryItemRenderer);
+            collectionButtonContainer.itemRenderer = new ClassFactory(ContentGeneratorCollectionItemRenderer);
+            resultsList.itemRenderer = new ClassFactory(ContentGeneratorEffectVOItemRenderer);
+            fadeOut.addEventListener("effectEnd", __fadeOut_effectEnd);
+            ani.autoRewind = mAutoRewindEnabled;
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function locaLabel(key:String):String
+        {
+            var value:* = cLocaManager.GetInstance().getLabel(key);
+            return ((value == undefined) ? null : String(value));
+        }
+
+        private function locaText(group:String, key:String):String
+        {
+            var value:* = cLocaManager.GetInstance().GetText(group, key);
+            return ((value == undefined) ? null : String(value));
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            if (!cLocaManager.GetInstance().IsInitialized())
+            {
+                return;
+            }
+            panelLabel.text = locaLabel("ContentGenerator");
+            availableLabel.text = locaLabel("Available");
+            crystalResourceIcon.toolTip = locaText(LOCA_GROUP.RESOURCES, "Crystal");
+            crystalResourceLabel.toolTip = locaText(LOCA_GROUP.RESOURCES, "Crystal");
+            gemResourceIcon.toolTip = locaText(LOCA_GROUP.RESOURCES, "HardCurrency");
+            gemResourceLabel.toolTip = locaText(LOCA_GROUP.RESOURCES, "HardCurrency");
+            btnAddCash.toolTip = locaLabel("BuyGemsInGiftWindow");
+            collectionCountCanvas.toolTip = locaText(LOCA_GROUP.TOOLTIP, "CGCollectionCountText");
+            completeCollectionButton.label = locaLabel("Complete");
+            completeCollectionButton.toolTip = locaText(LOCA_GROUP.TOOLTIP, "CGCompleteCollectionButton");
+            possibleResultsLabel.text = locaLabel("PossibleResults");
+            incrementButton.toolTip = locaText(LOCA_GROUP.TOOLTIP, "CGIncrementRolls");
+            decrementButton.toolTip = locaText(LOCA_GROUP.TOOLTIP, "CGDecrementRolls");
+            spinButton.toolTip = locaText(LOCA_GROUP.TOOLTIP, "CGRollButton");
+        }
+
+        public function __fadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+
+        public function getAllItems(_arg_1:String):Vector.<DisplayObject>
+        {
+            var _local_3:ArrayCollection;
+            var _local_4:int;
+            if (_arg_1 == null)
+            {
+                return (null);
+            };
+            var _local_2:Vector.<DisplayObject> = new Vector.<DisplayObject>();
+            if (this.categoryButtonContainer.dataProvider != null)
+            {
+                _local_3 = ArrayCollection(this.categoryButtonContainer.dataProvider);
+                _local_4 = 0;
+                while (_local_4 < _local_3.length)
+                {
+                    if (_local_3[_local_4].GetName_string() == _arg_1)
+                    {
+                        _local_2.push((this.categoryButtonContainer.indexToItemRenderer(_local_4) as DisplayObject));
+                    };
+                    _local_4++;
+                };
+            };
+            if (this.collectionButtonContainer.dataProvider != null)
+            {
+                _local_3 = ArrayCollection(this.collectionButtonContainer.dataProvider);
+                _local_4 = 0;
+                while (_local_4 < _local_3.length)
+                {
+                    if (_local_3[_local_4].GetName_string() == _arg_1)
+                    {
+                        _local_2.push((this.collectionButtonContainer.indexToItemRenderer(_local_4) as DisplayObject));
+                    };
+                    _local_4++;
+                };
+            };
+            switch (_arg_1)
+            {
+                case "spinButton":
+                    _local_2.push(this.spinButton);
+                case "completeCollectionButton":
+                    _local_2.push(this.completeCollectionButton);
+                case "incrementButton":
+                    _local_2.push(this.incrementButton);
+                case "decrementButton":
+                    _local_2.push(this.decrementButton);
+            };
+            return (_local_2);
+        }
+
+        public function getFirstItem(_arg_1:String):DisplayObject
+        {
+            var _local_2:ArrayCollection;
+            var _local_3:int;
+            var _local_4:ArrayCollection;
+            var _local_5:int;
+            if (_arg_1 == null)
+            {
+                return (null);
+            };
+            if (this.categoryButtonContainer.dataProvider != null)
+            {
+                _local_2 = ArrayCollection(this.categoryButtonContainer.dataProvider);
+                _local_3 = 0;
+                while (_local_3 < _local_2.length)
+                {
+                    if ((_local_2[_local_3] as ContentGeneratorCategory).getName() == _arg_1)
+                    {
+                        return (this.categoryButtonContainer.indexToItemRenderer(_local_3) as DisplayObject);
+                    };
+                    _local_3++;
+                };
+            };
+            if (this.collectionButtonContainer.dataProvider != null)
+            {
+                _local_4 = ArrayCollection(this.collectionButtonContainer.dataProvider);
+                _local_5 = 0;
+                while (_local_5 < _local_4.length)
+                {
+                    if ((_local_4[_local_5] as ContentGeneratorContent).getName() == _arg_1)
+                    {
+                        return (this.collectionButtonContainer.indexToItemRenderer(_local_5) as DisplayObject);
+                    };
+                    _local_5++;
+                };
+            };
+            switch (_arg_1)
+            {
+                case "spinButton":
+                    return (this.spinButton);
+                case "completeCollectionButton":
+                    return (this.completeCollectionButton);
+                case "incrementButton":
+                    return (this.incrementButton);
+                case "decrementButton":
+                    return (this.decrementButton);
+            };
+            return (getChildByName(_arg_1));
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <mx:Canvas id="mainPanel" top="53" bottom="53" left="19" right="19" styleName="contentGeneratorBackground"
+        horizontalScrollPolicy="off" verticalScrollPolicy="off">
+        <gui:CustomLabel id="panelLabel" height="15" top="6" left="190" right="200" textAlign="center" fontWeight="bold" color="0xFFFFFF" />
+        <mx:Canvas id="TopBar" top="25" left="3" right="1" backgroundAlpha="1" height="38" styleName="contentGeneratorTitleBackground">
+            <mx:HBox id="resourcesContainer" left="240" right="240" top="6" bottom="9" verticalAlign="middle">
+                <gui:CustomLabel id="availableLabel" color="0xFFFFFF" />
+                <gui:TSOImage id="crystalResourceIcon" source="{gAssetManager.GetResourceIcon('Crystal')}" />
+                <gui:CustomLabel id="crystalResourceLabel" text="" color="0xFFFFFF" fontWeight="bold" />
+                <gui:TSOImage id="gemResourceIcon" source="{gAssetManager.GetResourceIcon('HardCurrency')}" />
+                <gui:CustomLabel id="gemResourceLabel" text="" color="0xFFFFFF" fontWeight="bold" />
+            </mx:HBox>
+            <mx:Button id="btnAddCash" right="40" top="4" width="56" height="31"
+                icon="{gAssetManager.GetClass('ButtonIconHardCurrency')}"
+                upSkin="{gAssetManager.GetClass('ButtonAddCashUp')}"
+                downSkin="{gAssetManager.GetClass('ButtonAddCashOver')}"
+                overSkin="{gAssetManager.GetClass('ButtonAddCashOver')}"
+                disabledSkin="{gAssetManager.GetClass('ButtonAddCashDisabled')}" />
+        </mx:Canvas>
+        <mx:HorizontalList id="categoryButtonContainer" height="115" selectable="false"
+            backgroundAlpha="0" left="150" right="150" top="60" horizontalCenter="0" borderStyle="none" />
+        <mx:Canvas id="mainBackground" top="130" left="2" bottom="3" backgroundAlpha="1" backgroundColor="0"
+            width="500" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+            <gui:TSOVideoDisplay id="ani" width="500" height="370" playheadTime="0" autoPlay="false" />
+        </mx:Canvas>
+        <mx:Canvas id="collectionDescriptionCanvas" right="5" top="130" backgroundAlpha="1" backgroundColor="4535340"
+            width="253" height="185">
+            <mx:Canvas id="collectionDescriptionTextCanvas" left="5" top="5" bottom="35" right="5" styleName="textBoxBackground">
+                <gui:CustomTextArea id="collectionDescriptionText" text="" verticalScrollPolicy="on" selectable="false" editable="false"
+                    left="4" right="4" top="4" bottom="4" color="0xFFFFFF" borderStyle="none" backgroundAlpha="0" />
+            </mx:Canvas>
+            <gui:TSOImage id="partImage" left="10" bottom="6" width="26" height="25" />
+            <mx:Canvas id="collectionCountCanvas" left="45" bottom="8" height="21" width="95" styleName="textBoxBackground">
+                <gui:CustomLabel id="collectionCountText" text="" percentWidth="100" percentHeight="100"
+                    top="2" fontWeight="bold" textAlign="center" color="0xFFFFFF" />
+            </mx:Canvas>
+            <gui:StandardButton id="completeCollectionButton" right="18" bottom="5" height="25" width="83" />
+        </mx:Canvas>
+        <mx:Canvas id="resultCanvas" bottom="0" right="5" backgroundAlpha="1" backgroundColor="4276807" width="253" height="180">
+            <mx:Canvas id="resultsHeader" left="1" right="1" top="1" bottom="4" backgroundAlpha="1" styleName="contentGeneratorResults">
+                <gui:CustomLabel id="possibleResultsLabel" percentWidth="100" color="0xFFFFFF" top="2" textAlign="center" />
+                <mx:Canvas id="rewardResultCanvas" left="4" right="4" top="4" bottom="4" backgroundAlpha="1"
+                    verticalScrollPolicy="auto" horizontalScrollPolicy="off" />
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas id="selectorOverlayCanvas" top="80" percentWidth="100" height="70" />
+        <gui:CloseButton id="btnClose" top="5" right="15" />
+    </mx:Canvas>
+    <mx:Canvas id="collectionCanvas" top="150" left="0" right="0" height="54" styleName="contentGeneratorGearHeader"
+        verticalScrollPolicy="off" horizontalScrollPolicy="off" />
+    <mx:HorizontalList id="collectionButtonContainer" width="240" height="75" selectable="false"
+        backgroundAlpha="0" left="160" top="155" paddingLeft="10" borderStyle="none" />
+    <gui:TSOImage id="headerImage" horizontalCenter="-30" top="0" />
+    <gui:TSOImage id="headerCrystalImage" horizontalCenter="-10" top="12" />
+    <mx:Canvas id="topLeftGearImage" top="46" left="5" width="92" height="65" styleName="contentGeneratorTopLeftGearHeader" mouseEnabled="false" />
+    <mx:Canvas id="topRightGearImage" top="46" right="2" width="44" height="64" styleName="contentGeneratorTopRightGearHeader" mouseEnabled="false" />
+    <mx:Canvas id="footerCanvas" bottom="14" left="2" right="0" width="44" height="107" styleName="contentGeneratorFooter" mouseEnabled="false" />
+    <gui:CustomTileList id="resultsList" width="230" height="160" selectable="false"
+        bottom="49" right="34" backgroundAlpha="0" borderStyle="none" paddingBottom="0" />
+    <mx:Canvas id="controllerCanvas" left="100" bottom="0" width="327" height="144" styleName="contentGeneratorController">
+        <cg:CGIncrementButton id="incrementButton" left="34" top="23" width="25" height="23" />
+        <cg:ScrollingDigitWheel id="selectorSpinner" left="32" top="55" width="33" height="25" digitGap="2" numberOfDigits="2" />
+        <cg:CGDecrementButton id="decrementButton" left="34" top="84" width="25" height="23" />
+        <gui:TSOImage id="crystalSpinnerImage" top="35" left="70" source="{gAssetManager.GetResourceIcon('Crystal')}" />
+        <cg:ScrollingDigitWheel id="crystalSpinner" left="98" top="37" width="87" height="25" digitGap="2" numberOfDigits="5" />
+        <gui:TSOImage id="gemSpinnerImage" top="70" left="69" source="{gAssetManager.GetResourceIcon('HardCurrency')}" />
+        <cg:ScrollingDigitWheel id="gemSpinner" left="99" top="71" width="87" height="25" digitGap="2" numberOfDigits="5" />
+        <gui:TSOImage id="spinButton" left="210" top="21" width="88" height="88" source="{gAssetManager.GetClass('congen_button')}" />
+    </mx:Canvas>
+</mx:Canvas>

@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*" width="212" height="80">
+    <mx:Script><![CDATA[
+        import GUI.Components.LegacyMxmlContent;
+        import Communication.VO.TriggerVO;
+        import Communication.VO.dQuestDefinitionTriggerVO;
+        import mx.collections.ArrayCollection;
+        import GUI.Assets.gAssetManager;
+        import Enums.TRIGGER_ACTION;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import Utils.StringUtils;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import Communication.VO.dQuestTriggerVO;
+        import converted.bluebyte.tso.quests.logic.QuestManagerStatic;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+
+        private function getPassedIndicatorSource():Object
+        {
+            return gAssetManager.GetBitmap("DailyLoginPassed");
+        }
+
+        private function getFailedIndicatorSource():Object
+        {
+            return gAssetManager.GetBitmap("DailyLoginFailed");
+        }
+
+        private function getLockedIndicatorSource():Object
+        {
+            return gAssetManager.GetBitmap("IconPadlock");
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            LegacyMxmlContent.createChildren(triggerBG);
+            this.addEventListener("toolTipCreate", this.onCanvasToolTipCreate);
+            this.progress.addEventListener("toolTipCreate", this.onProgressToolTipCreate);
+        }
+
+        public function onCanvasToolTipCreate(_arg_1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, _arg_1);
+        }
+
+        public function onProgressToolTipCreate(_arg_1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, _arg_1);
+        }
+
+        private function handleNewTrigger(_arg_1:Object):void
+        {
+            var _local_2:TriggerVO;
+            var _local_3:Boolean;
+            var _local_7:dQuestDefinitionTriggerVO;
+            var _local_9:String;
+            var _local_10:ArrayCollection;
+            var _local_11:int;
+            var _local_12:TriggerVO;
+            _local_2 = (_arg_1.trigger as TriggerVO);
+            _local_3 = _arg_1.questAvailable;
+            var _local_4:int = int(_arg_1.remaining);
+            var _local_5:int = int(_arg_1.total);
+            var _local_6:String = String(_arg_1.loca);
+            _local_7 = _arg_1.oldTriggerDefinition;
+            this.image.source = gAssetManager.GetNewQuestTriggerIcon(_local_2);
+            this.failedIndicator.visible = false;
+            var _local_8:int;
+            if (_local_4 == 0)
+            {
+                _local_8 = _local_5;
+                this.passedIndicator.visible = true;
+            }
+            else
+            {
+                _local_8 = (_local_5 - ((_local_4 <= 0) ? 0 : _local_4));
+                this.passedIndicator.visible = false;
+            };
+            if ((((_local_2.action_string == TRIGGER_ACTION.ACTION_QUEST_COMPLETE_string) && (!(_local_3))) && (_local_4 > 0)))
+            {
+                this.triggerBG.setStyle("backgroundImage", gAssetManager.GetClass("TriggerBGGrey"));
+                this.lockedIndicator.visible = true;
+            }
+            else
+            {
+                if (!this.passedIndicator.visible)
+                {
+                    this.triggerBG.setStyle("backgroundImage", gAssetManager.GetClass("TriggerBGNormal"));
+                    this.lockedIndicator.visible = false;
+                }
+                else
+                {
+                    if (_local_2.isFailTrigger)
+                    {
+                        this.triggerBG.setStyle("backgroundImage", gAssetManager.GetClass("TriggerBGFail"));
+                        this.failedIndicator.visible = true;
+                        this.passedIndicator.visible = false;
+                        this.lockedIndicator.visible = false;
+                    }
+                    else
+                    {
+                        this.triggerBG.setStyle("backgroundImage", gAssetManager.GetClass("TriggerBGWon"));
+                        this.lockedIndicator.visible = false;
+                    };
+                };
+            };
+            this.title.text = _local_6;
+            this.progress.value = (_local_8 / _local_5);
+            this.progress.toolTip = global.ui.mQuestClientCallbacks.GetNewTriggerProgressTooltip(_local_2, _local_8, _local_5);
+            toolTip = "";
+            if (((_local_2.action_string == TRIGGER_ACTION.ACTION_QUEST_COMPLETE_string) && (!(_local_3))))
+            {
+                _local_9 = (cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ConditionsToUnlockQuest") + "\n");
+                if (!StringUtils.isEmpty(_local_7.unlockTooltipLoca_string))
+                {
+                    _local_9 = (_local_9 + cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, _local_7.unlockTooltipLoca_string));
+                }
+                else
+                {
+                    if (((_local_7.startConditions_vector) && (_local_7.startConditions_vector.length > 0)))
+                    {
+                        _local_10 = ArrayCollection(_local_7.startConditions_vector.getItemAt(0));
+                        if (_local_10 != null)
+                        {
+                            _local_11 = 0;
+                            while (_local_11 < _local_10.length)
+                            {
+                                _local_12 = TriggerVO(_local_10.getItemAt(_local_11));
+                                _local_9 = (_local_9 + this.parseStartCondition(_local_12));
+                                _local_11++;
+                            };
+                        };
+                    };
+                };
+                toolTip = _local_9;
+            }
+            else
+            {
+                toolTip = this.title.text;
+            };
+            validateNow();
+        }
+
+        private function handleLegacyTrigger(_arg_1:Object):void
+        {
+            var _local_6:String;
+            var _local_7:ArrayCollection;
+            var _local_8:int;
+            var _local_9:TriggerVO;
+            var _local_2:dQuestTriggerVO = (_arg_1.trigger as dQuestTriggerVO);
+            var _local_3:dQuestDefinitionTriggerVO = (_arg_1.definition as dQuestDefinitionTriggerVO);
+            var _local_4:Boolean = _arg_1.questAvailable;
+            this.image.source = gAssetManager.GetQuestTriggerIcon(_local_3);
+            var _local_5:int;
+            if (_local_2.status <= 0)
+            {
+                _local_5 = (_arg_1.total - ((_arg_1.remaining <= 0) ? 0 : _arg_1.remaining));
+                this.passedIndicator.visible = false;
+            }
+            else
+            {
+                _local_5 = _arg_1.total;
+                this.passedIndicator.visible = true;
+            };
+            this.progress.value = (_local_5 / _arg_1.total);
+            if (_local_3.showAsPercentage)
+            {
+                this.progress.toolTip = (_local_5 + "%");
+            }
+            else
+            {
+                this.progress.toolTip = ((_local_5 + "/") + _arg_1.total);
+            };
+            if ((((_local_3.type == QuestManagerStatic.TYPE_QUEST_COMPLETE) && (!(_local_4))) && (this.progress.value < 1)))
+            {
+                this.triggerBG.setStyle("backgroundImage", gAssetManager.GetClass("TriggerBGGrey"));
+                this.lockedIndicator.visible = true;
+            }
+            else
+            {
+                if (!this.passedIndicator.visible)
+                {
+                    this.triggerBG.setStyle("backgroundImage", gAssetManager.GetClass("TriggerBGNormal"));
+                    this.lockedIndicator.visible = false;
+                }
+                else
+                {
+                    this.triggerBG.setStyle("backgroundImage", gAssetManager.GetClass("TriggerBGWon"));
+                    this.lockedIndicator.visible = false;
+                };
+            };
+            if (((_local_3.type == QuestManagerStatic.TYPE_QUEST_COMPLETE) && (!(_local_4))))
+            {
+                this.title.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.QUEST_TRIGGERS, _local_3.toString(), [_arg_1.total, _local_3.buildingUpgradeLevel.toString()]);
+                _local_6 = (cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ConditionsToUnlockQuest") + "\n");
+                if (!StringUtils.isEmpty(_local_3.unlockTooltipLoca_string))
+                {
+                    _local_6 = (_local_6 + cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, _local_3.unlockTooltipLoca_string));
+                }
+                else
+                {
+                    _local_7 = null;
+                    if (((!(_local_3.startConditions_vector == null)) && (_local_3.startConditions_vector.length > 0)))
+                    {
+                        _local_7 = ArrayCollection(_local_3.startConditions_vector.getItemAt(0));
+                    };
+                    if (_local_7 != null)
+                    {
+                        _local_8 = 0;
+                        while (_local_8 < _local_7.length)
+                        {
+                            _local_9 = TriggerVO(_local_7.getItemAt(_local_8));
+                            _local_6 = (_local_6 + this.parseStartCondition(_local_9));
+                            _local_8++;
+                        };
+                    };
+                };
+                toolTip = _local_6;
+            }
+            else
+            {
+                this.title.text = global.ui.mQuestClientCallbacks.GetTriggerText(_local_3, _arg_1.total);
+                toolTip = this.title.text;
+            };
+        }
+
+        private function parseStartCondition(_arg_1:TriggerVO):String
+        {
+            var _local_2:* = "";
+            switch (_arg_1.action_string)
+            {
+                case TRIGGER_ACTION.ACTION_PLAYERLEVEL_string:
+                    _local_2 = (((("- " + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "TriggerRequiredPlayerLevel")) + " ") + _arg_1.min) + "\n");
+                    break;
+                case TRIGGER_ACTION.ACTION_QUEST_ACTIVE_string:
+                    _local_2 = (((("- " + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "TriggerRequiredActiveQuest")) + " ") + cLocaManager.GetInstance().GetText(LOCA_GROUP.QUEST_LABELS, _arg_1.item_string)) + "\n");
+                    break;
+                case TRIGGER_ACTION.ACTION_QUEST_COMPLETE_string:
+                    _local_2 = (((("- " + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "TriggerRequiredCompletedQuest")) + " ") + cLocaManager.GetInstance().GetText(LOCA_GROUP.QUEST_LABELS, _arg_1.item_string)) + "\n");
+                    break;
+                case TRIGGER_ACTION.ACTION_ONMAP_string:
+                    _local_2 = (((("- " + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "TriggerRequiredBuildingOnMap")) + " ") + cLocaManager.GetInstance().GetText(LOCA_GROUP.BUILDINGS, _arg_1.item_string)) + "\n");
+                    break;
+                case TRIGGER_ACTION.ACTION_SECTOR_EXPLORED_string:
+                    _local_2 = (((("- " + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "TriggerRequiredSectorExplored")) + " ") + _arg_1.min) + "\n");
+                    break;
+                case TRIGGER_ACTION.ACTION_CLICK_string:
+                    break;
+                case TRIGGER_ACTION.ACTION_CALENDAR_DOOR_OPENED_string:
+                    _local_2 = ("- " + global.ui.mQuestClientCallbacks.getNewTriggerText(_arg_1));
+                    break;
+                case TRIGGER_ACTION.ACTION_GARRISON_ON_MAP_string:
+                    _local_2 = (((("- " + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "TriggerRequiredBuildingOnMap")) + " ") + cLocaManager.GetInstance().GetText(LOCA_GROUP.BUILDINGS, "Garrison")) + "\n");
+                    break;
+                default:
+                    _local_2 = (("- " + global.ui.mQuestClientCallbacks.getNewTriggerText(_arg_1)) + "\n");
+            };
+            return (_local_2);
+        }
+
+        override public function set data(_arg_1:Object):void
+        {
+            super.data = _arg_1;
+            if (_arg_1 == null)
+            {
+                return;
+            };
+            if (((!(_arg_1.isLegacyTrigger == null)) && (_arg_1.isLegacyTrigger === true)))
+            {
+                this.handleLegacyTrigger(_arg_1);
+            }
+            else
+            {
+                this.handleNewTrigger(_arg_1);
+            };
+            this.title.validateNow();
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="triggerBG" width="212" height="80" horizontalScrollPolicy="off" verticalScrollPolicy="off" backgroundSize="100%">
+        <gui:TSOImage id="image" width="57" height="74" scaleContent="false" left="0" top="3" horizontalAlign="center" verticalAlign="middle" />
+        <mx:Image id="passedIndicator" left="0" verticalCenter="0" source="{getPassedIndicatorSource()}" />
+        <mx:Image id="failedIndicator" visible="false" left="0" verticalCenter="0" source="{getFailedIndicatorSource()}" />
+        <mx:Image id="lockedIndicator" visible="false" left="20" bottom="5" source="{getLockedIndicatorSource()}" />
+        <gui:CustomText id="title" selectable="false" styleName="questTriggerDescription" left="58" right="3" verticalCenter="-7" color="0xFFFFFF" />
+        <gui:ProgressBar id="progress" left="58" right="6" bottom="6" />
+    </mx:Canvas>
+</mx:Canvas>

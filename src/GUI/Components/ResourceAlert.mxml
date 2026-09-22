@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="GUI.Components.ICustomAlert"
+    clipContent="false" cacheAsBitmap="true">
+    <mx:Script><![CDATA[
+        import flash.display.Sprite;
+        import flash.events.EventPhase;
+        import flash.events.MouseEvent;
+        import mx.controls.Alert;
+        import mx.controls.Button;
+        import mx.core.IFlexDisplayObject;
+        import mx.core.UIComponent;
+        import mx.events.CloseEvent;
+        import mx.events.FlexEvent;
+        import mx.events.ResizeEvent;
+        import mx.managers.PopUpManager;
+        import ServerState.dResource;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ItemRenderer.ResourceItemRenderer;
+
+        private static var _resourcesDisplay:Vector.<dResource>;
+        private static var _surplusResources:Vector.<dResource>;
+        private static var _localize:Boolean;
+
+        public static const STYLE_DEFAULT:int = 0;
+        public static const STYLE_WHITE_RESOURCES:int = 1;
+        public static const STYLE_HTML_TEXT:int = 2;
+        public static const STYLE_RESOURCE_LOSS:int = 3;
+
+        public var style:int;
+        public var buttonFlags:uint = 0;
+
+        private var _text:String;
+        private var _title:String;
+
+        private static function static_creationCompleteHandler(_arg_1:FlexEvent):void
+        {
+            if (((_arg_1.target is IFlexDisplayObject) && (_arg_1.eventPhase == EventPhase.AT_TARGET)))
+            {
+                _arg_1.target.removeEventListener(FlexEvent.CREATION_COMPLETE, static_creationCompleteHandler);
+                _arg_1.target.addButtons();
+                _arg_1.target.setTexts();
+                PopUpManager.centerPopUp(IFlexDisplayObject(_arg_1.target));
+            };
+        }
+
+        public static function show(_arg_1:String="", _arg_2:Array=null, _arg_3:String="", _arg_4:Array=null, _arg_5:Vector.<dResource>=null, _arg_6:uint=4, _arg_7:Sprite=null, _arg_8:Function=null, _arg_9:Class=null, _arg_10:Boolean=true, _arg_11:int=0, _arg_12:Vector.<dResource>=null):ResourceAlert
+        {
+            _resourcesDisplay = _arg_5;
+            _surplusResources = _arg_12;
+            _localize = _arg_10;
+            var _local_13:Boolean = ((_arg_6 & Alert.NONMODAL) ? false : true);
+            if (!_arg_7)
+            {
+                _arg_7 = Sprite(global.getApplication());
+            };
+            var _local_14:ResourceAlert = new (ResourceAlert)();
+            _local_14.style = _arg_11;
+            if (((((_arg_6 & Alert.OK) || (_arg_6 & Alert.CANCEL)) || (_arg_6 & Alert.YES)) || (_arg_6 & Alert.NO)))
+            {
+                _local_14.buttonFlags = _arg_6;
+            };
+            _local_14.setText(_arg_1, _arg_2);
+            _local_14.setTitle(_arg_3, _arg_4);
+            if (_arg_8 != null)
+            {
+                _local_14.addEventListener(CloseEvent.CLOSE, _arg_8);
+            };
+            if ((_arg_7 is UIComponent))
+            {
+                _local_14.moduleFactory = UIComponent(_arg_7).moduleFactory;
+            };
+            PopUpManager.addPopUp(_local_14, _arg_7, _local_13);
+            _local_14.addEventListener(FlexEvent.CREATION_COMPLETE, static_creationCompleteHandler);
+            switch (_arg_11)
+            {
+                case STYLE_RESOURCE_LOSS:
+                    _local_14.resourceLossMessage.visible = (_local_14.resourceLossList.visible = true);
+                case STYLE_DEFAULT:
+                case STYLE_WHITE_RESOURCES:
+                case STYLE_HTML_TEXT:
+                    _local_14.styleName = "customAlert";
+                    _local_14.paymentOrnament.visible = false;
+                    _local_14.titleLabel.visible = true;
+                    _local_14.width = 300;
+                    _local_14.minHeight = 200;
+                    _local_14.message.width = 250;
+                    _local_14.message.setConstraintValue("left", 25);
+                    _local_14.message.setConstraintValue("top", 40);
+                    _local_14.message.setConstraintValue("bottom", 120);
+                    _local_14.buttonsList.setConstraintValue("bottom", 15);
+                    break;
+            };
+            if (_arg_11 == STYLE_RESOURCE_LOSS)
+            {
+                _local_14.message.setConstraintValue("bottom", 170);
+            };
+            return (_local_14);
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            updateTops();
+            message.addEventListener(ResizeEvent.RESIZE, updateTops, false, 0, true);
+        }
+
+        private function updateTops(event:ResizeEvent = null):void
+        {
+            costsList.setStyle("top", String(45 + message.height));
+            resourceLossMessage.setStyle("top", String(85 + message.height));
+            resourceLossList.setStyle("top", String(105 + message.height));
+        }
+
+        public function setTitle(_arg_1:String, _arg_2:Array):void
+        {
+            if (((_localize) && (_arg_1.length > 0)))
+            {
+                this._title = cLocaManager.GetInstance().GetText(LOCA_GROUP.ALERT_TITLES, _arg_1, _arg_2);
+            }
+            else
+            {
+                this._title = _arg_1;
+            };
+        }
+
+        public function setText(_arg_1:String, _arg_2:Array):void
+        {
+            if (((_localize) && (_arg_1.length > 0)))
+            {
+                this._text = cLocaManager.GetInstance().GetText(LOCA_GROUP.ALERT_MESSAGES, _arg_1, _arg_2);
+            }
+            else
+            {
+                this._text = _arg_1;
+            };
+        }
+
+        public function confirmAction():void
+        {
+            this.visible = false;
+            var _local_1:CloseEvent = new CloseEvent(CloseEvent.CLOSE);
+            if ((this.buttonFlags & Alert.YES))
+            {
+                _local_1.detail = Alert.YES;
+            }
+            else
+            {
+                _local_1.detail = Alert.OK;
+            };
+            this.dispatchEvent(_local_1);
+            PopUpManager.removePopUp(this);
+        }
+
+        public function cancelAction():void
+        {
+            this.visible = false;
+            var _local_1:CloseEvent = new CloseEvent(CloseEvent.CLOSE);
+            if ((this.buttonFlags & Alert.CANCEL))
+            {
+                _local_1.detail = Alert.CANCEL;
+            }
+            else
+            {
+                if ((this.buttonFlags & Alert.NO))
+                {
+                    _local_1.detail = Alert.NO;
+                }
+                else
+                {
+                    _local_1.detail = Alert.OK;
+                };
+            };
+            this.dispatchEvent(_local_1);
+            PopUpManager.removePopUp(this);
+        }
+
+        public function get isCloseable():Boolean
+        {
+            return (Boolean(((((this.buttonFlags & Alert.OK) || (this.buttonFlags & Alert.CANCEL)) || (this.buttonFlags & Alert.NO)) || (this.buttonFlags & Alert.YES))));
+        }
+
+        private function addButtons():void
+        {
+            var _local_3:StandardButton;
+            var _local_1:cLocaManager = cLocaManager.GetInstance();
+            var _local_2:uint = ((this.buttonFlags != 0) ? this.buttonFlags : Alert.OK);
+            var _local_4:Array = new Array();
+            if ((_local_2 & Alert.OK))
+            {
+                _local_3 = new StandardButton();
+                _local_3.name = "OK";
+                _local_3.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+                _local_3.width = 70;
+                _local_3.height = 32;
+                _local_3.addEventListener(MouseEvent.CLICK, this.removeAlert);
+                _local_4.push(_local_3);
+            };
+            if ((_local_2 & Alert.CANCEL))
+            {
+                _local_3 = new StandardButton();
+                _local_3.name = "CANCEL";
+                _local_3.setStyle("icon", gAssetManager.GetClass("ButtonIconAbort"));
+                _local_3.width = 70;
+                _local_3.height = 32;
+                _local_3.addEventListener(MouseEvent.CLICK, this.removeAlert);
+                _local_4.push(_local_3);
+            };
+            if ((_local_2 & Alert.YES))
+            {
+                _local_3 = new StandardButton();
+                _local_3.name = "YES";
+                _local_3.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+                _local_3.width = 70;
+                _local_3.height = 32;
+                _local_3.addEventListener(MouseEvent.CLICK, this.removeAlert);
+                _local_4.push(_local_3);
+            };
+            if ((_local_2 & Alert.NO))
+            {
+                _local_3 = new StandardButton();
+                _local_3.name = "NO";
+                _local_3.setStyle("icon", gAssetManager.GetClass("ButtonIconAbort"));
+                _local_3.width = 70;
+                _local_3.height = 32;
+                _local_3.addEventListener(MouseEvent.CLICK, this.removeAlert);
+                _local_4.push(_local_3);
+            };
+            for each (_local_3 in _local_4)
+            {
+                this.buttonsList.addChild(_local_3);
+            };
+        }
+
+        private function setTexts():void
+        {
+            var renderer:ResourceItemRenderer;
+            var remainedItemCount:int;
+            var resource:dResource;
+            var label:CustomLabel;
+            var resource2:dResource;
+            var renderer2:ResourceItemRenderer;
+            this.titleLabel.text = this._title;
+            if (this.style == STYLE_HTML_TEXT)
+            {
+                this.message.htmlText = this._text;
+            }
+            else
+            {
+                this.message.text = this._text;
+            };
+            if ((((this.style == STYLE_RESOURCE_LOSS) && (_surplusResources)) && (_surplusResources.length)))
+            {
+                this.resourceLossMessage.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.ALERT_MESSAGES, "ConfirmTeardownResourceLoss");
+                this.resourceLossList.removeAllChildren();
+                renderer = new ResourceItemRenderer();
+                _surplusResources = _surplusResources.sort(function (_arg_1:dResource, _arg_2:dResource):int
+                {
+                    return ((_arg_1.amount > _arg_2.amount) ? -1 : 1);
+                });
+                remainedItemCount = (_surplusResources.length - 10);
+                _surplusResources = _surplusResources.slice(0, 10);
+                for each (resource in _surplusResources)
+                {
+                    renderer = new ResourceItemRenderer();
+                    renderer.data = resource;
+                    this.resourceLossList.addChild(renderer);
+                };
+                if (remainedItemCount > 0)
+                {
+                    label = new CustomLabel();
+                    label.text = "...";
+                    label.setStyle("color", 0xFFFFFF);
+                    label.setStyle("fontWeight", "bold");
+                    this.resourceLossList.addChild(label);
+                };
+            };
+            this.costsList.removeAllChildren();
+            if (_resourcesDisplay != null)
+            {
+                for each (resource2 in _resourcesDisplay)
+                {
+                    renderer2 = new ResourceItemRenderer();
+                    renderer2.data = resource2;
+                    if (this.style == STYLE_WHITE_RESOURCES)
+                    {
+                        renderer2.color = 0xFFFFFF;
+                        renderer2.enableAmountCheck = false;
+                    };
+                    this.costsList.addChild(renderer2);
+                };
+            };
+            updateTops();
+        }
+
+        private function removeAlert(_arg_1:MouseEvent):void
+        {
+            var _local_2:String = Button(_arg_1.currentTarget).name;
+            this.visible = false;
+            var _local_3:CloseEvent = new CloseEvent(CloseEvent.CLOSE);
+            if (_local_2 == "YES")
+            {
+                _local_3.detail = Alert.YES;
+            }
+            else
+            {
+                if (_local_2 == "NO")
+                {
+                    _local_3.detail = Alert.NO;
+                }
+                else
+                {
+                    if (_local_2 == "OK")
+                    {
+                        _local_3.detail = Alert.OK;
+                    }
+                    else
+                    {
+                        if (_local_2 == "CANCEL")
+                        {
+                            _local_3.detail = Alert.CANCEL;
+                        };
+                    };
+                };
+            };
+            this.dispatchEvent(_local_3);
+            PopUpManager.removePopUp(this);
+        }
+    ]]></mx:Script>
+    <mx:Image id="paymentOrnament"
+        source="@Embed(source='../../../assets/embedded/alert/alert_alert_payment_ornament.png')"  horizontalCenter="1" top="-25" />
+    <gui:CustomLabel id="titleLabel"  left="25" right="25" top="8" textAlign="center" color="0xFFFFFF" fontWeight="bold" />
+    <gui:CustomText id="message" selectable="false" width="250"  left="25" top="40" bottom="60" color="0xFFFFFF" textAlign="center" />
+    <mx:HBox id="costsList" height="25"  horizontalCenter="0" />
+    <gui:CustomText id="resourceLossMessage" selectable="false" width="250" visible="false"  left="25" color="0xFFFFFF" textAlign="center" />
+    <mx:HBox id="resourceLossList" height="50" width="250" visible="false"  horizontalCenter="0" />
+    <mx:HBox id="buttonsList"  bottom="15" horizontalCenter="0" />
+</mx:Canvas>

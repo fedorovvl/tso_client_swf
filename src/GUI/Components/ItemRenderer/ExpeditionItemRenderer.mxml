@@ -1,0 +1,590 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="204" height="100">
+    <mx:Script><![CDATA[
+        import mx.containers.HBox;
+        import GUI.Components.StandardButton;
+        import mx.controls.Image;
+        import mx.states.SetStyle;
+        import mx.states.SetProperty;
+        import mx.states.State;
+        import GUI.Components.CustomText;
+        import mx.containers.Canvas;
+        import GUI.Components.CustomLabel;
+        import Interface.cGameInterface;
+        import GUI.Loca.cLocaManager;
+        import mx.core.mx_internal;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import ShopSystem.cShopItem;
+        import Enums.ONE_CLICK_SHOPITEM;
+        import GUI.Components.CustomAlert;
+        import mx.controls.Alert;
+        import flash.events.MouseEvent;
+        import Communication.VO.dPlayerListItemVO;
+        import Communication.VO.UpdateVO.dAdventureClientInfoVO;
+        import Communication.VO.ColonyVO;
+        import AdventureSystem.cAdventureDefinition;
+        import ServerState.dResource;
+        import GUI.helpers.PVPClientUtil;
+        import Utils.PVPUtil;
+        import com.bluebyte.tso.util.TimeUtil;
+        import GUI.Assets.gAssetManager;
+        import Colony.cColony;
+        import GUI.Decorator.GUIDecorator;
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+        import Enums.COMMAND;
+        import Communication.VO.dBuyOneClickShopItemVO;
+        import mx.events.CloseEvent;
+        import mx.events.FlexEvent;
+        import mx.styles.IStyleClient;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        private var adventureLevel:int = -1;
+
+        private var timeLeft:Number = 0;
+
+        [Bindable]
+        private var permCost:int;
+
+        private var rewardID:int = 0;
+
+        public var noSlots:Boolean = false;
+
+        private var mode:String = "";
+
+        private var colonyState:int = -1;
+
+        [Bindable]
+        private var tempCost:int;
+
+        private var mGI:cGameInterface = (global.ui as cGameInterface);
+
+        private var lm:cLocaManager = cLocaManager.GetInstance();
+
+        public function onStateImage_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        private function buyTempSlot(argument1:MouseEvent):void
+        {
+            var localValue2:cShopItem = cShopItem.GetShopItem(ONE_CLICK_SHOPITEM.BUY_TEMP_COLONY_SLOT);
+            CustomAlert.show("BuyTempColonySlot", "BuyTempColonySlot", (Alert.OK | Alert.CANCEL), null, this.buyTempSlotHandler, null, Alert.OK, true, CustomAlert.STYLE_DEFAULT, localValue2.GetCosts_vector());
+        }
+
+        private function clickHandler(argument1:MouseEvent):void
+        {
+            var localValue4:dPlayerListItemVO;
+            var localValue5:dPlayerListItemVO;
+            var localValue2:dAdventureClientInfoVO = (data.adventureVO as dAdventureClientInfoVO);
+            var localValue3:ColonyVO = (data.colonyVO as ColonyVO);
+            if (localValue2 != null)
+            {
+                localValue5 = new dPlayerListItemVO();
+                localValue5.adventureVO = (data.adventureVO as dAdventureClientInfoVO);
+                localValue5.id = localValue5.adventureVO.zoneID;
+                globalFlash.gui.ShowFriendListMenu(argument1, localValue5);
+            }
+            else
+            {
+                if (localValue3 != null)
+                {
+                    localValue4 = new dPlayerListItemVO();
+                    localValue2 = new dAdventureClientInfoVO();
+                    localValue2.adventureName = localValue3.adventureName;
+                    localValue2.status = localValue2.status;
+                    localValue2.zoneID = data.zoneID;
+                    localValue2.colonyOwnerPlayerId = localValue3.ownerPlayerId;
+                    localValue2.colonyStatus = localValue3.state;
+                    localValue2.colonyID = localValue3.colonyId;
+                    localValue4.id = localValue3.colonyId;
+                    localValue4.adventureVO = localValue2;
+                    globalFlash.gui.ShowFriendListMenu(argument1, localValue4);
+                };
+            };
+            if (globalFlash.gui.mColonyWindow.isVisible())
+            {
+                globalFlash.gui.windowController.showModal();
+            };
+            this.display();
+        }
+
+        public function display():void
+        {
+            var localValue1:cAdventureDefinition;
+            var localValue9:Date;
+            var localValue10:dResource;
+            if (((!(data)) || (!(initialized))))
+            {
+                return;
+            };
+            if (data.hasOwnProperty("noSlots"))
+            {
+                this.noSlots = data.noSlots;
+            };
+            currentState = data.state;
+            if (currentState == null)
+            {
+                this.styleName = "colonyCurrent";
+            }
+            else
+            {
+                if (((currentState == "premium") || (currentState == "freeTemp")))
+                {
+                    this.styleName = "colonySlotUnactive";
+                }
+                else
+                {
+                    this.styleName = "colonySlotActive";
+                };
+            };
+            this.lblCenterDescription.text = data.centerMessage;
+            var localValue2:dAdventureClientInfoVO = (data.adventureVO as dAdventureClientInfoVO);
+            var localValue3:ColonyVO = (data.colonyVO as ColonyVO);
+            var localValue4:Boolean;
+            var localValue5:int;
+            this.colonyState = -1;
+            this.mode = "";
+            this.adventureLevel = 0;
+            this.incomeResourceRendererBottom.visible = false;
+            this.stateImage.source = null;
+            this.incomeRateDescription.text = "";
+            this.incomeRateAmount.text = "";
+            this.lblTimeLeft.text = "";
+            this.timeLeft = -1;
+            this.rewardID = -1;
+            if (localValue2 != null)
+            {
+                localValue5 = localValue2.ownerPlayerID;
+                localValue1 = cAdventureDefinition.FindAdventureDefinition(localValue2.adventureName);
+                this.timeLeft = (localValue2.totalDuration - localValue2.collectedTime);
+                if (((!(localValue1 == null)) && (localValue1.IsColony())))
+                {
+                    this.colonyState = localValue2.colonyStatus;
+                    this.adventureLevel = localValue2.mapLevel;
+                    this.rewardID = localValue2.rewardId;
+                    localValue4 = localValue2.IsFromMapPool();
+                    if (localValue1.IsPvE())
+                    {
+                        currentState = "PvE";
+                    }
+                    else
+                    {
+                        if (localValue1.IsPvP())
+                        {
+                            currentState = "PvP";
+                        };
+                    };
+                };
+            }
+            else
+            {
+                if (localValue3 != null)
+                {
+                    localValue5 = localValue3.ownerPlayerId;
+                    localValue1 = cAdventureDefinition.FindAdventureDefinition(localValue3.adventureName);
+                    if (localValue1 != null)
+                    {
+                        this.colonyState = localValue3.state;
+                        this.adventureLevel = localValue3.mapLevel;
+                        this.rewardID = localValue3.rewardId;
+                        localValue4 = localValue3.IsFromMapPool();
+                        if (localValue1.IsPvE())
+                        {
+                            currentState = "PvE";
+                        }
+                        else
+                        {
+                            if (localValue1.IsPvP())
+                            {
+                                currentState = "PvP";
+                            };
+                        };
+                    };
+                };
+            };
+            var localValue6:dResource = PVPClientUtil.getColonyYieldPerTick(this.rewardID, localValue1, localValue4);
+            if (localValue6.amount > 0)
+            {
+                this.incomeResourceRendererBottom.resourceName = localValue6.name_string;
+                this.incomeResourceRendererBottom.visible = true;
+                if (PVPUtil.GetActiveColonyYieldBonusForPvPLevel(global.ui.mCurrentPlayer.GetClaimedPvPLevel()) > 0)
+                {
+                    this.incomeRateAmount.setStyle("color", 0xFF00);
+                }
+                else
+                {
+                    this.incomeRateAmount.setStyle("color", 0xFFFFFF);
+                };
+                this.incomeRateAmount.text = ("+" + localValue6.amount.toString());
+                this.incomeRateDescription.text = this.lm.getLabel("IncomePerHour", [(global.colonyYieldTickTime / 3600)]);
+                if (((!(localValue3 == null)) && (localValue2 == null)))
+                {
+                    localValue9 = new Date(localValue3.colonyYieldStartTime);
+                    localValue9.date = (localValue9.date + (localValue6.maxLimit / 86400));
+                    this.timeLeft = (localValue9.time - TimeUtil.getServerTime());
+                };
+            };
+            var localValue7:Boolean;
+            if (this.timeLeft > 0)
+            {
+                this.lblTimeLeft.text = this.lm.FormatDuration(this.timeLeft, cLocaManager.DURATION_FORMAT_NUMERIC);
+            }
+            else
+            {
+                if (((localValue6.amount > 0) && (!(localValue3 == null))))
+                {
+                    this.lblTimeLeft.text = "";
+                    localValue7 = true;
+                };
+            };
+            if (localValue2 != null)
+            {
+                this.itemRankImage.source = gAssetManager.GetClass(("ColonyWindowIconRank" + PVPUtil.getColonyTier(localValue2.getLevelRange())));
+                this.itemRankImage.visible = true;
+            }
+            else
+            {
+                if (((this.adventureLevel > 0) && (!(localValue3 == null))))
+                {
+                    this.itemRankImage.source = gAssetManager.GetClass(("ColonyWindowIconRank" + PVPUtil.getColonyTier(localValue3.getLevelRange())));
+                    this.itemRankImage.visible = true;
+                }
+                else
+                {
+                    this.itemRankImage.visible = false;
+                };
+            };
+            this.slotContent.filters = [];
+            switch (this.colonyState)
+            {
+                case cColony.STATUS_NPC_OWNED:
+                this.stateImage.source = gAssetManager.GetClass("ExpeditionStateExplore");
+                this.stateImage.toolTip = cLocaManager.GetInstance().getLabel("ExpeditionStateExploreTooltip");
+                break;
+                case cColony.STATUS_WAIT_FOR_ASSIGNMENT:
+                case cColony.STATUS_READY_FOR_DEFENSE_MODE:
+                this.stateImage.source = gAssetManager.GetClass("ExpeditionStateDefense");
+                this.stateImage.toolTip = cLocaManager.GetInstance().getLabel("EnterDefenseMode");
+                this.styleName = "colonyCurrent";
+                break;
+                case cColony.STATUS_ASSIGNED:
+                this.stateImage.source = gAssetManager.GetClass("ExpeditionStateWorking");
+                if (localValue7)
+                {
+                    GUIDecorator.greyFilter(this.slotContent);
+                    this.stateImage.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.ALERT_TITLES, "ExpeditionJustExpired");
+                }
+                else
+                {
+                    this.stateImage.toolTip = cLocaManager.GetInstance().getLabel("ExpeditionStateWorkingTooltip", [PVPUtil.GetActiveColonyYieldBonusForPvPLevel(global.ui.mCurrentPlayer.GetClaimedPvPLevel())]);
+                };
+                break;
+                case cColony.STATUS_UNDER_PVP_ATTACK:
+                if (localValue3 != null)
+                {
+                    this.stateImage.source = gAssetManager.GetClass("ExpeditionStateAttention");
+                    this.stateImage.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ColonyUnderAttack");
+                    if (localValue7)
+                    {
+                        GUIDecorator.greyFilter(this.slotContent);
+                    };
+                }
+                else
+                {
+                    this.stateImage.source = gAssetManager.GetClass("ExpeditionStateFighting");
+                    this.stateImage.toolTip = cLocaManager.GetInstance().getLabel("ExpeditionStateFightingTooltip");
+                };
+                break;
+                default:
+                this.stateImage.toolTip = "";
+            };
+            if ((((this.noSlots) && (localValue3)) && (localValue2)))
+            {
+                this.stateImage.source = gAssetManager.GetClass("ExpeditionStateAttention");
+                this.stateImage.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "NoSlots");
+            };
+            var localValue8:cShopItem = cShopItem.GetShopItem(ONE_CLICK_SHOPITEM.BUY_TEMP_COLONY_SLOT);
+            this.tempCost = 0;
+            if (localValue8)
+            {
+                for each (localValue10 in localValue8.GetCosts_vector())
+                {
+                    this.tempCost = (this.tempCost + localValue10.amount);
+                    this.btnBuyTemp.setBitmapIcon(gAssetManager.GetResourceIcon(localValue10.name_string));
+                };
+            };
+            localValue8 = cShopItem.GetShopItem(ONE_CLICK_SHOPITEM.BUY_PERMANENT_COLONY_SLOT);
+            this.permCost = 0;
+            if (localValue8)
+            {
+                for each (localValue10 in localValue8.GetCosts_vector())
+                {
+                    this.permCost = (this.permCost + localValue10.amount);
+                    this.btnBuyPermenant.setBitmapIcon(gAssetManager.GetResourceIcon(localValue10.name_string));
+                };
+            };
+            this.btnBuyPermenant.addEventListener(MouseEvent.CLICK, this.buyPermanentSlot);
+            this.btnBuyTemp.addEventListener(MouseEvent.CLICK, this.buyTempSlot);
+        }
+
+        private function buyPermanentSlot(argument1:MouseEvent):void
+        {
+            var localValue2:cShopItem = cShopItem.GetShopItem(ONE_CLICK_SHOPITEM.BUY_PERMANENT_COLONY_SLOT);
+            CustomAlert.show("BuyPermColonySlot", "BuyPermColonySlot", (Alert.OK | Alert.CANCEL), null, this.buyPermanentSlotHandler, null, Alert.OK, true, CustomAlert.STYLE_DEFAULT, localValue2.GetCosts_vector());
+        }
+
+        protected function onDataChange(argument1:Event):void
+        {
+            invalidateProperties();
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            this.display();
+            refreshRendererPresentation();
+        }
+
+        private function buyPermanentSlotHandler(argument1:CloseEvent):void
+        {
+            if (argument1.detail != Alert.OK)
+            {
+                return;
+            };
+            global.ui.mClientMessages.SendMessagetoServer(COMMAND.BUY_ONE_CLICK_SHOP_ITEM, this.mGI.mCurrentViewedZoneID, new dBuyOneClickShopItemVO().Init(ONE_CLICK_SHOPITEM.BUY_PERMANENT_COLONY_SLOT));
+        }
+
+        private function buyTempSlotHandler(argument1:CloseEvent):void
+        {
+            if (argument1.detail != Alert.OK)
+            {
+                return;
+            };
+            global.ui.mClientMessages.SendMessagetoServer(COMMAND.BUY_ONE_CLICK_SHOP_ITEM, this.mGI.mCurrentViewedZoneID, new dBuyOneClickShopItemVO().Init(ONE_CLICK_SHOPITEM.BUY_TEMP_COLONY_SLOT));
+        }
+
+        public function onExpeditionItemRenderer_HBox1_creationComplete(argument1:FlexEvent):void
+        {
+            this.display();
+        }
+
+        private function readPresentationValue33():String
+        {
+            var localValue1:* = tempCost;
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private function readPresentationValue34():String
+        {
+            var localValue1:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "BuyTempColonySlot");
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private function readPresentationValue35():String
+        {
+            var localValue1:* = permCost;
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private function readPresentationValue36():String
+        {
+            var localValue1:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "BuyPermColonySlot");
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            stateImage.addEventListener("toolTipCreate", onStateImage_toolTipCreate);
+            imageBGSourceOverride1.value = gAssetManager.GetClass("ExpeditionBackgroundNormal");
+            itemImageSourceOverride2.value = gAssetManager.GetClass("ExpeditionItemBackground");
+            imageBGSourceOverride5.value = gAssetManager.GetClass("ExpeditionPvEBackgroundNormal");
+            itemImageSourceOverride6.value = gAssetManager.GetClass("ExpeditionPvEItemBackground");
+            imageBGSourceOverride7.value = gAssetManager.GetClass("ExpeditionPvPBackgroundNormal");
+            itemImageSourceOverride8.value = gAssetManager.GetClass("ColonyWindowIcon");
+            ornamentTopSourceOverride9.value = gAssetManager.GetClass("ExpeditionPvPOrnamentTop");
+            lockImageSourceOverride10.value = gAssetManager.GetClass("QuestUnlocked");
+            lockImageSourceOverride11.value = gAssetManager.GetClass("QuestLocked");
+            lockImageSourceOverride12.value = gAssetManager.GetClass("QuestLocked");
+            lockImageSourceOverride15.value = gAssetManager.GetClass("QuestUnlocked");
+            this.width = 204;
+            this.height = 100;
+            this.styleName = "colonySlotUnactive";
+            this.verticalScrollPolicy = "off";
+            this.horizontalScrollPolicy = "off";
+
+            this.addEventListener("click", this.clickHandler);
+            this.addEventListener("dataChange", this.onDataChange);
+            this.addEventListener("creationComplete", this.onExpeditionItemRenderer_HBox1_creationComplete);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+                imageBGSourceOverride1.target = imageBG;
+                itemImageSourceOverride2.target = itemImage;
+                imageBGWidthOverride1.target = imageBG;
+                imageBGHeightOverride2.target = imageBG;
+                imageBGTopOverride3.target = imageBG;
+                imageBGBottomOverride4.target = imageBG;
+                imageBGLeftOverride5.target = imageBG;
+                imageBGRightOverride6.target = imageBG;
+                imageBGSourceOverride5.target = imageBG;
+                itemImageSourceOverride6.target = itemImage;
+                imageBGSourceOverride7.target = imageBG;
+                itemImageSourceOverride8.target = itemImage;
+                ornamentTopSourceOverride9.target = ornamentTop;
+                lockImageSourceOverride10.target = lockImage;
+                lockImageSourceOverride11.target = lockImage;
+                lockImageSourceOverride12.target = lockImage;
+                btnBuyTempVisibleOverride13.target = btnBuyTemp;
+                btnBuyPermenantVisibleOverride14.target = btnBuyPermenant;
+                lockImageSourceOverride15.target = lockImage;
+                btnBuyTempVisibleOverride16.target = btnBuyTemp;
+                btnBuyPermenantVisibleOverride17.target = btnBuyPermenant;
+                btnBuyTemp.label = readPresentationValue33();
+                btnBuyTemp.toolTip = readPresentationValue34();
+                btnBuyPermenant.label = readPresentationValue35();
+                btnBuyPermenant.toolTip = readPresentationValue36();
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:states>
+        <mx:State id="activeState" name="active">
+            <mx:overrides>
+                <mx:SetProperty id="imageBGSourceOverride1" name="source" />
+                <mx:SetProperty id="itemImageSourceOverride2" name="source" />
+            </mx:overrides>
+        </mx:State>
+        <mx:State id="trackerState" name="tracker">
+            <mx:overrides>
+                <mx:SetStyle id="imageBGWidthOverride1" name="width" value="180" />
+                <mx:SetStyle id="imageBGHeightOverride2" name="height" value="93" />
+                <mx:SetStyle id="imageBGTopOverride3" name="top" value="0" />
+                <mx:SetStyle id="imageBGBottomOverride4" name="bottom" value="0" />
+                <mx:SetStyle id="imageBGLeftOverride5" name="left" value="0" />
+                <mx:SetStyle id="imageBGRightOverride6" name="right" value="0" />
+                <mx:SetProperty id="viewSetProperty1" name="height" value="93" />
+                <mx:SetProperty id="viewSetProperty2" name="width" value="180" />
+                <mx:SetStyle id="viewSetStyle1" name="backgroundAlpha" value="1" />
+            </mx:overrides>
+        </mx:State>
+        <mx:State id="pveState" name="PvE">
+            <mx:overrides>
+                <mx:SetProperty id="imageBGSourceOverride5" name="source" />
+                <mx:SetProperty id="itemImageSourceOverride6" name="source" />
+            </mx:overrides>
+        </mx:State>
+        <mx:State id="pvpState" name="PvP">
+            <mx:overrides>
+                <mx:SetProperty id="imageBGSourceOverride7" name="source" />
+                <mx:SetProperty id="itemImageSourceOverride8" name="source" />
+                <mx:SetProperty id="ornamentTopSourceOverride9" name="source" />
+            </mx:overrides>
+        </mx:State>
+        <mx:State id="inactiveState" name="inactive" />
+        <mx:State id="freeState" name="free">
+            <mx:overrides>
+                <mx:SetProperty id="lockImageSourceOverride10" name="source" />
+            </mx:overrides>
+        </mx:State>
+        <mx:State id="lockedState" name="locked">
+            <mx:overrides>
+                <mx:SetProperty id="lockImageSourceOverride11" name="source" />
+            </mx:overrides>
+        </mx:State>
+        <mx:State id="premiumState" name="premium">
+            <mx:overrides>
+                <mx:SetProperty id="lockImageSourceOverride12" name="source" />
+                <mx:SetProperty id="btnBuyTempVisibleOverride13" name="visible" value="true" />
+                <mx:SetProperty id="btnBuyPermenantVisibleOverride14" name="visible" value="true" />
+            </mx:overrides>
+        </mx:State>
+        <mx:State id="viewState1" name="freeTemp">
+            <mx:overrides>
+                <mx:SetProperty id="lockImageSourceOverride15" name="source" />
+                <mx:SetProperty id="btnBuyTempVisibleOverride16" name="visible" value="false" />
+                <mx:SetProperty id="btnBuyPermenantVisibleOverride17" name="visible" value="false" />
+            </mx:overrides>
+        </mx:State>
+    </mx:states>
+    <mx:Canvas id="bg" percentWidth="100" percentHeight="100" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+        <mx:Canvas id="slotContent" percentWidth="100" percentHeight="100">
+            <mx:Canvas id="viewCanvas1" percentWidth="100" percentHeight="100" horizontalCenter="0" verticalCenter="0">
+                <mx:Image id="imageBG" maintainAspectRatio="false" top="7" bottom="0" left="5" right="0" />
+            </mx:Canvas>
+            <mx:Image id="ornamentTop" top="-6" horizontalCenter="0" />
+            <mx:Image id="itemImage" left="22" top="12" />
+            <mx:Image id="itemRankImage" width="42" height="44" left="35" top="27" />
+            <mx:Image id="lockImage" width="40" height="40" right="2" bottom="0" />
+            <ui:CustomLabel id="lblTimeLeft" mouseEnabled="false" color="0xFFFFFF" left="78" top="30" fontWeight="bold" />
+            <local:ResourceIconRenderer id="incomeResourceRendererBottom" bottom="12" left="56" />
+            <mx:HBox id="viewHBox1" bottom="18" left="90" horizontalGap="-4">
+                <ui:CustomText id="incomeRateAmount" selectable="false" mouseEnabled="false" color="0xFFFFFF" fontWeight="bold" />
+                <ui:CustomText id="incomeRateDescription" selectable="false" mouseEnabled="false" color="0xFFFFFF" fontWeight="bold" />
+            </mx:HBox>
+            <ui:CustomText id="lblCenterDescription" selectable="false" mouseEnabled="false" wordWrap="true" height="54" color="0xFFFFFF" verticalCenter="0" left="0" right="0" fontWeight="bold" />
+            <ui:StandardButton id="btnBuyTemp" visible="false" width="78" left="5" bottom="5" />
+            <ui:StandardButton id="btnBuyPermenant" visible="false" width="78" right="40" bottom="5" />
+            <mx:Image id="stateImage" width="26" height="25" right="30" top="20" />
+        </mx:Canvas>
+    </mx:Canvas>
+</mx:HBox>

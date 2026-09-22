@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" height="20">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import GUI.Components.CustomLabel;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import Communication.VO.dContextItemVO;
+        import flash.events.MouseEvent;
+        import mx.events.PropertyChangeEvent;
+        import GUI.Loca.cLocaManager;
+        import mx.managers.ToolTipManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private var dataChanged:Boolean;
+
+        private function highlight(argument1:MouseEvent):void
+        {
+            if (!enabled)
+            {
+                return;
+            };
+            var localValue2:Function = ((data is dContextItemVO) ? (data as dContextItemVO).over : null);
+            if (localValue2 != null)
+            {
+                (localValue2(argument1));
+            };
+            this.setStyle("backgroundColor", 10979932);
+        }
+
+        public function resetStyle():void
+        {
+            this.setStyle("backgroundColor", 12623724);
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            this.dataChanged = ((!(super.data == argument1)) && (argument1 is dContextItemVO));
+            super.data = argument1;
+            if (this.dataChanged)
+            {
+                invalidateProperties();
+            };
+            refreshRendererPresentation();
+        }
+
+        private function normal(argument1:MouseEvent):void
+        {
+            if (!enabled)
+            {
+                return;
+            };
+            var localValue2:Function = ((data is dContextItemVO) ? (data as dContextItemVO).out : null);
+            if (localValue2 != null)
+            {
+                (localValue2(argument1));
+            };
+            this.setStyle("backgroundColor", 12623724);
+        }
+
+        override protected function commitProperties():void
+        {
+            var localValue1:dContextItemVO;
+            if (this.dataChanged)
+            {
+                localValue1 = (data as dContextItemVO);
+                this.itemLabel.text = cLocaManager.GetInstance().GetText(localValue1.locaGroup, localValue1.key_string, localValue1.labelParams);
+                this.enabled = localValue1.enabled;
+                ToolTipManager.enabled = false;
+                this.toolTip = localValue1.tooltip_string;
+                ToolTipManager.enabled = true;
+                this.normal(null);
+                this.dataChanged = false;
+            };
+            super.commitProperties();
+        }
+
+        protected function createTooltip(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        protected function canvas1_clickHandler(argument1:MouseEvent):void
+        {
+            if (!enabled)
+            {
+                return;
+            };
+            var localValue2:Function = ((data is dContextItemVO) ? (data as dContextItemVO).callback : null);
+            if (localValue2 != null)
+            {
+                (localValue2(argument1));
+            };
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("borderStyle", "solid");
+            this.setStyle("borderThickness", 0);
+            this.setStyle("backgroundColor", 12623724);
+            this.percentWidth = 100;
+            this.height = 20;
+            this.mouseChildren = false;
+            this.addEventListener("mouseOver", this.highlight);
+            this.addEventListener("mouseOut", this.normal);
+            this.addEventListener("toolTipCreate", this.createTooltip);
+            this.addEventListener("click", this.canvas1_clickHandler);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <ui:CustomLabel id="itemLabel" mouseEnabled="false"  horizontalCenter="0" verticalCenter="0" textAlign="center" color="4601379" fontWeight="bold" />
+</mx:Canvas>

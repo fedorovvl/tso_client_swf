@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="530" height="390" implements="GUI.Components.IGUIList">
+    <mx:Script><![CDATA[
+        import flash.display.DisplayObject;
+        import __AS3__.vec.Vector;
+        import flash.events.Event;
+        import mx.collections.ArrayCollection;
+        import mx.core.ClassFactory;
+        import mx.events.ToolTipEvent;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Components.ItemRenderer.WarehouseDetailsItemRenderer;
+        import GUI.Components.ItemRenderer.CollectionItemRenderer;
+
+        public static const SHADOW_BACKGROUND_CANVAS_BOTTOM_SIZE:int = 33;
+        public static const COLLECTION_LIST_BOTTOM_SIZE:int = 35;
+        public static const COLLECTION_BOTTOM_OFFSET:int = 5;
+
+        public function getAllItems(id:String):Vector.<DisplayObject>
+        {
+            if (id == null)
+            {
+                return (null);
+            };
+            var found:Vector.<DisplayObject> = new Vector.<DisplayObject>();
+            var groups:ArrayCollection = ArrayCollection(mayorhouseButtonBar.dataProvider);
+            var index:int;
+            while (index < groups.length)
+            {
+                if (groups[index].group == id)
+                {
+                    found.push(mayorhouseButtonBar.getChildAt(index));
+                };
+                index++;
+            };
+            if (hasOwnProperty(id))
+            {
+                found.push(this[id]);
+            };
+            return (found);
+        }
+
+        public function getFirstItem(id:String):DisplayObject
+        {
+            if (id == null)
+            {
+                return (null);
+            };
+            var groups:ArrayCollection = ArrayCollection(mayorhouseButtonBar.dataProvider);
+            var index:int;
+            while (index < groups.length)
+            {
+                if (groups[index].group == id)
+                {
+                    return (mayorhouseButtonBar.getChildAt(index));
+                };
+                index++;
+            };
+            if (hasOwnProperty(id))
+            {
+                return (this[id]);
+            };
+            return (null);
+        }
+
+        public function set busy(value:Boolean):void
+        {
+            busyOverlay.visible = value;
+            busyAnim.visible = value;
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(upgradeBox);
+            LegacyMxmlContent.createChildren(busyOverlay);
+            list.itemRenderer = new ClassFactory(WarehouseDetailsItemRenderer);
+            collectionList.itemRenderer = new ClassFactory(CollectionItemRenderer);
+            shadowBackgroundCanvas.setStyle("bottom", SHADOW_BACKGROUND_CANVAS_BOTTOM_SIZE);
+            list.setStyle("bottom", COLLECTION_LIST_BOTTOM_SIZE);
+            mayorhouseButtonBar.addEventListener("toolTipCreate", onMayorhouseButtonBar_toolTipCreate);
+            warehouseButtonBar.addEventListener("toolTipCreate", onWarehouseButtonBar_toolTipCreate);
+            updateBottom();
+            globalFlash.staticEventDispatcher.addEventListener("propertyChange", updateBottom, false, 0, true);
+        }
+
+        private function updateBottom(event:Event = null):void
+        {
+            setStyle("bottom", globalFlash.mainHudBottomPos);
+        }
+
+        public function onMayorhouseButtonBar_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function onWarehouseButtonBar_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <gui:BuildingWindowHeader id="buildingHeader" />
+            <mx:Canvas id="upgradeBox" height="267" top="62" left="8">
+                <gui:BuildingUpgrade id="upgradeColumn" />
+            </mx:Canvas>
+            <mx:Canvas id="shadowBackgroundCanvas" styleName="listBackgroundShadow" left="165" right="23" top="63" />
+            <gui:CustomTileList id="list" left="169" right="6" top="67" paddingTop="0" paddingBottom="0" paddingLeft="0" paddingRight="0" useRollOver="false" borderThickness="0" backgroundAlpha="0" />
+            <gui:CollectionTileList id="collectionList" visible="false" left="169" right="6" top="67" bottom="35" paddingTop="0" paddingBottom="0" paddingLeft="0" paddingRight="0" useRollOver="false" borderThickness="0" backgroundAlpha="0" />
+            <mx:Canvas id="dividerCanvas" styleName="hr" height="3" left="2" right="0" bottom="27" />
+            <gui:CustomToggleButtonBar id="mayorhouseButtonBar" buttonStyleName="tab" selectedButtonTextStyleName="tabSelected" bottom="0" left="2" right="2" />
+            <gui:CustomToggleButtonBar id="warehouseButtonBar" visible="false" buttonStyleName="tab" selectedButtonTextStyleName="tabSelected" bottom="0" left="2" right="2" />
+            <gui:DonateResourcePanel id="donateResourcePanel" visible="false" includeInLayout="false" verticalCenter="0" horizontalCenter="0" />
+            <mx:Canvas id="busyOverlay" styleName="detailsContentBox" height="260" visible="false" top="67" left="169" right="6">
+                <gui:SpriteLibAnimation id="busyAnim" animationName="guianim_hourglass" loop="true"
+                    visible="false" width="48" height="48" horizontalCenter="0" verticalCenter="0" />
+            </mx:Canvas>
+            <renderer:CollectionProductionOverlay id="productionOverlay" height="55" visible="true" left="165" right="3" bottom="33" />
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

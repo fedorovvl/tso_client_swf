@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<local:Combat3UnitBaseItemRenderer xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" width="127" height="113">
+    <mx:Script><![CDATA[
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import GUI.Components.data.dCombatUnitData;
+        import GUI.Assets.gAssetManager;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            mBackgroundSource = "BackgroundCombat3UnitSelection";
+            mBackgroundSourceMouseOver = "BackgroundCombat3UnitSelectionMouseOver";
+            super.data = argument1;
+            var localValue2:dCombatUnitData = (argument1 as dCombatUnitData);
+            if (localValue2 != null)
+            {
+                arrowSmall.visible = false;
+                arrowSmall.includeInLayout = false;
+                amountLabel.visible = false;
+                amountLabel.includeInLayout = false;
+                amountInput.visible = false;
+                amountInput.includeInLayout = false;
+                amountSlider.visible = false;
+                amountSlider.includeInLayout = false;
+                slash.visible = false;
+                slash.includeInLayout = false;
+                btnRemove.visible = false;
+                btnRemove.includeInLayout = false;
+                resourceIcon.visible = true;
+                topBox.setStyle("bottom", 22);
+                amountCanvas.setStyle("top", 79);
+                bottomBox.setStyle("horizontalAlign", "center");
+                costLabel.text = localValue2.costAmount.toString();
+                resourceIcon.source = gAssetManager.GetResourceIcon(localValue2.costName, true);
+                invalidateDisplayList();
+            };
+            refreshRendererPresentation();
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundAlpha", 0);
+            this.width = 127;
+            this.height = 113;
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+
+</local:Combat3UnitBaseItemRenderer>

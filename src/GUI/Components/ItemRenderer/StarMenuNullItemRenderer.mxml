@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="56" height="68">
+    <mx:Script><![CDATA[
+        import GUI.Assets.gAssetManager;
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            _StarMenuNullItemRenderer_Image1.source = gAssetManager.GetBitmap("StarmenuFrameEmpty");
+        }
+    ]]></mx:Script>
+    <mx:Image id="_StarMenuNullItemRenderer_Image1" percentWidth="100" percentHeight="100" />
+</mx:Canvas>

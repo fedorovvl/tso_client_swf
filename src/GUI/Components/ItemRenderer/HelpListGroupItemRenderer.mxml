@@ -1,0 +1,271 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="240">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.effects.Fade;
+        import mx.containers.VBox;
+        import mx.effects.Sequence;
+        import GUI.Components.SpecialButton;
+        import mx.effects.Resize;
+        import flash.utils.Dictionary;
+        import mx.core.mx_internal;
+        import GUI.Assets.gAssetManager;
+        import flash.display.Bitmap;
+        import flash.events.MouseEvent;
+        import mx.events.FlexEvent;
+        import flash.events.Event;
+        import mx.events.EffectEvent;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        public var _HelpListGroupItemRenderer_Fade1:Fade;
+
+        public var _HelpListGroupItemRenderer_Fade2:Fade;
+
+        [Bindable]
+        private var collapsed:Boolean = false;
+
+        [Bindable]
+        public var expand:Sequence;
+
+        [Bindable]
+        public var collapse:Sequence;
+
+        public var categoryId:String;
+
+        [Bindable]
+        public var expandToHeight:int;
+
+        public var _HelpListGroupItemRenderer_Resize1:Resize;
+
+        public var _HelpListGroupItemRenderer_Resize2:Resize;
+
+        [Bindable]
+        public var title:String;
+
+        private var _itemRendererMap:Dictionary = new Dictionary();
+
+        private function createSequence2():Sequence
+        {
+            var localValue1:Sequence = new Sequence();
+            this.collapse = localValue1;
+            localValue1.children = [this.createFade2(), this.createResize2()];
+            return (localValue1);
+        }
+
+        private function createFade1():Fade
+        {
+            var localValue1:Fade = new Fade();
+            this._HelpListGroupItemRenderer_Fade1 = localValue1;
+            localValue1.alphaFrom = 0;
+            localValue1.alphaTo = 1;
+            localValue1.duration = 300;
+            return (localValue1);
+        }
+
+        private function createResize2():Resize
+        {
+            var localValue1:Resize = new Resize();
+            this._HelpListGroupItemRenderer_Resize2 = localValue1;
+            localValue1.duration = 300;
+            return (localValue1);
+        }
+
+        public function onBtnTitle_click(argument1:MouseEvent):void
+        {
+            this.expandCollapse();
+        }
+
+        private function display(argument1:Event=null):void
+        {
+            var localValue3:Object;
+            var localValue4:String;
+            var localValue5:HelpListItemRenderer;
+            removeEventListener(FlexEvent.CREATION_COMPLETE, this.display);
+            if (!data)
+            {
+                return;
+            };
+            this.expandToHeight = 31;
+            var localValue2:Object = {};
+            for each (localValue3 in (data as Array))
+            {
+                localValue4 = localValue3.helpName_string;
+                if (this._itemRendererMap[localValue4])
+                {
+                    localValue5 = this._itemRendererMap[localValue4];
+                }
+                else
+                {
+                    localValue5 = new HelpListItemRenderer();
+                    this._itemRendererMap[localValue4] = localValue5;
+                    this.list.addChild(localValue5);
+                };
+                this.expandToHeight = (this.expandToHeight + (int(this.list.getStyle("verticalGap")) + 29));
+                localValue5.data = localValue3;
+                localValue2[localValue4] = localValue3;
+            };
+            for (localValue4 in this._itemRendererMap)
+            {
+                if (!localValue2[localValue4])
+                {
+                    this.list.removeChild(this._itemRendererMap[localValue4]);
+                    delete this._itemRendererMap[localValue4];
+                };
+            };
+            if (!this.collapsed)
+            {
+                this.height = this.expandToHeight;
+            };
+        }
+
+        private function createSequence1():Sequence
+        {
+            var localValue1:Sequence = new Sequence();
+            this.expand = localValue1;
+            localValue1.children = [this.createResize1(), this.createFade1()];
+            return (localValue1);
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            if (this.list)
+            {
+                this.display();
+            }
+            else
+            {
+                addEventListener(FlexEvent.CREATION_COMPLETE, this.display);
+            };
+            refreshRendererPresentation();
+        }
+
+        private function expandCollapse():void
+        {
+            if (!this.collapsed)
+            {
+                this.collapse.play();
+            }
+            else
+            {
+                this.expand.play();
+            };
+            this.collapsed = (!(this.collapsed));
+            if (!this.collapsed)
+            {
+                dispatchEvent(new EffectEvent(EffectEvent.EFFECT_START, true));
+            };
+        }
+
+        private function createFade2():Fade
+        {
+            var localValue1:Fade = new Fade();
+            this._HelpListGroupItemRenderer_Fade2 = localValue1;
+            localValue1.alphaFrom = 1;
+            localValue1.alphaTo = 0;
+            localValue1.duration = 300;
+            return (localValue1);
+        }
+
+        private function createResize1():Resize
+        {
+            var localValue1:Resize = new Resize();
+            this._HelpListGroupItemRenderer_Resize1 = localValue1;
+            localValue1.duration = 300;
+            return (localValue1);
+        }
+
+        private function readPresentationValue8():String
+        {
+            var localValue1:* = title;
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            btnTitle.addEventListener("click", onBtnTitle_click);
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.width = 240;
+            this.createSequence2();
+            this.createSequence1();
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"],
+                [btnTitle, "heightChanged"],
+                [btnTitle, "xChanged"]]);
+                _HelpListGroupItemRenderer_Resize1.heightTo = expandToHeight;
+                _HelpListGroupItemRenderer_Resize1.target = this;
+                _HelpListGroupItemRenderer_Fade1.target = details;
+                _HelpListGroupItemRenderer_Fade2.target = details;
+                _HelpListGroupItemRenderer_Resize2.heightTo = btnTitle.x + btnTitle.height;
+                _HelpListGroupItemRenderer_Resize2.target = this;
+                btnTitle.labelText = readPresentationValue8();
+                btnTitle.iconImage = gAssetManager.GetBitmap(((collapsed) ? "ArrowSmallSUp" : "ArrowSmallNUp"));
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="details" top="26" left="1" right="3" bottom="0" backgroundSize="100%" backgroundImage="{gAssetManager.GetClass('QuestItemBg')}">
+        <mx:VBox id="list"  left="3" right="3" top="3" bottom="3" verticalGap="1" />
+    </mx:Canvas>
+    <ui:SpecialButton id="btnTitle" height="29" labelCenter="true" iconLeft="5" iconCenter="-1"  left="0" right="0" />
+</mx:Canvas>

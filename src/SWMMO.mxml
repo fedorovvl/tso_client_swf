@@ -1,0 +1,623 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:local="*" xmlns:gui="GUI.Components.*"
+    xmlns:bridge="com.bluebyte.tso.ui.bridge.*"
+    xmlns:particles="com.bluebyte.tso.particle.*"
+    xmlns:cg="com.bluebyte.tso.contentgenerator.view.ui.panel.*"
+    xmlns:quest="com.bluebyte.tso.quests.view.ui.panel.*"
+    creationPolicy="all">
+    <mx:Script><![CDATA[
+        import mx.core.Application;
+        import GUI.Components.*;
+        import com.bluebyte.tso.contentgenerator.view.ui.panel.ContentGeneratorRewardPanel;
+        import mx.controls.CheckBox;
+        import mx.collections.ArrayCollection;
+        import com.bluebyte.tso.particle.ParticlePlane;
+        import mx.states.AddChild;
+        import mx.states.State;
+        import com.bluebyte.tso.ui.bridge.NLibFlexBridgeManager;
+        import com.bluebyte.tso.quests.view.ui.panel.QuestBook;
+        import com.bluebyte.tso.contentgenerator.view.ui.panel.ContentGeneratorPanel;
+        import mx.containers.Panel;
+        import mx.containers.TitleWindow;
+        import mx.controls.DataGrid;
+        import Interface.cGameInterface;
+        import Utils.RabbidCode;
+        import mx.core.UIComponentDescriptor;
+        import Model.Notifiers.InputNotifier;
+        import com.bluebyte.tso.bootstrap.Bootstrap;
+        import com.bluebyte.tso.util.ClientLogger;
+        import Interface.gInitStaticForAllZones;
+        import mx.core.mx_internal;
+        import mx.core.DeferredInstanceFromFunction;
+        import mx.events.PropertyChangeEvent;
+        import GUI.GAME.Chat.TSOChatMediator;
+        import mx.controls.dataGridClasses.DataGridColumn;
+        import nLib.cLog;
+        import mx.core.UIComponent;
+        import mx.events.FlexEvent;
+        import mx.states.SetProperty;
+        import ServerState.cResources;
+        import ServerState.dResourceCreationDefinition;
+        import ServerState.cResourceCreation;
+        import com.bluebyte.tso.bootstrap.steps.*;
+        import mx.core.ComponentDescriptor;
+        import mx.core.IFlexDisplayObject;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+
+        use namespace mx_internal;
+
+        private static const addrPrefix:String = "[object Stage].NO_UI.SWMMO.isoengine.";
+        mx_internal static var swmmoStylesInitDone:Boolean = false;
+        public var GAMESTATE_ID_CHAT_PANEL:ChatPanel = null;
+        public var checker:RabbidCode = null;
+        public var inputNotifier:InputNotifier = new InputNotifier();
+        [Bindable]
+        public var mGameInterface:cGameInterface;
+        [Bindable]
+        public var bootstrap:Bootstrap = new Bootstrap();
+        [Bindable]
+        public var runningState:State;
+
+        private function registerInvokeHook():void
+        {
+            NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, function (_arg_1:InvokeEvent):void
+            {
+                ClientLogger.log(("SWMMO invokeEvent.arguments: " + _arg_1.arguments.toString()));
+                gInitStaticForAllZones.parseCommandLineArguments(_arg_1.arguments);
+            });
+        }
+
+        private function configureApplication():Boolean
+        {
+            registerInvokeHook();
+            mx_internal::_document = this;
+            if (!this.styleDeclaration)
+            {
+                this.styleDeclaration = new CSSStyleDeclaration();
+            };
+            this.styleDeclaration.defaultFactory = function ():void
+            {
+                this.backgroundGradientColors = [4151151, 4151151];
+                this.borderStyle = "none";
+                this.paddingTop = 0;
+                this.paddingBottom = 0;
+                this.paddingLeft = 0;
+                this.paddingRight = 0;
+            };
+            (mx_internal::swmmoStylesInit());
+            this.clipContent = true;
+            this.layout = "absolute";
+            this.minWidth = 800;
+            this.minHeight = 600;
+            this.horizontalPageScrollSize = 0;
+            this.horizontalScrollPolicy = "off";
+            this.horizontalScrollPosition = 0;
+            this.verticalPageScrollSize = 0;
+            this.verticalScrollPolicy = "off";
+            this.verticalScrollPosition = 0;
+            this.currentState = "LoadSettings";
+            this.creationPolicy = "all";
+            this.addEventListener("applicationComplete", this.onSWMMOApplicationComplete);
+            this.addEventListener("enterFrame", this.onSWMMOEnterFrame);
+            return true;
+        }
+
+        public function getGUIAdress(_arg_1:DisplayObject):String
+        {
+            var _local_2:String = this._getGUIAdress(_arg_1);
+            if (_local_2.indexOf(addrPrefix) == 0)
+            {
+                return (_local_2.substr(addrPrefix.length));
+            };
+            return (_local_2);
+        }
+
+        public function onSWMMOEnterFrame(_arg_1:Event):void
+        {
+            this.isoengine.update();
+        }
+
+        public function getGUIItem(_arg_1:String):DisplayObject
+        {
+            var _local_2:Array = _arg_1.split(".");
+            var _local_3:DisplayObject = this;
+            var _local_4:int;
+            var _local_5:int = _local_2.length;
+            while (_local_4 < _local_5)
+            {
+                if (((_local_3 is IGUIList) && (!(_local_2[_local_4] == "(GUIList)"))))
+                {
+                    _local_3 = IGUIList(_local_3).getFirstItem(_local_2[_local_4]);
+                }
+                else
+                {
+                    if (((((!(_local_2[_local_4] == null)) && (!(_local_2[_local_4] == "NO_UI"))) && (!(_local_2[_local_4] == ""))) && (_local_3.hasOwnProperty(_local_2[_local_4]))))
+                    {
+                        _local_3 = _local_3[_local_2[_local_4]];
+                    }
+                    else
+                    {
+                        cLog.warning(((("GUI Adress not found: " + _arg_1) + " NULL on: ") + _local_2[_local_4]));
+                        _local_3 = null;
+                    };
+                };
+                if (_local_3 == null) break;
+                _local_4++;
+            };
+            return (_local_3);
+        }
+
+        public function _getGUIAdress(_arg_1:DisplayObject):String
+        {
+            if (_arg_1.parent)
+            {
+                if ((_arg_1 is IGUIList))
+                {
+                    return ((this.getGUIAdress(_arg_1.parent) + ".") + ((_arg_1 is UIComponent) ? (UIComponent(_arg_1).id + ".(GUIList)") : "???.(GUIList)"));
+                };
+                return ((this.getGUIAdress(_arg_1.parent) + ".") + ((_arg_1 is UIComponent) ? UIComponent(_arg_1).id : "NO_UI"));
+            };
+            return (_arg_1.toString());
+        }
+
+        public function onSWMMOApplicationComplete(_arg_1:FlexEvent):void
+        {
+            this.applicationCompleteHandler(_arg_1);
+        }
+
+        public function __runningState_exitState(_arg_1:FlexEvent):void
+        {
+            this.ExitGame(_arg_1);
+        }
+
+        protected function applicationCompleteHandler(_arg_1:FlexEvent):void
+        {
+            this.bootstrap.add(new StepInitialize()).add(new StepBigbrother()).add(new StepLoadStylesheet()).add(new StepParseSettings()).add(new StepLoadGFXResource()).add(new StepBootWindowManagement()).add(new StepBootEngine()).add(new StepHideLoadingscreen()).add(new StepStartCommuncation()).add(new StepHandover()).add(new StepInitJSCall()).start();
+        }
+
+        protected function ExitGame(_arg_1:Event):void
+        {
+            this.mGameInterface.Exit();
+        }
+
+        public function setTabEnabled(_arg_1:Boolean):void
+        {
+            this.tabEnabled = _arg_1;
+        }
+
+        mx_internal function swmmoStylesInit():void
+        {
+            var style:CSSStyleDeclaration;
+            var effects:Array;
+            if (mx_internal::swmmoStylesInitDone)
+            {
+                return;
+            };
+            mx_internal::swmmoStylesInitDone = true;
+            var _local_2:* = StyleManager;
+            (_local_2.mx_internal::initProtoChainRoots());
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            configureApplication();
+            for each (var st:State in this.states)
+            {
+                if (st.name == "Game")
+                {
+                    this.runningState = st;
+                    break;
+                }
+            }
+            this.runningState.addEventListener("exitState", this.__runningState_exitState);
+            this.runningState.addEventListener("enterState", onGameEnterStateOnce);
+        }
+
+        private function onGameEnterStateOnce(e:*):void
+        {
+            this.runningState.removeEventListener("enterState", onGameEnterStateOnce);
+            blueFireComponent.panelClass = ChatPanel;
+            blueFireComponent.chatPanelMediatorClass = TSOChatMediator;
+            blueFireComponent.setStyle("right", "auto");
+            GAMESTATE_ID_SUPPORT_LOCK_ZONE_CLOCK.setStyle("left", "auto");
+            GAMESTATE_ID_TRACKED_MISSION_LIST.setStyle("left", "auto");
+            GAMESTATE_ID_CONSTRUCTION_INFO_PANEL.setStyle("left", "auto");
+            GAMESTATE_ID_DECORATION_INFO_PANEL.setStyle("left", "auto");
+            GAMESTATE_ID_MINIMAL_INFO_PANEL.setStyle("left", "auto");
+            GAMESTATE_ID_TRADE_OFFICE_PANEL.setStyle("left", "auto");
+            SPECIALIST_COOLDOWN_PANEL.setStyle("left", "auto");
+            GAMESTATE_ID_BUILDING_INFO_PANEL.setStyle("left", "auto");
+            GAMESTATE_ID_RESIDENCE_INFO_PANEL.setStyle("left", "auto");
+            GAMESTATE_ID_GENERIC_LINK_BUILDING_INFO_PANEL.setStyle("left", "auto");
+            GAMESTATE_ID_ENEMY_BUILDING_INFO_PANEL.setStyle("left", "auto");
+            GAMESTATE_ID_MOUNTAIN_INFO_PANEL.setStyle("left", "auto");
+            GAMESTATE_ID_WATCHTOWER_INFO_PANEL.setStyle("left", "auto");
+            GAMESTATE_ID_WAREHOUSE_INFO_PANEL.setStyle("left", "auto");
+            GAMESTATE_ID_TAVERN_INFO_PANEL.setStyle("left", "auto");
+            GAMESTATE_ID_HELP_WINDOW.setStyle("right", "auto");
+            initGameStateLayout();
+        }
+
+        private function initGameStateLayout():void
+        {
+            GAMESTATE_ID_EVENT_WIDGET_LIST.chat = blueFireComponent;
+            GAMESTATE_ID_EVENT_WIDGET_LIST.setStyle("right", "auto");
+            GAMESTATE_ID_TRACKED_MISSION_LIST.queue = GAMESTATE_ID_BUILD_QUEUE;
+            GAMESTATE_ID_ACTIONBAR.addEventListener("move", updateFriendsListY);
+            GAMESTATE_ID_ACTIONBAR.addEventListener("resize", updateFriendsListY);
+            GAMESTATE_ID_ACTIONBAR.addEventListener("move", updateCancelPanelY);
+            GAMESTATE_ID_FRIENDS_LIST.addEventListener("resize", updateActionBarBottom);
+            GAMESTATE_ID_CANCEL_ACTION_PANEL.addEventListener("show", updateCancelPanelY);
+            GAMESTATE_ID_CANCEL_ACTION_PANEL.addEventListener("hide", updateCancelPanelY);
+            GAMESTATE_ID_AVATAR.addEventListener("resize", updateAvatarMessageListX);
+            this.addEventListener("resize", updateAvatarMessageListY);
+            GAMESTATE_ID_INFO_BAR.addEventListener("resize", updateAvatarMessageListY);
+            GAMESTATE_ID_BUILD_QUEUE.addEventListener("resize", updateTrackedMissionTop);
+            updateCancelPanelY();
+            updateActionBarBottom();
+            updateAvatarMessageListX();
+            updateAvatarMessageListY();
+            updateFriendsListY();
+            updateTrackedMissionTop();
+        }
+
+        private function updateCancelPanelY(event:Event = null):void
+        {
+            GAMESTATE_ID_CANCEL_ACTION_PANEL.y = GAMESTATE_ID_ACTIONBAR.y + (GAMESTATE_ID_CANCEL_ACTION_PANEL.visible ? -35 : 85);
+        }
+
+        private function updateActionBarBottom(event:Event = null):void
+        {
+            GAMESTATE_ID_ACTIONBAR.setStyle("bottom", String(GAMESTATE_ID_FRIENDS_LIST.height));
+            blueFireComponent.setStyle("bottom", String(GAMESTATE_ID_FRIENDS_LIST.height));
+        }
+
+        private function updateAvatarMessageListX(event:Event = null):void
+        {
+            GAMESTATE_ID_AVATAR_MESSAGE_LIST.x = GAMESTATE_ID_AVATAR.width - 5;
+        }
+
+        private function updateAvatarMessageListY(event:Event = null):void
+        {
+            GAMESTATE_ID_AVATAR_MESSAGE_LIST.y = (this.width < 1733) ? GAMESTATE_ID_INFO_BAR.height : 0;
+        }
+
+        private function updateFriendsListY(event:Event = null):void
+        {
+            GAMESTATE_ID_FRIENDS_LIST.y = GAMESTATE_ID_ACTIONBAR.y + GAMESTATE_ID_ACTIONBAR.height;
+        }
+
+        private function updateTrackedMissionTop(event:Event = null):void
+        {
+            GAMESTATE_ID_TRACKED_MISSION_LIST.topBinded = GAMESTATE_ID_BUILD_QUEUE.height;
+        }
+
+    ]]></mx:Script>
+
+    <mx:states>
+        <mx:State name="LoadSettings" />
+        <mx:State name="Game">
+            <mx:AddChild position="lastChild">
+                <gui:CancelActionPanel id="GAMESTATE_ID_CANCEL_ACTION_PANEL" visible="false" horizontalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:PacketLossAlert id="GAMESTATE_ID_PACKET_LOST_ALERT" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:SupportLockZone id="GAMESTATE_ID_SUPPORT_LOCK_ZONE_CLOCK" visible="false" right="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:Combat30ToolTip id="GAMESTATE_ID_COMBAT30_TOOLTIP" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:CombatScenarioTooltip id="GAMESTATE_ID_COMBAT_SCENARIO_TOOLTIP" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:ActionBar id="GAMESTATE_ID_ACTIONBAR" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:InfoBar id="GAMESTATE_ID_INFO_BAR" y="-3" visible="false" horizontalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:SingleInfoBar id="GAMESTATE_ID_EXPEDITION_INFO_BAR" y="-3" visible="false" horizontalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:EventWidgetList id="GAMESTATE_ID_EVENT_WIDGET_LIST" visible="false" left="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:Avatar id="GAMESTATE_ID_AVATAR" y="0" x="0" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:AvatarMessageList id="GAMESTATE_ID_AVATAR_MESSAGE_LIST" visible="true" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:HintPointer id="GAMESTATE_ID_QUEST_HINT_POINTER" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:HintPointer id="GAMESTATE_ID_CALENDAR_HINT_POINTER" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <local:BlueFireComponent id="blueFireComponent" width="350" height="250" visible="false" left="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:FriendsList id="GAMESTATE_ID_FRIENDS_LIST" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:TrackedMissionList id="GAMESTATE_ID_TRACKED_MISSION_LIST" visible="false" right="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:ConstructionInfoPanel id="GAMESTATE_ID_CONSTRUCTION_INFO_PANEL" visible="false" right="100" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:DecorationInfoPanel id="GAMESTATE_ID_DECORATION_INFO_PANEL" visible="false" right="100" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:MinimalInfoPanel id="GAMESTATE_ID_MINIMAL_INFO_PANEL" visible="false" right="100" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:MinimalInfoPanel id="GAMESTATE_ID_TRADE_OFFICE_PANEL" visible="false" right="100" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:SpecialistCooldownPanel id="SPECIALIST_COOLDOWN_PANEL" visible="false" right="100" bottom="180" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:MysteryBoxPanel id="GAMESTATE_ID_MYSTERYBOX_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:BuildingInfoPanel id="GAMESTATE_ID_BUILDING_INFO_PANEL" visible="false" right="100" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:EpicWorkyardInfoPanel id="GAMESTATE_ID_EPIC_WORKYARD_INFO_PANEL" visible="false" right="200" bottom="180" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:MoveBuildingPanel id="GAMESTATE_ID_MOVE_BUILDING_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:ResidenceInfoPanel id="GAMESTATE_ID_RESIDENCE_INFO_PANEL" visible="false" right="100" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:GenericLinkBuildingInfoPanel id="GAMESTATE_ID_GENERIC_LINK_BUILDING_INFO_PANEL" visible="false" right="100" bottom="180" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:EnemyBuildingInfoPanel id="GAMESTATE_ID_ENEMY_BUILDING_INFO_PANEL" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:MountainInfoPanel id="GAMESTATE_ID_MOUNTAIN_INFO_PANEL" visible="false" right="100" bottom="180" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:TimedProductionInfoPanel id="GAMESTATE_ID_TIMED_PRODUCTION_INFO_PANEL" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:TimedProductionInfoPanel id="GAMESTATE_ID_BARRACKS" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:TimedProductionInfoPanel id="GAMESTATE_ID_BARRACKS3" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:TimedProductionInfoPanel id="GAMESTATE_ID_EXPEDITION_WEAPONSMITH" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:SkillProductionPanel id="GAMESTATE_ID_SKILL_PRODUCTION_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:WatchTowerInfoPanel id="GAMESTATE_ID_WATCHTOWER_INFO_PANEL" visible="false" right="100" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:WarehouseInfoPanel id="GAMESTATE_ID_WAREHOUSE_INFO_PANEL" visible="false" right="100" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:TavernInfoPanel id="GAMESTATE_ID_TAVERN_INFO_PANEL" visible="false" right="100" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:AddFriendsPanel id="GAMESTATE_ID_ADD_FRIENDS_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:FoundGuildPanel id="GAMESTATE_ID_FOUND_GUILD_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:LoadingZonePanel id="GAMESTATE_ID_LOADING_ZONE_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:BuildQueue id="GAMESTATE_ID_BUILD_QUEUE" y="0" visible="false" right="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:HiredTroopsPoolPanel id="GAMESTATE_HIRED_TROOPS_POOL_PANEL" y="0" visible="false" right="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:StarMenu id="GAMESTATE_ID_STAR_MENU" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:SpecialistPanel id="GAMESTATE_ID_SPECIALIST_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:CombatPreviewPanel id="GAMESTATE_ID_PRECOMBAT_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:SpecialistTravelPanel id="GAMESTATE_ID_SPECIALIST_TRAVEL_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:HintPointer id="GAMESTATE_ID_PVP_LEVEL_UP_HINT_POINTER" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:ToolboxPanel id="GAMESTATE_ID_TOOLBOX_PANEL" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:DarkenPanel id="GAMESTATE_ID_DARKEN_PANEL" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:ShopWindow id="GAMESTATE_ID_SHOP_WINDOW" visible="false" horizontalCenter="0" verticalCenter="-50" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:PvPReportWindow id="GAMESTATE_ID_PVP_REPORT_WINDOW" visible="false" horizontalCenter="0" verticalCenter="-50" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:LoadingMailPanel id="GAMESTATE_ID_LOADING_MAIL_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:TradeWindow id="GAMESTATE_ID_TRADE_WINDOW" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:GuildWindow id="GAMESTATE_ID_GUILD_WINDOW" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:AdventurePanel id="GAMESTATE_ID_ADVENTURE_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <quest:QuestBook id="GAMESTATE_ID_QUEST_BOOK" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:HelpWindow id="GAMESTATE_ID_HELP_WINDOW" y="58" visible="false" left="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:HelpOverview id="GAMESTATE_ID_HELP_OVERVIEW" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:AdventWindow id="GAMESTATE_ID_ADVENT_WINDOW" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:EventPanel id="GAMESTATE_ID_EVENT_WINDOW" visible="false" verticalCenter="0" horizontalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:LevelUpWindow id="GAMESTATE_ID_LEVELUP_WINDOW" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:EconomyOverview id="GAMESTATE_ID_ECONOMY_OVERVIEW" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:ColonyWindow id="GAMESTATE_ID_COLONY_WINDOW" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:PvPColoniesWindow id="GAMESTATE_ID_PVPCOLONIES_WINDOW" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:PromotionWindow id="GAMESTATE_ID_PROMOTION" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:WelcomeWindow id="GAMESTATE_ID_WELCOME_WINDOW" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:DailyLoginPanel id="GAMESTATE_ID_DAILY_LOGIN_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:FriendsListMenu id="GAMESTATE_ID_FRIENDS_LIST_MENU" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:MailWindowContextMenu id="GAMESTATE_ID_MAIL_CONTEXT_MENU" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:MailWindowContextMenu id="GAMESTATE_ID_BLOCK_LIST_MENU" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:CameraControlPanel id="GAMESTATE_ID_CAMERA_CONTROL_PANEL" y="195" x="130" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:NewsWindow id="GAMESTATE_ID_NEWS_WINDOW" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:PremiumAccountActivationWindow id="GAMESTATE_ID_ACTIVATE_PREMIUM_ACCOUNT_WINDOW" visible="false" horizontalCenter="0" verticalCenter="-50" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:SkillTreeWindow id="GAMESTATE_ID_SKILLTREEWINDOW" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:EventMonster id="GAMESTATE_ID_EVENT_MONSTER" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:BlockList id="GAMESTATE_ID_BLOCK_LIST" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:GuildBank id="GAMESTATE_ID_GUILD_BANK_WINDOW" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:TaskBuildingPanel id="GAMESTATE_ID_TASK_BUILDING_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:GuildPayResourcePanel id="GAMESTATE_ID_GUILD_PAY_RESOURCE_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:GuildTransferResourcePanel id="GAMESTATE_ID_GUILD_TRANSFER_RESOURCE_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:ApplyBuffResourcePanel id="GAMESTATE_ID_APPLY_BUFF_RESOURCE_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:DeleteBuffResourcePanel id="GAMESTATE_ID_DELETE_BUFF_RESOURCE_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:GuildBankBuyTabPanel id="GAMESTATE_ID_GUILD_BUY_TAB_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:GuildBankEnlargeTabPanel id="GAMESTATE_ID_GUILD_ENLARGE_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:GuildBankTransactionHistory id="GAMESTATE_ID_GUILD_TRANSACTION_HISTORY" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:AchievementPanelViewComponent id="GAMESTATE_ID_ACHIEVEMENT_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:AvatarSelectionViewComponent id="GAMESTATE_ID_AVATAR_SELECTION" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:DefenseBuildingPanel id="GAMESTATE_ID_DEFENSE_BUILDING" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:PvPLevelRewardPanel id="GAMESTATE_ID_PVP_LEVEL_REWARDS" visible="false" horizontalCenter="65" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:PlayerOptionsPanel id="GAMESTATE_ID_PLAYER_OPTIONS" y="180" x="200" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:EventInfoPanel id="GAMESTATE_ID_EVENT_INFO_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:ZoneBuffPanel id="GAMESTATE_ID_ZONE_BUFF_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:CultureBuildingPanel id="GAMESTATE_ID_CULTURE_BUILDING_PANEL" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <cg:ContentGeneratorPanel id="GAMESTATE_ID_CONTENT_GENERATOR_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <cg:ContentGeneratorRewardPanel id="GAMESTATE_ID_CONTENT_GENERATOR_REWARD_PANEL" visible="false" horizontalCenter="0" verticalCenter="0" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:SplashScreen id="GAMESTATE_ID_SPLASH_SCREEN" percentWidth="100" percentHeight="100" visible="true" mouseEnabled="false" />
+            </mx:AddChild>
+        </mx:State>
+    </mx:states>
+
+    <local:EngineCanvas id="isoengine" x="0" y="0" percentWidth="100" percentHeight="100" minWidth="800" minHeight="600" horizontalScrollPolicy="off" verticalScrollPolicy="off" creationPolicy="all">
+        <bridge:NLibFlexBridgeManager id="nLibFlexBridgeManager" />
+        <particles:ParticlePlane id="particlePlane" percentWidth="100" percentHeight="100" />
+    </local:EngineCanvas>
+    <gui:LoadingScreenLoader id="loadingScreenLoader" x="0" y="0" percentWidth="100" percentHeight="100" />
+    <gui:LoadingScreen id="loadingScreen" x="0" y="0" percentWidth="100" percentHeight="100" visible="false" />
+</mx:Application>
+

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="190" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import mx.core.ClassFactory;
+        import mx.controls.Button;
+        import GUI.Components.ItemRenderer.AvatarListItemRenderer;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import global;
+
+        [Embed('../../../assets/embedded/avatar/avatar_achievement.png')]
+        private var avatarAchievementSkin:Class;
+        [Embed('../../../assets/embedded/avatar/avatar_background.png')]
+        private var avatarBackgroundSkin:Class;
+        [Embed('../../../assets/embedded/avatar/avatar_pvp_progress_background.png')]
+        private var avatarPvpProgressSkin:Class;
+
+        private var avatarUpdates:AvatarUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            pvpRankImage.source = gAssetManager.GetResourceIcon("ValorPoint");
+            applySkins(btnNewMail, "ButtonIconNewMail", "ButtonIconNewMail", "ButtonIconNewMail", "ButtonIconNewMail");
+            pvpProgressImage.source = avatarPvpProgressSkin;
+            backgroundImage.source = avatarBackgroundSkin;
+            achievementImage.source = avatarAchievementSkin;
+            otherPlayers.itemRenderer = new ClassFactory(AvatarListItemRenderer);
+            avatarImage.addEventListener("toolTipCreate", onAvatarImage_toolTipCreate);
+            xpTooltipMask.addEventListener("toolTipCreate", onXpTooltipMask_toolTipCreate);
+            pvpRankButton.addEventListener("toolTipCreate", onPvpRankButton_toolTipCreate);
+            btnQuestBook.addEventListener("toolTipCreate", onBtnQuestBook_toolTipCreate);
+            avatarUpdates = new AvatarUpdates(updateAvatarState);
+        }
+
+        private function applySkins(button:Button, up:String, down:String, over:String, disabled:String):void
+        {
+            button.setStyle("upSkin", gAssetManager.GetClass(up));
+            button.setStyle("downSkin", gAssetManager.GetClass(down));
+            button.setStyle("overSkin", gAssetManager.GetClass(over));
+            button.setStyle("disabledSkin", gAssetManager.GetClass(disabled));
+        }
+
+        private function updateAvatarState(event:Object = null):void
+        {
+            var packetLost:Boolean = global.ui_bindable ? global.ui_bindable.mPacketLost : false;
+            var defenseMode:Boolean = global.ui_bindable ? global.ui_bindable.mIsDefenseMode : false;
+            achievement.enabled = (!(defines.ACHIEVEMENT_THROTTLE_MODE_ACTIVE)) && (!(packetLost));
+            btnNewMail.enabled = (!(packetLost));
+            btnQuestBook.visible = (!(defenseMode));
+            btnQuestBook.enabled = ((!(packetLost)) && (!(defenseMode)));
+            var questTip:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "QuestButton");
+            btnQuestBook.toolTip = ((questTip == undefined) ? null : String(questTip));
+        }
+
+        public function onAvatarImage_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function onXpTooltipMask_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.MULTILINE_string, event);
+        }
+
+        public function onPvpRankButton_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.MULTILINE_string, event);
+        }
+
+        public function onBtnQuestBook_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+
+    <mx:TileList id="otherPlayers" selectable="false" width="120" y="360" useRollOver="false" horizontalCenter="5" backgroundAlpha="0" borderThickness="0" />
+
+    <gui:OptionsPanel id="options" width="128" visible="false" top="294" left="4" />
+
+    <mx:Canvas id="progressBar" height="30" width="100" left="17" top="138" backgroundColor="0x95FF00" />
+
+    <mx:Canvas id="pvpProgressBar" height="55" width="133"
+        horizontalScrollPolicy="off" verticalScrollPolicy="off" left="2" top="15">
+        <gui:TSOImage id="pvpProgressImage" width="133" height="55" left="0" top="0" />
+    </mx:Canvas>
+
+    <gui:TSOImage id="backgroundImage" left="2" top="15" />
+
+    <gui:TSOImage id="avatarBackground" left="2" top="28" />
+
+    <gui:TSOImage id="avatarImage" left="2" top="28" />
+
+    <mx:Canvas id="xpTooltipMask" height="150" width="100" left="17" top="20" backgroundColor="0xFFFFFF" backgroundAlpha="0" />
+
+    <gui:CustomLabel id="playerName" y="175" x="10" width="113" textAlign="center" fontWeight="bold" color="0xFFFFFF" />
+
+    <gui:CustomLabel id="level" y="193" x="10" width="113" textAlign="center" fontWeight="bold" color="0xFFFFFF" />
+
+    <mx:Button id="pvpRankButton" y="215" width="100" height="25" styleName="optionsMenu" left="18" textIndent="20" textAlign="center" fontWeight="bold" color="0xFFFFFF" />
+
+    <gui:TSOImage id="pvpRankImage" y="215" mouseEnabled="false" left="20" />
+
+    <mx:Button id="achievement" y="246" width="100" height="25" styleName="optionsMenu" textIndent="20" left="18" textAlign="center" fontWeight="bold" color="0xFFFFFF" />
+
+    <gui:TSOImage id="achievementImage" y="249" mouseEnabled="false" left="25" />
+
+    <gui:SpriteLibAnimation id="animXP" visible="false" x="5" y="123"
+        width="131" height="69" animationName="guianim_avatar_xp" />
+
+    <gui:SpriteLibAnimation id="animPvPXP" visible="false" x="5" y="72"
+        width="131" height="69" scaleY="-1" animationName="guianim_avatar_xp" />
+
+    <gui:SpriteLibAnimation id="animLevelUp" visible="false" x="15" y="181"
+        width="120" height="50" animationName="guianim_avatar_levelup" />
+
+    <gui:TSOImage id="btnAdvent" right="20" top="98" />
+
+    <mx:Button id="btnNewMail" visible="false" width="32" height="24" right="37" top="68" />
+
+    <gui:TwinkleButton id="btnQuestBook" twinkle="false" width="67" height="66" right="27" top="148" upSkin="{gAssetManager.GetClass('IconQuest')}" downSkin="{gAssetManager.GetClass('IconQuestHighlight')}" overSkin="{gAssetManager.GetClass('IconQuestHighlight')}" selectedUpSkin="{gAssetManager.GetClass('IconQuestHighlight')}" selectedOverSkin="{gAssetManager.GetClass('IconQuestHighlight')}" selectedDownSkin="{gAssetManager.GetClass('IconQuestHighlight')}" disabledSkin="{gAssetManager.GetClass('IconQuest')}" />
+</mx:Canvas>

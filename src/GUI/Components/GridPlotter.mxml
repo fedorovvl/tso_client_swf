@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="400" height="300">
+    <mx:Script><![CDATA[
+        import flash.geom.Point;
+        import GUI.Components.ItemRenderer.PvPReportCampItemRenderer;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundAlpha", 0);
+        }
+
+        private function getPlotPointFromGrid(gridId:int):Point
+        {
+            return new Point((gridId % 64 / 64 * width) - 20,
+                (gridId / 128 / 128 * height * 2) - 25);
+        }
+
+        public function setData(camps:Array, rendererClass:Class):void
+        {
+            removeAllChildren();
+            for each (var camp:Object in camps)
+            {
+                var point:Point = getPlotPointFromGrid(camp.gridid);
+                var renderer:PvPReportCampItemRenderer = new PvPReportCampItemRenderer();
+                renderer.x = point.x;
+                renderer.y = point.y;
+                addChild(renderer);
+                renderer.data = camp;
+            }
+        }
+    ]]></mx:Script>
+</mx:Canvas>

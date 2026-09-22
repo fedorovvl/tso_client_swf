@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<renderers:ResourceItemRenderer2 xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:renderers="GUI.Components.ItemRenderer.*" height="40" color="0xFFFFFF" direction="vertical">
+    <mx:Script><![CDATA[
+        [Bindable]
+        public var outerDocument:GUI.Components.ColonyYieldPanel;
+    ]]></mx:Script>
+</renderers:ResourceItemRenderer2>

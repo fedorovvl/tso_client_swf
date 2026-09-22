@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="560" height="480">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.core.ClassFactory;
+        import mx.events.FlexEvent;
+        import mx.events.ToolTipEvent;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Components.ItemRenderer.SpecialistTravelItemRenderer;
+        import GUI.Components.ToolTips.cToolTipUtil;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(headerPanel);
+            LegacyMxmlContent.createChildren(confirmFooter);
+            LegacyMxmlContent.createChildren(fetchingData);
+            _SpecialistTravelPanel_Image1.source = gAssetManager.GetResourceIcon("Military");
+            _SpecialistTravelPanel_Image2.source = gAssetManager.GetResourceIcon("General");
+            btnOK.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            btnCancel.setStyle("icon", gAssetManager.GetClass("ButtonIconAbort"));
+            availableSpecialists.itemRenderer = new ClassFactory(SpecialistTravelItemRenderer);
+            btnOK.addEventListener("toolTipCreate", __btnOK_toolTipCreate);
+            syncColonyLayout();
+            syncBusyIndicator();
+            colonyLimitsPanel.addEventListener(FlexEvent.SHOW, syncColonyLayout, false, 0, true);
+            colonyLimitsPanel.addEventListener(FlexEvent.HIDE, syncColonyLayout, false, 0, true);
+            fetchingData.addEventListener(FlexEvent.SHOW, syncBusyIndicator, false, 0, true);
+            fetchingData.addEventListener(FlexEvent.HIDE, syncBusyIndicator, false, 0, true);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function syncColonyLayout(event:Event = null):void
+        {
+            colonyLimitsPanel.includeInLayout = colonyLimitsPanel.visible;
+        }
+
+        private function syncBusyIndicator(event:Event = null):void
+        {
+            _SpecialistTravelPanel_SpriteLibAnimation1.visible = fetchingData.visible;
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var duration:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Duration");
+            _SpecialistTravelPanel_CustomLabel3.text = ((duration == undefined) ? null : String(duration));
+        }
+
+        public function __btnOK_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_ERROR_string, event, (!(this.btnOK.enabled)));
+        }
+    ]]></mx:Script>
+    <gui:subComponents><mx:Array>
+        <mx:Canvas id="headerPanel" styleName="detailsHeader" height="97" left="2" right="2">
+            <mx:Canvas left="15" right="15" top="5" bottom="4">
+                <mx:HBox id="colonyLimitsPanel" height="30" top="2" left="0" right="0" horizontalAlign="center" verticalAlign="middle">
+                    <mx:HBox horizontalAlign="center" verticalAlign="middle" horizontalGap="0">
+                        <mx:Image id="_SpecialistTravelPanel_Image1" width="26" height="25" />
+                        <gui:CustomLabel id="troopsLabel" text="0/0" color="0xFFFFFF" />
+                    </mx:HBox>
+                    <mx:HBox horizontalAlign="center" verticalAlign="middle" horizontalGap="0">
+                        <mx:Image id="_SpecialistTravelPanel_Image2" width="26" height="25" />
+                        <gui:CustomLabel id="admiralsLabel" text="0/0" color="0xFFFFFF" />
+                    </mx:HBox>
+                </mx:HBox>
+                <gui:CustomText id="lblSendArmyDescription" top="20" left="10" right="10" color="0xFFFFFF" fontWeight="normal" />
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas styleName="listBackgroundShadow" left="8" right="26" top="100" bottom="113" />
+        <gui:CustomTileList id="availableSpecialists" columnWidth="255" columnCount="2" rowHeight="84" verticalScrollPolicy="auto" horizontalScrollPolicy="off" left="11" right="9" top="102" bottom="116" paddingTop="0" paddingBottom="0" paddingLeft="0" paddingRight="0" useRollOver="false" borderThickness="0" backgroundAlpha="0" />
+        <mx:Canvas id="confirmFooter" left="7" right="8" bottom="13">
+            <mx:Canvas styleName="detailsSubHeader" height="18" percentWidth="100">
+                <gui:CustomLabel id="_SpecialistTravelPanel_CustomLabel3" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+            </mx:Canvas>
+            <mx:Canvas styleName="detailsContentBox" height="80" left="1" right="1" top="18">
+                <mx:Canvas styleName="detailsSubContentBox" percentWidth="100" height="37">
+                    <gui:CustomLabel id="taskDuration" horizontalCenter="0" verticalCenter="0" color="0xFFFFFF" />
+                </mx:Canvas>
+                <mx:HBox horizontalCenter="0" bottom="5">
+                    <gui:StandardButton id="btnOK" width="70" height="32" enabled="false" playSound="false" />
+                    <gui:StandardButton id="btnCancel" width="70" height="32" />
+                </mx:HBox>
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas id="fetchingData" visible="false" backgroundColor="6970177" backgroundAlpha="0.7" left="8" right="8" top="100" bottom="113">
+            <gui:SpriteLibAnimation id="_SpecialistTravelPanel_SpriteLibAnimation1" animationName="guianim_hourglass" loop="true" visible="false" width="48" height="48" horizontalCenter="0" verticalCenter="0" />
+        </mx:Canvas>
+    </mx:Array></gui:subComponents>
+</gui:BasicPanel>

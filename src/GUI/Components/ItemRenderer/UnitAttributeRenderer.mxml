@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.containers.HBox;
+        import GUI.Components.TSOImage;
+        import GUI.Components.CustomText;
+        import mx.core.mx_internal;
+        import mx.events.PropertyChangeEvent;
+        import GUI.Assets.gAssetManager;
+        import Utils.StringUtils;
+        import GUI.Loca.cLocaManager;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        public static function createAttributeObject(argument1:String, argument2:int, argument3:int, argument4:int=-1, argument5:int=-1):Object
+        {
+            var localValue6:Object = {};
+            localValue6.name = argument1;
+            localValue6.value = argument2;
+            localValue6.baseValue = argument3;
+            localValue6.additionalValue = argument4;
+            localValue6.additionalBaseValue = argument5;
+            return (localValue6);
+        }
+
+        private function InitiativeValueToText(argument1:int):String
+        {
+            switch (argument1)
+            {
+                case 1:
+                return ("Slow");
+                case 2:
+                return ("Normal");
+                case 3:
+                return ("Fast");
+                default:
+                return ("Missing");
+            };
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            if (argument1.value == -1)
+            {
+                this.attributeIcon.source = gAssetManager.GetBitmap((argument1.name + ".png"));
+                this.attributeValue.text = "-";
+                return;
+            };
+            var localValue2:* = (argument1.value > argument1.baseValue);
+            var localValue3:uint = 0xFFFFFF;
+            this.attributeValue.text = argument1.value;
+            if (StringUtils.equalsIgnoreCase(argument1.name, "accuracy"))
+            {
+                this.attributeValue.text = (this.attributeValue.text + "%");
+            }
+            else
+            {
+                if (StringUtils.equalsIgnoreCase(argument1.name, "initiative"))
+                {
+                    this.attributeValue.text = cLocaManager.GetInstance().getLabel(("Initiative" + this.InitiativeValueToText(argument1.value)));
+                }
+                else
+                {
+                    if (StringUtils.contains("speed", argument1.name))
+                    {
+                        this.attributeValue.text = cLocaManager.GetInstance().FormatDuration(argument1.value, cLocaManager.DURATION_FORMAT_SHORT);
+                    }
+                    else
+                    {
+                        this.attributeValue.text = cLocaManager.GetInstance().FormatNumber(argument1.value);
+                    };
+                };
+            };
+            if (argument1.additionalValue > -1)
+            {
+                this.attributeValue.text = (this.attributeValue.text + (" - " + cLocaManager.GetInstance().FormatNumber(argument1.additionalValue)));
+            };
+            if (((argument1.value == argument1.baseValue) && ((argument1.additionalValue == -1) || (argument1.additionalValue == argument1.additionalBaseValue))))
+            {
+                this.attributeIcon.source = gAssetManager.GetBitmap((argument1.name + ".png"));
+            }
+            else
+            {
+                if (((argument1.value > argument1.baseValue) || ((argument1.additionalValue > -1) && (argument1.additionalValue > argument1.additionalBaseValue))))
+                {
+                    this.attributeIcon.source = gAssetManager.GetBitmap((argument1.name + ((StringUtils.contains("speed", argument1.name)) ? "_negative.png" : "_positive.png")));
+                    localValue3 = ((StringUtils.contains("speed", argument1.name)) ? 16737637 : 8900346);
+                }
+                else
+                {
+                    this.attributeIcon.source = gAssetManager.GetBitmap((argument1.name + ((StringUtils.contains("speed", argument1.name)) ? "_positive.png" : "_negative.png")));
+                    localValue3 = ((StringUtils.contains("speed", argument1.name)) ? 8900346 : 16737637);
+                };
+            };
+            this.attributeValue.setStyle("color", localValue3);
+            this.toolTip = cLocaManager.GetInstance().getLabel(argument1.name);
+            refreshRendererPresentation();
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.horizontalScrollPolicy = "off";
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:HBox id="viewHBox1" horizontalGap="5">
+        <ui:TSOImage id="attributeIcon" />
+        <ui:CustomText id="attributeValue" selectable="false"  color="0xFFFFFF" />
+    </mx:HBox>
+</mx:Canvas>

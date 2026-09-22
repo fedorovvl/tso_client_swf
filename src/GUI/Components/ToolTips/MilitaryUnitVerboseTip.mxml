@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="mx.core.IToolTip"
+    mouseChildren="false" mouseEnabled="false" styleName="toolTip">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import Enums.MILITARY_UNIT_ABILITY;
+        import MilitarySystem.cMilitaryUnitDescription;
+        import MilitarySystem.cMilitaryUnitBase;
+        import MilitarySystem.cMilitaryUnitData;
+        import MilitarySystem.cMilitaryUnitAbility;
+        import GUI.Components.BonusDamageInfo;
+        import GUI.Assets.gAssetManager;
+
+        private var _text:String;
+        private var _title:String;
+        private var _description:String;
+
+        public function get descriptionText():String
+        {
+            return (this._description);
+        }
+
+        public function set descriptionText(_arg_1:String):void
+        {
+            this._description = _arg_1;
+            invalidateProperties();
+        }
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this.data = _arg_1;
+        }
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this._text = _arg_1;
+            invalidateProperties();
+        }
+
+        public function set title(_arg_1:String):void
+        {
+            this._title = _arg_1;
+            invalidateProperties();
+        }
+
+        override protected function commitProperties():void
+        {
+            var _local_2:String;
+            var _local_4:cMilitaryUnitDescription;
+            super.commitProperties();
+            this.headline.text = this._title;
+            var _local_1:cMilitaryUnitBase = cMilitaryUnitBase.GetUnitBaseForType(this.text);
+            var _local_3:cMilitaryUnitData = (_local_1 as cMilitaryUnitData);
+            if (_local_3 == null)
+            {
+                _local_4 = cMilitaryUnitDescription.GetUnitDescriptionForType(this.text);
+                if (_local_4 != null)
+                {
+                    this.commitPropertiesMilitaryUnitDescription(_local_4);
+                };
+            }
+            else
+            {
+                this.commitPropertiesMilitaryUnitData(_local_3);
+            };
+        }
+
+        private function commitPropertiesMilitaryUnitDescription(_arg_1:cMilitaryUnitDescription):void
+        {
+            this.headline.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, this.text);
+            if (_arg_1.IsBoss())
+            {
+                this.headline.text = (this.headline.text + (" " + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsIsBoss")));
+            };
+            this.hitPointAmount.text = _arg_1.GetHitPoints().toString();
+            this.damageAmount.text = _arg_1.GetHitDamage().toString();
+            this.bonusList.removeAllChildren();
+        }
+
+        private function commitPropertiesMilitaryUnitData(_arg_1:cMilitaryUnitData):void
+        {
+            var _local_2:cMilitaryUnitAbility;
+            var _local_3:BonusDamageInfo;
+            this.headline.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, this.text);
+            if (_arg_1.IsBoss())
+            {
+                this.headline.text = (this.headline.text + (" " + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsIsBoss")));
+            };
+            this.typeLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, _arg_1.GetUnitClassLabelString());
+            this.hitPointAmount.text = _arg_1.GetHitPoints().toString();
+            this.damageAmount.text = _arg_1.GetBaseDamage().toString();
+            if (_arg_1.IsBoss())
+            {
+                this.stackSizeContainer.visible = false;
+                this.stackSizeContainer.includeInLayout = false;
+            }
+            else
+            {
+                this.stackSizeContainer.visible = true;
+                this.stackSizeContainer.includeInLayout = true;
+                if (_arg_1.GetCombatBatchSize() > 0)
+                {
+                    this.stackSizeAmount.text = _arg_1.GetCombatBatchSize().toString();
+                }
+                else
+                {
+                    this.stackSizeAmount.text = cLocaManager.GetInstance().getLabel("MatchesPlayer");
+                };
+            };
+            this.bonusList.removeAllChildren();
+            for each (_local_2 in _arg_1.GetAbilities())
+            {
+                _local_3 = new BonusDamageInfo();
+                this.bonusList.addChild(_local_3);
+                switch (_local_2.GetType())
+                {
+                    case MILITARY_UNIT_ABILITY.DAMAGE_BONUS_PERCENT_LIGHT_ARMOR:
+                        _local_3.description.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsBonusVsLight", [_local_2.GetValue().toString()]);
+                        _local_3.image.source = gAssetManager.GetClass("IconMeleeSmall");
+                        break;
+                    case MILITARY_UNIT_ABILITY.DAMAGE_BONUS_PERCENT_MEDIUM_ARMOR:
+                        _local_3.description.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsBonusVsMedium", [_local_2.GetValue().toString()]);
+                        _local_3.image.source = gAssetManager.GetClass("IconRangedSmall");
+                        break;
+                    case MILITARY_UNIT_ABILITY.DAMAGE_BONUS_PERCENT_HEAVY_ARMOR:
+                        _local_3.description.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsBonusVsHeavy", [_local_2.GetValue().toString()]);
+                        _local_3.image.source = gAssetManager.GetClass("IconCombat3CavalrySmall");
+                        break;
+                };
+            };
+            if (data)
+            {
+                this.description.text = (((cLocaManager.GetInstance().getLabel("ThisUnitWillAttackFirst") + "\n\n") + cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, this.text)) + "\n\n");
+            }
+            else
+            {
+                this.description.text = (cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, this.text) + "\n\n");
+            };
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var t:*;
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsHitpoints", null);
+            hitPointLabel.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsStackSizeCombat3", null);
+            stackSizeLabel.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsDamageCombat3", null);
+            damageLabel.text = ((t == undefined) ? null : String(t));
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("paddingBottom", 5);
+            this.setStyle("paddingLeft", 5);
+            this.setStyle("paddingRight", 5);
+            this.setStyle("paddingTop", 5);
+            this.setStyle("verticalGap", 2);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="headBox" percentWidth="100">
+        <gui:CustomText id="headline" wordWrap="false"  textAlign="left" left="0" color="0xFFFFFF" fontWeight="bold" />
+        <gui:CustomText id="typeLabel" wordWrap="false"  textAlign="right" right="0" color="0xFFFFFF" fontWeight="bold" />
+    </mx:Canvas>
+    <mx:VBox id="statsBox" verticalGap="0">
+        <gui:CustomText id="description" text="" width="220"  color="0xFFFFFF" />
+        <mx:HBox id="hpRow">
+            <gui:CustomText id="hitPointLabel" width="85"  color="0xFFFFFF" />
+            <gui:CustomText id="hitPointAmount"  color="0xFF00" />
+        </mx:HBox>
+        <mx:HBox id="stackSizeContainer">
+            <gui:CustomText id="stackSizeLabel" width="85"  color="0xFFFFFF" />
+            <gui:CustomText id="stackSizeAmount"  color="2794443" />
+        </mx:HBox>
+        <mx:HBox id="dmgRow">
+            <gui:CustomText id="damageLabel" width="85"  color="0xFFFFFF" />
+            <gui:CustomText id="damageAmount"  color="0xFF0000" />
+        </mx:HBox>
+    </mx:VBox>
+    <mx:VBox id="bonusList" percentWidth="100" />
+</mx:VBox>

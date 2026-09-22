@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="650" height="390">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.core.ClassFactory;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ItemRenderer.TradeDetailsItemRenderer;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(header);
+            LegacyMxmlContent.createChildren(listRow);
+            LegacyMxmlContent.createChildren(buttonRow);
+            _GuildPayResourcePanel_Image1.source = gAssetManager.GetClass("PanelOrnamentalTop");
+            _GuildPayResourcePanel_Image2.source = gAssetManager.GetClass("GuildBankIcon");
+            resourceList.itemRenderer = new ClassFactory(TradeDetailsItemRenderer);
+            refreshLabels();
+            updateEnabled();
+            amountSlider.addEventListener("enabledChanged", updateEnabled);
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var text:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Select");
+            description.text = ((text == undefined) ? null : String(text));
+        }
+
+        private function updateEnabled(event:Event = null):void
+        {
+            selectedCount.enabled = amountSlider.enabled;
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <mx:Image id="_GuildPayResourcePanel_Image1" horizontalCenter="0" top="-87" />
+            <mx:Image id="_GuildPayResourcePanel_Image2" horizontalCenter="0" top="-75" />
+            <mx:Canvas id="header" styleName="detailsHeader" height="30" width="404" left="26">
+                <mx:Text id="description" selectable="false" left="18" top="6" bottom="2" color="0xFFFFFF" horizontalCenter="0" />
+            </mx:Canvas>
+            <mx:HBox id="listRow" left="32" verticalAlign="bottom" horizontalGap="2">
+                <mx:VBox id="listBox" verticalGap="2">
+                    <mx:Canvas id="listContentBox" styleName="detailsContentBox" width="393" height="198"
+                        horizontalScrollPolicy="off" verticalScrollPolicy="off">
+                        <gui:CustomTileList id="resourceList" horizontalCenter="0" right="2" left="35" top="8" bottom="0" backgroundAlpha="0" borderThickness="0" paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0" useRollOver="false" />
+                    </mx:Canvas>
+                    <mx:Canvas id="formBox" styleName="detailsSubHeader" width="393" height="69"
+                        horizontalScrollPolicy="off" verticalScrollPolicy="off" bottom="0">
+                        <renderer:StarMenuItemRenderer id="buffIcon" visible="false" left="2" verticalCenter="0" />
+                        <mx:Image id="resourceIcon" visible="false" width="26" height="25" left="15" verticalCenter="0" />
+                        <mx:VBox id="formBoxInner" width="330" left="57" bottom="10" verticalGap="1">
+                            <mx:Label id="resourceName" color="0xFFFFFF" fontWeight="bold" />
+                            <mx:HBox id="inputRow" paddingLeft="14" horizontalGap="0" verticalAlign="middle">
+                                <mx:TextInput id="selectedCount" width="12" height="17" text=""
+                                    restrict="0-9" styleName="standardInput" color="0xFFFFFF" fontSize="10" textAlign="right" />
+                                <mx:Label id="maximumCount" fontSize="10" color="0xFFFFFF" />
+                            </mx:HBox>
+                            <gui:ExtendedHSlider id="amountSlider" enabled="false" minimum="1" percentWidth="100" />
+                        </mx:VBox>
+                    </mx:Canvas>
+                </mx:VBox>
+                <gui:TradeSearchColumn id="searchColumn" />
+            </mx:HBox>
+            <mx:HBox id="buttonRow" horizontalCenter="0" bottom="17">
+                <gui:StandardButton id="btnOK" enabled="false" width="120" height="26" icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+                <gui:StandardButton id="btnCancel" width="120" height="26" icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+            </mx:HBox>
+            <mx:Canvas id="footerRuler" styleName="hr" height="3" horizontalCenter="0" bottom="55" left="16" right="15" />
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

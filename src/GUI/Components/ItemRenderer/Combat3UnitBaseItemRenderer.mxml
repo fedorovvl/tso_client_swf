@@ -1,0 +1,316 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Image;
+        import GUI.Components.CustomLabel;
+        import mx.controls.Button;
+        import GUI.Components.CustomTextInput;
+        import GUI.Components.ExtendedHSlider;
+        import GUI.Components.CustomText;
+        import mx.containers.HBox;
+        import mx.core.mx_internal;
+        import flash.utils.setTimeout;
+        import flash.events.FocusEvent;
+        import mx.events.PropertyChangeEvent;
+        import mx.events.SliderEvent;
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import MilitarySystem.cMilitaryUnitBase;
+        import MilitarySystem.cMilitaryUnitData;
+        import MilitarySystem.cMilitaryUnitAbility;
+        import GUI.Components.data.dCombatUnitData;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import Enums.MILITARY_UNIT_ARMORTYPE;
+        import Enums.MILITARY_UNIT_ABILITY;
+        import GUI.Components.Combat3UnitSelection;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        public static var ADD_UNIT_EVENT:String = "addUnitEvent";
+
+        public var mBackgroundSourceMouseOver:String;
+
+        public var mBackgroundSource:String;
+
+        protected function amountInput_focusInHandler(argument1:FocusEvent):void
+        {
+            setTimeout(this.amountInput.setSelection, 50, 0, this.amountInput.text.length);
+        }
+
+        protected function amountSlider_changeHandler(argument1:SliderEvent):void
+        {
+            argument1.stopImmediatePropagation();
+            if (((!(isNaN(argument1.value))) && (!(argument1.value == data.current))))
+            {
+                dispatchEvent(new SliderEvent(SliderEvent.CHANGE, true, true, -1, argument1.value));
+            };
+        }
+
+        protected function addUnitCanvas_clickHandler(argument1:MouseEvent):void
+        {
+            argument1.stopPropagation();
+            dispatchEvent(new Event(ADD_UNIT_EVENT, true, true));
+        }
+
+        protected function amountInput_focusOutHandler(argument1:FocusEvent):void
+        {
+            argument1.stopPropagation();
+            if (argument1.target.text == "")
+            {
+                argument1.target.text = "0";
+                this.amountLabel_changeHandler(argument1);
+            };
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            var localValue3:cMilitaryUnitBase;
+            var localValue4:cMilitaryUnitData;
+            var localValue5:Boolean;
+            var localValue6:cMilitaryUnitAbility;
+            super.data = argument1;
+            var localValue2:dCombatUnitData = (argument1 as dCombatUnitData);
+            if (localValue2 != null)
+            {
+                if (localValue2.isDummyAddIcon)
+                {
+                    this.addUnitCanvas.visible = true;
+                    return;
+                };
+                this.setSelectedState(localValue2.isSelected);
+                if (this.costLabel.text == null)
+                {
+                    this.costLabel.text = "0";
+                };
+                this.amountLabel.text = localValue2.current.toString();
+                this.amountInput.text = localValue2.current.toString();
+                this.amountInput.tabIndex = localValue2.tabIndex;
+                this.amountSlider.maximum = localValue2.maximum;
+                this.amountSlider.value = localValue2.current;
+                this.amountSlider.enabled = (!(this.amountSlider.maximum == 0));
+                this.unitIcon.toolTip = localValue2.name_string;
+                this.unitIcon.source = gAssetManager.GetMilitaryIcon(localValue2.name_string);
+                switch (localValue2.armorType)
+                {
+                    case MILITARY_UNIT_ARMORTYPE.LIGHT:
+                    this.armorTypeIcon.source = gAssetManager.GetClass("IconCombat3BonusMelee");
+                    this.armorTypeIcon.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitTypeLightArmor");
+                    break;
+                    case MILITARY_UNIT_ARMORTYPE.MEDIUM:
+                    this.armorTypeIcon.source = gAssetManager.GetClass("IconCombat3BonusRanged");
+                    this.armorTypeIcon.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitTypeMediumArmor");
+                    break;
+                    case MILITARY_UNIT_ARMORTYPE.HEAVY:
+                    this.armorTypeIcon.source = gAssetManager.GetClass("IconCombat3BonusCavalry");
+                    this.armorTypeIcon.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitTypeHeavyArmor");
+                    break;
+                    case MILITARY_UNIT_ARMORTYPE.TANK:
+                    this.armorTypeIcon.source = gAssetManager.GetClass("IconCombat3BonusTank");
+                    this.armorTypeIcon.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitTypeTank");
+                    break;
+                };
+                localValue3 = cMilitaryUnitBase.GetUnitBaseForType(localValue2.name_string);
+                localValue4 = (localValue3 as cMilitaryUnitData);
+                localValue5 = false;
+                for each (localValue6 in localValue4.GetAbilities())
+                {
+                    localValue5 = true;
+                    switch (localValue6.GetType())
+                    {
+                        case MILITARY_UNIT_ABILITY.DAMAGE_BONUS_PERCENT_LIGHT_ARMOR:
+                        this.bonusInfo.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsBonusVsLight", [localValue6.GetValue().toString()]);
+                        this.bonusInfo.source = gAssetManager.GetClass("IconMeleeSmall");
+                        break;
+                        case MILITARY_UNIT_ABILITY.DAMAGE_BONUS_PERCENT_MEDIUM_ARMOR:
+                        this.bonusInfo.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsBonusVsMedium", [localValue6.GetValue().toString()]);
+                        this.bonusInfo.source = gAssetManager.GetClass("IconRangedSmall");
+                        break;
+                        case MILITARY_UNIT_ABILITY.DAMAGE_BONUS_PERCENT_HEAVY_ARMOR:
+                        this.bonusInfo.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitDetailsBonusVsHeavy", [localValue6.GetValue().toString()]);
+                        this.bonusInfo.source = gAssetManager.GetClass("IconCombat3CavalrySmall");
+                        break;
+                    };
+                };
+                this.bonusInfo.visible = localValue5;
+                this.bonusBG.visible = localValue5;
+            };
+            refreshRendererPresentation();
+        }
+
+        private function setSelectedState(argument1:Boolean):void
+        {
+            if (data.isSelectable)
+            {
+                if (argument1)
+                {
+                    this.background.source = gAssetManager.GetClass(this.mBackgroundSourceMouseOver);
+                }
+                else
+                {
+                    this.background.source = gAssetManager.GetClass(this.mBackgroundSource);
+                };
+            }
+            else
+            {
+                this.background.source = gAssetManager.GetClass(this.mBackgroundSource);
+            };
+        }
+
+        protected function btnRemove_clickHandler(argument1:MouseEvent):void
+        {
+            argument1.stopPropagation();
+            dispatchEvent(new Event(Combat3UnitSelection.UNIT_MANAGER_REMOVE_ME_EVENT, true, true));
+        }
+
+        public function onFrame_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.MILITARY_UNIT_CONDENSED_string, argument1);
+        }
+
+        protected function amountLabel_changeHandler(argument1:Event):void
+        {
+            var localValue2:int;
+            if (argument1.target.text != "")
+            {
+                localValue2 = Number(argument1.target.text);
+                if (localValue2 <= Number(this.amountSlider.maximum))
+                {
+                    this.amountSlider.value = Number(argument1.target.text);
+                }
+                else
+                {
+                    localValue2 = Number(this.costLabel.text);
+                    argument1.target.text = localValue2.toString();
+                    this.amountSlider.value = localValue2;
+                };
+            };
+        }
+
+        public function onUnitIcon_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.MILITARY_UNIT_CONDENSED_string, argument1);
+        }
+
+        private function readPresentationValue7():String
+        {
+            var localValue1:* = cLocaManager.GetInstance().getLabel("SelectUnits");
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            frame.addEventListener("toolTipCreate", onFrame_toolTipCreate);
+            unitIcon.addEventListener("toolTipCreate", onUnitIcon_toolTipCreate);
+            btnRemove.addEventListener("click", btnRemove_clickHandler);
+            amountInput.addEventListener("change", amountLabel_changeHandler);
+            amountInput.addEventListener("focusOut", amountInput_focusOutHandler);
+            amountInput.addEventListener("focusIn", amountInput_focusInHandler);
+            amountSlider.addEventListener("change", amountSlider_changeHandler);
+            addUnitCanvas.addEventListener("click", addUnitCanvas_clickHandler);
+            addImage.addEventListener("click", addUnitCanvas_clickHandler);
+            frame.source = gAssetManager.GetClass("FrameExpeditionUnitBareStandard");
+            bonusBG.source = gAssetManager.GetClass("AttackBonusSlot");
+            arrowSmall.source = gAssetManager.GetClass("ArrowSmallRight");
+            addImage.source = gAssetManager.GetClass("AddUnitCombat3UnitSelectionIcon");
+            this.tabChildren = true;
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"],
+                [amountSlider, "enabledChanged"]]);
+                amountInput.enabled = amountSlider.enabled;
+                addLabel.text = readPresentationValue7();
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Image id="background" scaleContent="true" maintainAspectRatio="false" top="5" bottom="5" left="5" right="5" />
+    <mx:Canvas id="topBox" verticalScrollPolicy="off" horizontalScrollPolicy="off" top="5" left="5" right="5" bottom="44">
+        <mx:Canvas id="unitBox" width="53" height="66" verticalScrollPolicy="off" horizontalScrollPolicy="off" top="8" left="7">
+            <mx:Image id="frame" percentWidth="100" percentHeight="100" />
+            <mx:Image id="unitIcon" top="0" left="0" />
+            <mx:Image id="armorTypeIcon" width="24" height="24" top="0" left="0" />
+        </mx:Canvas>
+        <mx:Canvas id="detailsBox" percentHeight="100" verticalScrollPolicy="off" horizontalScrollPolicy="off" left="60" right="0">
+            <mx:Image id="bonusBG" scaleContent="false" visible="false" width="21" height="21" top="20" left="5" />
+            <mx:Image id="bonusInfo" scaleContent="false" visible="false" width="19" height="19" top="21" left="6" />
+            <mx:Button id="btnRemove" tabEnabled="false" styleName="close" width="25" height="23" top="2" right="1" />
+        </mx:Canvas>
+    </mx:Canvas>
+    <mx:Canvas id="amountCanvas" left="5" right="5" top="82" bottom="5">
+        <mx:HBox id="bottomBox" left="21" right="20" top="2" horizontalGap="0" verticalAlign="middle">
+            <ui:CustomText id="amountLabel" text="0" color="0xFFFFFF" />
+            <ui:CustomTextInput id="amountInput" height="17" width="30" tabEnabled="true" focusEnabled="true" styleName="standardInput" text="" restrict="0-9" color="0xFFFFFF" fontSize="10" textAlign="right" />
+            <ui:CustomLabel id="slash" text=" / " color="0xFFFFFF" />
+            <mx:Image id="arrowSmall" width="10" height="8" />
+            <ui:CustomLabel id="costLabel" minWidth="18" visible="true" color="0xFFFFFF" />
+            <mx:Image id="resourceIcon" />
+        </mx:HBox>
+        <ui:ExtendedHSlider id="amountSlider" tabEnabled="false" value="0" minimum="0" left="6" right="6" bottom="6" />
+    </mx:Canvas>
+    <mx:Canvas id="addUnitCanvas" percentWidth="100" percentHeight="100" visible="false" backgroundImage="{gAssetManager.GetClass('BackgroundCombat3UnitAllocationAdd')}">
+        <mx:Image id="addImage" horizontalCenter="0" verticalCenter="0" horizontalAlign="center" verticalAlign="middle" />
+        <ui:CustomLabel id="addLabel" percentWidth="100" textAlign="center" bottom="20" color="0xFFFFFF" />
+    </mx:Canvas>
+</mx:Canvas>

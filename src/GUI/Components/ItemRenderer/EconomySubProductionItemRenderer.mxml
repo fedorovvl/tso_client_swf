@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="100" height="50">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import GUI.Components.CustomLabel;
+        import mx.controls.Image;
+        import mx.core.mx_internal;
+        import ServerState.cEconomyOverviewData;
+        import GO.cBuilding;
+        import ServerState.dEconomyOverviewDataResult;
+        import GUI.Assets.gAssetManager;
+        import ServerState.cResourceCreation;
+        import Enums.HALLOWEEN_EVENT;
+        import flash.events.Event;
+        import mx.events.PropertyChangeEvent;
+        import flash.filters.GlowFilter;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import mx.events.FlexEvent;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        private var bgColorStd:String;
+
+        private var _selected:Boolean = false;
+
+        private function DisplayData(argument1:Event=null):void
+        {
+            var localValue7:int;
+            if ((((data == null) || (this.productionBg == null)) || (this.productionCount == null)))
+            {
+                return;
+            };
+            this.styleName = "economyProductionBgStd";
+            var localValue2:cEconomyOverviewData = new cEconomyOverviewData();
+            var localValue3:dEconomyOverviewDataResult = localValue2.GetBuildingProductionAndConsumptionValues((data as cBuilding), null);
+            var localValue4:int = localValue3.mProductionValue;
+            var localValue5:int = localValue3.mBuffedProductionValue;
+            this.productionCount.text = this.FormatAmount(localValue4);
+            this.productionCount.toolTip = ((localValue4 == 0) ? ("" + localValue4) : ("+" + localValue4));
+            this.buildingStatusIcon.visible = true;
+            if (localValue4 != 0)
+            {
+                this.bgColorStd = "economyProductionBgStdGreen";
+            }
+            else
+            {
+                this.bgColorStd = "economyProductionBgStdGrey";
+            };
+            if (data.GetResourceCreation() != null)
+            {
+                switch (data.GetResourceCreation().GetProductionState())
+                {
+                    case cResourceCreation.PRODUCTIONSTATE_ERROR_NECESSARY_RESOURCE_MISSING:
+                    this.buildingStatusIcon.source = gAssetManager.GetBitmap("BuildingNoResourceMode");
+                    this.productionBg.styleName = "economyProductionBgStdGreen";
+                    break;
+                    case cResourceCreation.PRODUCTIONSTATE_UPGRADELEVEL_TOO_LOW:
+                    case cResourceCreation.PRODUCTIONSTATE_STOPPED_PRODUCTION:
+                    this.buildingStatusIcon.source = gAssetManager.GetBitmap("BuildingSleepMode");
+                    this.productionBg.styleName = "economyProductionBgStdGrey";
+                    break;
+                    case cResourceCreation.PRODUCTIONSTATE_ERROR_WAITING_FOR_SETTLER:
+                    this.buildingStatusIcon.source = gAssetManager.GetBitmap("BuildingNoSettlerMode");
+                    this.productionBg.styleName = "economyProductionBgStdGreen";
+                    break;
+                    case cResourceCreation.PRODUCTIONSTATE_ERROR_WAREHOUSE_FULL:
+                    this.buildingStatusIcon.source = gAssetManager.GetBitmap("BuildingWareHouseFullMode");
+                    this.productionBg.styleName = "economyProductionBgStdGreen";
+                    break;
+                    default:
+                    this.productionBg.styleName = this.bgColorStd;
+                    this.buildingStatusIcon.visible = false;
+                };
+            };
+            if (!data.IsProductionActive())
+            {
+                this.buildingStatusIcon.source = gAssetManager.GetBitmap("BuildingSleepMode");
+                this.productionBg.styleName = "economyProductionBgStdGrey";
+            };
+            if (((data.hasBuff(HALLOWEEN_EVENT.BUFF_HORROR)) || (data.hasBuff(HALLOWEEN_EVENT.BUFF_DARKNESS))))
+            {
+                this.productionBg.styleName = "economyProductionBgStdGrey";
+            };
+            if (localValue5 > localValue4)
+            {
+                localValue7 = int((localValue5 / localValue4));
+                this.productionCount.y = 7;
+                this.buffIndicator.visible = true;
+                this.buffPercentage.visible = true;
+                this.buffPercentage.text = ("X" + localValue7);
+                this.productionCountExtra.visible = true;
+                this.productionCountExtra.text = this.FormatAmount(localValue5);
+                this.productionCountExtra.toolTip = ("x" + localValue7);
+                this.buffIndicator.source = gAssetManager.GetBitmap("BuffStarIndicator1");
+            }
+            else
+            {
+                this.productionCount.y = 16;
+                this.productionCountExtra.visible = false;
+                this.buffIndicator.visible = false;
+                this.buffPercentage.visible = false;
+            };
+            this.buildingIcon.source = gAssetManager.GetBuildingIcon((data as cBuilding).getProductionBuildingName());
+            var localValue6:int = (data as cBuilding).GetUIUpgradeLevel();
+            if (((localValue6 >= 1) && (localValue6 <= 7)))
+            {
+                this.levelIndication.source = gAssetManager.GetBitmap(("BuildingLevelIndicator" + localValue6));
+            }
+            else
+            {
+                this.levelIndication.source = gAssetManager.GetBitmap("BuildingLevelIndicator3");
+            };
+        }
+
+        public function onProductionCountExtra_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        private function FormatAmount(argument1:int):String
+        {
+            var localValue2:String = ((argument1 == 0) ? "" : "+");
+            if (argument1 < 1000)
+            {
+                localValue2 = (localValue2 + argument1.toString());
+            }
+            else
+            {
+                argument1 = int((argument1 / 1000));
+                localValue2 = (localValue2 + (argument1.toString() + "k"));
+            };
+            return (localValue2);
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            this.DisplayData();
+            refreshRendererPresentation();
+        }
+
+        public function onEconomySubProductionItemRenderer_Canvas1_creationComplete(argument1:FlexEvent):void
+        {
+            this.DisplayData();
+        }
+
+        public function onProductionCount_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            productionCount.addEventListener("toolTipCreate", onProductionCount_toolTipCreate);
+            productionCountExtra.filters = [viewGlowFilter1];
+            productionCountExtra.addEventListener("toolTipCreate", onProductionCountExtra_toolTipCreate);
+            this.width = 100;
+            this.height = 50;
+            this.clipContent = false;
+            this.addEventListener("creationComplete", this.onEconomySubProductionItemRenderer_Canvas1_creationComplete);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="productionBg" width="45" percentHeight="100" right="0">
+        <ui:CustomLabel id="productionCount" y="7" width="37"  right="3" color="0xFFFFFF" />
+        <ui:CustomLabel id="productionCountExtra" y="25" width="37" right="3" color="1763398" fontWeight="bold">
+            <ui:filters>
+                <mx:GlowFilter id="viewGlowFilter1" color="0" blurX="2" blurY="2" quality="2" strength="25" />
+            </ui:filters>
+        </ui:CustomLabel>
+    </mx:Canvas>
+    <mx:Image id="buildingIcon" x="0"  verticalCenter="0" />
+    <mx:Image id="levelIndication" x="4" y="18" />
+    <mx:Image id="buffIndicator" x="22" y="1" />
+    <ui:CustomLabel id="buffPercentage" x="29" y="12" width="22" height="15" text="X3"  color="0" fontSize="10" fontWeight="bold" textAlign="center" />
+    <mx:Image id="buildingStatusIcon" x="20"  verticalCenter="0" />
+</mx:Canvas>

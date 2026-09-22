@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="321" height="363">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.events.ToolTipEvent;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Components.ToolTips.cToolTipUtil;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(canvas1);
+            LegacyMxmlContent.createChildren(canvas2);
+            btnLink.addEventListener("toolTipCreate", onBtnLink_toolTipCreate);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var capacity:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Capacity");
+            _GenericLinkBuildingInfoPanel_CustomLabel1.text = ((capacity == undefined) ? null : String(capacity));
+        }
+
+        public function onBtnLink_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.UPGRADE_BUILDING_string, event, "Upgrade");
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <gui:BuildingWindowHeader id="buildingHeader" />
+            <mx:Canvas id="canvas1" height="265" top="62" left="7">
+                <gui:BuildingUpgrade id="upgradeColumn" />
+            </mx:Canvas>
+            <mx:Canvas id="canvas2" width="139" top="62" right="7" bottom="5">
+                <mx:Canvas id="canvas3" styleName="detailsSubHeader" percentWidth="100" height="18" left="1" right="1" top="115" bottom="0">
+                    <gui:CustomLabel id="_GenericLinkBuildingInfoPanel_CustomLabel1"  top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                </mx:Canvas>
+                <mx:Canvas id="canvas4" styleName="detailsContentBox" left="1" right="1" top="18" bottom="0">
+                    <renderer:ResidenceDetailsItemRenderer id="population"  horizontalCenter="0" top="10" />
+                </mx:Canvas>
+                <mx:Canvas id="canvas5" styleName="detailsContentBox">
+                    <mx:Canvas id="linkCanvas" styleName="generalButtonBg" percentWidth="100" height="82"
+                        horizontalScrollPolicy="off" verticalScrollPolicy="off" left="1" top="0">
+                        <mx:VBox id="vbox1" top="5" left="5" right="5" horizontalAlign="center" verticalGap="0">
+                            <gui:StandardButton id="btnLink" width="67" height="39" playSound="false" />
+                            <gui:CustomText id="linkLabel" percentWidth="100" wordWrap="true" selectable="false"  horizontalCenter="0" textAlign="center" fontWeight="normal" />
+                        </mx:VBox>
+                    </mx:Canvas>
+                </mx:Canvas>
+            </mx:Canvas>
+            </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

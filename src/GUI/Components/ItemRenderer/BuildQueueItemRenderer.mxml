@@ -1,0 +1,300 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="82" height="93">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Button;
+        import GUI.Components.CustomLabel;
+        import GUI.Components.SpriteLibAnimation;
+        import mx.states.RemoveChild;
+        import mx.containers.HBox;
+        import mx.collections.ArrayCollection;
+        import mx.controls.Image;
+        import mx.utils.ObjectProxy;
+        import mx.core.mx_internal;
+        import mx.events.ListEvent;
+        import GUI.GAME.cBuildQueue;
+        import GO.cBuilding;
+        import flash.events.MouseEvent;
+        import mx.states.State;
+        import flash.display.DisplayObject;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import ServerState.cResources;
+        import mx.controls.List;
+        import nLib.gMisc;
+        import GO.cBuildSlot;
+        import mx.events.FlexEvent;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import ServerState.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private var dataProvider:ArrayCollection;
+
+        [Bindable]
+        private var offset:int;
+
+        [Bindable]
+        private var dataProxy:ObjectProxy;
+
+        [Bindable]
+        private var index:int;
+
+        public function onBtnUp_click(argument1:MouseEvent):void
+        {
+            this.dispatchEvent(new ListEvent(cBuildQueue.MOVE_UP, true, false, 0, (data as cBuilding).GetGrid()));
+        }
+
+        public function onBtnInstant_click(argument1:MouseEvent):void
+        {
+            this.btnInstant.enabled = false;
+            this.dispatchEvent(new ListEvent(cBuildQueue.INSTANT_BUILD, true, false, 0, (data as cBuilding).GetGrid()));
+        }
+
+        private function ScrollToPosition():void
+        {
+            if ((data is cBuilding))
+            {
+                global.ui.mCurrentPlayerZone.ScrollToGrid((data as cBuilding).GetGrid());
+            };
+        }
+
+        public function onResourceMissing_click(argument1:MouseEvent):void
+        {
+            this.ScrollToPosition();
+        }
+
+        public function onBtnRemove_click(argument1:MouseEvent):void
+        {
+            this.dispatchEvent(new ListEvent(cBuildQueue.REMOVE, true, false, 0, (data as cBuilding).GetGrid()));
+        }
+
+        public function onBtnInstant_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.INSTANT_BUILD_string, argument1, (data as cBuilding).GetBuildInstantCosts());
+        }
+
+        public function onBtnDown_click(argument1:MouseEvent):void
+        {
+            this.dispatchEvent(new ListEvent(cBuildQueue.MOVE_DOWN, true, false, 0, (data as cBuilding).GetGrid()));
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            var localValue2:cBuilding;
+            var localValue3:cResources;
+            var localValue4:String;
+            if (((!(argument1 == null)) && (argument1 is cBuilding)))
+            {
+                this.currentState = null;
+                this.btnInstant.enabled = true;
+                localValue2 = (argument1 as cBuilding);
+                super.data = localValue2;
+                this.dataProvider = ArrayCollection(List(owner).dataProvider);
+                this.dataProxy = new ObjectProxy();
+                this.dataProxy.label = localValue2.GetBuildingName_string();
+                this.dataProxy.bitmap = gAssetManager.GetBuildingIcon(localValue2.GetBuildingName_string());
+                localValue3 = global.ui.mCurrentPlayerZone.GetResourcesForPlayerID(localValue2.getPlayerID());
+                this.resourceMissing.visible = ((!(localValue3 == null)) && (!(localValue3.CanPlayerAffordBuilding(localValue2.GetBuildingName_string()))));
+                toolTip = localValue2.GetBuildingName_string();
+                this.index = this.dataProvider.getItemIndex(data);
+                if ((this.dataProvider[0] as cBuilding).GetBuildingMode() == cBuilding.BUILDING_MODE_QUEUED)
+                {
+                    this.offset = 0;
+                }
+                else
+                {
+                    this.offset = 1;
+                };
+                if (this.index >= global.ui.mCurrentPlayer.mBuildQueue.GetMaxCount())
+                {
+                    this.dataProxy.itemBackground = gAssetManager.GetClass("QueuePaidBackground");
+                }
+                else
+                {
+                    this.dataProxy.itemBackground = gAssetManager.GetClass("QueueStdBackground");
+                };
+                this.btnUp.enabled = (this.index > this.offset);
+                this.btnDown.enabled = ((this.index < (this.dataProvider.length - 1)) && (this.dataProvider[(this.index + 1)] is cBuilding));
+                this.btnRemove.enabled = true;
+                this.btnUp.visible = (localValue2.GetBuildingMode() == cBuilding.BUILDING_MODE_QUEUED);
+                this.btnDown.visible = (localValue2.GetBuildingMode() == cBuilding.BUILDING_MODE_QUEUED);
+                this.btnRemove.visible = (localValue2.GetBuildingMode() == cBuilding.BUILDING_MODE_QUEUED);
+                this.btnInstant.visible = (!(localValue2.GetBuildingMode() == cBuilding.BUILDING_MODE_QUEUED));
+                if (global.ui.mCurrentPlayer.mBuildQueue.AreMoveButtonsDisabled())
+                {
+                    this.btnUp.enabled = false;
+                    this.btnDown.enabled = false;
+                    this.btnRemove.enabled = false;
+                };
+                if (localValue2.GetBuildingMode() != cBuilding.BUILDING_MODE_QUEUED)
+                {
+                    this.resourceMissing.visible = false;
+                    this.progressLabel.visible = (localValue2.GetBuildingMode() == cBuilding.BUILDING_MODE_CONSTRUCTION);
+                    this.walkingSettler.visible = (!(localValue2.GetBuildingMode() == cBuilding.BUILDING_MODE_CONSTRUCTION));
+                    localValue4 = ((gMisc.IsNaN(localValue2.mBuildingProgress)) ? "0" : Math.floor((localValue2.mBuildingProgress / defines.BUILDING_PROGRESS_SCALE_FACTOR)).toString());
+                    this.progressLabel.text = (localValue4 + "%");
+                }
+                else
+                {
+                    this.progressLabel.visible = false;
+                    this.walkingSettler.visible = false;
+                };
+            }
+            else
+            {
+                if (((!(argument1 == null)) && (argument1 is cBuildSlot)))
+                {
+                    this.dataProxy = new ObjectProxy();
+                    this.currentState = "emptySlot";
+                    toolTip = null;
+                    this.progressLabel.visible = (argument1.mType == cBuildSlot.TEMPORARY_BUILDSLOT);
+                    this.walkingSettler.visible = false;
+                    if (argument1.mType == cBuildSlot.REGULAR_BUILDSLOT)
+                    {
+                        this.dataProxy.itemBackground = gAssetManager.GetClass("QueueEmptyBackground");
+                    }
+                    else
+                    {
+                        this.dataProxy.itemBackground = gAssetManager.GetClass("QueuePaidBackground");
+                        if (argument1.mType == cBuildSlot.TEMPORARY_BUILDSLOT)
+                        {
+                            this.dataProxy.bitmap = gAssetManager.GetClass("BuildQueueTempSlotTimeLeftIcon");
+                            this.progressLabel.text = argument1.mTimeLeft;
+                        };
+                    };
+                };
+            };
+            dispatchEvent(new FlexEvent(FlexEvent.DATA_CHANGE));
+            refreshRendererPresentation();
+        }
+
+        public function onBuildQueueItemRenderer_Canvas1_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.BUILDQUEUE_ITEM_string, argument1, data);
+        }
+
+        public function onBuildingIcon_click(argument1:MouseEvent):void
+        {
+            this.ScrollToPosition();
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            buildingIcon.addEventListener("click", onBuildingIcon_click);
+            resourceMissing.addEventListener("click", onResourceMissing_click);
+            btnUp.addEventListener("click", onBtnUp_click);
+            btnDown.addEventListener("click", onBtnDown_click);
+            btnRemove.addEventListener("click", onBtnRemove_click);
+            btnInstant.addEventListener("toolTipCreate", onBtnInstant_toolTipCreate);
+            btnInstant.addEventListener("click", onBtnInstant_click);
+            resourceMissing.source = gAssetManager.GetBitmap("BuildQueueResourceMissing");
+            this.styleName = "buildQueueItem";
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.width = 82;
+            this.height = 93;
+
+            this.addEventListener("toolTipCreate", this.onBuildQueueItemRenderer_Canvas1_toolTipCreate);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"],
+                [dataProxy, "propertyChange"],
+                [global, "propertyChange"],
+                [RendererPresentationUpdates.readPath(global, "ui_bindable"), "propertyChange"]]);
+                configuredRemoveChild1.target = resourceMissing;
+                configuredRemoveChild2.target = buttonBar;
+                if (dataProxy != null)
+                {
+                    background.setStyle("backgroundImage", dataProxy.itemBackground);
+                }
+                if (dataProxy != null)
+                {
+                    buildingIcon.source = dataProxy.bitmap;
+                }
+                btnRemove.enabled = !(global.ui_bindable.mPacketLost);
+                btnInstant.enabled = !(global.ui_bindable.mPacketLost);
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:states>
+        <mx:State id="viewState1" name="emptySlot">
+            <mx:overrides>
+                <mx:RemoveChild id="configuredRemoveChild1" />
+                <mx:RemoveChild id="configuredRemoveChild2" />
+            </mx:overrides>
+        </mx:State>
+    </mx:states>
+    <mx:Canvas id="background" percentWidth="100" percentHeight="100" backgroundSize="100%" />
+    <mx:Image id="buildingIcon" scaleContent="false" top="5" bottom="30" horizontalAlign="center" verticalAlign="middle" left="6" right="8" />
+    <mx:Image id="resourceMissing" scaleContent="false" top="1" bottom="37" horizontalAlign="left" verticalAlign="top" left="6" right="17" />
+    <ui:SpriteLibAnimation id="walkingSettler" animationName="walking_settler" loop="true" visible="false" width="26" height="25" horizontalCenter="0" bottom="13" />
+    <ui:CustomLabel id="progressLabel" visible="false" percentWidth="100" bottom="17" textAlign="center" fontWeight="normal" color="0xFFFFFF" />
+    <mx:HBox id="buttonBar" percentWidth="100" horizontalCenter="0" bottom="5" horizontalGap="0" horizontalAlign="center" paddingTop="0" paddingBottom="0">
+        <mx:Button id="btnUp" width="25" height="23" upSkin="{gAssetManager.GetClass('ArrowUp')}" downSkin="{gAssetManager.GetClass('ArrowUpHighlight')}" overSkin="{gAssetManager.GetClass('ArrowUpHighlight')}" disabledSkin="{gAssetManager.GetClass('ArrowUpDisabled')}" />
+        <mx:Button id="btnDown" width="25" height="23" upSkin="{gAssetManager.GetClass('ArrowDown')}" downSkin="{gAssetManager.GetClass('ArrowDownHighlight')}" overSkin="{gAssetManager.GetClass('ArrowDownHighlight')}" disabledSkin="{gAssetManager.GetClass('ArrowDownDisabled')}" />
+        <mx:Canvas id="viewCanvas1">
+            <mx:Button id="btnRemove" width="25" height="23" upSkin="{gAssetManager.GetClass('Close')}" downSkin="{gAssetManager.GetClass('CloseHighlight')}" overSkin="{gAssetManager.GetClass('CloseHighlight')}" disabledSkin="{gAssetManager.GetClass('CloseDisabled')}" />
+            <mx:Button id="btnInstant" toolTip="BuildInstant" width="25" height="23" upSkin="{gAssetManager.GetClass('HalfTime')}" downSkin="{gAssetManager.GetClass('HalfTimeHighlight')}" overSkin="{gAssetManager.GetClass('HalfTimeHighlight')}" disabledSkin="{gAssetManager.GetClass('HalfTimeDisabled')}" />
+        </mx:Canvas>
+    </mx:HBox>
+</mx:Canvas>

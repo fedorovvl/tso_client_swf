@@ -1,0 +1,30 @@
+<flex-config>
+  <compiler>
+    <source-path><path-element>src</path-element></source-path>
+    <locale><locale-element>en_US</locale-element></locale>
+    <external-library-path><path-element>libs/airglobal.swc</path-element></external-library-path>
+    <library-path>
+      <path-element>sdk/3.6.0/frameworks/libs/framework.swc</path-element>
+      <path-element>sdk/3.6.0/frameworks/libs/rpc.swc</path-element>
+      <path-element>sdk/4.16.1/frameworks/locale/en_US/framework_rb.swc</path-element>
+      <path-element>sdk/4.16.1/frameworks/locale/en_US/rpc_rb.swc</path-element>
+      <path-element>sdk/4.16.1/frameworks/locale/en_US/mx_rb.swc</path-element>
+      <path-element>libs/PureMVC_AS3_2_0_4.swc</path-element>
+      <path-element>libs/PureMVC_AS3_MultiCore_1_0_5.swc</path-element>
+      <path-element>libs/Flint2d_4.0.1.swc</path-element>
+      <path-element>libs/XIFF-quiet.swc</path-element>
+      <path-element>libs/as3crypto.swc</path-element>
+      <path-element>libs/as3zlib.swc</path-element>
+    </library-path>
+    <namespaces><namespace><uri>http://www.adobe.com/2006/mxml</uri><manifest>sdk/3.6.0/frameworks/mxml-manifest.xml</manifest></namespace></namespaces>
+    <show-actionscript-warnings>false</show-actionscript-warnings>
+    <strict>false</strict>
+    <omit-trace-statements>false</omit-trace-statements>
+  </compiler>
+  <target-player>15.0</target-player>
+  <swf-version>26</swf-version>
+  <default-size><width>1024</width><height>768</height></default-size>
+  <default-frame-rate>30</default-frame-rate>
+  <default-script-limits><max-recursion-depth>1000</max-recursion-depth><max-execution-time>60</max-execution-time></default-script-limits>
+  <default-background-color>#869CA7</default-background-color>
+</flex-config>

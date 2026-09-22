@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="mx.core.IToolTip"
+    mouseEnabled="false" mouseChildren="false"
+    horizontalScrollPolicy="off" verticalScrollPolicy="off" styleName="toolTip">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+
+        private var _rawKey:String;
+
+        public function get text():String
+        {
+            if (lblText)
+            {
+                return (lblText.text);
+            };
+            return (this._rawKey);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this._rawKey = _arg_1;
+            if (!lblText)
+            {
+                return;
+            };
+            applyText();
+        }
+
+        private function applyText():void
+        {
+            var _local_2:String = cLocaManager.GetInstance().GetTextPure(LOCA_GROUP.TOOLTIP, this._rawKey);
+            this.lblText.text = ((_local_2) ? _local_2 : this._rawKey);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            if (this._rawKey != null)
+            {
+                applyText();
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("paddingTop", 2);
+            this.setStyle("paddingBottom", 2);
+            this.setStyle("paddingLeft", 5);
+            this.setStyle("paddingRight", 5);
+            if (this._rawKey != null)
+            {
+                applyText();
+            };
+            if (cLocaManager.GetInstance().IsInitialized())
+            {
+                refreshLabels();
+            };
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+    ]]></mx:Script>
+    <gui:CustomText id="lblText" truncateToFit="false" maxWidth="300" wordWrap="true" fontWeight="bold" color="0xFFFFFF" />
+</mx:VBox>

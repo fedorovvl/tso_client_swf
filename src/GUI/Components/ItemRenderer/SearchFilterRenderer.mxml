@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="175" height="19">
+    <mx:Script><![CDATA[
+        import mx.containers.HBox;
+        import GUI.Components.StandardCheckBox;
+        import GUI.Components.CustomLabel;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import mx.events.PropertyChangeEvent;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import flash.events.Event;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            this.displayData();
+            refreshRendererPresentation();
+        }
+
+        private function displayData():void
+        {
+            if (!data)
+            {
+                return;
+            };
+            this.filterName.label = data.name_string;
+            this.availableAmount.text = data.amount;
+            this.filterName.selected = data.selected;
+        }
+
+        private function createToolTip(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        public function onFilterName_change(argument1:Event):void
+        {
+            this.filterClicked();
+        }
+
+        private function filterClicked():void
+        {
+            data.selected = this.filterName.selected;
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("horizontalGap", 0);
+            this.setStyle("paddingRight", 3);
+            this.setStyle("verticalAlign", "middle");
+            filterName.addEventListener("change", onFilterName_change);
+            this.width = 175;
+            this.height = 19;
+            this.addEventListener("toolTipCreate", this.createToolTip);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <ui:StandardCheckBox id="filterName" width="146"  fontSize="10" />
+    <ui:CustomLabel id="availableAmount" width="23"  color="0xFFFFFF" fontSize="10" fontWeight="normal" textAlign="right" />
+</mx:HBox>

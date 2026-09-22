@@ -1,0 +1,243 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="275" height="63">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Button;
+        import GUI.Components.CustomLabel;
+        import mx.controls.Image;
+        import GUI.Components.ProgressBar;
+        import mx.collections.ArrayCollection;
+        import mx.utils.ObjectProxy;
+        import mx.containers.HBox;
+        import mx.core.mx_internal;
+        import mx.events.ListEvent;
+        import GUI.GAME.cTimedProductionInfoPanel;
+        import flash.events.MouseEvent;
+        import GUI.Assets.gAssetManager;
+        import TimedProduction.cTimedProduction;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import mx.controls.TileList;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import MilitarySystem.cMilitaryUnitProductionOrder;
+        import TimedProduction.cAbstractTimedProductionOrder;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private var dataProvider:ArrayCollection;
+
+        [Bindable]
+        private var offset:int;
+
+        [Bindable]
+        private var dataProxy:ObjectProxy;
+
+        [Bindable]
+        private var index:int;
+
+        public function onBtnUp_click(argument1:MouseEvent):void
+        {
+            this.dispatchEvent(new ListEvent(cTimedProductionInfoPanel.MOVE_UP, true, false, 0, this.index, null, this));
+        }
+
+        public function onBtnContextMenu_click(argument1:MouseEvent):void
+        {
+            argument1.stopImmediatePropagation();
+            this.dispatchEvent(new ListEvent(cTimedProductionInfoPanel.CONTEXT_MENU, true, false, 0, this.index, null, this));
+        }
+
+        public function onOrderItemRenderer_Canvas1_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.TIMED_PRODUCTION_ORDER_string, argument1, data);
+        }
+
+        public function onBtnRemove_click(argument1:MouseEvent):void
+        {
+            this.btnRemove.enabled = false;
+            this.dispatchEvent(new ListEvent(cTimedProductionInfoPanel.REMOVE, true, false, 0, this.index, null, this));
+        }
+
+        public function onBtnUp_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1, null);
+        }
+
+        public function onBtnInstantFinish_click(argument1:MouseEvent):void
+        {
+            this.btnInstantFinish.enabled = false;
+            this.dispatchEvent(new ListEvent(cTimedProductionInfoPanel.INSTANT_FINISH, true, false, 0, this.index));
+        }
+
+        public function onBtnDown_click(argument1:MouseEvent):void
+        {
+            this.dispatchEvent(new ListEvent(cTimedProductionInfoPanel.MOVE_DOWN, true, false, 0, this.index, null, this));
+        }
+
+        public function onBtnContextMenu_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1, null);
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            var localValue2:cTimedProduction;
+            var localValue3:int;
+            if (argument1 != null)
+            {
+                localValue2 = (argument1 as cTimedProduction);
+                super.data = localValue2;
+                this.dataProvider = ArrayCollection(TileList(owner).dataProvider);
+                this.orderName.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, localValue2.GetType());
+                this.orderIcon.source = gAssetManager.GetResourceIcon(localValue2.GetType());
+                this.btnInstantFinish.visible = localValue2.HasStarted();
+                this.btnInstantFinish.enabled = ((!(localValue2.GetWaitingForServer())) && (localValue2.GetInstantBuildCosts() > 0));
+                this.removeBtns.visible = (!(localValue2.HasStarted()));
+                this.btnRemove.enabled = (!(localValue2.GetWaitingForServer()));
+                this.index = this.dataProvider.getItemIndex(data);
+                toolTip = localValue2.GetType();
+                this.btnUp.enabled = ((!(localValue2.GetWaitingForServer())) && (this.index > 1));
+                this.btnDown.enabled = ((!(localValue2.GetWaitingForServer())) && (this.index < (this.dataProvider.length - 1)));
+                this.btnContextMenu.enabled = ((!(localValue2.GetWaitingForServer())) && (this.dataProvider.length > 2));
+                if (this.index > 0)
+                {
+                    this.progressLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "OrdersWaiting", [localValue2.GetAmount().toString()]);
+                }
+                else
+                {
+                    if ((localValue2.GetProductionOrder() is cMilitaryUnitProductionOrder))
+                    {
+                        this.progressLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Recruited", [localValue2.GetProducedItems().toString(), localValue2.GetAmount().toString()]);
+                    }
+                    else
+                    {
+                        this.progressLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Produced", [localValue2.GetProducedItems().toString(), localValue2.GetAmount().toString()]);
+                    };
+                };
+                this.StarIcon.visible = false;
+                if ((localValue2.GetProductionOrder() is cAbstractTimedProductionOrder))
+                {
+                    localValue3 = (localValue2.GetProductionOrder() as cAbstractTimedProductionOrder).GetProductionMultiplierInPercentage();
+                    this.StarIcon.visible = (!(localValue3 == 0));
+                };
+            };
+            refreshRendererPresentation();
+        }
+
+        public function onBtnRemove_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1, null);
+        }
+
+        public function onBtnInstantFinish_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.INSTANT_BUILD_string, argument1, [(data as cTimedProduction).GetInstantBuildCosts(), (data as cTimedProduction).GetInstantBuildCostsUnmodified()]);
+        }
+
+        public function onBtnDown_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1, null);
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            btnInstantFinish.addEventListener("toolTipCreate", onBtnInstantFinish_toolTipCreate);
+            btnInstantFinish.addEventListener("click", onBtnInstantFinish_click);
+            btnUp.addEventListener("click", onBtnUp_click);
+            btnUp.addEventListener("toolTipCreate", onBtnUp_toolTipCreate);
+            btnDown.addEventListener("click", onBtnDown_click);
+            btnDown.addEventListener("toolTipCreate", onBtnDown_toolTipCreate);
+            btnContextMenu.addEventListener("click", onBtnContextMenu_click);
+            btnContextMenu.addEventListener("toolTipCreate", onBtnContextMenu_toolTipCreate);
+            btnRemove.addEventListener("click", onBtnRemove_click);
+            btnRemove.addEventListener("toolTipCreate", onBtnRemove_toolTipCreate);
+            StarIcon.source = gAssetManager.GetBitmap("SmallIconStar");
+            this.styleName = "buildQueueItem";
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.width = 275;
+            this.height = 63;
+            this.addEventListener("toolTipCreate", this.onOrderItemRenderer_Canvas1_toolTipCreate);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+                if (data != null && data is cTimedProduction)
+                {
+                    progressBar.value = (data as cTimedProduction).mProductionProgress;
+                }
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="background" percentWidth="100" percentHeight="100" backgroundSize="100%" backgroundImage="{gAssetManager.GetClass('QueueBackground')}" />
+    <mx:Image id="orderIcon" width="26" height="25" verticalCenter="-8" left="10" />
+    <mx:Image id="StarIcon" left="28" top="3" />
+    <ui:CustomLabel id="orderName" maxWidth="175" top="3" left="43" color="0xFFFFFF" />
+    <ui:CustomLabel id="progressLabel" color="0xFFFFFF" fontWeight="normal" left="43" top="30" />
+    <ui:ProgressBar id="progressBar" right="29" left="45" top="21" />
+    <mx:Button id="btnInstantFinish" enabled="true" toolTip="InstantFinishProduction" width="25" height="23" right="15" bottom="5" upSkin="{gAssetManager.GetClass('HalfTime')}" downSkin="{gAssetManager.GetClass('HalfTimeHighlight')}" overSkin="{gAssetManager.GetClass('HalfTimeHighlight')}" disabledSkin="{gAssetManager.GetClass('HalfTimeDisabled')}" />
+    <mx:HBox id="removeBtns" right="15" bottom="5" horizontalGap="0">
+        <mx:Button id="btnUp" width="25" height="23" toolTip="ProductionMoveUp" upSkin="{gAssetManager.GetClass('ArrowUp')}" downSkin="{gAssetManager.GetClass('ArrowUpHighlight')}" overSkin="{gAssetManager.GetClass('ArrowUpHighlight')}" disabledSkin="{gAssetManager.GetClass('ArrowUpDisabled')}" />
+        <mx:Button id="btnDown" width="25" height="23" toolTip="ProductionMoveDown" upSkin="{gAssetManager.GetClass('ArrowDown')}" downSkin="{gAssetManager.GetClass('ArrowDownHighlight')}" overSkin="{gAssetManager.GetClass('ArrowDownHighlight')}" disabledSkin="{gAssetManager.GetClass('ArrowDownDisabled')}" />
+        <mx:Button id="btnContextMenu" width="25" height="23" toolTip="ProductionContextMenu" upSkin="{gAssetManager.GetClass('ButtonContextMenu')}" downSkin="{gAssetManager.GetClass('ButtonContextMenuHighlight')}" overSkin="{gAssetManager.GetClass('ButtonContextMenuHighlight')}" disabledSkin="{gAssetManager.GetClass('ButtonContextMenuDisabled')}" />
+        <mx:Button id="btnRemove" width="25" height="23" toolTip="ProductionRemove" upSkin="{gAssetManager.GetClass('Close')}" downSkin="{gAssetManager.GetClass('CloseHighlight')}" overSkin="{gAssetManager.GetClass('CloseHighlight')}" disabledSkin="{gAssetManager.GetClass('CloseDisabled')}" />
+    </mx:HBox>
+</mx:Canvas>

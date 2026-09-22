@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+    width="52" height="25">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import mx.events.FlexEvent;
+        import mx.events.ToolTipEvent;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Components.ToolTips.cToolTipUtil;
+
+        public function editState(event:Event):void
+        {
+            editButton.visible = false;
+            cancelButton.visible = true;
+            acceptButton.visible = true;
+        }
+
+        public function normalState(event:Event):void
+        {
+            editButton.visible = true;
+            cancelButton.visible = false;
+            acceptButton.visible = false;
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            refreshTips();
+            editButton.addEventListener("click", onEditButton_click);
+            editButton.addEventListener("toolTipCreate", onEditButton_toolTipCreate);
+            cancelButton.addEventListener("click", onCancelButton_click);
+            cancelButton.addEventListener("toolTipCreate", onCancelButton_toolTipCreate);
+            acceptButton.addEventListener("click", onAcceptButton_click);
+            acceptButton.addEventListener("toolTipCreate", onAcceptButton_toolTipCreate);
+            addEventListener("creationComplete", onCreationComplete);
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshTips, false, 0, true);
+        }
+
+        private function refreshTips(event:Event = null):void
+        {
+            var tip:*;
+            tip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildEdit");
+            editButton.toolTip = ((tip == undefined) ? null : String(tip));
+            tip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Cancel");
+            cancelButton.toolTip = ((tip == undefined) ? null : String(tip));
+            tip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Accept");
+            acceptButton.toolTip = ((tip == undefined) ? null : String(tip));
+        }
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            normalState(event);
+        }
+
+        public function onEditButton_click(event:MouseEvent):void
+        {
+            editState(event);
+        }
+
+        public function onCancelButton_click(event:MouseEvent):void
+        {
+            normalState(event);
+        }
+
+        public function onAcceptButton_click(event:MouseEvent):void
+        {
+            normalState(event);
+        }
+
+        public function onEditButton_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function onCancelButton_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function onAcceptButton_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+
+    <mx:Button id="editButton" x="24" y="2" styleName="edit" />
+    <mx:Button id="cancelButton" x="25" visible="false" styleName="abort" />
+    <mx:Button id="acceptButton" y="1" visible="false" styleName="accept" />
+</mx:Canvas>

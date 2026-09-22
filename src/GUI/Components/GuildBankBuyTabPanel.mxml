@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="360" height="260">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import ServerState.IResourceContainer;
+
+        private var _returnGuildBankPaytab:Function = function ():IResourceContainer
+        {
+            return (global.ui.GetCurrentPlayerGuildBank().GetPaymentTab());
+        };
+
+        private function get returnGuildBankPaytab():Function
+        {
+            return (_returnGuildBankPaytab);
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(headerCanvas);
+            LegacyMxmlContent.createChildren(leftHeader);
+            LegacyMxmlContent.createChildren(leftBox);
+            LegacyMxmlContent.createChildren(rightHeader);
+            LegacyMxmlContent.createChildren(rightBox);
+            _GuildBankBuyTabPanel_Image1.source = gAssetManager.GetBitmap("IconGuild");
+            costListItemRenderer.resourceContainerFunction = returnGuildBankPaytab;
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var text:*;
+            text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildBankBuyTab");
+            label = ((text == undefined) ? null : String(text));
+            text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildBankBuyTabDescription");
+            _GuildBankBuyTabPanel_Text1.text = ((text == undefined) ? null : String(text));
+            text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "BuyMethod1");
+            _GuildBankBuyTabPanel_Label1.text = ((text == undefined) ? null : String(text));
+            text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Costs");
+            _GuildBankBuyTabPanel_Label2.text = ((text == undefined) ? null : String(text));
+            text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Buy");
+            btnBuyTabCoin.label = ((text == undefined) ? null : String(text));
+            text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "BuyMethod2");
+            _GuildBankBuyTabPanel_Label3.text = ((text == undefined) ? null : String(text));
+            text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Costs");
+            _GuildBankBuyTabPanel_Label4.text = ((text == undefined) ? null : String(text));
+            text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Buy");
+            btnBuyTabGem.label = ((text == undefined) ? null : String(text));
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <mx:Canvas id="headerCanvas" styleName="detailsHeader" height="55" left="3" right="3"
+                horizontalScrollPolicy="off" verticalScrollPolicy="off" clipContent="false">
+                <mx:Image id="_GuildBankBuyTabPanel_Image1" left="10" verticalCenter="1" />
+                <mx:Text id="_GuildBankBuyTabPanel_Text1" selectable="false" left="70" right="15" top="11" bottom="2" color="0xFFFFFF" fontWeight="normal" />
+            </mx:Canvas>
+            <mx:Canvas id="leftHeader" styleName="detailsSubHeader" percentWidth="47.4" height="20" top="57" left="8">
+                <mx:Label id="_GuildBankBuyTabPanel_Label1" horizontalCenter="0" verticalCenter="0" fontWeight="bold" />
+            </mx:Canvas>
+            <mx:Canvas id="leftBox" styleName="detailsContentBox" percentWidth="47" height="115" top="77" left="9">
+                <mx:VBox id="methodBox1" horizontalAlign="center" horizontalCenter="0" top="10">
+                    <mx:Label id="_GuildBankBuyTabPanel_Label2" fontWeight="bold" />
+                    <mx:HBox id="costsList">
+                        <renderer:ResourceItemRenderer id="costListItemRenderer" />
+                    </mx:HBox>
+                </mx:VBox>
+                <mx:Canvas id="costListBox" styleName="detailsContentBox" percentWidth="100" height="40" bottom="0">
+                    <gui:StandardButton id="btnBuyTabCoin" height="27" width="150" horizontalCenter="0" verticalCenter="-2" />
+                </mx:Canvas>
+            </mx:Canvas>
+            <mx:Canvas id="rightHeader" styleName="detailsSubHeader" percentWidth="47.4" height="20" top="57" right="7">
+                <mx:Label id="_GuildBankBuyTabPanel_Label3" horizontalCenter="0" verticalCenter="0" fontWeight="bold" />
+            </mx:Canvas>
+            <mx:Canvas id="rightBox" styleName="detailsContentBox" percentWidth="47" height="115" top="77" right="8">
+                <mx:VBox id="methodBox2" horizontalAlign="center" horizontalCenter="0" top="10">
+                    <mx:Label id="_GuildBankBuyTabPanel_Label4" fontWeight="bold" />
+                    <mx:HBox id="gemCost">
+                        <renderer:ResourceItemRenderer id="gemCostItemRenderer" />
+                    </mx:HBox>
+                </mx:VBox>
+                <mx:Canvas id="gemCostBox" styleName="detailsContentBox" percentWidth="100" height="40" bottom="0">
+                    <gui:StandardButton id="btnBuyTabGem" height="27" width="150" horizontalCenter="0" verticalCenter="-2" icon="{gAssetManager.GetClass('IconMailTypeHardCurrency')}" />
+                </mx:Canvas>
+            </mx:Canvas>
+            <gui:StandardButton id="btnCancel" height="27" width="150" horizontalCenter="0" bottom="5" icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

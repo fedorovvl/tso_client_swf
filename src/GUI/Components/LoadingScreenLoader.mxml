@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+    percentWidth="100" percentHeight="100" creationPolicy="all">
+    <mx:Script><![CDATA[
+        import GUI.SWMMOPreloader;
+        import GUI.Assets.gLoadingScreenInterface;
+        import flash.events.Event;
+        import flash.display.Loader;
+        import flash.system.LoaderContext;
+        import nLib.TSOURLLoader;
+        import mx.events.FlexEvent;
+
+        public function resumeLoading():void
+        {
+            var _local_1:String;
+            if (global.eventLoadingScreen != defines.DEFAULT_UNDEFINED)
+            {
+                _local_1 = "UNDEFINED";
+                if (global.eventLoadingScreen != defines.DEFAULT_UNDEFINED)
+                {
+                    _local_1 = global.eventLoadingScreen;
+                };
+                _local_1 = (_local_1.charAt(0).toUpperCase() + _local_1.substr(1, (_local_1.length - 1)).toLowerCase());
+                this.loadSwf((("gLoadingScreen" + _local_1) + ".swf"));
+            }
+            else
+            {
+                this.loadSwf("gLoadingScreen.swf");
+            };
+        }
+
+        public function init():void
+        {
+			
+            this.preloaderLogo.source = new SWMMOPreloader.Logo();
+            this.preloaderBar.source = new SWMMOPreloader.Bar();
+        }
+
+        private function completeHandler(_arg_1:Event):void
+        {
+            global.getApplication().loadingScreenLoader.setVisible(false, true);
+            this.preloaderLogo.source = null;
+            this.preloaderBar.source = null;
+            removeAllChildren();
+            global.loadingScreen = (_arg_1.currentTarget.content as gLoadingScreenInterface);
+            global.getApplication().loadingScreen.updateImages(_arg_1.currentTarget.content);
+            global.getApplication().loadingScreen.setVisible(true, true);
+            dispatchEvent(new Event(Event.COMPLETE));
+        }
+
+        private function completeURLHandler(_arg_1:Event):void
+        {
+            var _local_2:Loader = new Loader();
+            var _local_3:LoaderContext = new LoaderContext();
+            _local_3.allowLoadBytesCodeExecution = true;
+            _local_2.contentLoaderInfo.addEventListener(Event.COMPLETE, this.completeHandler);
+            _local_2.loadBytes((_arg_1.currentTarget as TSOURLLoader).data, _local_3);
+        }
+
+        private function onInitialize(event:FlexEvent):void
+        {
+            this.init();
+        }
+
+        private function loadSwf(_arg_1:String):void
+        {
+            var _local_2:TSOURLLoader = new TSOURLLoader();
+            _local_2.addEventListener(Event.COMPLETE, this.completeURLHandler);
+            _local_2.loadFile(("loadingscreen/" + _arg_1));
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            setStyle("fontAntiAliasType", "advanced");
+            setStyle("fontGridFitType", "pixel");
+            setStyle("fontSharpness", 0);
+            setStyle("fontThickness", 0);
+			setStyle("backgroundColor", "16708586");
+            addEventListener("initialize", onInitialize);
+        }
+    ]]></mx:Script>
+    <mx:Canvas percentWidth="100" percentHeight="100" creationPolicy="all">
+        <mx:Image id="preloaderLogo"  horizontalCenter="0" verticalCenter="0" />
+        <mx:Image id="preloaderBar"  horizontalCenter="0" verticalCenter="140" />
+    </mx:Canvas>
+</mx:Canvas>

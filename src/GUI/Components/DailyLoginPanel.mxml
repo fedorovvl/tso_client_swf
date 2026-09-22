@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="470" height="315" cacheAsBitmap="true" clipContent="false">
+    <mx:Script><![CDATA[
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Loca.cLocaManager;
+        import mx.events.EffectEvent;
+        import mx.events.ToolTipEvent;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(content);
+            LegacyMxmlContent.createChildren(rewardsList);
+            LegacyMxmlContent.createChildren(daysLabels);
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            _DailyLoginPanel_Image1.source = gAssetManager.GetBitmap("DailyLoginHeaderOrnamental");
+            btnOK.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            day1.addEventListener("toolTipCreate", __day1_toolTipCreate);
+            day2.addEventListener("toolTipCreate", __day2_toolTipCreate);
+            day3.addEventListener("toolTipCreate", __day3_toolTipCreate);
+            day4.addEventListener("toolTipCreate", __day4_toolTipCreate);
+            day5.addEventListener("toolTipCreate", __day5_toolTipCreate);
+            day6.addEventListener("toolTipCreate", __day6_toolTipCreate);
+            day7.addEventListener("toolTipCreate", __day7_toolTipCreate);
+            fadeOut.addEventListener("effectEnd", __fadeOut_effectEnd);
+            refreshHeadline();
+            addEventListener("labelChanged", refreshHeadline, false, 0, true);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function refreshHeadline(event:Event = null):void
+        {
+            var value:* = label;
+            headline.text = ((value == undefined) ? null : String(value));
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var rewards:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Rewards");
+            _DailyLoginPanel_CustomLabel2.text = ((rewards == undefined) ? null : String(rewards));
+            var day1text:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "DailyLoginDay", ["1"]);
+            day1label.text = ((day1text == undefined) ? null : String(day1text));
+            var day2text:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "DailyLoginDay", ["2"]);
+            day2label.text = ((day2text == undefined) ? null : String(day2text));
+            var day3text:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "DailyLoginDay", ["3"]);
+            day3label.text = ((day3text == undefined) ? null : String(day3text));
+            var day4text:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "DailyLoginDay", ["4"]);
+            day4label.text = ((day4text == undefined) ? null : String(day4text));
+            var day5text:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "DailyLoginDay", ["5"]);
+            day5label.text = ((day5text == undefined) ? null : String(day5text));
+            var day6text:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "DailyLoginDay", ["6"]);
+            day6label.text = ((day6text == undefined) ? null : String(day6text));
+            var day7text:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "DailyLoginDay", ["7"]);
+            day7label.text = ((day7text == undefined) ? null : String(day7text));
+        }
+
+        public function __day1_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __day2_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __day3_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __day4_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __day5_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __day6_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __day7_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __fadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <mx:Canvas styleName="basicPanel" top="5" left="5" right="9" bottom="0" />
+    <mx:Canvas styleName="questPanelHeader" height="82" left="0" right="0" top="0" />
+    <mx:Image id="_DailyLoginPanel_Image1" horizontalCenter="0" top="-35" />
+    <mx:Canvas styleName="questPanelFooter" height="60" left="10" right="10" bottom="0" />
+    <gui:CustomLabel id="headline" left="46" top="10" right="46" fontWeight="bold" textAlign="center" color="0" />
+    <mx:Canvas id="content" top="35" bottom="1" left="17" right="19">
+        <mx:Canvas styleName="detailsHeader" height="66" left="2" right="2" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+            <mx:Canvas left="12" right="12" top="7" bottom="2" horizontalScrollPolicy="off" verticalScrollPolicy="auto">
+                <gui:CustomText id="description" percentWidth="100" selectable="false" color="0xFFFFFF" fontWeight="normal" leading="0" textAlign="center" />
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas styleName="detailsSubHeader" height="18" left="7" right="6" top="69">
+            <gui:CustomLabel id="_DailyLoginPanel_CustomLabel2" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+        </mx:Canvas>
+        <mx:Canvas styleName="detailsContentBox" height="90" left="8" right="7" top="87" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+            <mx:HBox id="rewardsList" horizontalCenter="0" top="3" horizontalGap="2">
+                <gui:Frame id="day1" />
+                <gui:Frame id="day2" />
+                <gui:Frame id="day3" />
+                <gui:Frame id="day4" />
+                <gui:Frame id="day5" />
+                <gui:Frame id="day6" />
+                <gui:Frame id="day7" />
+            </mx:HBox>
+            <mx:HBox horizontalCenter="-2" top="5" horizontalGap="4">
+                <mx:Image id="day1result" width="54" height="65" scaleContent="false" visible="false" />
+                <mx:Image id="day2result" width="54" height="65" scaleContent="false" visible="false" />
+                <mx:Image id="day3result" width="54" height="65" scaleContent="false" visible="false" />
+                <mx:Image id="day4result" width="54" height="65" scaleContent="false" visible="false" />
+                <mx:Image id="day5result" width="54" height="65" scaleContent="false" visible="false" />
+                <mx:Image id="day6result" width="54" height="65" scaleContent="false" visible="false" />
+                <mx:Image id="day7result" width="54" height="65" scaleContent="false" visible="false" />
+            </mx:HBox>
+            <mx:HBox id="daysLabels" horizontalCenter="0" top="71" horizontalGap="2">
+                <gui:CustomLabel id="day1label" width="56" textAlign="center" color="0xFFFFFF" />
+                <gui:CustomLabel id="day2label" width="56" textAlign="center" color="0xFFFFFF" />
+                <gui:CustomLabel id="day3label" width="56" textAlign="center" color="0xFFFFFF" />
+                <gui:CustomLabel id="day4label" width="56" textAlign="center" color="0xFFFFFF" />
+                <gui:CustomLabel id="day5label" width="56" textAlign="center" color="0xFFFFFF" />
+                <gui:CustomLabel id="day6label" width="56" textAlign="center" color="0xFFFFFF" />
+                <gui:CustomLabel id="day7label" width="56" textAlign="center" color="0xFFFFFF" />
+            </mx:HBox>
+        </mx:Canvas>
+        <mx:Canvas styleName="detailsSubHeader" height="42" left="7" right="6" top="180">
+            <mx:Canvas left="12" right="12" top="1" bottom="1" horizontalScrollPolicy="off" verticalScrollPolicy="auto">
+                <gui:CustomText id="daysRemaining" percentWidth="100" selectable="false" color="0xFFFFFF" fontWeight="normal" leading="0" textAlign="center" />
+            </mx:Canvas>
+        </mx:Canvas>
+        <gui:StandardButton id="btnOK" horizontalCenter="0" bottom="10" playSound="false" width="70" height="30" />
+    </mx:Canvas>
+</mx:Canvas>

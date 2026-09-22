@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<bridge:NLibFlexBridge xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:bridge="com.bluebyte.tso.ui.bridge.*"
+    xmlns:menu="GUI.Components.circularmenu.*"
+    xmlns:gui="GUI.Components.*"
+    xmlns:tpa="com.bluebyte.tso.ui.texturepacker.*"
+    xmlns:cloud="com.bluebyte.tso.ui.battle.battlecloud.*"
+    mouseEnabled="false" scaleWithZoom="true">
+    <mx:Script><![CDATA[
+        import mx.effects.Fade;
+        import mx.events.FlexEvent;
+        import GUI.Assets.gAssetManager;
+        import Enums.MILITARY_UNIT_ARMORTYPE;
+        import Enums.MILITARY_UNIT_ABILITY;
+        import MilitarySystem.cMilitaryUnitData;
+        import MilitarySystem.cCombat;
+        import MilitarySystem.cCombatSlot;
+        import MilitarySystem.cSquad;
+        import Specialists.cSpecialist;
+        import Model.Notifier;
+
+        private var combat:cCombat = null;
+
+        public function updateCombat(_arg_1:cSpecialist, _arg_2:cCombat):void
+        {
+            var _local_4:cCombatSlot;
+            if (this.combat != _arg_2)
+            {
+                if (this.combat)
+                {
+                    this.combat.removePropertyObserver(cCombat.SLOT_PLAYER_DAMAGE_TAKEN_string, this);
+                    this.combat.removePropertyObserver(cCombat.SLOT_NPC_DAMAGE_TAKEN_string, this);
+                    this.combat.removePropertyObserver(cCombat.SLOT_BATCH_DIED_string, this);
+                    this.combat.removePropertyObserver(cCombat.SLOT_BATCH_DEPLOYED_string, this);
+                    this.combat.removePropertyObserver(cCombat.SLOT_UNITS_DIED_string, this);
+                    this.combat.removePropertyObserver(cCombat.PLAYER_UNIT_SWITCH_FAILED_string, this);
+                };
+                this.combat = _arg_2;
+                if (_arg_2)
+                {
+                    this.flyouts.definition = global.battlegroundDefinition;
+                    this.cloud.definition = global.battlegroundDefinition;
+                    _arg_2.addPropertyObserver(cCombat.SLOT_PLAYER_DAMAGE_TAKEN_string, this);
+                    _arg_2.addPropertyObserver(cCombat.SLOT_NPC_DAMAGE_TAKEN_string, this);
+                    _arg_2.addPropertyObserver(cCombat.SLOT_BATCH_DIED_string, this);
+                    _arg_2.addPropertyObserver(cCombat.SLOT_BATCH_DEPLOYED_string, this);
+                    _arg_2.addPropertyObserver(cCombat.SLOT_UNITS_DIED_string, this);
+                    _arg_2.addPropertyObserver(cCombat.PLAYER_UNIT_SWITCH_FAILED_string, this);
+                };
+            };
+            if (!_arg_2)
+            {
+                return;
+            };
+            var _local_3:cCombatSlot = _arg_2.GetCombatSlotNPC();
+            _local_4 = _arg_2.GetCombatSlotPlayer();
+            if (((((!(_local_3)) || (!(_local_3.GetUnitData()))) || (!(_local_4))) || (!(_local_4.GetUnitData()))))
+            {
+                return;
+            };
+            this.cloud.setCondition("player-unit-melee", (_local_4.GetUnitData().GetArmorType() == MILITARY_UNIT_ARMORTYPE.LIGHT));
+            this.cloud.setCondition("player-unit-ranged", (_local_4.GetUnitData().GetArmorType() == MILITARY_UNIT_ARMORTYPE.MEDIUM));
+            this.cloud.setCondition("player-unit-cavalry", (_local_4.GetUnitData().GetArmorType() == MILITARY_UNIT_ARMORTYPE.HEAVY));
+            this.cloud.setCondition("player-unit-tank", (_local_4.GetUnitData().GetArmorType() == MILITARY_UNIT_ARMORTYPE.TANK));
+            this.cloud.setCondition("enemy-unit-melee", (_local_3.GetUnitData().GetArmorType() == MILITARY_UNIT_ARMORTYPE.LIGHT));
+            this.cloud.setCondition("enemy-unit-ranged", (_local_3.GetUnitData().GetArmorType() == MILITARY_UNIT_ARMORTYPE.MEDIUM));
+            this.cloud.setCondition("enemy-unit-cavalry", (_local_3.GetUnitData().GetArmorType() == MILITARY_UNIT_ARMORTYPE.HEAVY));
+            this.cloud.setCondition("enemy-unit-tank", (_local_3.GetUnitData().GetArmorType() == MILITARY_UNIT_ARMORTYPE.TANK));
+            var _local_5:Boolean = this.checkHasBonus(_local_4.GetUnitData(), _local_3.GetUnitData());
+            this.cloud.setCondition("player-dmg-bonus", _local_5);
+            var _local_6:String;
+            if (_local_5)
+            {
+                _local_6 = "IconBonusDamageNPC";
+            };
+            var _local_7:BattleGroundUnitData = BattleGroundUnitData.fromCombatSlot(_local_3, _local_6);
+            var _local_8:int = _local_7.amount;
+            this.enemyCurrent.data = _local_7;
+            this.enemyCurrent.visible = (_local_7.amount > 0);
+            if (_local_3.GetUnitData().IsBoss())
+            {
+                this.enemyBossHealthBar.visible = true;
+                this.enemyBossHealthBar.value = (Number(_local_3.GetHitPointsLeft()) / Number(_local_3.GetUnitData().GetHitPoints()));
+            }
+            else
+            {
+                this.enemyBossHealthBar.visible = false;
+            };
+            var _local_9:cSquad = _arg_2.GetUpcomingUnitNPC();
+            _local_7 = BattleGroundUnitData.fromSquadVO(_local_9);
+            if (((_arg_2.GetUpcomingUnitNPC()) && (_arg_2.GetUpcomingUnitNPC().GetUnitData() == _local_3.GetUnitData())))
+            {
+                _local_7.amount = (_local_7.amount - ((_local_8 < 0) ? 0 : _local_8));
+            };
+            this.enemyNext.data = _local_7;
+            this.enemyNext.visible = ((_local_7.amount > 0) || ((!(_local_9 == null)) && (_local_9.GetUnitBase().IsBoss())));
+            _local_6 = null;
+            _local_5 = this.checkHasBonus(_local_3.GetUnitData(), _local_4.GetUnitData());
+            this.cloud.setCondition("enemy-dmg-bonus", _local_5);
+            if (_local_5)
+            {
+                _local_6 = "IconBonusDamagePlayer";
+            };
+            _local_7 = BattleGroundUnitData.fromCombatSlot(_local_4, _local_6);
+            this.playerCurrent.data = _local_7;
+            this.playerCurrent.visible = (_local_7.amount > 0);
+            this.playerNext.update(_arg_1, _arg_2.GetUpcomingUnitPlayer(), _local_4.GetAmount(), _arg_2.GetCombatSlotPlayer());
+        }
+
+        public function update(_arg_1:Notifier, _arg_2:String, _arg_3:Object):void
+        {
+            var _local_4:int;
+            var _local_5:int;
+            var _local_6:cCombatSlot;
+            var _local_7:int;
+            switch (_arg_2)
+            {
+                case cCombat.SLOT_NPC_DAMAGE_TAKEN_string:
+                    _local_4 = Number(_arg_3);
+                    this.damageNPC.data = new BattleDamageDisplayData(_local_4, this.checkHasBonus(this.combat.GetCombatSlotNPC().GetUnitData(), this.combat.GetCombatSlotPlayer().GetUnitData()));
+                    return;
+                case cCombat.SLOT_PLAYER_DAMAGE_TAKEN_string:
+                    _local_5 = Number(_arg_3);
+                    this.damagePlayer.data = new BattleDamageDisplayData(_local_5, this.checkHasBonus(this.combat.GetCombatSlotPlayer().GetUnitData(), this.combat.GetCombatSlotNPC().GetUnitData()));
+                    return;
+                case cCombat.SLOT_BATCH_DIED_string:
+                    if (_arg_3 == this.combat.GetCombatSlotPlayer())
+                    {
+                        this.playerCurrent.visible = false;
+                        this.playerDeathAnim.play();
+                        this.cloud.trigger("player-batch-died");
+                    }
+                    else
+                    {
+                        this.enemyCurrent.visible = false;
+                        this.enemyDeathAnim.play();
+                        this.cloud.trigger("enemy-batch-died");
+                    };
+                    return;
+                case cCombat.SLOT_BATCH_DEPLOYED_string:
+                    if (_arg_3 == this.combat.GetCombatSlotPlayer())
+                    {
+                        this.playerDeployAnim.play();
+                        this.cloud.trigger("player-batch-deployed");
+                    }
+                    else
+                    {
+                        this.enemyDeployAnim.play();
+                        this.cloud.trigger("enemy-batch-deployed");
+                    };
+                    return;
+                case cCombat.SLOT_UNITS_DIED_string:
+                    _local_6 = (_arg_3 as Array)[0];
+                    _local_7 = (_arg_3 as Array)[1];
+                    if (_local_6 == this.combat.GetCombatSlotPlayer())
+                    {
+                        this.flyouts.flyToPlayer(_local_7);
+                        this.cloud.trigger("player-units-died");
+                    }
+                    else
+                    {
+                        this.flyouts.flyToEnemy(_local_7);
+                        this.cloud.trigger("enemy-units-died");
+                    };
+                    return;
+                case cCombat.PLAYER_UNIT_SWITCH_FAILED_string:
+                    this.playerNext.resetSelection();
+                    return;
+            };
+        }
+
+        public function dispose():void
+        {
+            this.updateCombat(null, null);
+            this.playerNext.dispose();
+            this.cloud.dispose();
+            this.flyouts.dispose();
+            detachFromEngine();
+            removeAllChildren();
+        }
+
+        public var battleShowEffect:Fade;
+        public var battleHideEffect:Fade;
+
+        private function checkHasBonus(_arg_1:cMilitaryUnitData, _arg_2:cMilitaryUnitData):Boolean
+        {
+            return ((((_arg_1.GetArmorType() == MILITARY_UNIT_ARMORTYPE.HEAVY) && (!(_arg_2.GetAbility(MILITARY_UNIT_ABILITY.DAMAGE_BONUS_PERCENT_HEAVY_ARMOR) == null))) || ((_arg_1.GetArmorType() == MILITARY_UNIT_ARMORTYPE.MEDIUM) && (!(_arg_2.GetAbility(MILITARY_UNIT_ABILITY.DAMAGE_BONUS_PERCENT_MEDIUM_ARMOR) == null)))) || ((_arg_1.GetArmorType() == MILITARY_UNIT_ARMORTYPE.LIGHT) && (!(_arg_2.GetAbility(MILITARY_UNIT_ABILITY.DAMAGE_BONUS_PERCENT_LIGHT_ARMOR) == null))));
+        }
+
+        private function syncEnemyPlate(event:FlexEvent = null):void
+        {
+            _BattleGround_Image1.visible = enemyNext.visible;
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            var showEff:Fade = new Fade();
+            showEff.alphaFrom = 0;
+            showEff.alphaTo = 1;
+            showEff.duration = 300;
+            battleShowEffect = showEff;
+            var hideEff:Fade = new Fade();
+            hideEff.alphaFrom = 1;
+            hideEff.alphaTo = 0;
+            hideEff.duration = 300;
+            battleHideEffect = hideEff;
+            setStyle("addedEffect", battleShowEffect);
+            setStyle("showEffect", battleShowEffect);
+            setStyle("hideEffect", battleHideEffect);
+            _BattleGround_Image1.source = gAssetManager.GetClass("CombatUIPlateEnemyNext");
+            _BattleGround_Image1.setStyle("showEffect", battleShowEffect);
+            _BattleGround_Image1.setStyle("hideEffect", battleHideEffect);
+            enemyNext.setStyle("showEffect", battleShowEffect);
+            enemyNext.setStyle("hideEffect", battleHideEffect);
+            enemyCurrent.setStyle("showEffect", battleShowEffect);
+            enemyCurrent.setStyle("hideEffect", battleHideEffect);
+            enemyCurrent.plateImageSource = gAssetManager.GetClass("CombatUIPlateEnemy");
+            enemyCurrent.plateHoveredImageSource = gAssetManager.GetClass("CombatUIPlateEnemy");
+            playerNext.setStyle("showEffect", battleShowEffect);
+            playerNext.setStyle("hideEffect", battleHideEffect);
+            playerCurrent.setStyle("showEffect", battleShowEffect);
+            playerCurrent.setStyle("hideEffect", battleHideEffect);
+            playerCurrent.plateImageSource = gAssetManager.GetClass("CombatUIPlatePlayer");
+            playerCurrent.plateHoveredImageSource = gAssetManager.GetClass("CombatUIPlatePlayer");
+            flyouts.conditionsProvider = cloud;
+            syncEnemyPlate();
+            enemyNext.addEventListener(FlexEvent.SHOW, syncEnemyPlate, false, 0, true);
+            enemyNext.addEventListener(FlexEvent.HIDE, syncEnemyPlate, false, 0, true);
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="battleCanvas" clipContent="false" mouseEnabled="false">
+        <cloud:BattleCloud id="cloud" x="-10" y="45" />
+        <menu:BattleDamageDisplay id="damageNPC" x="45" y="0" />
+        <menu:BattleDamageDisplay id="damagePlayer" x="230" y="100" />
+        <mx:Image id="_BattleGround_Image1" x="5" y="45"
+            mouseChildren="false" mouseEnabled="false" />
+        <menu:UnitDisplay id="enemyNext" x="5" y="45" minWidth="59" minHeight="44"
+            alphaNotHovered="0.7" />
+        <menu:UnitBatchDisplay id="enemyCurrent" x="70" y="45" />
+        <gui:Combat3HealthBar id="enemyBossHealthBar" x="70" y="130" visible="false" />
+        <tpa:TPAnimation id="enemyDeathAnim" animation="combat_unit_death.png" x="57" y="15" />
+        <tpa:TPAnimation id="enemyDeployAnim" animation="combat_unit_enter_enemy.png" x="25" y="55" />
+        <menu:CombatMenu id="playerNext" x="260" y="203" />
+        <menu:UnitBatchDisplay id="playerCurrent" x="250" y="142" />
+        <tpa:TPAnimation id="playerDeathAnim" animation="combat_unit_death.png" x="237" y="112" />
+        <tpa:TPAnimation id="playerDeployAnim" animation="combat_unit_enter_player.png" x="350" y="240" />
+        <cloud:BattleFlyoutArea id="flyouts" x="0" y="0" />
+    </mx:Canvas>
+</bridge:NLibFlexBridge>

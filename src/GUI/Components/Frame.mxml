@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="56" height="70">
+    <mx:Script><![CDATA[
+        import mx.controls.Image;
+        import mx.events.ToolTipEvent;
+        import mx.events.FlexEvent;
+        import GUI.Components.data.dPvPLevelUnlockData;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Assets.gAssetManager;
+        import Communication.VO.dPickupItemVO;
+        import flash.display.Bitmap;
+        import flash.geom.Point;
+        import flash.filters.GlowFilter;
+        import AdventureSystem.cAdventureDefinition;
+        import GUI.greyFilter;
+
+        public static const DUMMY_REWARD:String = "dummyReward";
+        public static const SPECIALIST:String = "specialist";
+        public static const BUFF_INSTANT:String = "buffInstant";
+        public static const BUFF_TIMED:String = "buffTimed";
+        public static const BUFF_UPGRADE:String = "buffUpgrade";
+        public static const BUFF_ZONE_TIMED:String = "ZoneTimed";
+        public static const BUFF_PERMANENT:String = "Permanent";
+        public static const CONTENT_GENERATOR_REWARD:String = "ContentGeneratorReward";
+        public static const CONTENT_GENERATOR_REWARD_POPUP:String = "ContentGeneratorRewardPopup";
+        public static const CONTENT_GENERATOR_RESULT_JACKPOT:String = "ContentGeneratorResultJackpot";
+        public static const DAILY_LOGIN:String = "dailyLogin";
+        public static const DAILY_LOGIN_LAST:String = "dailyLoginLast";
+        public static const EMPTY:String = "empty";
+        public static const PERK:String = "perk";
+        public static const FRAME_FANCY:String = "fancyFrame";
+        public static const FRAME_FANCIER:String = "fancierFrame";
+        public static const CONTENT_TYPE_NORMAL:String = "normal";
+        public static const CONTENT_TYPE_SHOPITEM:String = "shopitem";
+        public static const CONTENT_TYPE_RESOURCE:String = "resource";
+        public static const CONTENT_TYPE_COLLECTIONPART:String = "collectionpart";
+        public static const CONTENT_TYPE_ADVENTURE:String = "adventure";
+        public static const CONTENT_TYPE_BUILDING:String = "building";
+        public static const CONTENT_TYPE_MILITARY:String = "military";
+        public static const CONTENT_TYPE_BUFF:String = "buff";
+        public static const CONTENT_TYPE_UNLOCK:String = "unlock";
+        public static const CONTENT_TYPE_BOOST:String = "boost";
+        public static const CONTENT_TYPE_DEPOSIT_BUFF:String = "depositBuff";
+        public static const CONTENT_TYPE_HIDDEN:String = "hidden";
+        public static const CONTENT_TYPE_MILITARY_PRODUCTION:String = "militaryProduction";
+
+        private var _filterOverride:Boolean = false;
+        private var _contentType:String = "normal";
+        private var _type:String;
+        private var _glowEffect:Boolean = false;
+        private var _movable:Boolean = true;
+        private var _adventureDifficulty:int;
+        private var _tickOverlay:Boolean = false;
+        private var _content:String;
+        private var _greyFilter:Boolean = false;
+        private var _adventureType:String;
+        private var _dataChanged:Boolean = false;
+        private var _amount:int = -1;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.clipContent = false;
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            addEventListener("creationComplete", onCreationComplete);
+            addEventListener("toolTipCreate", createToolTipHandler);
+        }
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            Init();
+        }
+
+        public function set content(_arg_1:String):void
+        {
+            this._content = _arg_1;
+            this.invalidateData();
+        }
+
+        public function get content():String
+        {
+            return (this._content);
+        }
+
+        public function set contentType(_arg_1:String):void
+        {
+            this._contentType = _arg_1;
+            this.invalidateData();
+        }
+
+        public function get contentType():String
+        {
+            return (this._contentType);
+        }
+
+        public function set amount(_arg_1:int):void
+        {
+            this._amount = _arg_1;
+            this.invalidateData();
+        }
+
+        public function get amount():int
+        {
+            return (this._amount);
+        }
+
+        public function get type():String
+        {
+            return (this._type);
+        }
+
+        public function set type(_arg_1:String):void
+        {
+            this._type = _arg_1;
+            this.invalidateData();
+        }
+
+        public function set filterOverride(_arg_1:Boolean):void
+        {
+            this._filterOverride = _arg_1;
+            this.invalidateData();
+        }
+
+        public function set isMovable(_arg_1:Boolean):void
+        {
+            this._movable = _arg_1;
+        }
+
+        public function get isMovable():Boolean
+        {
+            return (this._movable);
+        }
+
+        public function set tickOverlay(_arg_1:Boolean):void
+        {
+            this._tickOverlay = _arg_1;
+            this.invalidateData();
+        }
+
+        public function set greyFilter(_arg_1:Boolean):void
+        {
+            this._greyFilter = _arg_1;
+            this.invalidateData();
+        }
+
+        public function set glowEffect(_arg_1:Boolean):void
+        {
+            this._glowEffect = _arg_1;
+            this.invalidateData();
+        }
+
+        public function set adventureType(_arg_1:String):void
+        {
+            this._adventureType = _arg_1;
+        }
+
+        public function set adventureDifficulty(_arg_1:int):void
+        {
+            this._adventureDifficulty = _arg_1;
+        }
+
+        private function invalidateData():void
+        {
+            this._dataChanged = true;
+            invalidateProperties();
+        }
+
+        protected function createToolTipHandler(_arg_1:ToolTipEvent):void
+        {
+            if (((this._contentType == Frame.CONTENT_TYPE_BOOST) || ((this._contentType == Frame.CONTENT_TYPE_UNLOCK) && (data is dPvPLevelUnlockData))))
+            {
+                toolTip = (data as dPvPLevelUnlockData).effectName;
+                cToolTipUtil.createToolTip(cToolTipUtil.PVP_LEVEL_UNLOCK_string, _arg_1, (data as dPvPLevelUnlockData));
+            }
+            else
+            {
+                cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, _arg_1);
+            };
+        }
+
+        public function setByPickup(_arg_1:dPickupItemVO):void
+        {
+            this._content = _arg_1.item_string;
+            this._amount = _arg_1.amount;
+            this._contentType = Frame.CONTENT_TYPE_RESOURCE;
+            this._type = Frame.BUFF_INSTANT;
+            this.invalidateData();
+        }
+
+        public function Clear():void
+        {
+            this._contentType = Frame.CONTENT_TYPE_NORMAL;
+            this._content = "";
+            this.type = Frame.EMPTY;
+            this.amount = -1;
+            this.framedIcon.source = null;
+            this.framedImageBackground.source = null;
+            this.Init();
+        }
+
+        private function Init():void
+        {
+            if (!this._type)
+            {
+                this.type = Frame.EMPTY;
+            };
+            this.invalidateData();
+        }
+
+        override protected function commitProperties():void
+        {
+            super.commitProperties();
+            if (this._dataChanged)
+            {
+                this.DisplayContent();
+                this._dataChanged = false;
+            };
+        }
+
+        private function DisplayContent():void
+        {
+            var _local_1:Bitmap;
+            var _local_2:Bitmap;
+            var _local_3:Point;
+            var _local_4:GlowFilter;
+            if (!this.framedIcon)
+            {
+                this.framedIcon = new Image();
+            };
+            if (!this.framedImageBackground)
+            {
+                this.framedImageBackground = new Image();
+            };
+            this.framedImageBackground.visible = false;
+            if (((this.framedIcon) && (this._content)))
+            {
+                switch (this._contentType)
+                {
+                    case Frame.DUMMY_REWARD:
+                        this.framedIcon.setStyle("verticalCenter", ((this._amount > 0) ? -10 : 0));
+                        this.framedIcon.source = gAssetManager.GetDummyIcon(this._content);
+                        this._filterOverride = true;
+                        break;
+                    case Frame.CONTENT_TYPE_RESOURCE:
+                        this.framedIcon.setStyle("verticalCenter", ((this._amount > -1) ? -10 : 0));
+                        this.framedIcon.source = gAssetManager.GetResourceIcon(this._content);
+                        break;
+                    case Frame.CONTENT_TYPE_SHOPITEM:
+                        _local_1 = gAssetManager.GetShopIcon(this._content);
+                        if (((this._adventureType) && (this._adventureType.length > 0)))
+                        {
+                            _local_2 = gAssetManager.ColorFilterImage(gAssetManager.GetBitmap(("adventureType" + this._adventureType)), cAdventureDefinition.GetDifficultyColor(this._adventureDifficulty));
+                            if ((((!(_local_2 == null)) && (!(_local_2.bitmapData == null))) && (!(_local_1.bitmapData == null))))
+                            {
+                                _local_3 = new Point(((_local_1.bitmapData.width - _local_2.bitmapData.width) - 3), ((_local_1.bitmapData.height - _local_2.bitmapData.height) - 2));
+                                gAssetManager.AddIconToImage(_local_1, _local_2, _local_3);
+                            };
+                        };
+                        this.framedIcon.source = _local_1;
+                        break;
+                    case Frame.CONTENT_TYPE_ADVENTURE:
+                    case Frame.CONTENT_TYPE_BUFF:
+                        if (this._content == "ExploreIsland")
+                        {
+                            this.framedIcon.source = gAssetManager.GetBuffIcon("ExploreSector");
+                        }
+                        else
+                        {
+                            this.framedIcon.source = gAssetManager.GetBuffIcon(this._content);
+                        };
+                        break;
+                    case Frame.CONTENT_TYPE_BUILDING:
+                        this.framedIcon.source = gAssetManager.GetBuildingIcon(this._content);
+                        break;
+                    case Frame.CONTENT_TYPE_MILITARY:
+                        this.framedIcon.source = gAssetManager.GetMilitaryIcon(this._content);
+                        break;
+                    case Frame.CONTENT_TYPE_MILITARY_PRODUCTION:
+                        this.framedIcon.source = gAssetManager.GetMilitaryIcon(this._content.substr(7, (this._content.length - 7)));
+                        break;
+                    case Frame.CONTENT_TYPE_UNLOCK:
+                    case Frame.CONTENT_TYPE_BOOST:
+                        this.framedIcon.source = gAssetManager.GetBuffIcon(this._content);
+                        if ((((!(data == null)) && (!((data as dPvPLevelUnlockData).enabled))) && (!(this._filterOverride))))
+                        {
+                            this.framedIcon.filters = [GUI.greyFilter()];
+                        };
+                        break;
+                    case Frame.CONTENT_TYPE_DEPOSIT_BUFF:
+                        this.framedImageBackground.visible = true;
+                        if (this.content == "Fish")
+                        {
+                            this.framedImageBackground.source = gAssetManager.GetBuffIcon((defines.FILL_DEPOSIT_BUFF + "_Fishfood"));
+                        }
+                        else
+                        {
+                            this.framedImageBackground.source = gAssetManager.GetBuffIcon(defines.FILL_DEPOSIT_BUFF);
+                        };
+                        this.framedIcon.source = gAssetManager.GetResourceIcon(this._content);
+                        break;
+                    case Frame.CONTENT_TYPE_HIDDEN:
+                        this.framedIcon.source = gAssetManager.GetGfx("DailyLoginQuestionMark");
+                        break;
+                    default:
+                        this.framedIcon.source = gAssetManager.GetBitmap(this._content);
+                };
+                if (((this._greyFilter) && (!(this._filterOverride))))
+                {
+                    this.framedIcon.filters = [GUI.greyFilter()];
+                };
+                if (this._glowEffect)
+                {
+                    _local_4 = new GlowFilter(16777130);
+                    this.framedIcon.filters = [_local_4];
+                };
+            };
+            if (this.frameImage)
+            {
+                switch (this._type)
+                {
+                    case Frame.DUMMY_REWARD:
+                        this.frameImage.source = gAssetManager.GetBitmap("FrameDummy");
+                        break;
+                    case Frame.BUFF_ZONE_TIMED:
+                        this.frameImage.source = gAssetManager.GetBitmap("FrameZoneBuff");
+                        break;
+                    case Frame.SPECIALIST:
+                        this.frameImage.source = gAssetManager.GetBitmap("FrameSpecialist");
+                        break;
+                    case Frame.BUFF_INSTANT:
+                        this.frameImage.source = gAssetManager.GetBitmap("FrameBuffInstant");
+                        break;
+                    case Frame.BUFF_TIMED:
+                        this.frameImage.source = gAssetManager.GetBitmap("FrameBuffTimed");
+                        break;
+                    case Frame.BUFF_UPGRADE:
+                        this.frameImage.source = gAssetManager.GetBitmap("FrameBuffUpgrade");
+                        break;
+                    case Frame.BUFF_PERMANENT:
+                        this.frameImage.source = gAssetManager.GetBitmap("FramePermanentBuff");
+                        break;
+                    case Frame.DAILY_LOGIN:
+                        this.frameImage.source = gAssetManager.GetBitmap("FrameDailyLogin");
+                        break;
+                    case Frame.DAILY_LOGIN_LAST:
+                        this.frameImage.source = gAssetManager.GetBitmap("FrameDailyLoginLast");
+                        break;
+                    case Frame.PERK:
+                        this.frameImage.source = gAssetManager.GetBitmap("FramePerk");
+                        break;
+                    case Frame.EMPTY:
+                        this.frameImage.source = gAssetManager.GetBitmap("StarmenuFrameEmpty");
+                        break;
+                    case Frame.FRAME_FANCY:
+                        this.frameImage.source = gAssetManager.GetBitmap("FrameFancy");
+                        break;
+                    case Frame.FRAME_FANCIER:
+                        this.frameImage.source = gAssetManager.GetBitmap("FrameSpecialist");
+                        break;
+                    case Frame.CONTENT_GENERATOR_REWARD:
+                        this.frameImage.source = gAssetManager.GetBitmap("FrameContentGeneratorReward");
+                        break;
+                    case Frame.CONTENT_GENERATOR_REWARD_POPUP:
+                        this.frameImage.source = gAssetManager.GetBitmap("FrameContentGeneratorRewardPopup");
+                        break;
+                    case Frame.CONTENT_GENERATOR_RESULT_JACKPOT:
+                        this.frameImage.source = gAssetManager.GetBitmap("FrameContentGeneratorResultsJackpot");
+                        break;
+                    default:
+                        this.frameImage.source = gAssetManager.GetBitmap(this._type);
+                };
+            };
+            if (!this.amountLabel)
+            {
+                return;
+            };
+            if (this._amount > -1)
+            {
+                if (((this._contentType == Frame.CONTENT_TYPE_BOOST) || (Frame.CONTENT_TYPE_UNLOCK)))
+                {
+                    if (this._amount > 0)
+                    {
+                        if (this._contentType == Frame.CONTENT_TYPE_BOOST)
+                        {
+                            this.amountLabel.text = (("+" + this._amount) + "%");
+                        }
+                        else
+                        {
+                            this.amountLabel.text = this._amount.toString();
+                        };
+                    }
+                    else
+                    {
+                        this.amountLabel.text = "";
+                        if (!this._filterOverride)
+                        {
+                            this.framedIcon.filters = [GUI.greyFilter()];
+                        };
+                    };
+                }
+                else
+                {
+                    if (this.amount == 0)
+                    {
+                        this.amountLabel.visible = false;
+                    }
+                    else
+                    {
+                        this.amountLabel.visible = true;
+                        this.amountLabel.text = this._amount.toString();
+                    };
+                };
+                this.amountLabel.visible = true;
+            }
+            else
+            {
+                this.amountLabel.visible = false;
+            };
+            this.tickIcon.visible = this._tickOverlay;
+            dispatchEvent(new FlexEvent(FlexEvent.DATA_CHANGE));
+        }
+    ]]></mx:Script>
+
+    <mx:Image id="frameImage" percentWidth="100" percentHeight="100" maintainAspectRatio="false" />
+    <mx:Image id="framedImageBackground" percentWidth="100" percentHeight="100" visible="false" horizontalCenter="0" verticalCenter="0" />
+    <mx:Image id="framedIcon" horizontalCenter="0" verticalCenter="0" />
+    <mx:Image id="tickIcon" visible="false" horizontalCenter="0" verticalCenter="0" source="{gAssetManager.GetBitmap('DailyLoginPassed')}" />
+    <gui:CustomLabel id="amountLabel" width="50" horizontalCenter="0" bottom="5" textAlign="center" color="0xFFFFFF" fontWeight="bold" />
+</mx:Canvas>

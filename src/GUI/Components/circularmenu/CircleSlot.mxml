@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu:MenuSlot xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:menu="GUI.Components.circularmenu.*"
+    clipContent="false">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.effects.Move;
+        import mx.effects.Resize;
+        import mx.events.EffectEvent;
+        import flash.filters.GlowFilter;
+
+        private var _iconX:int = 0;
+        private var _iconY:int = 0;
+        private var _labelX:int = 0;
+        private var _labelY:int = 0;
+        private var _posNormalX:Number = 0;
+        private var _posNormalY:Number = 0;
+        private var _posHoveredX:Number = 0;
+        private var _posHoveredY:Number = 0;
+
+        public function get iconX():int
+        {
+            return (_iconX);
+        }
+
+        public function set iconX(value:int):void
+        {
+            _iconX = value;
+            refreshLayout();
+        }
+
+        public function get iconY():int
+        {
+            return (_iconY);
+        }
+
+        public function set iconY(value:int):void
+        {
+            _iconY = value;
+            refreshLayout();
+        }
+
+        public function get labelX():int
+        {
+            return (_labelX);
+        }
+
+        public function set labelX(value:int):void
+        {
+            _labelX = value;
+            refreshLayout();
+        }
+
+        public function get labelY():int
+        {
+            return (_labelY);
+        }
+
+        public function set labelY(value:int):void
+        {
+            _labelY = value;
+            refreshLayout();
+        }
+
+        public function get posNormalX():Number
+        {
+            return (_posNormalX);
+        }
+
+        public function set posNormalX(value:Number):void
+        {
+            _posNormalX = value;
+            refreshLayout();
+        }
+
+        public function get posNormalY():Number
+        {
+            return (_posNormalY);
+        }
+
+        public function set posNormalY(value:Number):void
+        {
+            _posNormalY = value;
+            refreshLayout();
+        }
+
+        public function get posHoveredX():Number
+        {
+            return (_posHoveredX);
+        }
+
+        public function set posHoveredX(value:Number):void
+        {
+            _posHoveredX = value;
+            refreshLayout();
+        }
+
+        public function get posHoveredY():Number
+        {
+            return (_posHoveredY);
+        }
+
+        public function set posHoveredY(value:Number):void
+        {
+            _posHoveredY = value;
+            refreshLayout();
+        }
+
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+            refreshLayout();
+        }
+
+        protected function moveEndHandler(event:EffectEvent):void
+        {
+            move(((this.isMouseOver) ? this.posHoveredX : this.posNormalX), ((this.isMouseOver) ? this.posHoveredY : this.posNormalY));
+        }
+
+        private function refreshLayout(event:Event = null):void
+        {
+            if (!_CircleSlot_Image1 || !amountLabel)
+            {
+                return;
+            };
+            x = ((this.isMouseOver) ? this.posHoveredX : this.posNormalX);
+            y = ((this.isMouseOver) ? this.posHoveredY : this.posNormalY);
+            if (data)
+            {
+                var tip:* = data.toolTip;
+                this.toolTip = ((tip == undefined) ? null : String(tip));
+                _CircleSlot_Image1.source = data.icon;
+                var amount:* = data.amount;
+                amountLabel.text = ((amount == undefined) ? null : String(amount));
+                amountLabel.visible = (int(data.amount) > -1);
+            };
+            _CircleSlot_Image1.setStyle("horizontalCenter", String(iconX));
+            _CircleSlot_Image1.setStyle("verticalCenter", String(iconY));
+            _CircleSlot_Image1.scaleX = ((this.isMouseOver) ? 1 : 0.8);
+            _CircleSlot_Image1.scaleY = ((this.isMouseOver) ? 1 : 0.8);
+            amountLabel.x = labelX;
+            amountLabel.y = labelY;
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundSize", "100%");
+            var moveEff:Move = new Move();
+            moveEff.duration = 100;
+            moveEff.addEventListener("effectEnd", moveEndHandler);
+            setStyle("moveEffect", moveEff);
+            registerEffects(["moveEffect"]);
+            var resizeEff:Resize = new Resize();
+            resizeEff.duration = 150;
+            _CircleSlot_Image1.setStyle("resizeEffect", resizeEff);
+            var glow:GlowFilter = new GlowFilter();
+            glow.alpha = 0.8;
+            glow.blurX = 2;
+            glow.blurY = 2;
+            glow.strength = 5;
+            glow.quality = 1;
+            glow.color = 0;
+            amountLabel.filters = [glow];
+            addEventListener("rollOverChanged", refreshLayout);
+            refreshLayout();
+        }
+    ]]></mx:Script>
+    <mx:Image id="_CircleSlot_Image1" autoLoad="true" mouseEnabled="false" smoothBitmapContent="true" />
+    <gui:CustomLabel id="amountLabel"  color="0xFFFFFF" />
+</menu:MenuSlot>

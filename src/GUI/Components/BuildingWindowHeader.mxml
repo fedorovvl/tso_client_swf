@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    height="60" styleName="detailsHeader" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import flash.events.TimerEvent;
+        import flash.utils.Timer;
+        import GO.cBuilding;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import BuffSystem.BuffAppliance;
+        import global;
+
+        private var buffedTimer:Timer = null;
+
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+            if (buffedTimer)
+            {
+                buffedTimer.stop();
+                buffedTimer.removeEventListener(TimerEvent.TIMER, onTimer);
+                buffedTimer = null;
+            };
+            var building:cBuilding = (data as cBuilding);
+            if (building != null)
+            {
+                description.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, building.GetBuildingName_string());
+                image.source = gAssetManager.GetBuildingIcon(building.GetBuildingName_string());
+            image.setStyle("verticalCenter", 0);
+                payshopItemIndicator.visible = building.IsRecurringBuilding();
+                buffedTimer = new Timer(1000);
+                buffedTimer.addEventListener(TimerEvent.TIMER, onTimer);
+                onTimer(null);
+            };
+        }
+
+        private function onTimer(event:TimerEvent):void
+        {
+            var appliance:BuffAppliance;
+            var duration:String;
+            var building:cBuilding = (data as cBuilding);
+            if (building != null)
+            {
+                if (building.productionBuff != null)
+                {
+                    appliance = building.productionBuff;
+                    duration = cLocaManager.GetInstance().FormatDuration((appliance.GetBuffDefinition().getDuration(appliance.GetApplicanceMode()) - (global.getApplication().mGameInterface.GetClientTime() - appliance.GetStartTime())), cLocaManager.DURATION_FORMAT_SHORT);
+                    buffIndicator.source = gAssetManager.GetResourceIcon((appliance.GetBuffDefinition().GetName_string() + ((appliance.GetResourceName_string().length > 0) ? ("_" + appliance.GetResourceName_string()) : "")));
+                    buffTimer.text = duration;
+                    buffTimer.visible = true;
+                    buffIndicator.visible = true;
+                    updateVboxVisibility();
+                }
+                else
+                {
+                    buffTimer.visible = false;
+                    buffIndicator.visible = false;
+                };
+                buffedTimer.start();
+            }
+            else
+            {
+                buffedTimer.removeEventListener(TimerEvent.TIMER, onTimer);
+                buffedTimer = null;
+            };
+        }
+
+        private function updateVboxVisibility():void
+        {
+            vbox1.visible = (!(buffIndicator.source == null));
+            vbox1.includeInLayout = vbox1.visible;
+        }
+
+        private function updateDescriptionRight():void
+        {
+            description.setStyle("right", ((vbox1.includeInLayout) ? 72 : 10));
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("left", 3);
+            this.setStyle("right", 3);
+            payshopItemIndicator.source = gAssetManager.GetBitmap("PayshopIndicator");
+            buffIndicator.source = null;
+            updateVboxVisibility();
+            updateDescriptionRight();
+            vbox1.addEventListener("show", updateDescriptionRight);
+            vbox1.addEventListener("hide", updateDescriptionRight);
+            vbox1.addEventListener("includeInLayoutChanged", updateDescriptionRight);
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="canvas1" x="10" y="3" width="64" height="60"
+        verticalScrollPolicy="off" horizontalScrollPolicy="off">
+        <mx:Image id="payshopItemIndicator" visible="false"  horizontalCenter="0" />
+        <mx:Image id="image" />
+    </mx:Canvas>
+    <gui:CustomText id="description" selectable="false" y="4" height="56"  color="0xFFFFFF" fontWeight="normal" left="72" />
+    <mx:VBox id="vbox1" y="15" verticalScrollPolicy="off" horizontalScrollPolicy="off" horizontalAlign="center" verticalGap="1" right="10">
+        <mx:Image id="buffIndicator" />
+        <gui:CustomText id="buffTimer" width="75" height="14" selectable="false"  textAlign="center" color="0xFFFFFF" fontWeight="normal" />
+    </mx:VBox>
+</mx:Canvas>

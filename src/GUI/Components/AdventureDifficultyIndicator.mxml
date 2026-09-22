@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="124" height="125">
+    <mx:Script><![CDATA[
+        import flash.display.Bitmap;
+        import GUI.Assets.gAssetManager;
+        import AdventureSystem.cAdventureDefinition;
+
+        private var _theme:int;
+        private var _difficulty:int;
+        private var _difficultyTier:int;
+        private var _campaign:int;
+
+        public function SetData(arg1:int, arg2:int, arg3:int, arg4:int):void
+        {
+            _difficulty = arg1;
+            _theme = arg2;
+            _campaign = arg3;
+            _difficultyTier = arg4;
+            SetDigits(_difficulty);
+            var ring:Bitmap = gAssetManager.ColorFilterImage(gAssetManager.GetBitmap("AdventurePanelDifficultyColoredRing1"), cAdventureDefinition.GetDifficultyColor(_difficulty));
+            colouredRing.source = ring;
+        }
+
+        private function SetDigits(difficulty:int):void
+        {
+            var tens:String;
+            var ones:String;
+            if (difficulty < 10)
+            {
+                digit0.source = gAssetManager.GetClass(("AdventurePanelDifficulty" + difficulty.toString()));
+                digit0.visible = true;
+                digit1.visible = false;
+                digit2.visible = false;
+            }
+            else
+            {
+                tens = Math.floor((difficulty / 10)).toString();
+                ones = (difficulty % 10).toString();
+                digit1.source = gAssetManager.GetClass(("AdventurePanelDifficulty" + tens.toString()));
+                digit2.source = gAssetManager.GetClass(("AdventurePanelDifficulty" + ones.toString()));
+                digit0.visible = false;
+                digit1.visible = true;
+                digit2.visible = true;
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundColor", 5720887);
+            background2.source = gAssetManager.GetClass("AdventurePanelDifficultyBackground");
+            colouredRing.source = gAssetManager.GetClass("AdventurePanelDifficultyColoredRing");
+            outerRing.source = gAssetManager.GetClass("AdventurePanelDifficultyOuterRing");
+            digit0.source = gAssetManager.GetClass("AdventurePanelDifficulty0");
+            digit1.source = gAssetManager.GetClass("AdventurePanelDifficulty1");
+            digit2.source = gAssetManager.GetClass("AdventurePanelDifficulty2");
+        }
+    ]]></mx:Script>
+
+    <gui:TSOImage id="background2" percentWidth="100" percentHeight="100" />
+    <gui:TSOImage id="background" percentWidth="100" percentHeight="100" />
+    <gui:TSOImage id="colouredRing" percentWidth="100" percentHeight="100" />
+    <gui:TSOImage id="outerRing" percentWidth="100" percentHeight="100" />
+    <mx:Canvas id="numberContainer" percentWidth="100" percentHeight="100" backgroundAlpha="0" verticalCenter="0" horizontalCenter="0">
+        <gui:TSOImage id="digit0" width="38" height="48" visible="false"  verticalCenter="-7" horizontalCenter="0" />
+        <gui:TSOImage id="digit1" width="38" height="48"  verticalCenter="-7" horizontalCenter="-14" />
+        <gui:TSOImage id="digit2" width="38" height="48"  verticalCenter="-7" horizontalCenter="14" />
+    </mx:Canvas>
+</mx:Canvas>

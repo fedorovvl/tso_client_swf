@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    height="67" verticalScrollPolicy="off" horizontalScrollPolicy="off" clipContent="false">
+    <mx:Script><![CDATA[
+        import mx.events.FlexEvent;
+        import mx.events.ResizeEvent;
+        import mx.states.State;
+        import mx.states.SetProperty;
+        import GUI.Assets.gAssetManager;
+        import GUI.achievement.view.detail.CategoryDetailHeaderView;
+
+        public var showProgress:State;
+        public var hideProgress:State;
+
+        private function syncCenters(event:ResizeEvent = null):void
+        {
+            var hCenter:String = String(-(pointsCanvas.width) / 4);
+            categoryNameLabel.setStyle("horizontalCenter", hCenter);
+            categoryProgressLabel.setStyle("horizontalCenter", hCenter);
+        }
+
+        private function syncRing(event:FlexEvent = null):void
+        {
+            pointsCanvas.setStyle("backgroundImage", headerIcon.visible ?
+                gAssetManager.GetClass("AchievementDetailHeaderRingSimple") :
+                gAssetManager.GetClass("AchievementDetailHeaderRing"));
+        }
+
+        private function buildStates():void
+        {
+            showProgress = new State();
+            showProgress.name = "showProgress";
+            var sp1:SetProperty = new SetProperty();
+            sp1.target = progressBarCanvas;
+            sp1.name = "visible";
+            sp1.value = true;
+            var sp2:SetProperty = new SetProperty();
+            sp2.target = categoryProgressLabel;
+            sp2.name = "visible";
+            sp2.value = true;
+            var sp3:SetProperty = new SetProperty();
+            sp3.target = categoryNameLabel;
+            sp3.name = "y";
+            sp3.value = 10;
+            showProgress.overrides = [sp1, sp2, sp3];
+            hideProgress = new State();
+            hideProgress.name = "hideProgress";
+            var hp1:SetProperty = new SetProperty();
+            hp1.target = progressBarCanvas;
+            hp1.name = "visible";
+            hp1.value = false;
+            var hp2:SetProperty = new SetProperty();
+            hp2.target = categoryProgressLabel;
+            hp2.name = "visible";
+            hp2.value = false;
+            var hp3:SetProperty = new SetProperty();
+            hp3.target = categoryNameLabel;
+            hp3.name = "y";
+            hp3.value = 20;
+            hideProgress.overrides = [hp1, hp2, hp3];
+            states = [showProgress, hideProgress];
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            width = CategoryDetailHeaderView.DETAIL_CATEGORY_VIEW_WIDTH;
+            background.width = CategoryDetailHeaderView.DETAIL_CATEGORY_VIEW_WIDTH - CategoryDetailHeaderView.DETAIL_CATEGORY_VIEW_BACKGROUND_WIDTH_OFFSET;
+            progressBar.mask = progressBarMask;
+            syncRing();
+            headerIcon.addEventListener(FlexEvent.SHOW, syncRing, false, 0, true);
+            headerIcon.addEventListener(FlexEvent.HIDE, syncRing, false, 0, true);
+            syncCenters();
+            pointsCanvas.addEventListener(ResizeEvent.RESIZE, syncCenters, false, 0, true);
+            buildStates();
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="background" percentHeight="100" backgroundSize="100%" backgroundImage="{gAssetManager.GetClass('AchievementDetailHeaderCategoryBackground')}">
+        <mx:Label id="categoryNameLabel" height="30" truncateToFit="true"  textAlign="center" fontWeight="bold" fontSize="15" />
+        <mx:Canvas id="progressBarCanvas" height="15" top="30" left="20" right="57" backgroundSize="100%" backgroundImage="{gAssetManager.GetClass('AchievementCategoryHeaderProgressBackground')}">
+            <mx:Canvas id="progressBar" left="2" top="2" right="2" bottom="2" backgroundSize="100%" backgroundImage="{gAssetManager.GetClass('AchievementCategoryHeaderProgressBar')}" />
+            <mx:Canvas id="progressBarMask"  backgroundColor="0xFF0000" />
+        </mx:Canvas>
+        <mx:Label id="categoryProgressLabel"  textAlign="center" top="45" />
+    </mx:Canvas>
+    <mx:Canvas id="pointsCanvas" width="75" height="85"
+        verticalScrollPolicy="off" horizontalScrollPolicy="off" clipContent="false" right="5" top="-17">
+        <gui:TSOImage id="headerIcon" visible="false"  top="3" horizontalCenter="0" />
+        <mx:Label id="pointsLabel"  bottom="20" horizontalCenter="-1" textAlign="center" fontWeight="bold" fontSize="20" />
+    </mx:Canvas>
+</mx:Canvas>

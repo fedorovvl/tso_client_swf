@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="63" height="64" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import GUI.Assets.gAssetManager;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            finishedIcon.source = gAssetManager.GetBitmap("AchievementCompletedCheckedIcon");
+        }
+    ]]></mx:Script>
+    <gui:TSOImage id="achievementIcon" />
+    <gui:TSOImage id="achievementSmallIcon" visible="false" />
+    <mx:Image id="finishedIcon"  bottom="5" right="5" />
+</mx:Canvas>

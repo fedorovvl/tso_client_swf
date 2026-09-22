@@ -1,0 +1,305 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" xmlns:core="mx.core.*" implements="Collections.ICollectionUpdate" width="320" height="99">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import Collections.ICollectionUpdate;
+        import GUI.Components.CollectionTileList;
+        import mx.controls.Label;
+        import GO.cBuilding;
+        import GUI.Components.ButtonWihtoutKeyboard;
+        import mx.controls.Image;
+        import Communication.VO.collectibles.CollectionVO;
+        import flash.display.DisplayObject;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import mx.events.ToolTipEvent;
+        import mx.events.PropertyChangeEvent;
+        import flash.utils.getTimer;
+        import mx.managers.ToolTipManager;
+        import Collections.CollectionEvent;
+        import flash.events.MouseEvent;
+        import mx.core.ClassFactory;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import Collections.CollectionsConsts;
+        import Collections.CollectionUtils;
+        import flash.geom.Point;
+        import GUI.Assets.gAssetManager;
+        import Communication.VO.collectibles.CollectionResourceVO;
+        import ServerState.dResource;
+        import __AS3__.vec.Vector;
+        import BuffSystem.cBuffDefinition;
+        import BuffSystem.cBuff;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import __AS3__.vec.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private static var clickTime:int;
+
+        private const TOOLTIP_CLICK_DELAY:int = 500;
+
+        private var active:Boolean;
+
+        private var collectionResources:Array;
+
+        public var building:cBuilding;
+
+        private var collectionVO:CollectionVO;
+
+        private var frame:DisplayObject;
+
+        public function setActive(argument1:Boolean):void
+        {
+            this.active = argument1;
+        }
+
+        private function configureBuyButton():void
+        {
+            this.btnCreateCollection.enabled = (((this.collectionVO.getHasNeededPlayerLevel()) && (!(this.building.productionQueue == null))) && (this.building.productionQueue.mTimedProductions_vector.length < 1));
+            this.smallGemIcon.visible = false;
+            if (this.collectionVO.getHasNeededPlayerLevel())
+            {
+                if (!this.collectionVO.getHasNeededResources())
+                {
+                    this.smallGemIcon.visible = true;
+                }
+                else
+                {
+                    this.smallGemIcon.visible = false;
+                };
+            };
+            this.smallGemIcon.mouseEnabled = false;
+        }
+
+        private function handleCreateClick(argument1:MouseEvent):void
+        {
+            clickTime = getTimer();
+            ToolTipManager.enabled = false;
+            if (this.collectionVO.getHasNeededResources())
+            {
+                if (!this.collectionVO.getIsAvailable())
+                {
+                    return;
+                };
+                this.dispatchCollectionEvent(CollectionEvent.CREATE_COLLECTION);
+            }
+            else
+            {
+                this.dispatchCollectionEvent(CollectionEvent.BUY_COLLECTION);
+            };
+        }
+
+        private function configureTooltip(argument1:CollectionVO):void
+        {
+            var localValue2:int = getTimer();
+            if (localValue2 <= (clickTime + this.TOOLTIP_CLICK_DELAY))
+            {
+                this.btnCreateCollection.toolTip = "";
+                return;
+            };
+            ToolTipManager.enabled = true;
+            if (!argument1.getHasNeededPlayerLevel())
+            {
+                this.btnCreateCollection.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, CollectionsConsts.BUILD_COLLECTION_MISSING_LEVEL, [argument1.getRequiredPlayerLevel()]);
+            }
+            else
+            {
+                this.btnCreateCollection.toolTip = argument1.getOutputBuffName();
+            };
+        }
+
+        public function getFrame():DisplayObject
+        {
+            return (this.frame);
+        }
+
+        private function dispatchCollectionEvent(argument1:String):void
+        {
+            this.btnCreateCollection.toolTip = null;
+            this.frame = CollectionUtils.createRewardItem(this.collectionVO, this, new Point(this.createCanvas.x, this.createCanvas.y));
+            this.dispatchEvent(new CollectionEvent(argument1, this, true));
+        }
+
+        public function update(... _args):void
+        {
+            var localValue2:Boolean = this.collectionVO.getHasNeededPlayerLevel();
+            this.outputIcon.source = gAssetManager.GetResourceIcon(this.collectionVO.getOutputBuffName(), localValue2);
+            this.configureBuyButton();
+            this.configureTooltip(this.collectionVO);
+            this.resourceList.update.apply(this, []);
+        }
+
+        public function getCollectionVO():CollectionVO
+        {
+            return (this.collectionVO);
+        }
+
+        private function getMissingResources():Vector.<dResource>
+        {
+            var localValue2:CollectionResourceVO;
+            var localValue3:dResource;
+            var localValue1:Vector.<dResource> = new Vector.<dResource>();
+            for each (localValue2 in this.collectionVO.getCollectionResources())
+            {
+                if (!localValue2.getHasNeededResources())
+                {
+                    localValue3 = new dResource();
+                    localValue3.name_string = localValue2.getName();
+                    localValue3.amount = (localValue2.getAmount() - localValue2.getPlayerAmount());
+                    localValue1.push(localValue3);
+                };
+            };
+            return (localValue1);
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            this.collectionVO = (data[0] as CollectionVO);
+            this.building = (data[1] as cBuilding);
+            this.id = this.collectionVO.getName();
+            this.collectionName.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.COLLECTIONS, this.collectionVO.getName());
+            this.outputIcon.source = gAssetManager.GetResourceIcon(this.collectionVO.getOutputBuffName(), this.collectionVO.getHasNeededPlayerLevel());
+            this.outputIcon.mouseEnabled = false;
+            this.configureBuyButton();
+            this.active = true;
+            this.configureTooltip(this.collectionVO);
+            this.collectionResources = this.collectionVO.getCollectionResourcesAsArray();
+            var localValue2:int = this.collectionResources.length;
+            while (localValue2 < 6)
+            {
+                this.collectionResources.push(new CollectionResourceVO(null, 0));
+                localValue2++;
+            };
+            this.resourceList.dataProvider = this.collectionResources;
+            refreshRendererPresentation();
+        }
+
+        private function createTooltip(argument1:ToolTipEvent):void
+        {
+            var localValue2:cBuffDefinition;
+            if (this.btnCreateCollection.toolTip == "")
+            {
+                return;
+            };
+            if (this.collectionVO.getIsAvailable())
+            {
+                localValue2 = cBuff.getBuffDefinitionByName(this.collectionVO.getOutputBuffName());
+                cToolTipUtil.createToolTip(cToolTipUtil.BUFF_string, argument1, localValue2);
+            }
+            else
+            {
+                if (!this.collectionVO.getHasNeededPlayerLevel())
+                {
+                    cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_ERROR_string, argument1, true);
+                }
+                else
+                {
+                    if (!this.collectionVO.getHasNeededResources())
+                    {
+                        cToolTipUtil.createToolTip(cToolTipUtil.COLLECTIBLE_MISSING_RESOURCES_string, argument1, [this.getMissingResources(), this.collectionVO.getHardCurrency(), this.collectionVO.getHardCurrencyUnmodified()]);
+                    };
+                };
+            };
+        }
+
+        private function disableButtons():void
+        {
+            this.btnCreateCollection.enabled = false;
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundAlpha", 1);
+            this.setStyle("backgroundSize", "100%");
+            viewClassFactory1.generator = CollectionResourceItemRenderer;
+            resourceList.itemRenderer = viewClassFactory1;
+            btnCreateCollection.addEventListener("toolTipCreate", createTooltip);
+            btnCreateCollection.addEventListener("click", handleCreateClick);
+            smallGemIcon.source = gAssetManager.GetBitmap("SmallIconHardCurrency");
+            this.width = 320;
+            this.height = 99;
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+                configuredCanvas2.setStyle("backgroundImage", gAssetManager.GetClass(CollectionsConsts.COLLECTION_ITEM_BACKROUND_CLASS_NAME));
+                configuredCanvas3.setStyle("backgroundImage", gAssetManager.GetClass(CollectionsConsts.COLLECTION_ITEM_BACKROUND_CLASS_NAME));
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="configuredCanvas2" percentWidth="100" percentHeight="100"  backgroundSize="100%" />
+    <mx:Canvas id="configuredCanvas3" width="320" height="95"  backgroundAlpha="1" backgroundSize="100%" />
+    <mx:Canvas id="viewCanvas1" percentWidth="100" height="18">
+        <mx:Label id="collectionName" text="" y="1"  horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+    </mx:Canvas>
+    <ui:CollectionTileList id="resourceList" x="5" width="250" top="21" bottom="5" paddingTop="0" paddingBottom="0" paddingLeft="0" paddingRight="0" useRollOver="false" borderThickness="0" backgroundAlpha="0">
+        <ui:itemRenderer>
+            <core:ClassFactory id="viewClassFactory1" />
+        </ui:itemRenderer>
+    </ui:CollectionTileList>
+    <mx:Canvas id="createCanvas" width="58" height="53" top="27" right="1">
+        <ui:ButtonWihtoutKeyboard id="btnCreateCollection" playSound="false" enabled="false" width="58" height="53"  horizontalCenter="0" verticalCenter="0" />
+        <mx:Image id="outputIcon"  horizontalCenter="0" verticalCenter="0" />
+        <mx:Image id="smallGemIcon" mouseEnabled="false" visible="false"  top="1" left="1" />
+    </mx:Canvas>
+</mx:Canvas>

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    width="250" height="130" mouseEnabled="false" mouseChildren="false" styleName="toolTip">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.events.FlexEvent;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import ServerState.gEconomics;
+        import ServerState.dResourceCreationDefinition;
+        import GO.epicWorkyard.EpicWorkyardSubBuilding;
+
+        private var building:EpicWorkyardSubBuilding;
+        private var tooltipText:String;
+
+        public function get text():String
+        {
+            return (this.tooltipText);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this.tooltipText = _arg_1;
+        }
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this.building = (_arg_1 as EpicWorkyardSubBuilding);
+        }
+
+        private function setLabelTime(_arg_1:Label, _arg_2:Number):void
+        {
+            if (_arg_2 < 0)
+            {
+                _arg_1.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "NotAvailable");
+            }
+            else
+            {
+                _arg_1.text = cLocaManager.GetInstance().FormatDuration(_arg_2);
+            };
+        }
+
+        private function init():void
+        {
+            this.setLabelTime(this.way1, this.building.getWarehouseToWorkyardTime());
+            this.setLabelTime(this.way2, this.building.getWorkyardToDepositTime());
+            this.setLabelTime(this.way3, this.building.getWorkyardToDepositTime());
+            this.setLabelTime(this.way4, this.building.getWarehouseToWorkyardTime());
+            this.setLabelTime(this.productionTime, this.building.getProdutionTime());
+            var _local_1:dResourceCreationDefinition = gEconomics.GetResourcesCreationDefinitionForBuilding(this.building.GetBuildingName_string());
+            if (!_local_1)
+            {
+                return;
+            };
+            if (_local_1.externalResource_string == "")
+            {
+                this.arrowWay2.visible = false;
+                this.arrowWay3.visible = false;
+                this.labelWay2b.visible = false;
+                this.labelWay3b.visible = false;
+                this.labelWay2a.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "DetailsWay2Internal");
+                this.labelWay3a.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "DetailsWay3Internal");
+            }
+            else
+            {
+                this.arrowWay2.visible = true;
+                this.arrowWay3.visible = true;
+                this.labelWay2b.visible = true;
+                this.labelWay3b.visible = true;
+                this.labelWay2a.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Workyard");
+                this.labelWay3a.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "DetailsDeposit");
+            };
+        }
+
+        private function onInit(event:Event):void
+        {
+            init();
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var t:*;
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.BUILDINGS, "Warehouse");
+            labelWay1a.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Workyard");
+            labelWay1b.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "DetailsDeposit");
+            labelWay2b.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "DetailsProductionTime");
+            _EpicWorkyardDetailsTip_Label7.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Workyard");
+            labelWay3b.text = ((t == undefined) ? null : String(t));
+            labelWay4a.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.BUILDINGS, "Warehouse");
+            labelWay4b.text = ((t == undefined) ? null : String(t));
+            arrowWay1.source = gAssetManager.GetBitmap("ArrowSmallRight");
+            arrowWay2.source = gAssetManager.GetBitmap("ArrowSmallRight");
+            arrowWay3.source = gAssetManager.GetBitmap("ArrowSmallRight");
+            arrowWay4.source = gAssetManager.GetBitmap("ArrowSmallRight");
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+            addEventListener("creationComplete", onInit);
+            addEventListener("show", onInit);
+        }
+    ]]></mx:Script>
+    <mx:HBox id="wayRow1" verticalAlign="middle" left="5" top="5" horizontalGap="0">
+        <mx:Label id="labelWay1a" color="0xFFFFFF" fontWeight="normal" />
+        <mx:Image id="arrowWay1" />
+        <mx:Label id="labelWay1b" color="0xFFFFFF" fontWeight="normal" />
+    </mx:HBox>
+    <mx:Label id="way1" color="0xFFFFFF" fontWeight="normal" textAlign="right" right="5" top="5" />
+    <mx:HBox id="wayRow2" verticalAlign="middle" left="5" top="27" horizontalGap="0">
+        <mx:Label id="labelWay2a" color="0xFFFFFF" fontWeight="normal" />
+        <mx:Image id="arrowWay2" />
+        <mx:Label id="labelWay2b" color="0xFFFFFF" fontWeight="normal" />
+    </mx:HBox>
+    <mx:Label id="way2" color="0xFFFFFF" fontWeight="normal" textAlign="right" right="5" top="27" />
+    <mx:Canvas id="midBox" left="0" right="0" top="49">
+        <mx:Label id="_EpicWorkyardDetailsTip_Label7" color="0xFFFFFF" fontWeight="bold" textAlign="right" left="5" top="3" bottom="3" />
+        <mx:Label id="productionTime" color="0xFFFFFF" fontWeight="bold" textAlign="right" right="5" top="3" bottom="3" />
+    </mx:Canvas>
+    <mx:HBox id="wayRow3" verticalAlign="middle" left="5" top="77" horizontalGap="0">
+        <mx:Label id="labelWay3a" color="0xFFFFFF" fontWeight="normal" />
+        <mx:Image id="arrowWay3" />
+        <mx:Label id="labelWay3b" color="0xFFFFFF" fontWeight="normal" />
+    </mx:HBox>
+    <mx:Label id="way3" color="0xFFFFFF" fontWeight="normal" textAlign="right" right="5" top="77" />
+    <mx:HBox id="wayRow4" verticalAlign="middle" left="5" top="99" horizontalGap="0">
+        <mx:Label id="labelWay4a" color="0xFFFFFF" fontWeight="normal" />
+        <mx:Image id="arrowWay4" />
+        <mx:Label id="labelWay4b" color="0xFFFFFF" fontWeight="normal" />
+    </mx:HBox>
+    <mx:Label id="way4" color="0xFFFFFF" fontWeight="normal" textAlign="right" right="5" top="99" />
+</mx:Canvas>

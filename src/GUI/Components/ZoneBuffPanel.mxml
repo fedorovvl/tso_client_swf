@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="400" height="250" styleName="basicPanel" creationPolicy="all">
+    <mx:Script><![CDATA[
+        import mx.core.ClassFactory;
+        import GUI.Loca.cLocaManager;
+        import flash.events.Event;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            buffList.itemRenderer = new ClassFactory(ZoneBuffListItemRenderer);
+            updateLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", updateLabels, false, 0, true);
+        }
+
+        private function updateLabels(event:Event = null):void
+        {
+            noBuffsText.text = cLocaManager.GetInstance().getLabel("noZoneWideBuffsActive");
+            titleText.text = cLocaManager.GetInstance().getLabel("ZoneWideBuffs");
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="listContainer" creationPolicy="all" top="30" left="12" right="10" bottom="10">
+        <gui:CustomList id="buffList" percentWidth="100" percentHeight="100" selectable="false" rowHeight="72"  backgroundAlpha="0" borderStyle="none" />
+    </mx:Canvas>
+    <mx:Canvas id="busy" visible="false" creationPolicy="all" backgroundColor="6970177" backgroundAlpha="0.7" top="30" left="12" right="10" bottom="10">
+        <gui:SpriteLibAnimation id="busyAnim" animationName="guianim_hourglass" loop="true"
+            visible="false" width="48" height="48"  horizontalCenter="0" verticalCenter="0" />
+    </mx:Canvas>
+    <gui:CustomText id="noBuffsText" percentWidth="100" height="20" visible="false" selectable="false"  top="130" textAlign="center" color="0xFFFFFF" />
+    <gui:CustomText id="titleText" height="15" selectable="false"  left="20" textAlign="center" right="20" top="5" color="0xFFFFFF" />
+    <gui:CloseButton id="btnClose" visible="true"  top="5" right="10" />
+</mx:Canvas>

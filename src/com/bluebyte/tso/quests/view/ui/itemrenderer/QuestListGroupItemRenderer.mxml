@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="240">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.containers.VBox;
+        import mx.effects.Sequence;
+        import mx.effects.Fade;
+        import mx.effects.Resize;
+        import GUI.Components.SpecialButton;
+        import flash.utils.Dictionary;
+        import GUI.Assets.gAssetManager;
+        import flash.display.Bitmap;
+        import flash.events.MouseEvent;
+        import Communication.VO.UpdateVO.dAdventureClientInfoVO;
+        import Communication.VO.dQuestElementVO;
+        import Communication.VO.dQuestDefinitionVO;
+        import mx.events.FlexEvent;
+        import converted.bluebyte.tso.quests.logic.QuestManagerStatic;
+        import Communication.VO.dUniqueID;
+        import flash.events.Event;
+        import mx.events.EffectEvent;
+        import mx.events.ItemClickEvent;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        public var categoryId:String;
+
+        [Bindable]
+        private var collapsed:Boolean = false;
+
+        [Bindable]
+        public var expandToHeight:int;
+
+        [Bindable]
+        public var title:String;
+
+        private var _itemRendererMap:Dictionary = new Dictionary();
+
+        private function getUID(value:Object):String
+        {
+            if ((value is dAdventureClientInfoVO))
+            {
+                return (String((((value as dAdventureClientInfoVO).IsColony()) ? (value as dAdventureClientInfoVO).colonyID : (value as dAdventureClientInfoVO).zoneID)));
+            };
+            if ((value is dQuestElementVO))
+            {
+                return ((value as dQuestElementVO).GetUniqueId().toKeyString() + global.ui.mCurrentViewedZoneID);
+            };
+            return ("");
+        }
+
+        private function onBtnTitleClick(event:MouseEvent):void
+        {
+            this.expandCollapse();
+        }
+
+        private function display(event:Event=null):void
+        {
+            var item:QuestListItemRenderer;
+            var knownItems:Dictionary;
+            var uidToName:Dictionary;
+            var rawItem:Object;
+            var headRenderers:Dictionary;
+            var category:Object;
+            var questName:String;
+            var isHead:Boolean;
+            var uid:String;
+            var questVO:dQuestElementVO;
+            var headQuestName:String;
+            var headDef:dQuestDefinitionVO;
+            var headVO:dQuestElementVO;
+            var guildVO:dQuestElementVO;
+            removeEventListener(FlexEvent.CREATION_COMPLETE, this.display);
+            if (!data)
+            {
+                return;
+            };
+            this.expandToHeight = 31;
+            var currentNames:Dictionary = new Dictionary();
+            for each (item in this._itemRendererMap)
+            {
+                item.subQuests = [];
+            };
+            knownItems = new Dictionary();
+            uidToName = new Dictionary();
+            for each (rawItem in (data as Array))
+            {
+                questName = null;
+                isHead = true;
+                if ((rawItem is dAdventureClientInfoVO))
+                {
+                    questName = (rawItem.adventureName + rawItem.zoneID);
+                }
+                else
+                {
+                    if ((rawItem is dQuestElementVO))
+                    {
+                        questVO = (rawItem as dQuestElementVO);
+                        questName = questVO.getQuestName_string();
+                        if (questVO.mQuestDefinition.dailyMotherQuest != null)
+                        {
+                            questName = (questName + (questVO.mUniqueID.toKeyString() + global.ui.mCurrentViewedZoneID));
+                        };
+                        if (questVO.mQuestDefinition.connectedToQuest_string != "")
+                        {
+                            isHead = false;
+                        };
+                    };
+                };
+                uid = this.getUID(rawItem);
+                if (!(questName in knownItems))
+                {
+                    knownItems[questName] = uid;
+                };
+                uidToName[uid] = questName;
+                if (isHead)
+                {
+                    if (this._itemRendererMap[uid])
+                    {
+                        item = this._itemRendererMap[uid];
+                    }
+                    else
+                    {
+                        item = new QuestListItemRenderer();
+                        this._itemRendererMap[uid] = item;
+                        this.list.addChild(item);
+                    };
+                    this.expandToHeight = (this.expandToHeight + (int(this.list.getStyle("verticalGap")) + 29));
+                    item.data = rawItem;
+                };
+                currentNames[questName] = rawItem;
+            };
+            headRenderers = new Dictionary();
+            for each (rawItem in currentNames)
+            {
+                if ((rawItem is dQuestElementVO))
+                {
+                    uid = this.getUID(rawItem);
+                    questVO = (rawItem as dQuestElementVO);
+                    if (questVO.mQuestDefinition.connectedToQuest_string != "")
+                    {
+                        item = this._itemRendererMap[knownItems[questVO.mQuestDefinition.connectedToQuest_string]];
+                        if (item == null)
+                        {
+                            for (headQuestName in this._itemRendererMap)
+                            {
+                                if (String(uidToName[headQuestName]).indexOf(questVO.mQuestDefinition.connectedToQuest_string) == 0)
+                                {
+                                    item = this._itemRendererMap[headQuestName];
+                                    break;
+                                };
+                            };
+                        };
+                        if (item == null)
+                        {
+                            item = new QuestListItemRenderer();
+                            questName = questVO.mQuestDefinition.connectedToQuest_string;
+                            this._itemRendererMap[uid] = item;
+                            this.list.addChild(item);
+                            headDef = questVO.mQuestDefinition;
+                            while (headDef.questName_string != questName)
+                            {
+                                if (headDef.previousQuestDefinition == null) break;
+                                headDef = headDef.previousQuestDefinition;
+                            };
+                            headVO = new dQuestElementVO();
+                            headVO.mQuestDefinition = headDef;
+                            headVO.SetQuestMode(QuestManagerStatic.QUEST_MODE_WAIT_FOR_FINISH);
+                            item.data = headVO;
+                        };
+                        if (item.data.mQuestDefinition.specialType_string == QuestManagerStatic.SPECIAL_TYPE_GUILD_QUEST)
+                        {
+                            guildVO = (item.data as dQuestElementVO);
+                            headRenderers[guildVO.getQuestName_string()] = guildVO;
+                            this.expandToHeight = (this.expandToHeight + (int(this.list.getStyle("verticalGap")) + 29));
+                            guildVO.SetUniqueId(new dUniqueID());
+                            guildVO.mUniqueID.uniqueID1 = questVO.GetRandomPosition();
+                            guildVO.mOtherQuestDefinition_vector = questVO.mOtherQuestDefinition_vector;
+                        };
+                        if (((questVO.mQuestMode < QuestManagerStatic.QUEST_MODE_WAIT_FOR_FINISH) && (!(QuestManagerStatic.IsLastPartialGuildQuest(questVO.mQuestDefinition)))))
+                        {
+                            item.subQuests.push(questVO);
+                            if (!item.collapsed)
+                            {
+                                this.expandToHeight = (this.expandToHeight + (int(this.list.getStyle("verticalGap")) + 29));
+                            };
+                        };
+                    };
+                };
+            };
+            for (uid in this._itemRendererMap)
+            {
+                questName = uidToName[uid];
+                if (((!(currentNames[questName])) && (!(headRenderers[questName]))))
+                {
+                    this.list.removeChild(this._itemRendererMap[uid]);
+                    delete this._itemRendererMap[uid];
+                }
+                else
+                {
+                    this._itemRendererMap[uid].refresh();
+                };
+            };
+            if (!this.collapsed)
+            {
+                this.height = this.expandToHeight;
+            };
+            var cancelable:Boolean;
+            for each (category in global.questCategoryOrder)
+            {
+                if (category.name == this.categoryId)
+                {
+                    cancelable = category.cancelable;
+                    break;
+                };
+            };
+            this.btnTitle.deleteVisible = cancelable;
+        }
+
+        private function expandCollapse():void
+        {
+            if (!this.collapsed)
+            {
+                this.collapse.end();
+                this.expand.end();
+                this.collapse.play();
+            }
+            else
+            {
+                this.collapse.end();
+                this.expand.end();
+                this.expand.play();
+            };
+            this.collapsed = (!(this.collapsed));
+            if (!this.collapsed)
+            {
+                dispatchEvent(new EffectEvent(EffectEvent.EFFECT_START, true));
+            };
+        }
+
+        override public function set data(value:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = value;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = value;
+            if (this.list)
+            {
+                this.display();
+            }
+            else
+            {
+                addEventListener(FlexEvent.CREATION_COMPLETE, this.display);
+            };
+            refreshRendererPresentation();
+        }
+
+        private function deleteClicked(event:MouseEvent):void
+        {
+            event.stopImmediatePropagation();
+            var cancelEvent:ItemClickEvent = new ItemClickEvent("cancelAllQuests", true);
+            cancelEvent.item = this.categoryId;
+            dispatchEvent(cancelEvent);
+        }
+
+        private function readTitle():String
+        {
+            var value:* = title;
+            return ((value == undefined) ? null : String(value));
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.width = 240;
+            btnTitle.addEventListener(MouseEvent.CLICK, onBtnTitleClick);
+            btnTitle.deleteClicked = deleteClicked;
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[btnTitle, "heightChanged"],
+                [btnTitle, "xChanged"]]);
+                expandResize.heightTo = expandToHeight;
+                expandResize.target = this;
+                expandFade.alphaFrom = ((collapsed) ? 0 : 1);
+                expandFade.target = details;
+                collapseFade.target = details;
+                collapseResize.heightTo = btnTitle.x + btnTitle.height;
+                collapseResize.target = this;
+                btnTitle.labelText = readTitle();
+                btnTitle.iconImage = gAssetManager.GetBitmap(((collapsed) ? "ArrowSmallSUp" : "ArrowSmallNUp"));
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Sequence id="expand">
+        <mx:Resize id="expandResize" duration="300" />
+        <mx:Fade id="expandFade" alphaTo="1" duration="300" />
+    </mx:Sequence>
+    <mx:Sequence id="collapse">
+        <mx:Fade id="collapseFade" alphaFrom="1" alphaTo="0" duration="300" />
+        <mx:Resize id="collapseResize" duration="300" />
+    </mx:Sequence>
+
+    <mx:Canvas id="details" top="26" left="1" right="3" bottom="0" backgroundSize="100%" backgroundImage="{gAssetManager.GetClass('QuestItemBg')}">
+        <mx:VBox id="list" left="3" right="3" top="3" bottom="3" verticalGap="1" />
+    </mx:Canvas>
+    <gui:SpecialButton id="btnTitle" left="0" right="0" height="29" labelCenter="true" iconLeft="5" iconCenter="-1" />
+</mx:Canvas>

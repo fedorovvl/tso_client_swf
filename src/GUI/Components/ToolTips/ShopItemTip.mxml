@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tooltips:BasicDescriptionTip xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:tooltips="GUI.Components.ToolTips.*"
+    implements="GUI.Components.ToolTips.IDataToolTip">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import ShopSystem.cShopItem;
+        import ShopSystem.cItemContent;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+
+        private var _shopItem:cShopItem;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this._shopItem = (_arg_1 as cShopItem);
+            invalidateProperties();
+        }
+
+        override protected function commitProperties():void
+        {
+            var _local_1:Array;
+            var _local_2:cItemContent;
+            var _local_3:String;
+            super.commitProperties();
+            if (text != "DeactivatedItem")
+            {
+                _local_1 = [];
+                for each (_local_2 in this._shopItem.GetShopItemContent_vector())
+                {
+                    _local_1.push(_local_2.GetCount().toString());
+                    _local_1.push(_local_2.GetResourceName_string());
+                };
+                _local_3 = ((this._shopItem.GetToolTipIdentifier_string() != "") ? this._shopItem.GetToolTipIdentifier_string() : text);
+                headline.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.SHOP_ITEMS, text);
+                description.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.SHOP_ITEM_TOOLTIPS, _local_3, _local_1);
+                description.setConstraintValue("top", 26);
+                if (!this._shopItem.enabled)
+                {
+                    description.text = (description.text + ("\n\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.ALERT_MESSAGES, "GiftShopItem")));
+                };
+            }
+            else
+            {
+                headline.text = "";
+                description.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.ALERT_MESSAGES, "ShopItemDeactivated");
+                description.setConstraintValue("top", 5);
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            if (cLocaManager.GetInstance().IsInitialized())
+            {
+                invalidateProperties();
+            };
+            cLocaManager.GetInstance().addEventListener("languageChanged", onLanguageChanged, false, 0, true);
+        }
+
+        private function onLanguageChanged(event:Event):void
+        {
+            if (cLocaManager.GetInstance().IsInitialized())
+            {
+                invalidateProperties();
+            };
+        }
+    ]]></mx:Script>
+</tooltips:BasicDescriptionTip>

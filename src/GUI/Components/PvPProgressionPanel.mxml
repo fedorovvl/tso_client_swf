@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:quest="com.bluebyte.tso.quests.view.ui.component.*"
+    width="983" height="584">
+    <mx:Script><![CDATA[
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ItemRenderer.PvPRankItemRenderer;
+        import GUI.Components.ItemRenderer.SideTabItemRenderer;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Loca.cLocaManager;
+        import flash.events.Event;
+        import mx.core.ClassFactory;
+        import mx.events.ToolTipEvent;
+        import mx.states.SetProperty;
+        import mx.states.State;
+
+        public var overviewState:State;
+        public var ranksState:State;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            setStyle("horizontalCenter", "50");
+            setStyle("verticalCenter", "-20");
+            this.visible = false;
+            LegacyMxmlContent.createChildren(leftColumn);
+            LegacyMxmlContent.createChildren(rightColumn);
+            LegacyMxmlContent.createChildren(footer);
+            tabContainer.itemRenderer = new ClassFactory(SideTabItemRenderer);
+            rankList.itemRenderer = new ClassFactory(PvPRankItemRenderer);
+            achievementsButton.setStyle("icon", gAssetManager.GetClass("AchievementsCompletedAvatarMessageIcon"));
+            pvpBuildingButton.setStyle("icon", gAssetManager.GetClass("IconWaterCastle"));
+            okButton.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            archiveButton.setStyle("icon", gAssetManager.GetClass("DepositQuestionIcon"));
+            blackKnightImageGlow.source = gAssetManager.GetClass("ProgressionBlackKnightGlowOverview");
+            blackKnightImage.source = gAssetManager.GetClass("ProgressionBlackKnight");
+            progressBarTooltipZone.toolTip = cToolTipUtil.PVP_XP;
+            progressBarTooltipZone.addEventListener(ToolTipEvent.TOOL_TIP_CREATE, __progressBarTooltipZone_toolTipCreate);
+            overviewCanvas.addEventListener("show", updateLayouts);
+            overviewCanvas.addEventListener("hide", updateLayouts);
+            blackKnightImageGlow.addEventListener("show", updateLayouts);
+            blackKnightImageGlow.addEventListener("hide", updateLayouts);
+            blackKnightImage.addEventListener("show", updateLayouts);
+            blackKnightImage.addEventListener("hide", updateLayouts);
+            digit1.addEventListener("show", updateLayouts);
+            digit1.addEventListener("hide", updateLayouts);
+            updateLayouts();
+            buildStates();
+            currentState = "overview";
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function syncIncludeInLayout(visible:Boolean):Boolean
+        {
+            return visible;
+        }
+
+        private function digit2Left(digit1Visible:Boolean):int
+        {
+            return digit1Visible ? 403 : 390;
+        }
+
+        private function updateLayouts(event:Event = null):void
+        {
+            overviewCanvas.includeInLayout = syncIncludeInLayout(overviewCanvas.visible);
+            blackKnightImageGlow.includeInLayout = syncIncludeInLayout(blackKnightImageGlow.visible);
+            blackKnightImage.includeInLayout = syncIncludeInLayout(blackKnightImage.visible);
+            digit2.setStyle("left", String(digit2Left(digit1.visible)));
+        }
+
+        private function makeVisible(target:Object, value:Boolean):SetProperty
+        {
+            var sp:SetProperty = new SetProperty();
+            sp.target = target;
+            sp.name = "visible";
+            sp.value = value;
+            return sp;
+        }
+
+        private function buildStates():void
+        {
+            var overview:State = new State();
+            overview.name = "overview";
+            overview.overrides = [
+                makeVisible(overviewCanvas, true),
+                makeVisible(blackKnightImage, true),
+                makeVisible(blackKnightImageGlow, true),
+                makeVisible(overviewProgressContent, true),
+                makeVisible(archiveButton, true),
+                makeVisible(ranksProgressContent, false),
+                makeVisible(rankCanvas, false),
+                makeVisible(progressBarTooltipZone, false)
+            ];
+            overviewState = overview;
+            var ranks:State = new State();
+            ranks.name = "ranks";
+            ranks.overrides = [
+                makeVisible(overviewCanvas, false),
+                makeVisible(blackKnightImage, false),
+                makeVisible(blackKnightImageGlow, false),
+                makeVisible(overviewProgressContent, false),
+                makeVisible(archiveButton, false),
+                makeVisible(ranksProgressContent, true),
+                makeVisible(rankCanvas, true),
+                makeVisible(progressBarTooltipZone, true)
+            ];
+            ranksState = ranks;
+            states = [overview, ranks];
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            if (!cLocaManager.GetInstance().IsInitialized()) return;
+            var text:*;
+            text = cLocaManager.GetInstance().getLabel("pvpOverview");
+            overviewProgressTitle.text = ((text == undefined) ? null : String(text));
+            text = cLocaManager.GetInstance().getLabel("expeditionUnlocks");
+            unlocksListLabel.text = ((text == undefined) ? null : String(text));
+            text = ((cLocaManager.GetInstance().GetText(LOCA_GROUP.ACHIEVEMENT_LABELS, "PvP") + " ") + cLocaManager.GetInstance().getLabel("Achievements"));
+            achievementsButton.toolTip = ((text == undefined) ? null : String(text));
+            text = cLocaManager.GetInstance().GetText(LOCA_GROUP.BUILDINGS, "pvp_progression_building");
+            pvpBuildingButton.toolTip = ((text == undefined) ? null : String(text));
+        }
+
+        public function __progressBarTooltipZone_toolTipCreate(event:ToolTipEvent):void
+        {
+            progressBarTooltipZone_toolTipCreateHandler(event);
+        }
+
+        protected function progressBarTooltipZone_toolTipCreateHandler(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.PVP_XP, event);
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="leftColumn" width="150" top="91" left="0" bottom="40" backgroundAlpha="0">
+        <mx:Canvas id="leftColumnBackground" styleName="pvpTabBackground" top="0" bottom="0" right="0" left="30" backgroundAlpha="1" />
+        <mx:List id="tabContainer" left="0" right="5" top="124" bottom="0" backgroundAlpha="0" borderStyle="none" verticalAlign="middle" selectable="false" />
+    </mx:Canvas>
+    <mx:Canvas id="rightColumn" top="91" left="70" bottom="40" right="166" backgroundAlpha="0">
+        <mx:Canvas id="background" styleName="pvpRankBackground" left="25" right="25" top="0" bottom="0">
+            <mx:Canvas id="progressBackground" styleName="pvpRankLevelBoxBackground" height="50" left="15" right="15" top="15">
+                <mx:Canvas id="overviewProgressContent" left="0" top="0" right="75" bottom="0">
+                    <mx:VBox left="0" right="0" bottom="0" top="5" verticalGap="0" horizontalAlign="center">
+                        <gui:CustomLabel id="overviewProgressTitle" color="0" fontWeight="bold" />
+                    </mx:VBox>
+                </mx:Canvas>
+                <mx:Canvas id="ranksProgressContent" left="0" top="0" right="0" bottom="0">
+                    <gui:CustomLabel id="ranksPlayerLevelLabel" left="0" right="70" textAlign="center" />
+                    <gui:PvPProgressBar id="progressBar" top="14" bottom="10" left="30" right="30" />
+                </mx:Canvas>
+            </mx:Canvas>
+            <mx:Canvas id="rankCanvas" top="66" left="8" right="10" bottom="15">
+                <mx:TileList id="rankList" top="0" bottom="0" left="0" right="0" borderStyle="none" backgroundAlpha="0" useRollOver="false" columnWidth="85" rowHeight="94" horizontalScrollPolicy="off" verticalScrollPolicy="off" maxColumns="8" selectable="false" maxRows="4" />
+            </mx:Canvas>
+            <mx:Canvas id="overviewCanvas" top="0" right="0" left="0" bottom="0">
+                <gui:PvPTierSection id="pvpTier1" width="160" height="110" top="82" left="50" />
+                <gui:PvPTierSection id="pvpTier2" width="160" height="110" top="82" left="210" />
+                <gui:PvPTierSection id="pvpTier3" width="160" height="110" top="82" left="370" />
+                <gui:PvPTierSection id="pvpTier4" width="45" height="110" top="82" left="530" />
+                <gui:CustomLabel id="tier1StartLabel" height="15" text="0" top="127" left="45" color="0xFFFFFF" />
+                <gui:CustomLabel id="tier2StartLabel" height="15" text="10" top="127" left="203" color="0xFFFFFF" />
+                <gui:CustomLabel id="tier3StartLabel" height="15" text="20" top="127" left="362" color="0xFFFFFF" />
+                <gui:CustomLabel id="tier4StartLabel" height="15" text="30" top="127" left="521" color="0xFFFFFF" />
+                <gui:CustomLabel id="unlocksListLabel" width="350" height="20" color="0xFFFFFF" top="210" left="50" textAlign="left" />
+                <quest:QuestRewardList id="unlockList" width="178" height="100" horizontalScrollPolicy="off" top="230" left="50" />
+                <mx:Canvas id="achievementButtonCanvas" width="150" height="100" horizontalScrollPolicy="off" verticalScrollPolicy="off" top="350" left="50">
+                    <mx:VBox left="0" right="0" top="0" bottom="0" horizontalAlign="center" verticalGap="1">
+                        <gui:StandardButton id="achievementsButton" height="50" percentWidth="100" textAlign="center" />
+                    </mx:VBox>
+                </mx:Canvas>
+                <mx:Canvas id="pvpBuildingButtonCanvas" width="150" height="100" horizontalScrollPolicy="off" verticalScrollPolicy="off" top="350" left="225">
+                    <mx:VBox left="0" right="0" top="0" bottom="0" horizontalAlign="center" verticalGap="1">
+                        <gui:StandardButton id="pvpBuildingButton" height="50" percentWidth="100" textAlign="center" />
+                    </mx:VBox>
+                </mx:Canvas>
+            </mx:Canvas>
+        </mx:Canvas>
+    </mx:Canvas>
+    <mx:Canvas id="top" width="807" height="201" mouseEnabled="false" styleName="pvpRankTop" left="10" top="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" />
+    <mx:Image id="digit1" top="28" left="378" />
+    <mx:Image id="digit2" top="28" left="403" />
+    <mx:Canvas id="footer" height="60" styleName="questPanelFooterReward" left="28" right="190" bottom="0">
+        <gui:StandardButton id="okButton" width="140" height="28" horizontalCenter="0" bottom="11" />
+    </mx:Canvas>
+    <gui:TSOImage id="blackKnightImageGlow" width="529" height="520" mouseEnabled="false" right="0" bottom="30" />
+    <gui:TSOImage id="blackKnightImage" width="529" height="520" mouseEnabled="false" right="0" bottom="30" />
+    <gui:CloseButton id="closeButton" width="25" height="23" right="199" top="67" />
+    <gui:StandardButton id="archiveButton" width="30" height="30" left="640" top="217" />
+    <mx:Canvas id="progressBarTooltipZone" height="23" top="120" left="130" right="220" backgroundAlpha="0" />
+</mx:Canvas>

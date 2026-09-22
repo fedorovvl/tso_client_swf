@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" height="35">
+    <mx:Script><![CDATA[
+        import mx.containers.HBox;
+        import mx.controls.Image;
+        import mx.containers.Canvas;
+        import mx.controls.Label;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import mx.events.FlexEvent;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+        import mx.events.PropertyChangeEvent;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        private var _buffed:int = 0;
+
+        private var _missing:Boolean = false;
+
+        public function onEpicWorkyardResourceItemRenderer_HBox1_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        private function DisplayData(argument1:Event):void
+        {
+            if ((((!(data)) || (!(this.resourceIcon))) || (!(this.amountLabel))))
+            {
+                return;
+            };
+            this.removeEventListener(FlexEvent.CREATION_COMPLETE, this.DisplayData);
+            this.resourceIcon.source = gAssetManager.GetResourceIcon(data.name_string);
+            this.amountLabel.text = cLocaManager.GetInstance().FormatNumber(data.amount);
+            toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, data.name_string);
+            this.resourceIcon.x = (this.resourceIcon.y = 0);
+            switch (this._buffed)
+            {
+                case ResourceIconRenderer.BUFFED_POSITIVE:
+                this.background.source = gAssetManager.GetBitmap("OutputBuffedBackground");
+                this.foreground.source = gAssetManager.GetBitmap("OutputBuffedForeground");
+                this.resourceIcon.x = 5;
+                this.resourceIcon.y = 6;
+                break;
+                case ResourceIconRenderer.BUFFED_NEGATIVE:
+                this.background.source = gAssetManager.GetBitmap("InputMissingBackground");
+                this.foreground.source = gAssetManager.GetBitmap("OutputBuffedForeground");
+                break;
+                case ResourceIconRenderer.BUFFED_NONE:
+                this.background.source = null;
+                this.foreground.source = null;
+                break;
+            };
+            if (this._missing)
+            {
+                this.background.source = gAssetManager.GetBitmap("InputMissingBackground");
+                this.foreground.source = gAssetManager.GetBitmap("InputMissingForeground");
+            };
+        }
+
+        public function set missing(argument1:Boolean):void
+        {
+            if (this._missing == argument1)
+            {
+                return;
+            };
+            this._missing = argument1;
+            this.DisplayData(null);
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            if (((this.resourceIcon) && (this.amountLabel)))
+            {
+                this.DisplayData(null);
+            }
+            else
+            {
+                this.addEventListener(FlexEvent.CREATION_COMPLETE, this.DisplayData);
+            };
+            refreshRendererPresentation();
+        }
+
+        public function setBuffed(argument1:int):void
+        {
+            if (this._buffed == argument1)
+            {
+                return;
+            };
+            this._buffed = argument1;
+            this.DisplayData(null);
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("paddingLeft", 0);
+            this.setStyle("paddingTop", 0);
+            this.setStyle("paddingBottom", 0);
+            this.setStyle("horizontalGap", 0);
+            this.setStyle("verticalAlign", "middle");
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.height = 35;
+            this.addEventListener("toolTipCreate", this.onEpicWorkyardResourceItemRenderer_HBox1_toolTipCreate);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="viewCanvas1">
+        <mx:Image id="background" />
+        <mx:Image id="resourceIcon"  verticalAlign="middle" />
+        <mx:Image id="foreground" />
+    </mx:Canvas>
+    <mx:Label id="amountLabel"  fontWeight="bold" color="0xFFFFFF" verticalCenter="middle" />
+</mx:HBox>

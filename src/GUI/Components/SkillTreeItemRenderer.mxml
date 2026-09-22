@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="75" height="35">
+    <mx:Script><![CDATA[
+        import flash.display.Bitmap;
+        import flash.display.BitmapData;
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import flash.filters.ColorMatrixFilter;
+        import flash.geom.Point;
+        import flash.geom.Rectangle;
+        import flash.utils.Dictionary;
+        import mx.events.FlexEvent;
+        import mx.events.ToolTipEvent;
+        import Skill.cSkill;
+        import Skill.SkillDefinition;
+        import GUI.coloringFilter;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Decorator.GUIDecorator;
+        import Sound.cSoundManager;
+
+        import mx.events.PropertyChangeEvent;
+
+        private var dotContainer:Bitmap;
+        private var _maxLvl:int;
+        private var dot:Bitmap;
+        private var _availablePoints:Dictionary;
+        private var _skill:cSkill;
+        private var dotRect:Rectangle;
+        private var _definition:SkillDefinition;
+
+        protected function creationCompleteHandler(event:FlexEvent):void
+        {
+            var tint:ColorMatrixFilter = coloringFilter(_definition.conceringColor);
+            imgIcon.source = gAssetManager.GetBitmap(_definition.icon_string);
+            dot = gAssetManager.GetBitmap("greyDot");
+            dotRect = new Rectangle(0, 0, dot.width, dot.height);
+            var dotsBitmap:BitmapData = new BitmapData(dots.width, dots.height);
+            dotContainer = new Bitmap(dotsBitmap);
+            dots.rawChildren.addChild(dotContainer);
+            btnAddPoint.filters = [tint];
+            imgUnavailable.filters = [tint];
+            imgFull.filters = [tint];
+            dots.filters = [tint];
+            updateView();
+        }
+
+        public function updateView():void
+        {
+            var level:int;
+            var dotPosition:Point;
+            var dotIndex:int;
+            if (dotContainer == null)
+            {
+                return;
+            };
+            level = skill.getLevel();
+            toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, skill.getName());
+            lblPoints.text = ((level + "/") + _maxLvl);
+            if (skill.isLocked())
+            {
+                alpha = 0.5;
+            }
+            else
+            {
+                alpha = 1;
+            };
+            var unapplied:int = skill.getUnappliedPoints();
+            if (unapplied > 0)
+            {
+                dotPosition = new Point(0, (dots.height - 2));
+                dotIndex = 0;
+                while (dotIndex < unapplied)
+                {
+                    dotPosition.y = (dotPosition.y - dotRect.height);
+                    dotContainer.bitmapData.copyPixels(dot.bitmapData, dotRect, dotPosition);
+                    dotIndex++;
+                };
+            }
+            else
+            {
+                dotContainer.bitmapData.fillRect(dotContainer.getRect(dots), 0);
+            };
+            imgFull.visible = (level == _maxLvl);
+            imgUnavailable.visible = skill.isLocked();
+            if (skill.getSkillTree().isPointApplyable(1))
+            {
+                btnAddPoint.enabled = (_availablePoints[_definition.concerningResource_string].amount > 0);
+                btnAddPoint.alpha = 1;
+            }
+            else
+            {
+                if (level > 0)
+                {
+                    btnAddPoint.enabled = false;
+                    btnAddPoint.alpha = 0.5;
+                }
+                else
+                {
+                    imgUnavailable.visible = true;
+                    alpha = 0.5;
+                };
+            };
+            btnAddPoint.visible = ((!(imgUnavailable.visible)) && (!(imgFull.visible)));
+            updateLabelColor();
+        }
+
+        public function setSkill(arg1:cSkill, arg2:Dictionary):void
+        {
+            skill = arg1;
+            _definition = arg1.getDefinition();
+            _availablePoints = arg2;
+            _maxLvl = arg1.getMaxLevel();
+            id = arg1.getName();
+            GUIDecorator.setToolTipDelays(this, 0, Infinity);
+        }
+
+        public function get skill():cSkill
+        {
+            return (_skill);
+        }
+
+        public function set skill(value:cSkill):void
+        {
+            var oldValue:Object = _skill;
+            if (oldValue !== value)
+            {
+                _skill = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "skill", oldValue, value));
+            };
+        }
+
+        protected function clickHandler(event:MouseEvent):void
+        {
+            cSoundManager.getInstance().playEffect(cSoundManager.BUTTON_CLICK);
+            if (_availablePoints[_definition.concerningResource_string].amount > 0)
+            {
+                if (((skill.getSkillTree().isPointApplyable(1)) && (skill.addSkillPoint())))
+                {
+                    _availablePoints[_definition.concerningResource_string].amount--;
+                    dispatchEvent(new Event(Event.CHANGE));
+                };
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            updateLabelColor();
+            addEventListener("creationComplete", onCreationComplete);
+            addEventListener("toolTipCreate", onToolTipCreate);
+            imgUnavailable.addEventListener("show", updateLabelColor);
+            imgUnavailable.addEventListener("hide", updateLabelColor);
+            imgFull.addEventListener("show", updateLabelColor);
+            imgFull.addEventListener("hide", updateLabelColor);
+        }
+
+        private function updateLabelColor(event:Event = null):void
+        {
+            lblPoints.setStyle("color", (((imgUnavailable.visible) && (!(imgFull.visible))) ? 0xFFFFFF : 0));
+        }
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            creationCompleteHandler(event);
+        }
+
+        public function onToolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SKILL_string, event, {
+                "skill":skill,
+                "points":_availablePoints
+            });
+        }
+
+        public function onBtnAddPoint_click(event:MouseEvent):void
+        {
+            clickHandler(event);
+        }
+    ]]></mx:Script>
+
+    <mx:Button id="btnAddPoint" styleName="neutral" width="65" height="35" click="onBtnAddPoint_click(event)" />
+    <mx:Canvas id="imgUnavailable" width="65" height="35" />
+    <mx:Canvas id="imgFull" width="65" height="35" styleName="skillColorBG" />
+    <mx:Image id="imgIcon" x="5" y="5" mouseEnabled="false" />
+    <gui:CustomLabel id="lblPoints" x="34" y="8" mouseEnabled="false" mouseChildren="false"  fontWeight="bold" />
+    <mx:Canvas id="dots" x="65" width="10" height="35" />
+</mx:Canvas>

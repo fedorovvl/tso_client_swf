@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="275" height="168">
+    <mx:Script><![CDATA[
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+        import mx.events.ToolTipEvent;
+        import mx.events.FlexEvent;
+        import mx.core.UIComponent;
+        import mx.core.UIComponentDescriptor;
+        import mx.core.mx_internal;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            // Flex 4 puts this detached container's children in _documentDescriptor;
+            // the bundled Flex runtime reads childDescriptors instead.
+            var descriptor:UIComponentDescriptor = details.mx_internal::_documentDescriptor;
+            for each (var childDescriptor:UIComponentDescriptor in descriptor.properties.childDescriptors)
+            {
+                var child:UIComponent = details.createComponentFromDescriptor(childDescriptor, true) as UIComponent;
+                if (!child.initialized)
+                    child.initialize();
+            }
+            updateBottom();
+            globalFlash.staticEventDispatcher.addEventListener("propertyChange", updateBottom, false, 0, true);
+        }
+
+        override public function onBasicPanelCreationComplete(event:FlexEvent):void
+        {
+            super.onBasicPanelCreationComplete(event);
+            btnKnockDown.addEventListener("toolTipCreate", __btnKnockDown_toolTipCreate);
+            updateTexts();
+            cLocaManager.GetInstance().addEventListener("languageChanged", updateTexts, false, 0, true);
+        }
+
+        private function updateBottom(event:Event = null):void
+        {
+            setStyle("bottom", globalFlash.mainHudBottomPos);
+        }
+
+        private function updateTexts(event:Event = null):void
+        {
+            _MinimalInfoPanel_CustomLabel1.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "KnockDown");
+        }
+
+        public function __btnKnockDown_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <gui:BuildingWindowHeader id="buildingHeader" />
+            <mx:Canvas id="details" width="155" left="8" right="7" top="62" bottom="5">
+                <mx:Canvas id="subHeader" styleName="detailsSubHeader" percentWidth="100" height="18" top="0">
+                    <gui:CustomLabel id="_MinimalInfoPanel_CustomLabel1" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                </mx:Canvas>
+                <mx:Canvas id="detailsBox" styleName="detailsContentBox" left="1" right="1" top="18" bottom="0">
+                    <gui:StandardButton id="btnKnockDown" enabled="false" playSound="false"
+                        width="68" height="39" horizontalCenter="0" verticalCenter="0" icon="{gAssetManager.GetClass('ButtonIconBomb')}" />
+                </mx:Canvas>
+            </mx:Canvas>
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

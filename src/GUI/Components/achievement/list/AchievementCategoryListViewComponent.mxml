@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    horizontalScrollPolicy="off" verticalScrollPolicy="off" clipContent="true">
+    <mx:Script><![CDATA[
+        import mx.effects.Resize;
+        import GUI.Assets.gAssetManager;
+
+        public var detailsResize:Resize;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            detailsResize = new Resize();
+            detailsResize.duration = 300;
+            detailsResize.target = details;
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="details" clipContent="false" top="0" left="1" right="3" bottom="0" backgroundSize="100%" backgroundImage="{gAssetManager.GetClass('AchievementListBg')}">
+        <gui:GroupList id="list"  left="3" right="0" top="3" bottom="3" verticalGap="1" />
+    </mx:Canvas>
+</mx:Canvas>

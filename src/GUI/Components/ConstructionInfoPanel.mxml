@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="250" height="268">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(constructionBox);
+            btnInstant.width = 68;
+            btnInstant.height = 39;
+            btnKnockDown.enabled = false;
+            btnKnockDown.playSound = false;
+            btnKnockDown.width = 68;
+            btnKnockDown.height = 39;
+            refreshLabels();
+            updateBottom();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+            globalFlash.staticEventDispatcher.addEventListener("propertyChange", updateBottom, false, 0, true);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var knockDown:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "KnockDown");
+            headerLabel.text = ((knockDown == undefined) ? null : String(knockDown));
+        }
+
+        private function updateBottom(event:Event = null):void
+        {
+            setStyle("bottom", globalFlash.mainHudBottomPos);
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <gui:BuildingWindowHeader id="buildingHeader" />
+            <mx:Canvas id="constructionBox" width="155" left="8" right="7" top="62" bottom="5">
+                <mx:Canvas id="headerBox" styleName="detailsSubHeader" percentWidth="100" height="18">
+                    <gui:CustomLabel id="costsLabel" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                </mx:Canvas>
+                <mx:Canvas id="costsBox" styleName="detailsContentBox" height="80" left="1" right="1" top="18">
+
+                    <mx:HBox id="costsList" horizontalCenter="0" verticalCenter="0" horizontalGap="4" />
+                    <gui:CustomLabel id="timeLabel" fontWeight="normal" horizontalCenter="0" top="11" />
+                    <gui:StandardButton id="btnInstant" horizontalCenter="0" top="37" icon="{gAssetManager.GetClass('ButtonIconInstant')}" />
+                </mx:Canvas>
+                <mx:Canvas id="demolishHeaderBox" styleName="detailsSubHeader" percentWidth="100" height="18" top="100">
+                    <gui:CustomLabel id="headerLabel" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                </mx:Canvas>
+                <mx:Canvas id="demolishBox" styleName="detailsContentBox" left="1" right="1" top="118" bottom="0">
+                    <gui:StandardButton id="btnKnockDown" horizontalCenter="0" verticalCenter="0" icon="{gAssetManager.GetClass('ButtonIconBomb')}" />
+                </mx:Canvas>
+            </mx:Canvas>
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

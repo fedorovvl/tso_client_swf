@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    mouseEnabled="false" mouseChildren="false" minWidth="100" styleName="toolTip">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import Communication.VO.dAdventCalendarDoorVO;
+        import ServerState.dResource;
+        import GUI.Components.ItemRenderer.TradeResourceItemRenderer;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+
+        private var _door:dAdventCalendarDoorVO;
+        private var _rawKey:String;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this._door = (_arg_1 as dAdventCalendarDoorVO);
+        }
+
+        public function get text():String
+        {
+            return (this._rawKey);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this._rawKey = _arg_1;
+            if (!headline || !costsList)
+            {
+                return;
+            };
+            applyText();
+        }
+
+        private function applyText():void
+        {
+            var _local_2:dResource = new dResource();
+            this.headline.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, this._rawKey);
+            this.costsList.removeAllChildren();
+            _local_2.name_string = defines.HARD_CURRENCY_RESOURCE_NAME_string;
+            _local_2.amount = this._door.openGemCost;
+            var _local_3:TradeResourceItemRenderer = new TradeResourceItemRenderer();
+            var _local_4:dResource = global.ui.mCurrentPlayerZone.GetResources(global.ui.mCurrentPlayer).GetPlayerResource(_local_2.name_string);
+            _local_2.amount = Math.floor(_local_2.amount);
+            _local_3.enoughAmount = (_local_4.amount >= _local_2.amount);
+            _local_3.data = _local_2;
+            this.costsList.addChild(_local_3);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            if (this._rawKey != null && this._door != null)
+            {
+                applyText();
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("paddingLeft", 5);
+            this.setStyle("paddingRight", 5);
+            this.setStyle("paddingTop", 5);
+            this.setStyle("paddingBottom", 10);
+            if (this._rawKey != null && this._door != null)
+            {
+                applyText();
+            };
+            if (cLocaManager.GetInstance().IsInitialized())
+            {
+                refreshLabels();
+            };
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+    ]]></mx:Script>
+    <mx:Text id="headline" top="5" left="5" right="5" fontWeight="bold" color="0xFFFFFF" />
+    <mx:HBox id="costsList" height="25" left="5" right="5" />
+</mx:VBox>

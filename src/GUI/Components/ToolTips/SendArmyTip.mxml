@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    styleName="toolTip" mouseEnabled="false" mouseChildren="false">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.collections.ArrayCollection;
+        import mx.controls.TileList;
+        import mx.core.ClassFactory;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import ServerState.dResource;
+        import Specialists.cSpecialist;
+        import Specialists.cSpecialistTask;
+        import Enums.RESOURCE_GROUP;
+        import Enums.SPECIALIST_TASK_TYPES;
+        import MilitarySystem.cMilitaryUnitDescription;
+        import MilitarySystem.cSquad;
+        import GUI.Components.ItemRenderer.SkillIconRenderer;
+        import Skill.cSkill;
+
+        private var _specialist:cSpecialist;
+        private var _text:String;
+        private var _textChanged:Boolean;
+        private var _dataChanged:Boolean;
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this._text = _arg_1;
+            this._textChanged = true;
+            invalidateProperties();
+        }
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this._specialist = (_arg_1 as cSpecialist);
+            this._dataChanged = true;
+            invalidateProperties();
+        }
+
+        override protected function commitProperties():void
+        {
+            super.commitProperties();
+            if (this._textChanged)
+            {
+                this.headline.htmlText = this._specialist.getName(false);
+                this.description.text = this.CreateDescription();
+                this._textChanged = false;
+            };
+            if (((this._dataChanged) && (!(this.armyList == null))))
+            {
+                this.SetData();
+                this._dataChanged = false;
+            };
+        }
+
+        private function SetData(_arg_1:Event=null):void
+        {
+            var _local_2:dResource;
+            var _local_6:cMilitaryUnitDescription;
+            var _local_7:cSquad;
+            var _local_3:Array = [];
+            var _local_4:Boolean = this._specialist.GetArmy().HasEliteUnits();
+            var _local_5:cMilitaryUnitDescription = cMilitaryUnitDescription.GetUnitDescriptionForType(this._specialist.getMilitaryUnitType());
+            this.combatantTypeIcon.source = gAssetManager.GetBitmap((_local_5.GetCombatantType() + ".png"));
+            for each (_local_6 in cMilitaryUnitDescription.GetAllUnitDescriptions(true))
+            {
+                if (_local_4 == _local_6.GetIsElite())
+                {
+                    _local_2 = new dResource();
+                    _local_2.group_string = RESOURCE_GROUP.MILITARY;
+                    _local_2.name_string = _local_6.GetType();
+                    _local_2.amount = 0;
+                    _local_3.push(_local_2);
+                };
+            };
+            for each (_local_7 in this._specialist.GetArmy().GetSquads_vector())
+            {
+                for each (_local_2 in _local_3)
+                {
+                    if (_local_2.name_string == _local_7.GetType())
+                    {
+                        _local_2.amount = _local_7.GetAmount();
+                        break;
+                    };
+                };
+            };
+            this.armyList.dataProvider = _local_3;
+            this.CreateSkillList();
+        }
+
+        private function CreateDescription():String
+        {
+            var _local_1:* = "";
+            _local_1 = (_local_1 + (cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "CurrentMission") + " "));
+            var _local_2:cSpecialistTask = this._specialist.GetTask();
+            if (_local_2 != null)
+            {
+                _local_1 = (_local_1 + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, ("SpecialistTask" + SPECIALIST_TASK_TYPES.toString(_local_2.GetType()))));
+            }
+            else
+            {
+                _local_1 = (_local_1 + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "SpecialistTaskNone"));
+            };
+            if (((this._specialist.GetTask()) && (this._specialist.GetTask().GetRemainingTime() > -1)))
+            {
+                _local_1 = (_local_1 + ((("\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "TimeRemaining")) + " ") + cLocaManager.GetInstance().FormatDuration(this._specialist.GetTask().GetRemainingTime())));
+            };
+            return (_local_1);
+        }
+
+        private function CreateSkillList():void
+        {
+            var _local_2:cSkill;
+            var _local_1:ArrayCollection = new ArrayCollection();
+            if (this._specialist.getSkillTree().getItems_vector().length > 0)
+            {
+                for each (_local_2 in this._specialist.getSkillTree().getItems_vector())
+                {
+                    if (_local_2.getLevel() > 0)
+                    {
+                        _local_1.addItemAt(_local_2, 0);
+                    };
+                };
+                this.skillList.dataProvider = _local_1;
+                this.skillList.rowCount = Math.ceil((_local_1.length / this.skillList.columnCount));
+            };
+            this.skills.includeInLayout = (this.skills.visible = (_local_1.length > 0));
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var text:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "SpecialistSkills");
+            _SendArmyTip_Label1.text = ((text == undefined) ? null : String(text));
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            var armyFactory:ClassFactory = new ClassFactory(SendArmyTip_inlineComponent1);
+            armyFactory.properties = {"outerDocument":this};
+            armyList.itemRenderer = armyFactory;
+            skillList.itemRenderer = new ClassFactory(SkillIconRenderer);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+    ]]></mx:Script>
+    <mx:HBox id="headRow" left="5" top="5">
+        <gui:CustomLabel id="headline" minWidth="180"  horizontalCenter="0" color="0xFFFFFF" />
+        <gui:TSOImage id="combatantTypeIcon" />
+    </mx:HBox>
+    <gui:CustomText id="description"  color="0xFFFFFF" left="5" right="5" top="31" />
+    <mx:VBox id="listBox" top="68" bottom="5" left="5" right="5">
+        <mx:TileList id="armyList" columnCount="3" columnWidth="70"
+            rowHeight="40" width="210" height="120"  paddingTop="0" paddingBottom="0" paddingLeft="0" paddingRight="0" backgroundAlpha="0" borderThickness="0" />
+        <mx:VBox id="skills" visible="false" includeInLayout="false">
+            <mx:Label id="_SendArmyTip_Label1"  horizontalCenter="0" fontWeight="bold" color="0xFFFFFF" />
+            <gui:CustomTileList id="skillList" rowHeight="30" columnWidth="30" columnCount="7"  backgroundAlpha="0" borderThickness="0" />
+        </mx:VBox>
+    </mx:VBox>
+</mx:Canvas>

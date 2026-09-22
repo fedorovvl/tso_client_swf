@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import GUI.Components.CustomText;
+        import GUI.Components.TSOImage;
+        import mx.containers.HBox;
+        import mx.core.mx_internal;
+        import mx.events.PropertyChangeEvent;
+        import Enums.MILLITARY_UNIT_SKILLS;
+        import MilitarySystem.cMilitaryUnitSkill;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            var localValue2:String;
+            super.data = argument1;
+            localValue2 = MILLITARY_UNIT_SKILLS.toString((argument1.ability as cMilitaryUnitSkill).GetType());
+            var localValue3:* = ".png";
+            var localValue4:uint = 0xFFFFFF;
+            if (argument1.source == 1)
+            {
+                localValue3 = "_positive.png";
+                localValue4 = 8900346;
+            }
+            else
+            {
+                if (argument1.source == -1)
+                {
+                    localValue3 = "_negative.png";
+                    localValue4 = 16737637;
+                };
+            };
+            this.abilityIcon.source = gAssetManager.GetBitmap((localValue2.toLowerCase() + localValue3));
+            this.abilityLabel.text = cLocaManager.GetInstance().getLabel(("UnitSkill" + localValue2));
+            this.abilityLabel.setStyle("color", localValue4);
+            refreshRendererPresentation();
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.horizontalScrollPolicy = "off";
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:HBox id="viewHBox1" paddingLeft="10" paddingRight="10">
+        <ui:TSOImage id="abilityIcon" />
+        <ui:CustomText id="abilityLabel" selectable="false"  color="0xFFFFFF" />
+    </mx:HBox>
+</mx:Canvas>

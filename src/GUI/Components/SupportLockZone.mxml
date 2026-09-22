@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="220" height="120" styleName="supportTempKickZone">
+    <mx:Script><![CDATA[
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("bottom", 115);
+            this.setStyle("right", 0);
+            updateTitle();
+            cLocaManager.GetInstance().addEventListener("languageChanged", updateTitle, false, 0, true);
+        }
+
+        private function updateTitle(event:Event = null):void
+        {
+            titleLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "SupportTempLockZone");
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="titleBackground" styleName="economyTitleBg" height="20" top="6" left="7" right="7">
+        <gui:CustomLabel id="titleLabel"  top="1" horizontalCenter="0" textAlign="center" color="0" fontWeight="bold" />
+    </mx:Canvas>
+    <mx:TextArea id="message" height="82" width="206" wordWrap="true"
+        verticalScrollPolicy="off" horizontalScrollPolicy="off" editable="false"  top="32" color="0xFFFFFF" fontWeight="bold" backgroundAlpha="0" borderStyle="none" borderThickness="0" textAlign="center" />
+</mx:Canvas>

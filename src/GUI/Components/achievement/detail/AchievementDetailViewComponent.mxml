@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:detail="GUI.Components.achievement.detail.*"
+    width="540" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.effects.Fade;
+        import mx.effects.Resize;
+        import mx.effects.Sequence;
+        import mx.events.PropertyChangeEvent;
+        import mx.events.ResizeEvent;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import Achievements.AchievementConsts;
+        import GUI.achievement.view.detail.AchievementDetailView;
+
+        private const CANVAS_WIDTH:int = 525;
+        private const REWARD_CANVAS_CONTAINER_WIDTH:int = 530;
+        private const REWARD_LABEL_LEFT_OFFSET:int = 5;
+
+        private var _expand:Sequence;
+        private var _collapse:Sequence;
+        private var _expandFade:Fade;
+        private var _collapseFade:Fade;
+        private var _expandResize:Resize;
+        private var _collapseResize:Resize;
+
+        public function get expand():Sequence
+        {
+            return (_expand);
+        }
+
+        public function set expand(value:Sequence):void
+        {
+            _expand = value;
+        }
+
+        public function get collapse():Sequence
+        {
+            return (_collapse);
+        }
+
+        public function set collapse(value:Sequence):void
+        {
+            _collapse = value;
+        }
+
+        public function get expandFade():Fade
+        {
+            return (_expandFade);
+        }
+
+        public function set expandFade(value:Fade):void
+        {
+            _expandFade = value;
+        }
+
+        public function get collapseFade():Fade
+        {
+            return (_collapseFade);
+        }
+
+        public function set collapseFade(value:Fade):void
+        {
+            _collapseFade = value;
+        }
+
+        public function get expandResize():Resize
+        {
+            return (_expandResize);
+        }
+
+        public function set expandResize(value:Resize):void
+        {
+            _expandResize = value;
+        }
+
+        public function get collapseResize():Resize
+        {
+            return (_collapseResize);
+        }
+
+        public function set collapseResize(value:Resize):void
+        {
+            _collapseResize = value;
+        }
+
+        private function buildEffects():void
+        {
+            var fade1:Fade = new Fade();
+            fade1.alphaFrom = 0;
+            fade1.alphaTo = 1;
+            fade1.duration = 300;
+            fade1.target = triggerBox;
+            this.expandFade = fade1;
+            var resize1:Resize = new Resize();
+            resize1.duration = 300;
+            resize1.target = this;
+            this.expandResize = resize1;
+            var fade2:Fade = new Fade();
+            fade2.alphaFrom = 1;
+            fade2.alphaTo = 0;
+            fade2.duration = 300;
+            fade2.target = triggerBox;
+            this.collapseFade = fade2;
+            var resize2:Resize = new Resize();
+            resize2.duration = 300;
+            resize2.target = this;
+            this.collapseResize = resize2;
+            var seq1:Sequence = new Sequence();
+            seq1.children = [resize1, fade1];
+            this.expand = seq1;
+            var seq2:Sequence = new Sequence();
+            seq2.children = [fade2, resize2];
+            this.collapse = seq2;
+        }
+
+        private function syncIconLayout(event:ResizeEvent = null):void
+        {
+            bkCanvas.setStyle("left", iconBox.width);
+            var padLeft:Number = AchievementDetailView.ACHIEVEMENT_NAME_LABEL_PADDING + iconBox.width;
+            nameLabel.setStyle("left", padLeft);
+            descriptionLabel.setStyle("left", padLeft);
+            backgroundCanvas.width = CANVAS_WIDTH - (pointsCanvas.width / 2);
+            triggerContainer.width = CANVAS_WIDTH - (pointsCanvas.width / 2);
+            rewardContainer.width = REWARD_CANVAS_CONTAINER_WIDTH - (pointsCanvas.width / 2);
+        }
+
+        private function syncRewardTop(event:ResizeEvent = null):void
+        {
+            rewardContainer.setStyle("top", String((74 + AchievementDetailView.ACHIEVEMENT_REWARD_BOX_HEIGHT_NEGATIVE_OFFSET) + triggerContainer.height));
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var t:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.ACHIEVEMENT_LABELS, AchievementConsts.ACHIEVEMENT_REWARD_ID);
+            rewardLabel.text = ((t == undefined) ? null : String(t));
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            buildEffects();
+            backgroundCanvas.height = AchievementDetailView.ACHIEVEMENT_VIEW_BACKGROUND_HEIGHT - AchievementDetailView.ACHIEVEMENT_VIEW_BACKGROUND_TOP;
+            backgroundCanvas.setStyle("top", AchievementDetailView.ACHIEVEMENT_VIEW_BACKGROUND_TOP);
+            triggerBox.setStyle("verticalGap", AchievementDetailView.TRIGGER_BOX_VERTICAL_GAP);
+            bkCanvas.setStyle("backgroundImage", gAssetManager.GetClass(AchievementConsts.CURRENT_USER_ACHIEVEMENT_BACKGROUND));
+            iconBox.setStyle("backgroundImage", gAssetManager.GetClass(AchievementConsts.ACHIEVEMENT_ICON_BACKGROUND_NORMAL));
+            rewardContainer.setStyle("backgroundImage", gAssetManager.GetClass(AchievementConsts.ACHIEVEMENT_REWARD_BACKGROUND));
+            rewardContainer.height = AchievementDetailView.ACHIEVEMENT_REWARD_BOX_HEIGHT;
+            syncIconLayout();
+            syncRewardTop();
+            iconBox.addEventListener(ResizeEvent.RESIZE, syncIconLayout, false, 0, true);
+            pointsCanvas.addEventListener(ResizeEvent.RESIZE, syncIconLayout, false, 0, true);
+            triggerContainer.addEventListener(ResizeEvent.RESIZE, syncRewardTop, false, 0, true);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="backgroundCanvas" verticalScrollPolicy="off" horizontalScrollPolicy="off" left="15">
+        <mx:Canvas id="bkCanvas" percentHeight="100" right="0" backgroundSize="100%" />
+        <detail:AchievementIconViewComponent id="iconBox" left="0" top="0" />
+        <mx:Text id="nameLabel" selectable="false" textAlign="left" top="7" fontWeight="bold" fontSize="12" />
+        <mx:Text id="descriptionLabel" selectable="false" textAlign="left" top="23" fontWeight="normal" fontSize="12" />
+        <mx:Canvas id="fbPostButton" width="27" height="21" visible="false" textAlign="center" right="35" bottom="15" backgroundImage="{gAssetManager.GetClass('IconMailTypeFriend')}" />
+    </mx:Canvas>
+    <mx:Canvas id="pointsCanvas" width="60" height="64" backgroundImage="{gAssetManager.GetClass('AchievementCategoryRing')}"
+        verticalScrollPolicy="off" horizontalScrollPolicy="off" clipContent="false" right="0" top="11">
+        <mx:Label id="pointsLabel" verticalCenter="3" horizontalCenter="-1" textAlign="center" fontWeight="bold" fontSize="20" />
+    </mx:Canvas>
+    <mx:Canvas id="triggerContainer" horizontalScrollPolicy="off" verticalScrollPolicy="off" top="74" left="15" backgroundSize="100%" backgroundImage="{gAssetManager.GetClass('QuestItemBg')}">
+        <mx:VBox id="triggerBox" left="5" top="5" right="5" bottom="5" />
+    </mx:Canvas>
+        <mx:Canvas id="rewardContainer" horizontalCenter="-7" backgroundSize="100%">
+        <mx:Canvas id="rewardShell" height="27" horizontalScrollPolicy="off" top="8" left="75" right="75" backgroundAlpha="0">
+            <mx:HBox id="rewardRow" verticalCenter="0" horizontalGap="2" horizontalCenter="0">
+                <mx:Label id="rewardLabel" fontSize="12" color="0xFFFFFF" fontWeight="bold" />
+                <mx:HBox id="rewardBox" horizontalGap="2" />
+            </mx:HBox>
+        </mx:Canvas>
+    </mx:Canvas>
+</mx:Canvas>

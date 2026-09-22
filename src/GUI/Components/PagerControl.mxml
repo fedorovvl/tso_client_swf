@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import mx.collections.ArrayCollection;
+        import mx.core.ClassFactory;
+        import mx.events.CollectionEvent;
+        import mx.events.FlexEvent;
+        import mx.events.ListEvent;
+        import mx.events.ToolTipEvent;
+        import com.bluebyte.tso.ui.util.ListPager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Components.PagerControl_inlineComponent1;
+
+        private var _pager:ListPager;
+
+        public function set pager(value:ListPager):void
+        {
+            if (value)
+            {
+                value.removeEventListener(CollectionEvent.COLLECTION_CHANGE, pagerChangedHandler);
+            };
+            _pager = value;
+            if (_pager)
+            {
+                _pager.addEventListener(CollectionEvent.COLLECTION_CHANGE, pagerChangedHandler);
+            };
+        }
+
+        public function get pager():ListPager
+        {
+            return (_pager);
+        }
+
+        private function handleClickPrev():void
+        {
+            if (pager)
+            {
+                pager.previous();
+            };
+        }
+
+        private function handleClickNext():void
+        {
+            if (pager)
+            {
+                pager.next();
+            };
+        }
+
+        private function handleClickFirst():void
+        {
+            if (pager)
+            {
+                pager.page = 0;
+            };
+        }
+
+        private function handleClickLast():void
+        {
+            if (pager)
+            {
+                pager.page = (pager.numPages - 1);
+            };
+        }
+
+        private function pagerChangedHandler(event:CollectionEvent):void
+        {
+            var lastPage:int;
+            var middle:int;
+            var current:int = (pager.numPages - 1);
+            first.enabled = (previous.enabled = (pager.page > 0));
+            last.enabled = (next.enabled = (pager.page < current));
+            var items:Array = new Array();
+            items.push(genLabelItem(0));
+            if ((current - 1) <= 3)
+            {
+                middle = 1;
+                while (middle < current)
+                {
+                    items.push(genLabelItem(middle));
+                    middle++;
+                };
+            }
+            else
+            {
+                lastPage = Math.min((current - 3), Math.max(1, (pager.page - 1)));
+                if (lastPage > 1)
+                {
+                    items.push(genLabelItem(-1));
+                };
+                items.push(genLabelItem(lastPage++));
+                if (lastPage < current)
+                {
+                    items.push(genLabelItem(lastPage++));
+                };
+                if (lastPage < current)
+                {
+                    items.push(genLabelItem(lastPage++));
+                };
+                if (lastPage < current)
+                {
+                    items.push(genLabelItem(-1));
+                };
+            };
+            items.push(genLabelItem(current));
+            labels.dataProvider = items;
+        }
+
+        private function genLabelItem(page:int):Object
+        {
+            if (page == -1)
+            {
+                return ({
+                    "label":"…",
+                    "page":-1,
+                    "selected":false
+                });
+            };
+            return ({
+                "label":(page + 1).toString(),
+                "page":page,
+                "selected":(pager.page == page)
+            });
+        }
+
+        private function labelClickedHandler(event:ListEvent):void
+        {
+            event.stopImmediatePropagation();
+            pager.page = event.columnIndex;
+        }
+
+        private function completeHandler(event:FlexEvent):void
+        {
+            labels.addEventListener("labelClicked", labelClickedHandler);
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("horizontalGap", 0);
+            var labelsFactory:ClassFactory = new ClassFactory(PagerControl_inlineComponent1);
+            labelsFactory.properties = {"outerDocument":this};
+            labels.itemRenderer = labelsFactory;
+            refreshTips();
+            first.addEventListener("toolTipCreate", onFirst_toolTipCreate);
+            previous.addEventListener("toolTipCreate", onPrevious_toolTipCreate);
+            next.addEventListener("toolTipCreate", onNext_toolTipCreate);
+            last.addEventListener("toolTipCreate", onLast_toolTipCreate);
+            addEventListener("creationComplete", onCreationComplete);
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshTips, false, 0, true);
+        }
+
+        private function refreshTips(event:Event = null):void
+        {
+            var tip:*;
+            tip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "FirstPage");
+            first.toolTip = ((tip == undefined) ? null : String(tip));
+            tip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Previous");
+            previous.toolTip = ((tip == undefined) ? null : String(tip));
+            tip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Next");
+            next.toolTip = ((tip == undefined) ? null : String(tip));
+            tip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "LastPage");
+            last.toolTip = ((tip == undefined) ? null : String(tip));
+        }
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            completeHandler(event);
+        }
+
+        public function onFirst_click(event:MouseEvent):void
+        {
+            handleClickFirst();
+        }
+
+        public function onPrevious_click(event:MouseEvent):void
+        {
+            handleClickPrev();
+        }
+
+        public function onNext_click(event:MouseEvent):void
+        {
+            handleClickNext();
+        }
+
+        public function onLast_click(event:MouseEvent):void
+        {
+            handleClickLast();
+        }
+
+        public function onFirst_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function onPrevious_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function onNext_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function onLast_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+
+    <gui:StandardButton id="first" width="35" height="28" click="onFirst_click(event)" icon="{gAssetManager.GetClass('ArrowLeftScroll')}" />
+    <gui:StandardButton id="previous" width="35" height="28" click="onPrevious_click(event)" icon="{gAssetManager.GetClass('ArrowLeft')}" />
+    <renderer:RendererPoolBox id="labels" percentHeight="100" percentWidth="100" direction="horizontal"  horizontalAlign="center" horizontalGap="0" paddingLeft="2" paddingRight="2" verticalAlign="middle" />
+    <gui:StandardButton id="next" width="35" height="28" click="onNext_click(event)" icon="{gAssetManager.GetClass('ArrowRight')}" />
+    <gui:StandardButton id="last" width="35" height="28" click="onLast_click(event)" icon="{gAssetManager.GetClass('ArrowRightScroll')}" />
+</mx:HBox>

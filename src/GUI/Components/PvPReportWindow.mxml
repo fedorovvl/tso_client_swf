@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="670" height="585">
+    <mx:Script><![CDATA[
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+        import GUI.Components.ItemRenderer.Combat3ArmyToolTipRendererNoClassIcon;
+        import GUI.Loca.cLocaManager;
+        import mx.core.ClassFactory;
+        import mx.events.EffectEvent;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            unitsLostList.itemRenderer = new ClassFactory(Combat3ArmyToolTipRendererNoClassIcon);
+            campUnitList.itemRenderer = new ClassFactory(Combat3ArmyToolTipRendererNoClassIcon);
+            fadeOut.addEventListener("effectEnd", __fadeOut_effectEnd);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var attackStatistics:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "AttackStatistics");
+            _PvPReportWindow_CustomLabel1.text = ((attackStatistics == undefined) ? null : String(attackStatistics));
+            var attackOverview:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "AttackOverview");
+            _PvPReportWindow_CustomLabel8.text = ((attackOverview == undefined) ? null : String(attackOverview));
+            var selectedCampContent:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "SelectedCampContent");
+            _PvPReportWindow_CustomLabel9.text = ((selectedCampContent == undefined) ? null : String(selectedCampContent));
+        }
+
+        public function __fadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <mx:Canvas id="content" left="0" right="0" top="100" bottom="0"
+        horizontalScrollPolicy="off" verticalScrollPolicy="off" styleName="specialPanel">
+        <mx:Canvas id="leftPaneHeader" left="33" top="40" width="169" height="30" styleName="detailsHeaderSolid">
+            <gui:CustomLabel id="_PvPReportWindow_CustomLabel1" top="3" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+        </mx:Canvas>
+        <mx:Canvas id="leftPaneContent" left="40" top="62" bottom="64" width="155"
+            styleName="pvpSummaryContent" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+            <mx:TileList id="unitsLostList" top="90" bottom="0" left="22" right="4"
+                backgroundAlpha="0" paddingTop="0" paddingBottom="0" paddingLeft="0" paddingRight="0" borderStyle="none"
+                maxColumns="2" rowHeight="77" selectable="false" verticalScrollPolicy="auto" horizontalScrollPolicy="off" />
+            <mx:Canvas id="_PvPReportWindow_Canvas1" top="0" width="155" height="74"
+                styleName="pvpSummaryTop" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+                <mx:VBox top="5" left="2" right="2" height="74">
+                    <mx:HBox>
+                        <gui:CustomLabel id="numAttacksLabel" fontSize="10" color="0xFFFFFF" text="Number Of Attacks :" />
+                        <gui:CustomLabel id="numAttacksAmount" fontSize="10" color="0xFFFFFF" />
+                    </mx:HBox>
+                    <mx:HBox>
+                        <gui:CustomLabel id="lostAttacksLabel" fontSize="10" color="0xFFFFFF" text="Attacks Lost :" />
+                        <gui:CustomLabel id="lostAttacksAmount" fontSize="10" color="0xFFFFFF" />
+                    </mx:HBox>
+                    <mx:HBox>
+                        <gui:CustomLabel id="totalUnitLossesLabel" fontSize="10" color="0xFFFFFF" text="Total Unit Losses :" />
+                        <gui:CustomLabel id="totalUnitLossesAmount" fontSize="10" color="0xFFFFFF" />
+                    </mx:HBox>
+                </mx:VBox>
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas id="_PvPReportWindow_Canvas2" left="40" bottom="58" width="155" height="8" styleName="pvpSummaryBottom" />
+        <mx:Canvas id="rightPaneHeader" top="40" right="28" bottom="64" width="438" styleName="subpanelbare">
+            <gui:CustomLabel id="_PvPReportWindow_CustomLabel8" top="3" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+            <gui:TSOImage id="mapBackGround" top="25" left="8" right="0" width="424" height="251" />
+            <gui:TSOImage id="miniMapImage" top="25" left="8" right="0" width="424" height="251" />
+            <gui:TSOImage id="mapOverLayImage" top="25" left="8" right="0" width="424" height="251" />
+            <gui:GridPlotter id="attackPlotter" top="25" left="8" width="424" height="251" />
+            <mx:Canvas id="campContentsHeader" left="6" right="6" top="276" height="18"
+                backgroundColor="7035714" styleName="detailsSubHeaderLight">
+                <gui:CustomLabel id="_PvPReportWindow_CustomLabel9" top="1" left="0" right="0" textAlign="center" color="0xFFFFFF" />
+            </mx:Canvas>
+            <mx:Canvas id="campContentsCanvas" left="0" right="0" top="293" bottom="0" horizontalCenter="0"
+                horizontalScrollPolicy="off" verticalScrollPolicy="off">
+                <gui:AlignedHorizontalList id="campUnitList" top="4" horizontalCenter="0" rowHeight="77" selectable="false"
+                    backgroundAlpha="0" paddingTop="0" paddingBottom="0" paddingLeft="0" paddingRight="0" borderStyle="none" />
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas id="_PvPReportWindow_Canvas3" right="31" bottom="40" width="432" height="27" styleName="pvpCampBottom" />
+        <mx:Canvas id="_PvPReportWindow_Canvas4" left="20" right="18" bottom="25" height="1" backgroundColor="13142338" backgroundAlpha="1" />
+        <gui:CloseButton id="btnClose" top="5" right="15" />
+    </mx:Canvas>
+    <mx:Image id="pvpHeader" top="0" horizontalCenter="0" width="293" height="132" />
+</mx:Canvas>

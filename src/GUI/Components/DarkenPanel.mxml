@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml">
+    <mx:Script><![CDATA[
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundColor", 0);
+            this.setStyle("backgroundAlpha", 0.7);
+            this.setStyle("left", 0);
+            this.setStyle("right", 0);
+            this.setStyle("top", 0);
+            this.setStyle("bottom", 0);
+        }
+    ]]></mx:Script>
+</mx:Canvas>

@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.collections.ArrayCollection;
+        import mx.core.ClassFactory;
+        import __AS3__.vec.Vector;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import Specialists.cSpecialist;
+        import Specialists.cSpecialistDescription;
+        import MilitarySystem.cSquad;
+        import MilitarySystem.cMilitaryUnitSkill;
+        import Enums.MILLITARY_UNIT_SKILLS;
+        import MilitarySystem.cMilitaryUnitDescription;
+        import Utils.HashMapWrapper;
+        import Modifier.ModifierVO;
+        import Skill.cSkill;
+        import Enums.SPECIALIST_TASK_TYPES;
+        import Utils.StringUtils;
+        import Modifier.Modifiers.Common.GeneralRecoverySpeed;
+        import Modifier.Modifiers.Combat.CombatRoundDuration;
+        import global;
+        import GUI.Components.ItemRenderer.UnitAttributeRenderer;
+        import GUI.Components.ItemRenderer.UnitAbilityRenderer;
+        import GUI.Components.ItemRenderer.SkillListRenderer;
+
+        private var unitDescription:cMilitaryUnitDescription;
+        private var unitType:String;
+
+        private function CreateAbilityObjects(squad:cSquad):ArrayCollection
+        {
+            var squadSkill:cMilitaryUnitSkill;
+            var unitSkill:cMilitaryUnitSkill;
+            var ability:Object;
+            var existing:Object;
+            var abilities:HashMapWrapper = new HashMapWrapper();
+            for each (squadSkill in squad.GetSkills(true))
+            {
+                if ((((!(squadSkill.GetType() == MILLITARY_UNIT_SKILLS.FIRST_STRIKE)) && (!(squadSkill.GetType() == MILLITARY_UNIT_SKILLS.LAST_STRIKE))) && (!(squadSkill.GetType() == MILLITARY_UNIT_SKILLS.IS_SPECIALIST))))
+                {
+                    ability = {};
+                    ability.ability = squadSkill;
+                    ability.source = 1;
+                    abilities.putItem(squadSkill.GetType(), ability);
+                };
+            };
+            for each (unitSkill in unitDescription.GetSkills())
+            {
+                if ((((!(unitSkill.GetType() == MILLITARY_UNIT_SKILLS.FIRST_STRIKE)) && (!(unitSkill.GetType() == MILLITARY_UNIT_SKILLS.LAST_STRIKE))) && (!(unitSkill.GetType() == MILLITARY_UNIT_SKILLS.IS_SPECIALIST))))
+                {
+                    if (abilities.hasKey(unitSkill.GetType()))
+                    {
+                        abilities.getItem(unitSkill.GetType()).source = 0;
+                    }
+                    else
+                    {
+                        existing = {};
+                        existing.ability = squadSkill;
+                        existing.source = -1;
+                        abilities.putItem(unitSkill.GetType(), existing);
+                    };
+                };
+            };
+            return (new ArrayCollection(abilities.valueSet()));
+        }
+
+        private function addDurationModifiersFromSkills(taskType:int, duration:Number, skills:Vector.<cSkill>):Number
+        {
+            var skill:cSkill;
+            var modifier:ModifierVO;
+            var taskName:String = SPECIALIST_TASK_TYPES.toString(taskType);
+            for each (skill in skills)
+            {
+                if (skill.getLevel() != 0)
+                {
+                    for each (modifier in skill.getDefinition().level_vector[(skill.getLevel() - 1)])
+                    {
+                        if ((((modifier.type_string == taskName) || ((taskType == SPECIALIST_TASK_TYPES.RECOVER) && (StringUtils.equalsIgnoreCase(modifier.modifier_string, GeneralRecoverySpeed.xml_string)))) || ((taskType == SPECIALIST_TASK_TYPES.ATTACK_BUILDING) && (StringUtils.equalsIgnoreCase(modifier.modifier_string, CombatRoundDuration.xml_string)))))
+                        {
+                            if (modifier.value != 0)
+                            {
+                                duration = modifier.value;
+                            };
+                            duration = ((duration * modifier.multiplier) + modifier.adder);
+                        };
+                    };
+                };
+            };
+            return (duration);
+        }
+
+        private function createAttributeObject(name:String, value:int, base:int, additional:int = -1, additionalBase:int = -1):Object
+        {
+            var attribute:Object = {};
+            attribute.name = name;
+            attribute.value = value;
+            attribute.baseValue = base;
+            attribute.additionalValue = additional;
+            attribute.additionalBaseValue = additionalBase;
+            return (attribute);
+        }
+
+        private function GetInitiativeFromAbilities(skills:Vector.<cMilitaryUnitSkill>):int
+        {
+            var skill:cMilitaryUnitSkill;
+            for each (skill in skills)
+            {
+                if (skill.GetType() == MILLITARY_UNIT_SKILLS.FIRST_STRIKE)
+                {
+                    return (3);
+                };
+                if (skill.GetType() == MILLITARY_UNIT_SKILLS.LAST_STRIKE)
+                {
+                    return (1);
+                };
+            };
+            return (2);
+        }
+
+        private function calculateTaskDuration(specialist:cSpecialist, taskType:int, modified:Boolean):Number
+        {
+            var duration:Number = global.specialistTaskDefinitions_vector[taskType].subtasks_vector[0].duration;
+            if (((taskType == SPECIALIST_TASK_TYPES.TRAVEL_TO_ZONE) && (specialist.GetSpecialistDescription().GetTimeOverwriteTravelToZone() > 0)))
+            {
+                duration = specialist.GetSpecialistDescription().GetTimeOverwriteTravelToZone();
+            }
+            else
+            {
+                if (((taskType == SPECIALIST_TASK_TYPES.RECOVER) && (specialist.GetSpecialistDescription().GetTimeOverwriteRecover() > 0)))
+                {
+                    duration = specialist.GetSpecialistDescription().GetTimeOverwriteRecover();
+                }
+                else
+                {
+                    if (taskType == SPECIALIST_TASK_TYPES.ATTACK_BUILDING)
+                    {
+                        duration = global.combatRoundDuration;
+                    };
+                };
+            };
+            if (modified)
+            {
+                duration = addDurationModifiersFromSkills(taskType, duration, specialist.skills.getItems_vector());
+                duration = addDurationModifiersFromSkills(taskType, duration, specialist.getSkillTree().getItems_vector());
+            };
+            return ((duration / specialist.GetSpecialistDescription().GetTimeBonus()) * 100);
+        }
+
+        public function setData(specialist:cSpecialist):void
+        {
+            var description:cSpecialistDescription = specialist.GetSpecialistDescription();
+            unitDescription = cMilitaryUnitDescription.GetUnitDescriptionForType(specialist.getMilitaryUnitType());
+            unitType = unitDescription.GetType();
+            var squad:cSquad = ((specialist != null) ? specialist.GetArmy().GetSquad(unitType) : null);
+            if (squad == null)
+            {
+                squad = new cSquad(unitType, 0, unitDescription.GetHitPoints(), false);
+                if (specialist != null)
+                {
+                    squad.AddApplicableCombatModifiers(specialist.GetAllActiveModifiers());
+                };
+            };
+            var attributes:ArrayCollection = new ArrayCollection();
+            if (description.isTransportGeneral())
+            {
+                attributes.addItem(createAttributeObject("travelspeed", calculateTaskDuration(specialist, SPECIALIST_TASK_TYPES.TRAVEL_TO_ZONE, true), calculateTaskDuration(specialist, SPECIALIST_TASK_TYPES.TRAVEL_TO_ZONE, false)));
+                attributes.addItem(createAttributeObject("unitcapacity", specialist.GetMaxMilitaryUnits(), description.GetMaxUnits()));
+            }
+            else
+            {
+                attributes.addItem(createAttributeObject("hitpoints", squad.GetCurrentHitPoints(), unitDescription.GetHitPoints()));
+                attributes.addItem(createAttributeObject("accuracy", squad.GetHitPercentage(global.ui), unitDescription.GetHitPercentage()));
+                attributes.addItem(createAttributeObject("travelspeed", calculateTaskDuration(specialist, SPECIALIST_TASK_TYPES.TRAVEL_TO_ZONE, true), calculateTaskDuration(specialist, SPECIALIST_TASK_TYPES.TRAVEL_TO_ZONE, false)));
+                attributes.addItem(createAttributeObject("unitcapacity", specialist.GetMaxMilitaryUnits(), description.GetMaxUnits()));
+                attributes.addItem(createAttributeObject("damage", squad.GetMissDamage(global.ui), unitDescription.GetMissDamage(), squad.GetHitDamage(global.ui), unitDescription.GetHitDamage()));
+                attributes.addItem(createAttributeObject("initiative", GetInitiativeFromAbilities(squad.GetSkills()), GetInitiativeFromAbilities(unitDescription.GetSkills())));
+                attributes.addItem(createAttributeObject("recoveryspeed", calculateTaskDuration(specialist, SPECIALIST_TASK_TYPES.RECOVER, true), calculateTaskDuration(specialist, SPECIALIST_TASK_TYPES.RECOVER, false)));
+                attributes.addItem(createAttributeObject("combatspeed", calculateTaskDuration(specialist, SPECIALIST_TASK_TYPES.ATTACK_BUILDING, true), calculateTaskDuration(specialist, SPECIALIST_TASK_TYPES.ATTACK_BUILDING, false)));
+            };
+            attributeList.dataProvider = attributes;
+            attributeList.rowCount = Math.ceil((attributes.length / attributeList.columnCount));
+            var abilities:ArrayCollection = CreateAbilityObjects(squad);
+            abilitiesList.dataProvider = abilities;
+            abilitiesList.rowCount = Math.ceil((abilities.length / abilitiesList.columnCount));
+            abilitiesList.visible = (abilitiesList.includeInLayout = (abilities.length > 0));
+            abilitiesLabel.visible = (abilitiesLabel.includeInLayout = abilitiesList.visible);
+            var traits:ArrayCollection = specialist.getGeneralTraits();
+            traitList.dataProvider = traits;
+            traitList.rowCount = Math.ceil((traits.length / traitList.columnCount));
+            traitList.visible = (traitList.includeInLayout = (traits.length > 0));
+            skillLabel.visible = (skillLabel.includeInLayout = traitList.visible);
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            attributeList.itemRenderer = new ClassFactory(UnitAttributeRenderer);
+            abilitiesList.itemRenderer = new ClassFactory(UnitAbilityRenderer);
+            traitList.itemRenderer = new ClassFactory(SkillListRenderer);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var label:*;
+            label = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Abilities");
+            abilitiesLabel.text = ((label == undefined) ? null : String(label));
+            label = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Traits");
+            skillLabel.text = ((label == undefined) ? null : String(label));
+        }
+    ]]></mx:Script>
+
+    <gui:CustomTileList id="attributeList" rowHeight="30" columnWidth="100"
+        columnCount="4" selectable="false"  backgroundAlpha="0" borderThickness="0" />
+    <mx:Label id="abilitiesLabel"  horizontalCenter="0" fontWeight="bold" color="0xFFFFFF" />
+    <gui:CustomTileList id="abilitiesList" rowHeight="22" columnWidth="200"
+        columnCount="2" selectable="false"  backgroundAlpha="0" borderThickness="0" />
+    <mx:Label id="skillLabel"  horizontalCenter="0" fontWeight="bold" color="0xFFFFFF" />
+    <gui:CustomTileList id="traitList" rowHeight="60" columnWidth="400"
+        columnCount="1" rowCount="1" selectable="false"  backgroundAlpha="0" borderThickness="0" />
+</mx:VBox>

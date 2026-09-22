@@ -1,0 +1,386 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="368" height="390" implements="GUI.Components.IGUIList">
+    <mx:Script><![CDATA[
+        import flash.display.DisplayObject;
+        import flash.events.Event;
+        import mx.collections.ArrayCollection;
+        import mx.containers.Canvas;
+        import mx.containers.HBox;
+        import mx.containers.ViewStack;
+        import mx.controls.Image;
+        import __AS3__.vec.Vector;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ItemRenderer.TradeResourceItemRenderer;
+        import GUI.Components.ItemRenderer.WorkyardProductionChainRenderer;
+
+        [Bindable]
+        public var bonus:int;
+
+        public var upgradeColumn:BuildingUpgrade;
+        public var workyardProductionChain:WorkyardProductionChainRenderer;
+        public var cycleInputList:HBox;
+        public var cycleOutput:TradeResourceItemRenderer;
+        public var productionTimeLabel:CustomLabel;
+        public var productionTime:CustomLabel;
+        public var way1:CustomLabel;
+        public var way2:CustomLabel;
+        public var way3:CustomLabel;
+        public var way4:CustomLabel;
+        public var labelWay1a:CustomLabel;
+        public var labelWay1b:CustomLabel;
+        public var labelWay2a:CustomLabel;
+        public var labelWay2b:CustomLabel;
+        public var labelWay3a:CustomLabel;
+        public var labelWay3b:CustomLabel;
+        public var labelWay4a:CustomLabel;
+        public var labelWay4b:CustomLabel;
+        public var arrowWay1:Image;
+        public var arrowWay2:Image;
+        public var arrowWay3:Image;
+        public var arrowWay4:Image;
+        public var iconOverallTime:Image;
+        public var bonusStar:Image;
+        public var detailsOverallTimeText:CustomLabel;
+        public var overallTime:CustomLabel;
+        public var _BuildingInfoPanel_CustomLabel1:CustomLabel;
+        public var _BuildingInfoPanel_CustomLabel18:CustomLabel;
+        public var _BuildingInfoPanel_Image7:Image;
+        public var _BuildingInfoPanel_HBox2:HBox;
+
+        public function getFirstItem(id:String):DisplayObject
+        {
+            if (id == null)
+            {
+                return (null);
+            };
+            if (id == this.data)
+            {
+                return (this);
+            };
+            var list:ArrayCollection = ArrayCollection(this.buttonBar.dataProvider);
+            var index:int;
+            while (index < list.length)
+            {
+                if (list[index].id == id)
+                {
+                    return (this.buttonBar.getChildAt(index));
+                };
+                index++;
+            };
+            if (hasOwnProperty(id))
+            {
+                return (this[id]);
+            };
+            return (null);
+        }
+
+        public function getAllItems(id:String):Vector.<DisplayObject>
+        {
+            if (id == null)
+            {
+                return (null);
+            };
+            var found:Vector.<DisplayObject> = new Vector.<DisplayObject>();
+            if (id == this.data)
+            {
+                found.push(this);
+            };
+            var list:ArrayCollection = ArrayCollection(this.buttonBar.dataProvider);
+            var index:int;
+            while (index < list.length)
+            {
+                if (list[index].id == id)
+                {
+                    found.push(this.buttonBar.getChildAt(index));
+                };
+                index++;
+            };
+            if (hasOwnProperty(id))
+            {
+                found.push(this[id]);
+            };
+            return (found);
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            buildDetailsPages();
+            arrowWay1.source = gAssetManager.GetBitmap("ArrowSmallRight");
+            arrowWay2.source = gAssetManager.GetBitmap("ArrowSmallRight");
+            arrowWay3.source = gAssetManager.GetBitmap("ArrowSmallRight");
+            arrowWay4.source = gAssetManager.GetBitmap("ArrowSmallRight");
+            iconOverallTime.source = gAssetManager.GetBitmap("DetailsIconOverallTime");
+            bonusStar.source = gAssetManager.GetBitmap("SmallIconStar");
+            _BuildingInfoPanel_Image7.source = gAssetManager.GetBitmap("ProductionArrow");
+            refreshLabels();
+            updateBottom();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+            globalFlash.staticEventDispatcher.addEventListener("propertyChange", updateBottom, false, 0, true);
+        }
+
+        private function buildDetailsPages():void
+        {
+            var canvas1:Canvas = new Canvas();
+            canvas1.percentWidth = 100;
+            canvas1.percentHeight = 100;
+            var canvas2:Canvas = new Canvas();
+            canvas2.setStyle("top", 0);
+            canvas2.setStyle("left", 0);
+            canvas2.setStyle("bottom", 2);
+            canvas1.addChild(canvas2);
+            upgradeColumn = new BuildingUpgrade();
+            canvas2.addChild(upgradeColumn);
+            workyardProductionChain = new WorkyardProductionChainRenderer();
+            workyardProductionChain.width = 185;
+            workyardProductionChain.setStyle("top", 0);
+            workyardProductionChain.setStyle("right", 0);
+            workyardProductionChain.setStyle("bottom", 0);
+            canvas1.addChild(workyardProductionChain);
+            var canvas3:Canvas = new Canvas();
+            canvas3.percentWidth = 100;
+            canvas3.percentHeight = 100;
+            var canvas4:Canvas = new Canvas();
+            canvas4.styleName = "detailsSubHeader";
+            canvas4.percentWidth = 100;
+            canvas4.height = 18;
+            canvas3.addChild(canvas4);
+            _BuildingInfoPanel_CustomLabel1 = new CustomLabel();
+            _BuildingInfoPanel_CustomLabel1.setStyle("horizontalCenter", 0);
+            _BuildingInfoPanel_CustomLabel1.setStyle("top", 1);
+            _BuildingInfoPanel_CustomLabel1.setStyle("color", 0xFFFFFF);
+            _BuildingInfoPanel_CustomLabel1.setStyle("fontWeight", "bold");
+            canvas4.addChild(_BuildingInfoPanel_CustomLabel1);
+            var canvas5:Canvas = new Canvas();
+            canvas5.styleName = "detailsContentBox";
+            canvas5.height = 174;
+            canvas5.setStyle("left", 1);
+            canvas5.setStyle("right", 1);
+            canvas5.setStyle("top", 18);
+            canvas3.addChild(canvas5);
+            var canvas6:Canvas = new Canvas();
+            canvas6.styleName = "detailsSubContentBox";
+            canvas6.height = 122;
+            canvas6.setStyle("top", 4);
+            canvas6.setStyle("left", 4);
+            canvas6.setStyle("right", 4);
+            canvas5.addChild(canvas6);
+            var hbox1:HBox = new HBox();
+            hbox1.setStyle("verticalAlign", "middle");
+            hbox1.setStyle("left", 5);
+            hbox1.setStyle("top", 5);
+            hbox1.setStyle("horizontalGap", 0);
+            canvas6.addChild(hbox1);
+            labelWay1a = new CustomLabel();
+            labelWay1a.setStyle("color", 0xFFFFFF);
+            labelWay1a.setStyle("fontWeight", "normal");
+            hbox1.addChild(labelWay1a);
+            arrowWay1 = new Image();
+            hbox1.addChild(arrowWay1);
+            labelWay1b = new CustomLabel();
+            labelWay1b.setStyle("color", 0xFFFFFF);
+            labelWay1b.setStyle("fontWeight", "normal");
+            hbox1.addChild(labelWay1b);
+            way1 = new CustomLabel();
+            way1.setStyle("color", 0xFFFFFF);
+            way1.setStyle("fontWeight", "normal");
+            way1.setStyle("textAlign", "right");
+            way1.setStyle("right", 5);
+            way1.setStyle("top", 5);
+            canvas6.addChild(way1);
+            var hbox2:HBox = new HBox();
+            hbox2.setStyle("verticalAlign", "middle");
+            hbox2.setStyle("left", 5);
+            hbox2.setStyle("top", 27);
+            hbox2.setStyle("horizontalGap", 0);
+            canvas6.addChild(hbox2);
+            _BuildingInfoPanel_HBox2 = hbox2;
+            labelWay2a = new CustomLabel();
+            labelWay2a.setStyle("color", 0xFFFFFF);
+            labelWay2a.setStyle("fontWeight", "normal");
+            hbox2.addChild(labelWay2a);
+            arrowWay2 = new Image();
+            hbox2.addChild(arrowWay2);
+            labelWay2b = new CustomLabel();
+            labelWay2b.setStyle("color", 0xFFFFFF);
+            labelWay2b.setStyle("fontWeight", "normal");
+            hbox2.addChild(labelWay2b);
+            way2 = new CustomLabel();
+            way2.setStyle("color", 0xFFFFFF);
+            way2.setStyle("fontWeight", "normal");
+            way2.setStyle("textAlign", "right");
+            way2.setStyle("right", 5);
+            way2.setStyle("top", 27);
+            canvas6.addChild(way2);
+            var canvas7:Canvas = new Canvas();
+            canvas7.styleName = "detailsSubContentBox";
+            canvas7.setStyle("left", 0);
+            canvas7.setStyle("right", 0);
+            canvas7.setStyle("top", 49);
+            canvas6.addChild(canvas7);
+            productionTimeLabel = new CustomLabel();
+            productionTimeLabel.setStyle("color", 0xFFFFFF);
+            productionTimeLabel.setStyle("fontWeight", "bold");
+            productionTimeLabel.setStyle("textAlign", "right");
+            productionTimeLabel.setStyle("left", 5);
+            productionTimeLabel.setStyle("top", 3);
+            productionTimeLabel.setStyle("bottom", 3);
+            canvas7.addChild(productionTimeLabel);
+            productionTime = new CustomLabel();
+            productionTime.setStyle("color", 0xFFFFFF);
+            productionTime.setStyle("fontWeight", "bold");
+            productionTime.setStyle("textAlign", "right");
+            productionTime.setStyle("right", 5);
+            productionTime.setStyle("top", 3);
+            productionTime.setStyle("bottom", 3);
+            canvas7.addChild(productionTime);
+            var hbox3:HBox = new HBox();
+            hbox3.setStyle("verticalAlign", "middle");
+            hbox3.setStyle("left", 5);
+            hbox3.setStyle("top", 77);
+            hbox3.setStyle("horizontalGap", 0);
+            canvas6.addChild(hbox3);
+            labelWay3a = new CustomLabel();
+            labelWay3a.setStyle("color", 0xFFFFFF);
+            labelWay3a.setStyle("fontWeight", "normal");
+            hbox3.addChild(labelWay3a);
+            arrowWay3 = new Image();
+            hbox3.addChild(arrowWay3);
+            labelWay3b = new CustomLabel();
+            labelWay3b.setStyle("color", 0xFFFFFF);
+            labelWay3b.setStyle("fontWeight", "normal");
+            hbox3.addChild(labelWay3b);
+            way3 = new CustomLabel();
+            way3.setStyle("color", 0xFFFFFF);
+            way3.setStyle("fontWeight", "normal");
+            way3.setStyle("textAlign", "right");
+            way3.setStyle("right", 5);
+            way3.setStyle("top", 77);
+            canvas6.addChild(way3);
+            var hbox4:HBox = new HBox();
+            hbox4.setStyle("verticalAlign", "middle");
+            hbox4.setStyle("left", 5);
+            hbox4.setStyle("top", 99);
+            hbox4.setStyle("horizontalGap", 0);
+            canvas6.addChild(hbox4);
+            labelWay4a = new CustomLabel();
+            labelWay4a.setStyle("color", 0xFFFFFF);
+            labelWay4a.setStyle("fontWeight", "normal");
+            hbox4.addChild(labelWay4a);
+            arrowWay4 = new Image();
+            hbox4.addChild(arrowWay4);
+            labelWay4b = new CustomLabel();
+            labelWay4b.setStyle("color", 0xFFFFFF);
+            labelWay4b.setStyle("fontWeight", "normal");
+            hbox4.addChild(labelWay4b);
+            way4 = new CustomLabel();
+            way4.setStyle("color", 0xFFFFFF);
+            way4.setStyle("fontWeight", "normal");
+            way4.setStyle("textAlign", "right");
+            way4.setStyle("right", 5);
+            way4.setStyle("top", 99);
+            canvas6.addChild(way4);
+            var canvas8:Canvas = new Canvas();
+            canvas8.styleName = "detailsSubContentBox";
+            canvas8.width = 196;
+            canvas8.height = 40;
+            canvas8.setStyle("bottom", 4);
+            canvas8.setStyle("left", 4);
+            canvas8.setStyle("right", 4);
+            canvas5.addChild(canvas8);
+            iconOverallTime = new Image();
+            iconOverallTime.setStyle("verticalCenter", 0);
+            iconOverallTime.setStyle("left", 0);
+            canvas8.addChild(iconOverallTime);
+            bonusStar = new Image();
+            bonusStar.setStyle("left", 25);
+            bonusStar.setStyle("top", 3);
+            canvas8.addChild(bonusStar);
+            detailsOverallTimeText = new CustomLabel();
+            detailsOverallTimeText.setStyle("fontWeight", "bold");
+            detailsOverallTimeText.setStyle("verticalCenter", 0);
+            detailsOverallTimeText.setStyle("left", 40);
+            canvas8.addChild(detailsOverallTimeText);
+            overallTime = new CustomLabel();
+            overallTime.setStyle("color", 0xFFFFFF);
+            overallTime.setStyle("fontWeight", "bold");
+            overallTime.setStyle("verticalCenter", 0);
+            overallTime.setStyle("right", 5);
+            overallTime.setStyle("textAlign", "right");
+            canvas8.addChild(overallTime);
+            var canvas9:Canvas = new Canvas();
+            canvas9.styleName = "detailsSubHeader";
+            canvas9.percentWidth = 100;
+            canvas9.height = 18;
+            canvas9.setStyle("top", 194);
+            canvas3.addChild(canvas9);
+            _BuildingInfoPanel_CustomLabel18 = new CustomLabel();
+            _BuildingInfoPanel_CustomLabel18.setStyle("horizontalCenter", 0);
+            _BuildingInfoPanel_CustomLabel18.setStyle("top", 1);
+            _BuildingInfoPanel_CustomLabel18.setStyle("color", 0xFFFFFF);
+            _BuildingInfoPanel_CustomLabel18.setStyle("fontWeight", "bold");
+            canvas9.addChild(_BuildingInfoPanel_CustomLabel18);
+            var canvas10:Canvas = new Canvas();
+            canvas10.styleName = "detailsContentBox";
+            canvas10.setStyle("left", 1);
+            canvas10.setStyle("right", 1);
+            canvas10.setStyle("top", 212);
+            canvas10.setStyle("bottom", 2);
+            canvas3.addChild(canvas10);
+            var hbox5:HBox = new HBox();
+            hbox5.setStyle("verticalAlign", "middle");
+            hbox5.setStyle("horizontalCenter", 0);
+            hbox5.setStyle("verticalCenter", 0);
+            canvas10.addChild(hbox5);
+            cycleInputList = new HBox();
+            hbox5.addChild(cycleInputList);
+            _BuildingInfoPanel_Image7 = new Image();
+            hbox5.addChild(_BuildingInfoPanel_Image7);
+            cycleOutput = new TradeResourceItemRenderer();
+            hbox5.addChild(cycleOutput);
+            detailsStack.addChild(canvas1);
+            detailsStack.addChild(canvas3);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var labelText:*;
+            labelText = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ProductionDetailsTime");
+            _BuildingInfoPanel_CustomLabel1.text = ((labelText == undefined) ? null : String(labelText));
+            labelText = cLocaManager.GetInstance().GetText(LOCA_GROUP.BUILDINGS, "Warehouse");
+            labelWay1a.text = ((labelText == undefined) ? null : String(labelText));
+            labelText = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Workyard");
+            labelWay1b.text = ((labelText == undefined) ? null : String(labelText));
+            labelText = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "DetailsDeposit");
+            labelWay2b.text = ((labelText == undefined) ? null : String(labelText));
+            labelText = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "DetailsProductionTime");
+            productionTimeLabel.text = ((labelText == undefined) ? null : String(labelText));
+            labelText = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Workyard");
+            labelWay3b.text = ((labelText == undefined) ? null : String(labelText));
+            labelText = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Workyard");
+            labelWay4a.text = ((labelText == undefined) ? null : String(labelText));
+            labelText = cLocaManager.GetInstance().GetText(LOCA_GROUP.BUILDINGS, "Warehouse");
+            labelWay4b.text = ((labelText == undefined) ? null : String(labelText));
+            labelText = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "DetailsOverallTime");
+            detailsOverallTimeText.text = ((labelText == undefined) ? null : String(labelText));
+            labelText = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ProductionDetailsCycle");
+            _BuildingInfoPanel_CustomLabel18.text = ((labelText == undefined) ? null : String(labelText));
+        }
+
+        private function updateBottom(event:Event = null):void
+        {
+            setStyle("bottom", globalFlash.mainHudBottomPos);
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <gui:BuildingWindowHeader id="buildingHeader" />
+            <mx:ViewStack id="detailsStack" creationPolicy="all" left="8" right="7" top="62" bottom="33" />
+            <mx:Canvas id="canvas11" styleName="hr" height="3" left="2" right="0" bottom="27" />
+            <gui:CustomToggleButtonBar id="buttonBar" buttonStyleName="tab" selectedButtonTextStyleName="tabSelected" bottom="0" left="2" right="0" />
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

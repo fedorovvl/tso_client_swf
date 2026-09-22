@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="585" height="400" implements="GUI.Components.IGUIList">
+    <mx:Script><![CDATA[
+        import flash.display.DisplayObject;
+        import __AS3__.vec.Vector;
+        import flash.events.Event;
+        import mx.events.FlexEvent;
+        import flash.geom.Point;
+        import EpicWorkyard.EpicWorkyardConsts;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(busyOverlay);
+            LegacyMxmlContent.createChildren(chainSelectList);
+            checkButton.styleName = EpicWorkyardConsts.CHECKED_BUTTON_STYLE_NAME;
+            chainSelectList.addEventListener("updateComplete", onChainSelectList_updateComplete);
+        }
+
+        public function getAllItems(id:String):Vector.<DisplayObject>
+        {
+            if (id == null)
+            {
+                return (null);
+            };
+            var found:Vector.<DisplayObject> = new Vector.<DisplayObject>();
+            if (id == this.data)
+            {
+                found.push(this);
+            };
+            if (hasOwnProperty(id))
+            {
+                found.push(this[id]);
+            };
+            return (found);
+        }
+
+        public function getFirstItem(id:String):DisplayObject
+        {
+            if (id == null)
+            {
+                return (null);
+            };
+            if (id == this.data)
+            {
+                return (this);
+            };
+            if (hasOwnProperty(id))
+            {
+                return (this[id]);
+            };
+            return (null);
+        }
+
+        protected function chainSelectList_showHandler(event:FlexEvent):void
+        {
+            var stagePoint:Point = globalToLocal(new Point((stage.stageWidth - chainSelectList.measuredWidth), (stage.stageHeight - chainSelectList.measuredHeight)));
+            if (chainSelectList.x > stagePoint.x)
+            {
+                chainSelectList.x = stagePoint.x;
+            };
+            if (chainSelectList.y > stagePoint.y)
+            {
+                chainSelectList.y = stagePoint.y;
+            };
+        }
+
+        public function onChainSelectList_updateComplete(event:FlexEvent):void
+        {
+            chainSelectList_showHandler(event);
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <gui:BuildingWindowHeader id="buildingHeader" />
+            <mx:Canvas id="productionList" width="570" height="350"  top="62" left="8" />
+            <mx:Canvas id="busyOverlay" styleName="detailsContentBox" width="560" height="277" visible="false" top="62" left="8">
+                <gui:SpriteLibAnimation id="busyAnim" animationName="guianim_hourglass" loop="true"
+                    visible="false" width="48" height="48"  horizontalCenter="0" verticalCenter="0" />
+            </mx:Canvas>
+            <mx:Canvas id="hrCanvas" styleName="hr" height="3"  left="2" right="0" bottom="25" />
+            <mx:HBox id="chainSelectList" visible="false" backgroundColor="4601379" horizontalGap="0" verticalAlign="top">
+                <mx:VBox id="chainSelectListSub1"  paddingLeft="1" paddingRight="1" paddingTop="1" paddingBottom="1" verticalGap="1" />
+                <mx:VBox id="chainSelectListSub2"  paddingLeft="0" paddingRight="1" paddingTop="1" paddingBottom="1" verticalGap="1" />
+                <mx:VBox id="chainSelectListSub3"  paddingLeft="0" paddingRight="1" paddingTop="1" paddingBottom="1" verticalGap="1" />
+            </mx:HBox>
+            <mx:Button id="checkButton" visible="false" mouseEnabled="false" mouseChildren="false" />
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

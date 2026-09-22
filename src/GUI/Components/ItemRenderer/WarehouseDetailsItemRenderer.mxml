@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="80" height="40">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Image;
+        import GUI.Components.CapacityBar;
+        import mx.controls.Label;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import flash.events.MouseEvent;
+        import mx.events.PropertyChangeEvent;
+        import mx.events.FlexEvent;
+        import GUI.Loca.cLocaManager;
+        import BuffSystem.cBuff;
+        import GUI.Components.WarehouseInfoPanel;
+        import GUI.Components.ResidenceInfoPanel;
+        import GUI.Components.TradingPanel;
+        import GUI.Components.EnemyBuildingInfoPanel;
+        import Enums.LOCA_GROUP;
+        import nLib.gMisc;
+        import GUI.Components.EventMonster;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private var useRollOver:Boolean = false;
+
+        private var nameString:String = "";
+
+        public function onWarehouseDetailsItemRenderer_Canvas1_rollOut(argument1:MouseEvent):void
+        {
+            this.RollOut();
+        }
+
+        private function RollOver():void
+        {
+            if (this.useRollOver)
+            {
+                styleName = "backgroundHighlight";
+            };
+        }
+
+        protected function setAmount(argument1:int):void
+        {
+            this.amountLabel.visible = (argument1 > -1);
+            this.amountLabel.text = cLocaManager.GetInstance().FormatAmount(argument1);
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            if ((data is cBuff))
+            {
+                this.nameString = data.GetResourceName_string();
+            }
+            else
+            {
+                this.nameString = data.name_string;
+            };
+            this.useRollOver = (((this.parentDocument is TradingPanel) || (this.parentDocument is ResidenceInfoPanel)) || (this.parentDocument is WarehouseInfoPanel));
+            if ((this.parentDocument is EnemyBuildingInfoPanel))
+            {
+                width = 80;
+                height = 68;
+                this.resourceIcon.setConstraintValue("left", 0);
+                this.resourceIcon.setConstraintValue("top", 0);
+                toolTip = this.nameString;
+                if (((!(this.nameString.indexOf("EpicMonsterHeart") == -1)) && (data.amount > -1)))
+                {
+                    toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, this.nameString);
+                    toolTip = (toolTip + ((": " + Math.floor(data.amount)) + ((((isNaN(data.maxLimit)) || (data.maxLimit == 0)) || (data.maxLimit == gMisc.GetMaxIntValue())) ? "" : ("/" + Math.floor(data.maxLimit)))));
+                };
+            }
+            else
+            {
+                width = 80;
+                height = 40;
+                this.resourceIcon.setConstraintValue("left", 12);
+                this.resourceIcon.setConstraintValue("top", 6);
+                toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, this.nameString);
+                if (data.amount > -1)
+                {
+                    toolTip = (toolTip + ((": " + Math.floor(data.amount)) + ((((isNaN(data.maxLimit)) || (data.maxLimit == 0)) || (data.maxLimit == gMisc.GetMaxIntValue())) ? "" : ("/" + Math.floor(data.maxLimit)))));
+                };
+            };
+            this.capacityBar.maximum = data.maxLimit;
+            this.capacityBar.value = data.amount;
+            this.capacityBar.visible = ((((!(isNaN(data.maxLimit))) && (data.amount > -1)) && (data.maxLimit > 0)) && (data.maxLimit < gMisc.GetMaxIntValue()));
+            this.setAmount(data.amount);
+            if (((this.parentDocument is EnemyBuildingInfoPanel) || (this.parentDocument is EventMonster)))
+            {
+                this.resourceIcon.source = gAssetManager.GetMilitaryIcon(this.nameString, data.active);
+            }
+            else
+            {
+                this.resourceIcon.source = gAssetManager.GetResourceIcon(this.nameString);
+            };
+            refreshRendererPresentation();
+        }
+
+        private function ToolTipCreate(argument1:ToolTipEvent):void
+        {
+            if (((this.parentDocument is EnemyBuildingInfoPanel) && (this.nameString.indexOf("EpicMonsterHeart") == -1)))
+            {
+                cToolTipUtil.createToolTip(cToolTipUtil.MILITARY_UNIT_SKILL_string, argument1);
+            }
+            else
+            {
+                cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+            };
+        }
+
+        protected function canvas1_updateCompleteHandler(argument1:FlexEvent):void
+        {
+            if (!(styleName is String))
+            {
+                styleName = "backgroundNormal";
+            };
+        }
+
+        public function onWarehouseDetailsItemRenderer_Canvas1_rollOver(argument1:MouseEvent):void
+        {
+            this.RollOver();
+        }
+
+        private function RollOut():void
+        {
+            if (this.useRollOver)
+            {
+                styleName = "backgroundNormal";
+            };
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundAlpha", 1);
+            this.setStyle("backgroundSize", "100%");
+            this.styleName = "backgroundNormal";
+            this.width = 80;
+            this.height = 40;
+            this.addEventListener("rollOver", this.onWarehouseDetailsItemRenderer_Canvas1_rollOver);
+            this.addEventListener("rollOut", this.onWarehouseDetailsItemRenderer_Canvas1_rollOut);
+            this.addEventListener("toolTipCreate", this.ToolTipCreate);
+            this.addEventListener("updateComplete", this.canvas1_updateCompleteHandler);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <ui:CapacityBar id="capacityBar" x="2" y="2" />
+    <mx:Image id="resourceIcon" />
+    <mx:Label id="amountLabel"  color="0xFFFFFF" fontWeight="bold" left="15" right="6" verticalCenter="-1" textAlign="right" />
+</mx:Canvas>

@@ -1,0 +1,178 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="120" height="72">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import GUI.Components.CustomLabel;
+        import GUI.Components.TSOImage;
+        import Events.dEventVO;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import GUI.Assets.gAssetManager;
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import mx.events.FlexEvent;
+
+        import com.bluebyte.tso.util.TimeUtil;
+        import GUI.Loca.cLocaManager;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        [Bindable]
+        private var _data:dEventVO;
+
+        private function display(argument1:Event=null):void
+        {
+            this.image.source = gAssetManager.GetClass(this._data.event_name_string);
+            this.image.source = gAssetManager.GetWidgetUrl(this._data.widgetImageString);
+            this.updateTime();
+        }
+
+
+        protected function canvas1_creationCompleteHandler(argument1:FlexEvent):void
+        {
+            this.addEventListener(MouseEvent.CLICK, this.clickHandler);
+        }
+
+        private function rollOut():void
+        {
+            if (this.image)
+            {
+                this.image.alpha = 0.85;
+            };
+        }
+
+
+        public function onEventWidgetItemRenderer_Canvas1_rollOver(argument1:MouseEvent):void
+        {
+            this.rollOver();
+        }
+
+        private function clickHandler(argument1:MouseEvent):void
+        {
+            globalFlash.gui.mEventInfoPanel.SelectEventByName(this._data.event_name_string);
+            globalFlash.gui.mEventInfoPanel.Show();
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            this._data = (argument1 as dEventVO);
+            if (this.image)
+            {
+                this.display();
+            }
+            else
+            {
+                addEventListener(FlexEvent.CREATION_COMPLETE, this.display);
+            };
+            refreshRendererPresentation();
+        }
+
+        private function rollOver():void
+        {
+            if (this.image)
+            {
+                this.image.alpha = 1;
+            };
+        }
+
+        public function onEventWidgetItemRenderer_Canvas1_rollOut(argument1:MouseEvent):void
+        {
+            this.rollOut();
+        }
+
+        public function updateTime():void
+        {
+            var localValue1:Number = Math.max(0, (this._data.stopDate - TimeUtil.getServerTime()));
+            removeEventListener(FlexEvent.CREATION_COMPLETE, this.display);
+            if (localValue1 > 86400000)
+            {
+                this.timeLeft.text = cLocaManager.GetInstance().FormatDuration(localValue1, cLocaManager.DURATION_FORMAT_SHORTER);
+            }
+            else
+            {
+                this.timeLeft.text = cLocaManager.GetInstance().FormatDuration(localValue1, cLocaManager.DURATION_FORMAT_SHORT);
+            };
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("disabledOverlayAlpha", 0);
+            this.setStyle("backgroundSize", "100%");
+            this.width = 120;
+            this.height = 72;
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.addEventListener("click", this.clickHandler);
+            this.addEventListener("creationComplete", this.canvas1_creationCompleteHandler);
+            this.addEventListener("rollOver", this.onEventWidgetItemRenderer_Canvas1_rollOver);
+            this.addEventListener("rollOut", this.onEventWidgetItemRenderer_Canvas1_rollOut);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"],
+                [global, "propertyChange"],
+                [RendererPresentationUpdates.readPath(global, "ui_bindable"), "propertyChange"]]);
+                this.enabled = !(global.ui_bindable.mPacketLost);
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <ui:TSOImage id="image" percentWidth="100" percentHeight="100" alpha="0.85" />
+    <ui:CustomLabel id="timeLeft" mouseEnabled="false"  color="0xFFFFFF" fontWeight="bold" horizontalCenter="0" bottom="2" />
+</mx:Canvas>

@@ -1,0 +1,147 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="212" height="80">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Image;
+        import GUI.Components.TSOImage;
+        import GUI.Components.ProgressBar;
+        import GUI.Components.CustomText;
+        import mx.core.mx_internal;
+        import mx.events.PropertyChangeEvent;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import GUI.Assets.gAssetManager;
+        import Fulfilments.Trigger.FulfilmentTrigger;
+        import Enums.TRIGGER_ACTION;
+        import Trigger.TriggerFactory;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        public function onProgress_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            var localValue2:FulfilmentTrigger;
+            var localValue3:int;
+            var localValue4:int;
+            super.data = argument1;
+            this.triggerBG.setStyle("backgroundImage", gAssetManager.GetClass("TriggerBGNormal"));
+            this.image.source = null;
+            this.title.text = "";
+            this.passedIndicator.visible = false;
+            this.progress.value = 1;
+            toolTip = "";
+            if (argument1 != null)
+            {
+                localValue2 = (argument1 as FulfilmentTrigger);
+                if (localValue2 != null)
+                {
+                    localValue3 = global.ui.mQuestClientCallbacks.getNewTriggerTotal(localValue2.getDefinition());
+                    this.image.source = gAssetManager.GetNewQuestTriggerIcon(localValue2.getDefinition());
+                    localValue4 = (localValue3 - global.ui.mQuestClientCallbacks.getNewTriggerRemaining(localValue2));
+                    if ((((localValue2.getDefinition().action_string == TRIGGER_ACTION.ACTION_PAY_TO_FINISH_string) && (localValue2.isRunning())) && (!(localValue2.getFinished()))))
+                    {
+                        localValue4 = new TriggerFactory(global.ui).createTrigger(localValue2.getDefinition(), null).getCurrentAmount();
+                    };
+                    this.passedIndicator.visible = localValue2.getFinished();
+                    this.title.text = global.ui.mQuestClientCallbacks.getNewTriggerText(localValue2.getDefinition());
+                    this.progress.value = (localValue4 / localValue3);
+                    this.progress.toolTip = ((localValue4 + "/") + localValue3);
+                    toolTip = this.title.text;
+                    if (!this.passedIndicator.visible)
+                    {
+                        this.triggerBG.setStyle("backgroundImage", gAssetManager.GetClass("TriggerBGNormal"));
+                    }
+                    else
+                    {
+                        this.triggerBG.setStyle("backgroundImage", gAssetManager.GetClass("TriggerBGWon"));
+                    };
+                };
+            };
+            refreshRendererPresentation();
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            progress.addEventListener("toolTipCreate", onProgress_toolTipCreate);
+            passedIndicator.source = gAssetManager.GetBitmap("DailyLoginPassed");
+            this.width = 212;
+            this.height = 80;
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="triggerBG" width="212" height="80" horizontalScrollPolicy="off" verticalScrollPolicy="off" backgroundSize="100%">
+        <ui:TSOImage id="image" width="57" height="74" scaleContent="false"  left="0" top="3" horizontalAlign="center" verticalAlign="middle" />
+        <mx:Image id="passedIndicator"  left="0" verticalCenter="0" />
+        <ui:CustomText id="title" selectable="false" styleName="questTriggerDescription"  left="58" right="3" verticalCenter="-7" color="0xFFFFFF" />
+        <ui:ProgressBar id="progress"  left="58" right="6" bottom="6" />
+    </mx:Canvas>
+</mx:Canvas>

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="741" height="610">
+    <mx:Script><![CDATA[
+        import mx.effects.easing.Back;
+        import mx.effects.easing.Elastic;
+        import mx.events.EffectEvent;
+
+        [Embed(source="../../../assets/embedded/battlewindow/battlewindow_battle_bg_map.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_battlewindow_battle_bg_map_png_371761099:Class;
+
+        [Embed(source="../../../assets/embedded/generalstatuspanel/generalstatuspanel_top_panel.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_battlewindow_battle_ornamental_bottom01_png_1885966155:Class;
+
+        [Embed(source="../../../assets/embedded/battlewindow/battlewindow_battle_ornamental_left01.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_battlewindow_battle_ornamental_left01_png_788921163:Class;
+
+        [Embed(source="../../../assets/embedded/battlewindow/battlewindow_battle_ornamental_right01.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_battlewindow_battle_ornamental_right01_png_538206261:Class;
+
+        [Embed(source="../../../assets/embedded/battlewindow/battlewindow_battle_ornamental_top01.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_battlewindow_battle_ornamental_top01_png_40392011:Class;
+
+        [Embed(source="../../../assets/embedded/battlewindow/battlewindow_compass01_bg.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_battlewindow_compass01_bg_png_353452245:Class;
+
+        [Embed(source="../../../assets/embedded/battlewindow/battlewindow_compass01_needle.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_battlewindow_compass01_needle_png_1438648619:Class;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("horizontalCenter", "0");
+            this.setStyle("verticalCenter", "-50");
+            this.visible = false;
+            LegacyMxmlContent.createChildren(content);
+            LegacyMxmlContent.createChildren(rotationContainer);
+            LegacyMxmlContent.createChildren(attackerHolder);
+            LegacyMxmlContent.createChildren(defenderHolder);
+            map.source = _embed_mxml_____data_src_gfx_embedded_battlewindow_battle_bg_map_png_371761099;
+            curtainLeft.source = _embed_mxml_____data_src_gfx_embedded_battlewindow_battle_ornamental_left01_png_788921163;
+            curtainRight.source = _embed_mxml_____data_src_gfx_embedded_battlewindow_battle_ornamental_right01_png_538206261;
+            compassBg.source = _embed_mxml_____data_src_gfx_embedded_battlewindow_compass01_bg_png_353452245;
+            indicator.source = _embed_mxml_____data_src_gfx_embedded_battlewindow_compass01_needle_png_1438648619;
+            ornamentalTop.source = _embed_mxml_____data_src_gfx_embedded_battlewindow_battle_ornamental_top01_png_40392011;
+            ornamentalBottom.source = _embed_mxml_____data_src_gfx_embedded_battlewindow_battle_ornamental_bottom01_png_1885966155;
+            rotateToDefenderFirst.easingFunction = Elastic.easeOut;
+            rotateToDefender.easingFunction = Elastic.easeOut;
+            rotateToAttacker.easingFunction = Elastic.easeOut;
+            overlayZoom.easingFunction = Back.easeOut;
+            rotateToDefenderFirst.target = rotationContainer;
+            rotateToDefender.target = rotationContainer;
+            rotateToAttacker.target = rotationContainer;
+            overlayTextPhase.filters = [phaseGlowInner, phaseGlowOuter];
+            overlayTextRound.filters = [roundGlowInner, roundGlowOuter];
+            overlayTextPhase.setStyle("showEffect", showOverlayText);
+            overlayTextPhase.setStyle("hideEffect", hideOverlayText);
+            overlayTextRound.setStyle("showEffect", showOverlayText);
+            overlayTextRound.setStyle("hideEffect", hideOverlayText);
+            fadeOut.addEventListener("effectEnd", __fadeOut_effectEnd);
+        }
+
+        public function __fadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+    <mx:Fade id="hideOverlayText" alphaFrom="1" alphaTo="0" duration="150" />
+    <mx:Rotate id="rotateToDefenderFirst" originX="0" originY="0" startDelay="500" duration="1000" angleFrom="0" angleTo="90" />
+    <mx:Rotate id="rotateToDefender" originX="0" originY="0" startDelay="500" duration="2000" angleFrom="270" angleTo="90" />
+    <mx:Rotate id="rotateToAttacker" originX="0" originY="0" startDelay="500" duration="2000" angleFrom="90" angleTo="-90" />
+    <mx:Parallel id="showOverlayText">
+        <mx:Zoom id="overlayZoom" duration="300" zoomHeightFrom="0.01" zoomWidthFrom="0.01" zoomHeightTo="1" zoomWidthTo="1" />
+        <mx:Fade duration="300" alphaFrom="0" alphaTo="1" />
+    </mx:Parallel>
+
+    <mx:Canvas id="content" left="18" right="18" top="110" bottom="17"
+        horizontalScrollPolicy="off" verticalScrollPolicy="off" styleName="basicPanel">
+        <gui:CloseButton id="btnClose" top="5" right="15" />
+        <mx:Image id="map" horizontalCenter="3" verticalCenter="15" />
+        <mx:Canvas left="18" top="32" bottom="0" width="320">
+            <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                <gui:CustomLabel id="attackerNameLabel" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+            </mx:Canvas>
+            <mx:Canvas id="attackerPanel" left="1" right="1" top="18" bottom="11" backgroundColor="5326645" backgroundAlpha="0.6" />
+        </mx:Canvas>
+        <mx:Canvas right="16" top="32" bottom="0" width="320">
+            <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                <gui:CustomLabel id="defenderNameLabel" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+            </mx:Canvas>
+            <mx:Canvas id="defenderPanel" left="1" right="1" top="18" bottom="11" backgroundColor="5326645" backgroundAlpha="0.6" />
+        </mx:Canvas>
+    </mx:Canvas>
+    <mx:Image id="curtainLeft" top="140" left="30" />
+    <mx:Image id="curtainRight" top="140" right="24" />
+    <mx:Image id="compassBg" top="330" horizontalCenter="-1" />
+    <mx:Canvas id="rotationContainer" top="374" horizontalCenter="21" clipContent="false">
+        <mx:Image id="indicator" width="88" height="88" x="-44" y="-44" />
+    </mx:Canvas>
+    <mx:Canvas id="attackerHolder" left="37" top="160" bottom="28" width="318">
+        <renderer:BattleSlotItemRenderer id="attackerSlot01" top="5" right="0" />
+        <renderer:BattleSlotItemRenderer id="attackerSlot02" top="100" right="0" />
+        <renderer:BattleSlotItemRenderer id="attackerSlot03" top="195" right="0" />
+        <renderer:BattleSlotItemRenderer id="attackerSlot04" top="290" right="0" />
+        <renderer:BattleSlotItemRenderer id="attackerSlot05" top="50" right="100" />
+        <renderer:BattleSlotItemRenderer id="attackerSlot06" top="145" right="100" />
+        <renderer:BattleSlotItemRenderer id="attackerSlot07" top="240" right="100" />
+        <renderer:BattleSlotItemRenderer id="attackerSlot00" top="80" right="215" />
+        <renderer:BattleSlotItemRenderer id="attackerSlot08" top="190" right="200" />
+        <renderer:BattleSlotItemRenderer id="attackerSlot09" top="285" right="200" />
+    </mx:Canvas>
+    <mx:Canvas id="defenderHolder" right="35" top="160" bottom="28" width="318">
+        <renderer:BattleSlotItemRenderer id="defenderSlot01" top="5" left="0" />
+        <renderer:BattleSlotItemRenderer id="defenderSlot02" top="100" left="0" />
+        <renderer:BattleSlotItemRenderer id="defenderSlot03" top="195" left="0" />
+        <renderer:BattleSlotItemRenderer id="defenderSlot04" top="290" left="0" />
+        <renderer:BattleSlotItemRenderer id="defenderSlot05" top="50" left="100" />
+        <renderer:BattleSlotItemRenderer id="defenderSlot06" top="145" left="100" />
+        <renderer:BattleSlotItemRenderer id="defenderSlot07" top="240" left="100" />
+        <renderer:BattleSlotItemRenderer id="defenderSlot00" top="80" left="215" />
+        <renderer:BattleSlotItemRenderer id="defenderSlot08" top="190" left="200" />
+        <renderer:BattleSlotItemRenderer id="defenderSlot09" top="285" left="200" />
+    </mx:Canvas>
+    <gui:SpriteLibAnimation id="attackAnimation" animationName="guianim_attack" visible="false" width="140" height="174" />
+    <renderer:AvatarListItemRenderer id="attackerAvatar" top="138" left="32" />
+    <renderer:AvatarListItemRenderer id="defenderAvatar" top="138" right="30" />
+    <mx:Image id="ornamentalTop" top="0" horizontalCenter="0" />
+    <mx:Image id="ornamentalBottom" bottom="0" horizontalCenter="0" />
+    <gui:CustomLabel id="roundLabel" fontWeight="bold" color="0" horizontalCenter="0" top="120" fontSize="16" />
+    <gui:CustomLabel id="phaseLabel" fontWeight="bold" color="0" horizontalCenter="0" bottom="16" />
+    <gui:CustomText id="overlayTextPhase" fontWeight="bold" color="13736761" fontSize="38"
+        horizontalCenter="0" verticalCenter="40" textAlign="center" selectable="false" visible="false" width="600">
+        <gui:filters>
+            <mx:GlowFilter id="phaseGlowInner" color="3353634" blurX="3" blurY="3" quality="1" alpha="1" strength="5" />
+            <mx:GlowFilter id="phaseGlowOuter" color="14273191" blurX="40" blurY="30" quality="1" alpha="0.7" strength="5" />
+        </gui:filters>
+    </gui:CustomText>
+    <gui:CustomText id="overlayTextRound" fontWeight="bold" color="13736761" fontSize="50"
+        horizontalCenter="0" verticalCenter="40" textAlign="center" selectable="false" visible="false" width="600">
+        <gui:filters>
+            <mx:GlowFilter id="roundGlowInner" color="3353634" blurX="3" blurY="3" quality="1" alpha="1" strength="5" />
+            <mx:GlowFilter id="roundGlowOuter" color="14273191" blurX="40" blurY="30" quality="1" alpha="0.7" strength="5" />
+        </gui:filters>
+    </gui:CustomText>
+</mx:Canvas>

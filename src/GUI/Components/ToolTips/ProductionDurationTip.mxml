@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    mouseEnabled="false" mouseChildren="false" styleName="toolTip">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+
+        private var _remainingTime:Number;
+        private var _rawKey:String;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this._remainingTime = (_arg_1 as Number);
+        }
+
+        public function get text():String
+        {
+            return (this._rawKey);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this._rawKey = _arg_1;
+            if (!durationLabel)
+            {
+                return;
+            };
+            applyText();
+        }
+
+        private function applyText():void
+        {
+            var _local_2:cLocaManager = cLocaManager.GetInstance();
+            this.durationLabel.text = _local_2.GetText(LOCA_GROUP.LABELS, this._rawKey, [_local_2.FormatDuration(this._remainingTime)]);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            if (this._rawKey != null)
+            {
+                applyText();
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            if (this._rawKey != null)
+            {
+                applyText();
+            };
+            if (cLocaManager.GetInstance().IsInitialized())
+            {
+                refreshLabels();
+            };
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+    ]]></mx:Script>
+    <gui:CustomLabel id="durationLabel" top="2" bottom="2" left="5" right="5" fontWeight="bold" color="0xFFFFFF" />
+</mx:Canvas>

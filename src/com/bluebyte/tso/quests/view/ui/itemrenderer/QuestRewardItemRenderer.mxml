@@ -1,0 +1,509 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*" width="57" height="71">
+    <mx:Script><![CDATA[
+        import GUI.Components.Frame;
+        import GUI.Loca.cLocaManager;
+        import XpConversion.ConvertedXp;
+        import Communication.VO.dQuestDefinitionRewardVO;
+        import Communication.VO.EffectVO;
+        import GUI.Components.data.dPvPLevelUnlockData;
+        import XpConversion.XpConversionCalculator;
+        import Enums.LOCA_GROUP;
+        import mx.events.ToolTipEvent;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import converted.bluebyte.tso.quests.logic.QuestManagerStatic;
+        import Effects.Effects.Reward;
+        import Utils.StringUtils;
+        import BuffSystem.cBuffDefinition;
+        import Enums.BUFF_TYPE;
+        import Effects.Effects.FulfillCondition;
+        import Effects.Effects.GiveCollectibleResource;
+        import mx.events.FlexEvent;
+        import flash.events.Event;
+        import GUI.Assets.gAssetManager;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+
+        private static const EFFECT_CONDITION_TYPE_BUILDING:String = "building";
+        private static const EFFECT_CONDITION_TYPE_PRODUCTION:String = "production";
+        private static const EFFECT_CONDITION_TYPE_TASK:String = "task";
+        private static const EFFECT_CONDITION_TYPE_ADVENTURE:String = "adventure";
+        private static const EFFECT_CONDITION_TYPE_ITEM:String = "item";
+        private static const EFFECT_CONDITION_TYPE_MISC:String = "misc";
+        private static const EFFECT_CONDITION_TYPE_PICKUPMANAGER:String = "pickupmanager";
+        private static const EFFECT_CONDITION_TYPE_CHAIN:String = "chain";
+
+        private var lm:cLocaManager;
+
+        private function getFailedIndicatorSource():Object
+        {
+            return gAssetManager.GetBitmap("DailyLoginFailed");
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.lm = cLocaManager.GetInstance();
+        }
+
+        public function displayData(event:Event = null):void
+        {
+            var amount:int;
+            var convertedXp:ConvertedXp;
+            var reward:dQuestDefinitionRewardVO;
+            var effect:EffectVO;
+            var type:String;
+            var itemLocaString:String;
+            var tooltip:String;
+            var unlockData:dPvPLevelUnlockData;
+            if ((data is dQuestDefinitionRewardVO))
+            {
+                reward = (data as dQuestDefinitionRewardVO);
+                switch (reward.type)
+                {
+                    case QuestManagerStatic.TYPE_XP:
+                        this.frame.contentType = Frame.CONTENT_TYPE_RESOURCE;
+                        this.frame.type = Frame.BUFF_INSTANT;
+                        amount = reward.amount;
+                        if (reward.name_string == "formula")
+                        {
+                            amount = int(((global.playerLevelRewardXPs_vector[(global.ui.client_getPlayerLevel() - 1)] * amount) / 100));
+                        };
+                        if (global.ui.client_getPlayerLevel() == global.playerLevels_vector.length)
+                        {
+                            convertedXp = XpConversionCalculator.convertXp(amount);
+                            this.frame.amount = convertedXp.amount;
+                            this.frame.content = convertedXp.resourceName;
+                            this.toolTip = this.lm.GetText(LOCA_GROUP.RESOURCES, convertedXp.resourceName);
+                        }
+                        else
+                        {
+                            this.frame.amount = amount;
+                            this.frame.content = "XP";
+                            this.toolTip = this.lm.GetText(LOCA_GROUP.RESOURCES, "XP");
+                        };
+                        this.frame.addEventListener(ToolTipEvent.TOOL_TIP_CREATE, function (_arg_1:ToolTipEvent):void
+                        {
+                            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, _arg_1);
+                        });
+                        break;
+                    case QuestManagerStatic.TYPE_RESOURCE:
+                        this.frame.contentType = Frame.CONTENT_TYPE_RESOURCE;
+                        this.frame.type = Frame.BUFF_INSTANT;
+                        this.frame.amount = reward.amount;
+                        this.frame.content = reward.name_string;
+                        this.toolTip = this.lm.GetText(LOCA_GROUP.RESOURCES, reward.name_string);
+                        this.frame.addEventListener(ToolTipEvent.TOOL_TIP_CREATE, function (_arg_1:ToolTipEvent):void
+                        {
+                            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, _arg_1);
+                        });
+                        break;
+                    case QuestManagerStatic.TYPE_ADVENTURE:
+                        this.frame.contentType = Frame.CONTENT_TYPE_ADVENTURE;
+                        this.frame.type = Frame.BUFF_INSTANT;
+                        this.frame.content = reward.name_string;
+                        this.toolTip = this.lm.GetText(LOCA_GROUP.ADVENTURE_NAME, reward.name_string);
+                        this.frame.addEventListener(ToolTipEvent.TOOL_TIP_CREATE, function (_arg_1:ToolTipEvent):void
+                        {
+                            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, _arg_1);
+                        });
+                        break;
+                };
+            }
+            else
+            {
+                if ((data is EffectVO))
+                {
+                    effect = (data as EffectVO);
+                    type = effect.type_string.toLowerCase();
+                    if (effect.effect_string == Reward.XML_string)
+                    {
+                        if (type == "dummy")
+                        {
+                            this.frame.contentType = Frame.DUMMY_REWARD;
+                            this.frame.type = Frame.DUMMY_REWARD;
+                            this.frame.amount = effect.amount;
+                            this.frame.content = effect.item_string;
+                            if (!StringUtils.isEmpty(effect.name_string))
+                            {
+                                this.toolTip = this.lm.GetText(LOCA_GROUP.TOOLTIP, effect.name_string);
+                            };
+                        }
+                        else
+                        {
+                            if (type == "resource")
+                            {
+                                this.frame.contentType = Frame.CONTENT_TYPE_RESOURCE;
+                                this.frame.type = Frame.BUFF_INSTANT;
+                                this.frame.amount = effect.amount;
+                                this.frame.content = effect.name_string;
+                                this.toolTip = this.lm.GetText(LOCA_GROUP.RESOURCES, effect.name_string);
+                            }
+                            else
+                            {
+                                if (type == "collectionpart")
+                                {
+                                    this.frame.contentType = Frame.CONTENT_TYPE_RESOURCE;
+                                    this.frame.type = Frame.BUFF_INSTANT;
+                                    this.frame.amount = effect.amount;
+                                    this.frame.content = effect.name_string;
+                                    this.toolTip = this.lm.GetText(LOCA_GROUP.RESOURCES, effect.name_string);
+                                }
+                                else
+                                {
+                                    if (type == "xp")
+                                    {
+                                        this.frame.contentType = Frame.CONTENT_TYPE_RESOURCE;
+                                        this.frame.type = Frame.BUFF_INSTANT;
+                                        amount = effect.amount;
+                                        if (effect.name_string == "formula")
+                                        {
+                                            amount = int(((global.playerLevelRewardXPs_vector[(global.ui.client_getPlayerLevel() - 1)] * amount) / 100));
+                                        };
+                                        if (global.ui.client_getPlayerLevel() == global.playerLevels_vector.length)
+                                        {
+                                            convertedXp = XpConversionCalculator.convertXp(amount);
+                                            this.frame.amount = convertedXp.amount;
+                                            this.frame.content = convertedXp.resourceName;
+                                            this.toolTip = this.lm.GetText(LOCA_GROUP.RESOURCES, convertedXp.resourceName);
+                                        }
+                                        else
+                                        {
+                                            this.frame.amount = amount;
+                                            this.frame.content = "XP";
+                                            this.toolTip = this.lm.GetText(LOCA_GROUP.RESOURCES, "XP");
+                                        };
+                                    }
+                                    else
+                                    {
+                                        if (type == defines.PVP_XP_string.toLowerCase())
+                                        {
+                                            this.frame.contentType = Frame.CONTENT_TYPE_RESOURCE;
+                                            this.frame.type = Frame.BUFF_INSTANT;
+                                            amount = effect.amount;
+                                            this.frame.amount = amount;
+                                            this.frame.content = defines.PVP_XP_string;
+                                            this.toolTip = this.lm.GetText(LOCA_GROUP.RESOURCES, defines.PVP_XP_string);
+                                        }
+                                        else
+                                        {
+                                            if (type == "specialist")
+                                            {
+                                                this.frame.contentType = Frame.CONTENT_TYPE_NORMAL;
+                                                this.frame.type = Frame.SPECIALIST;
+                                                this.frame.content = (("icon_" + effect.name_string.toLowerCase()) + ".png");
+                                                this.toolTip = this.lm.GetText(LOCA_GROUP.SPECIALISTS, effect.name_string);
+                                            }
+                                            else
+                                            {
+                                                if (type != "military")
+                                                {
+                                                    if (type == "buff")
+                                                    {
+                                                        if (global.resourceDefinitions_vector.indexOf(effect.name_string) != -1)
+                                                        {
+                                                            if (StringUtils.contains(defines.FILL_DEPOSIT_BUFF, effect.item_string))
+                                                            {
+                                                                this.frame.contentType = Frame.CONTENT_TYPE_DEPOSIT_BUFF;
+                                                            }
+                                                            else
+                                                            {
+                                                                this.frame.contentType = Frame.CONTENT_TYPE_RESOURCE;
+                                                            };
+                                                            this.frame.type = Frame.BUFF_INSTANT;
+                                                            this.frame.amount = effect.amount;
+                                                            this.frame.content = effect.name_string;
+                                                            this.toolTip = this.lm.GetText(LOCA_GROUP.RESOURCES, effect.name_string);
+                                                        }
+                                                        else
+                                                        {
+                                                            if (((effect.item_string == "BuildBuilding") || (effect.item_string == "BuildDefenseModeBuilding")))
+                                                            {
+                                                                this.frame.contentType = Frame.CONTENT_TYPE_BUILDING;
+                                                                this.frame.type = Frame.BUFF_INSTANT;
+                                                                this.frame.amount = -1;
+                                                                this.frame.content = effect.name_string;
+                                                                this.toolTip = this.lm.GetText(LOCA_GROUP.BUILDINGS, effect.name_string);
+                                                            }
+                                                            else
+                                                            {
+                                                                this.frame.contentType = Frame.CONTENT_TYPE_BUFF;
+                                                                switch (cBuffDefinition.GetByName(effect.item_string).GetBuffType())
+                                                                {
+                                                                    case BUFF_TYPE.COMBAT_INSTANT:
+                                                                    case BUFF_TYPE.INSTANT:
+                                                                        this.frame.type = Frame.BUFF_INSTANT;
+                                                                        break;
+                                                                    case BUFF_TYPE.ZONE_TIMED:
+                                                                        this.frame.type = Frame.BUFF_ZONE_TIMED;
+                                                                        break;
+                                                                    case BUFF_TYPE.PERMANENT:
+                                                                        this.frame.type = Frame.BUFF_PERMANENT;
+                                                                        break;
+                                                                    case BUFF_TYPE.COMBAT_TIMED:
+                                                                    case BUFF_TYPE.TIMED_HIDDEN:
+                                                                    case BUFF_TYPE.TIMED:
+                                                                    case BUFF_TYPE.WAIT_FOR_ACTION:
+                                                                        this.frame.type = Frame.BUFF_TIMED;
+                                                                        break;
+                                                                    case BUFF_TYPE.UPGRADE:
+                                                                        this.frame.type = Frame.BUFF_UPGRADE;
+                                                                        break;
+                                                                    case BUFF_TYPE.ZONE:
+                                                                        this.frame.type = Frame.BUFF_TIMED;
+                                                                        break;
+                                                                };
+                                                                this.frame.amount = effect.amount;
+                                                                this.frame.content = effect.item_string;
+                                                                itemLocaString = this.frame.content;
+                                                                if (((itemLocaString == "FillDeposit") && (effect.name_string == "")))
+                                                                {
+                                                                    itemLocaString = (itemLocaString + "Any");
+                                                                };
+                                                                if (effect.name_string != "")
+                                                                {
+                                                                    if (effect.item_string == "HiredMilitary")
+                                                                    {
+                                                                        this.frame.content = (this.frame.content + ("_" + effect.name_string));
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        if (effect.item_string == "ChangeColorScheme")
+                                                                        {
+                                                                            this.frame.content = (this.frame.content + ("_" + effect.name_string));
+                                                                            itemLocaString = this.frame.content;
+                                                                        };
+                                                                    };
+                                                                };
+                                                                this.toolTip = this.lm.GetText(LOCA_GROUP.RESOURCES, itemLocaString, [effect.amount, effect.name_string]);
+                                                            };
+                                                        };
+                                                    }
+                                                    else
+                                                    {
+                                                        if (type == "adventure")
+                                                        {
+                                                            this.frame.contentType = Frame.CONTENT_TYPE_ADVENTURE;
+                                                            this.frame.type = Frame.BUFF_INSTANT;
+                                                            this.frame.content = effect.name_string;
+                                                            this.toolTip = this.lm.GetText(LOCA_GROUP.ADVENTURE_NAME, effect.name_string);
+                                                        }
+                                                        else
+                                                        {
+                                                            if (type == "unlock")
+                                                            {
+                                                                this.frame.contentType = Frame.CONTENT_TYPE_UNLOCK;
+                                                                this.frame.type = Frame.BUFF_INSTANT;
+                                                                this.frame.content = effect.item_string;
+                                                                this.toolTip = this.lm.GetText(LOCA_GROUP.LABELS, ("Unlock" + effect.name_string));
+                                                            }
+                                                            else
+                                                            {
+                                                                if (type == "production")
+                                                                {
+                                                                    this.frame.contentType = Frame.CONTENT_TYPE_UNLOCK;
+                                                                    this.frame.type = Frame.BUFF_INSTANT;
+                                                                    this.frame.content = effect.item_string;
+                                                                    this.toolTip = this.lm.GetText(LOCA_GROUP.LABELS, effect.name_string);
+                                                                };
+                                                            };
+                                                        };
+                                                    };
+                                                };
+                                            };
+                                        };
+                                    };
+                                };
+                            };
+                        };
+                    }
+                    else
+                    {
+                        if (effect.effect_string == FulfillCondition.XML_string)
+                        {
+                            this.frame.isMovable = false;
+                            this.frame.type = Frame.BUFF_INSTANT;
+                            if (type == EFFECT_CONDITION_TYPE_BUILDING)
+                            {
+                                if (effect.name_string == "MoveBuilding")
+                                {
+                                    this.frame.contentType = Frame.CONTENT_TYPE_NORMAL;
+                                    this.frame.content = "IconMoveBuilding";
+                                }
+                                else
+                                {
+                                    this.frame.contentType = Frame.CONTENT_TYPE_BUILDING;
+                                    this.frame.content = effect.name_string;
+                                };
+                                this.toolTip = this.lm.GetText(LOCA_GROUP.BUILDINGS, effect.name_string);
+                            }
+                            else
+                            {
+                                if (type == EFFECT_CONDITION_TYPE_PRODUCTION)
+                                {
+                                    if (effect.amount == -1)
+                                    {
+                                        this.frame.contentType = Frame.CONTENT_TYPE_MILITARY_PRODUCTION;
+                                    }
+                                    else
+                                    {
+                                        this.frame.contentType = Frame.CONTENT_TYPE_BUFF;
+                                    };
+                                    this.frame.content = ("Produce" + effect.name_string);
+                                    this.frame.type = Frame.BUFF_INSTANT;
+                                    this.toolTip = this.lm.GetText(LOCA_GROUP.RESOURCES, effect.name_string);
+                                }
+                                else
+                                {
+                                    if (type == EFFECT_CONDITION_TYPE_MISC)
+                                    {
+                                        this.frame.contentType = Frame.CONTENT_TYPE_UNLOCK;
+                                        this.frame.type = Frame.BUFF_INSTANT;
+                                        this.frame.content = effect.name_string;
+                                        this.toolTip = this.lm.GetText(LOCA_GROUP.LABELS, effect.name_string);
+                                    }
+                                    else
+                                    {
+                                        if (type == EFFECT_CONDITION_TYPE_TASK)
+                                        {
+                                            this.frame.contentType = Frame.CONTENT_TYPE_BUFF;
+                                            if (effect.name_string.indexOf("FindTreasure") != -1)
+                                            {
+                                                this.frame.content = "FindTreasure";
+                                                tooltip = effect.name_string;
+                                            }
+                                            else
+                                            {
+                                                if (effect.name_string.indexOf("FindAdventure") != -1)
+                                                {
+                                                    this.frame.content = "FindAdventure";
+                                                    tooltip = ("FindAdventure" + effect.name_string.substring(17));
+                                                }
+                                                else
+                                                {
+                                                    this.frame.content = effect.name_string;
+                                                    tooltip = ((effect.name_string.indexOf("Ore") != -1) ? effect.name_string.substring(0, (effect.name_string.length - 3)) : effect.name_string);
+                                                };
+                                            };
+                                            this.toolTip = this.lm.GetText(LOCA_GROUP.LABELS, tooltip);
+                                        }
+                                        else
+                                        {
+                                            if (type == EFFECT_CONDITION_TYPE_ADVENTURE)
+                                            {
+                                                this.frame.contentType = Frame.CONTENT_TYPE_BUFF;
+                                                this.frame.content = ("AdventureLevel" + effect.name_string);
+                                                this.toolTip = this.lm.GetText(LOCA_GROUP.LABELS, this.frame.content);
+                                            }
+                                            else
+                                            {
+                                                if (type == EFFECT_CONDITION_TYPE_ITEM)
+                                                {
+                                                    this.frame.contentType = Frame.CONTENT_TYPE_NORMAL;
+                                                    this.frame.content = (("icon_" + effect.name_string.toLowerCase()) + ".png");
+                                                    this.toolTip = this.lm.GetText(LOCA_GROUP.SPECIALISTS, effect.name_string);
+                                                }
+                                                else
+                                                {
+                                                    if (type == EFFECT_CONDITION_TYPE_CHAIN)
+                                                    {
+                                                        this.frame.contentType = Frame.CONTENT_TYPE_UNLOCK;
+                                                        this.frame.type = Frame.BUFF_INSTANT;
+                                                        this.frame.content = effect.item_string;
+                                                        this.toolTip = this.lm.GetText(LOCA_GROUP.LABELS, ("Unlock" + effect.name_string));
+                                                    };
+                                                };
+                                            };
+                                        };
+                                    };
+                                };
+                            };
+                        }
+                        else
+                        {
+                            if (effect.effect_string == GiveCollectibleResource.XML_string)
+                            {
+                                this.frame.contentType = Frame.CONTENT_TYPE_RESOURCE;
+                                this.frame.type = Frame.BUFF_INSTANT;
+                                this.frame.amount = effect.amount;
+                                this.frame.content = effect.name_string;
+                                this.toolTip = this.lm.GetText(LOCA_GROUP.RESOURCES, effect.name_string);
+                            };
+                        };
+                    };
+                }
+                else
+                {
+                    if ((data is dPvPLevelUnlockData))
+                    {
+                        unlockData = (data as dPvPLevelUnlockData);
+                        if (((unlockData.effectType.toLowerCase() == EFFECT_CONDITION_TYPE_MISC) || (unlockData.effectType.toLowerCase() == EFFECT_CONDITION_TYPE_PICKUPMANAGER)))
+                        {
+                            if (unlockData.effectName.slice(-5) == "Bonus")
+                            {
+                                this.frame.contentType = Frame.CONTENT_TYPE_BOOST;
+                            }
+                            else
+                            {
+                                this.frame.contentType = Frame.CONTENT_TYPE_UNLOCK;
+                            };
+                            this.frame.data = unlockData;
+                            this.frame.type = Frame.PERK;
+                            this.frame.content = unlockData.effectName;
+                            this.frame.amount = unlockData.value;
+                            this.toolTip = unlockData.effectName;
+                        }
+                        else
+                        {
+                            if (unlockData.effectType == Frame.CONTENT_TYPE_HIDDEN)
+                            {
+                                this.frame.type = Frame.BUFF_INSTANT;
+                                this.frame.content = Frame.CONTENT_TYPE_HIDDEN;
+                                this.frame.contentType = Frame.CONTENT_TYPE_HIDDEN;
+                            };
+                        };
+                    };
+                };
+            };
+            this.removeEventListener(FlexEvent.CREATION_COMPLETE, this.displayData);
+        }
+
+        override public function set data(_arg_1:Object):void
+        {
+            super.data = _arg_1;
+            if (this.frame)
+            {
+                this.displayData();
+            }
+            else
+            {
+                this.addEventListener(FlexEvent.CREATION_COMPLETE, this.displayData);
+            };
+        }
+    ]]></mx:Script>
+
+    <gui:Frame id="frame" />
+    <mx:Image id="failedIndicator" visible="false" source="{getFailedIndicatorSource()}" />
+</mx:Canvas>

@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="56" height="70" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import AdventureSystem.cAdventureDefinition;
+        import BuffSystem.cBuff;
+        import Collections.CollectionsManager;
+        import com.bluebyte.tso.util.ViewUtils;
+        import Communication.VO.dBuffVO;
+        import Enums.BUFF_TYPE;
+        import Enums.LOCA_GROUP;
+        import Enums.SPECIALIST_TASK_TYPES;
+        import Enums.SPECIALIST_TYPE;
+        import flash.display.Bitmap;
+        import flash.display.BitmapData;
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import flash.filters.GlowFilter;
+        import flash.geom.Point;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.CustomLabel;
+        import GUI.Components.EventMonster;
+        import GUI.Components.Frame;
+        import GUI.Components.ProgressBar;
+        import GUI.Components.RemoveBuffButton;
+        import GUI.Components.SpecialistPanel;
+        import GUI.Components.SpriteLibAnimation;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Components.UnassignManeuverButton;
+        import GUI.GAME.cSpecialistPanel;
+        import GUI.GAME.cStarMenu;
+        import GUI.greyFilter;
+        import GUI.Loca.cLocaManager;
+        import mx.collections.ArrayCollection;
+        import mx.containers.Canvas;
+        import mx.controls.Image;
+        import mx.controls.TileList;
+        import mx.events.FlexEvent;
+        import mx.events.ItemClickEvent;
+        import mx.events.PropertyChangeEvent;
+        import mx.events.ToolTipEvent;
+        import Specialists.cSpecialist;
+        import Specialists.cSpecialistTask_TravelToZone;
+        import Utils.RequirementsHelper;
+        import Utils.StringUtils;
+
+        private var usesCombatThree:Boolean = false;
+        private var selected:Boolean = false;
+        private var buffEnabled:Boolean = true;
+        private var contentReady:Boolean = false;
+        private var amountVisible:Boolean = true;
+        [Bindable]
+        public var index:int;
+        public var claimFlyToTarget:String;
+        public var flyToTarget:String;
+
+        [Bindable(event="propertyChange")]
+        public function get showAmount():Boolean { return amountVisible; }
+        public function set showAmount(value:Boolean):void
+        {
+            var previous:Boolean = amountVisible;
+            amountVisible = value;
+            if (amountLabel) amountLabel.visible = value;
+            if (previous != value) dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "showAmount", previous, value));
+        }
+
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+            if (value != null && owner is TileList) {
+                var items:ArrayCollection = TileList(owner).dataProvider as ArrayCollection;
+                if (items) index = items.getItemIndex(value);
+            }
+            displayData();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            for each (var icon:Image in [backgroundIcon, foregroundIcon]) {
+                icon.setStyle("horizontalCenter", 0);
+                icon.setStyle("verticalCenter", 0);
+            }
+            amountLabel.filters = [new GlowFilter(0, 0.8, 3, 3, 5, 2)];
+            addIcon.source = gAssetManager.GetClass("IconAddSpecialistItem");
+            starIcon.source = gAssetManager.GetBitmap("SmallIconStar");
+            starIcon.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "StarsOnSpecialist");
+            removeIcon.addEventListener("toolTipCreate", createRemoveBuffTooltip);
+            removeIcon.addEventListener("click", deleteIconClickHandler);
+            unassignIcon.addEventListener("click", deleteIconClickHandler);
+            amountLabel.addEventListener("toolTipCreate", createRemoveBuffTooltip);
+            addEventListener("toolTipCreate", createItemToolTip);
+            addEventListener("click", useItemClickHandler);
+            addEventListener("mouseOver", onMouseOverIcon);
+            addEventListener("mouseOut", onMouseOutIcon);
+            cLocaManager.GetInstance().addEventListener("languageChanged", displayData, false, 0, true);
+            contentReady = true;
+            displayData();
+        }
+        public function SetUsesCombatThree(value:Boolean):void
+        {
+            this.usesCombatThree = value;
+        }
+
+        public function select():void
+        {
+            this.selected = true;
+            if (this.buffEnabled)
+            {
+                this.backgroundIcon.filters = [new GlowFilter(16777130)];
+            };
+        }
+
+        public function deSelect():void
+        {
+            this.selected = false;
+            if (this.buffEnabled)
+            {
+                this.backgroundIcon.filters = [];
+            };
+        }
+
+        protected function onMouseOverIcon(event:Event):void
+        {
+            if (this.buffEnabled)
+            {
+                this.backgroundIcon.filters = [new GlowFilter(16777130)];
+            };
+        }
+
+        protected function onMouseOutIcon(event:Event):void
+        {
+            if (((!(this.selected)) && (this.buffEnabled)))
+            {
+                this.backgroundIcon.filters = [];
+            };
+        }
+
+        private function deleteIconClickHandler(mouseEvent:MouseEvent):void
+        {
+            var event:ItemClickEvent;
+            mouseEvent.stopPropagation();
+            if ((this.parentDocument is SpecialistPanel))
+            {
+                event = new ItemClickEvent(cSpecialistPanel.CLICK_DELETE_BUTTON, true);
+            }
+            else
+            {
+                event = new ItemClickEvent(cStarMenu.CLICK_DELETE_BUTTON, true);
+            };
+            event.item = data;
+            this.dispatchEvent(event);
+        }
+
+        private function addGemIcon(icon:BitmapData):void
+        {
+            var gemIcon:BitmapData;
+            if (icon)
+            {
+                gemIcon = gAssetManager.GetBitmap("SmallIconHardCurrency").bitmapData;
+                icon.copyPixels(gemIcon, gemIcon.rect, new Point(3, 2), null, null, true);
+            };
+        }
+
+        private function displayData(event:Event=null):void
+        {
+            var specialist:cSpecialist;
+            var specialistType:String;
+            var canAccelerate:Boolean;
+            var combatCompatible:Boolean;
+            var specialistIcon:Bitmap;
+            var travelTask:cSpecialistTask_TravelToZone;
+            var buffType:String;
+            var resourceName:String;
+            var available:Boolean;
+            var quantity:int;
+            var panelSpecialist:cSpecialist;
+            var buff:cBuff;
+            var applyResult:Object;
+            var buffVO:dBuffVO;
+            if (!contentReady) return;
+            this.backgroundIcon.source = null;
+            this.foregroundIcon.source = null;
+            this.foregroundIcon.visible = false;
+            this.amountLabel.text = "";
+            this.removeIcon.visible = false;
+            this.busyAnim.visible = false;
+            this.progress.visible = false;
+            this.starIcon.visible = false;
+            this.showAmount = true;
+            if (((!(data == null)) && (((data is cSpecialist) || (data is cBuff)) || (data is dBuffVO))))
+            {
+                this.addIcon.visible = false;
+                this.buffEnabled = true;
+                if ((data is cSpecialist))
+                {
+                    specialist = (data as cSpecialist);
+                    specialistType = SPECIALIST_TYPE.toString(specialist.GetType());
+                    canAccelerate = true;
+                    combatCompatible = true;
+                    switch (specialist.GetBaseType())
+                    {
+                        case SPECIALIST_TYPE.GENERAL:
+                        case SPECIALIST_TYPE.TRANSPORTER_GENERAL:
+                        case SPECIALIST_TYPE.TMP_ARMY_TRANSPORTER:
+                            canAccelerate = false;
+                            combatCompatible = (!(this.usesCombatThree));
+                            break;
+                    };
+                    specialistIcon = gAssetManager.GetSpecialistIcon(specialistType, ((!(specialist.IsInUse())) && (combatCompatible)));
+                    this.frame.type = Frame.SPECIALIST;
+                    toolTip = specialistType;
+                    this.id = specialistType;
+                    if (specialist.GetBaseType() == SPECIALIST_TYPE.ADMIRAL)
+                    {
+                        canAccelerate = false;
+                        if (((specialist.GetTask()) && (specialist.GetTask().GetType() == SPECIALIST_TASK_TYPES.TRAVEL_TO_ZONE)))
+                        {
+                            travelTask = (specialist.GetTask() as cSpecialistTask_TravelToZone);
+                            if (travelTask.GetDestinationZoneID() == specialist.getPlayerID())
+                            {
+                                canAccelerate = true;
+                            };
+                        };
+                    };
+                    if (((specialist.IsInUse()) && (canAccelerate)))
+                    {
+                        this.addGemIcon(specialistIcon.bitmapData);
+                        this.addEventListener(MouseEvent.MOUSE_OVER, this.onMouseOverIcon);
+                        this.addEventListener(MouseEvent.MOUSE_OUT, this.onMouseOutIcon);
+                    };
+                    this.starIcon.visible = ((specialist.skills.isEmpty()) && (!(specialist.skills.getItems_vector().length == specialist.GetSpecialistDescription().getTraits().length)));
+                    this.starIcon.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "StarsOnSpecialist");
+                    this.starIcon.setStyle("top", 6);
+                    this.backgroundIcon.source = specialistIcon;
+                    this.progress.visible = specialist.DisplayTaskProgress();
+                    if (specialist.GetTask())
+                    {
+                        this.progress.value = specialist.GetTaskProgress();
+                    };
+                    this.resetFilters();
+                    this.amountLabel.text = "";
+                    this.foregroundIcon.visible = false;
+                    this.removeIcon.visible = false;
+                }
+                else
+                {
+                    if ((data is cBuff))
+                    {
+                        buff = (data as cBuff);
+                        buffType = buff.GetType();
+                        resourceName = buff.GetResourceName_string();
+                        available = (!(buff.GetWaitingForServer()));
+                        quantity = buff.GetAmount();
+                        quantity = (quantity - buff.GetWaitingForServerCount());
+                        if (quantity == 0)
+                        {
+                            this.showAmount = false;
+                        };
+                        if (((!(StringUtils.isEmpty(buff.GetBuffDefinition().GetRedeemableEventName()))) && (!(RequirementsHelper.checkEvent(global.ui, buff.GetBuffDefinition().GetRedeemableEventName())))))
+                        {
+                            buff.enable = true;
+                        }
+                        else
+                        {
+                            if (buff.GetBuffDefinition().isQuestProduceable())
+                            {
+                                buff.enable = RequirementsHelper.checkQuest(global.ui, buff.GetBuffDefinition().GetRequiredQuest());
+                            }
+                            else
+                            {
+                                if (((buff.GetBuffDefinition().GetBuffType() == BUFF_TYPE.ZONE_TIMED) && (buff.enable)))
+                                {
+                                    applyResult = buff.IsApplyable(global.ui.mCurrentPlayer, global.ui, 0);
+                                    buff.enable = (applyResult === BUFF_TYPE.toString(BUFF_TYPE.ZONE_TIMED));
+                                };
+                            };
+                        };
+                        if (!buff.enable)
+                        {
+                            this.backgroundIcon.filters = [greyFilter()];
+                            this.foregroundIcon.filters = [greyFilter()];
+                            this.frame.filters = [greyFilter()];
+                            this.buffEnabled = false;
+                        }
+                        else
+                        {
+                            this.resetFilters();
+                        };
+                        this.busyAnim.visible = buff.loading;
+                        if (((buff.IsDeletable()) && (!((buffType == defines.ADD_RESOURCE_BUFF) && (resourceName == defines.HARD_CURRENCY_RESOURCE_NAME_string)))))
+                        {
+                            this.removeIcon.visible = true;
+                            this.removeIcon.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, "DeleteItem");
+                        }
+                        else
+                        {
+                            this.removeIcon.visible = false;
+                        };
+                    }
+                    else
+                    {
+                        if ((data is dBuffVO))
+                        {
+                            buffVO = (data as dBuffVO);
+                            buffType = buffVO.buffName_string;
+                            resourceName = buffVO.resourceName_string;
+                            available = true;
+                            quantity = buffVO.amount;
+                            this.resetFilters();
+                            this.removeIcon.visible = false;
+                        };
+                    };
+                    this.id = resourceName;
+                    switch (cBuff.getBuffDefinitionByName(buffType).GetBuffType())
+                    {
+                        case BUFF_TYPE.WAIT_FOR_ACTION:
+                        case BUFF_TYPE.INSTANT:
+                            this.frame.type = Frame.BUFF_INSTANT;
+                            break;
+                        case BUFF_TYPE.TIMED_HIDDEN:
+                        case BUFF_TYPE.TIMED:
+                            this.frame.type = Frame.BUFF_TIMED;
+                            break;
+                        case BUFF_TYPE.UPGRADE:
+                            this.frame.type = Frame.BUFF_UPGRADE;
+                            break;
+                        case BUFF_TYPE.ZONE_TIMED:
+                            this.frame.type = Frame.BUFF_ZONE_TIMED;
+                            break;
+                        case BUFF_TYPE.PERMANENT:
+                            this.frame.type = Frame.BUFF_PERMANENT;
+                            break;
+                        case BUFF_TYPE.ZONE:
+                            this.frame.type = Frame.BUFF_TIMED;
+                            break;
+                    };
+                    this.progress.visible = false;
+                    if ((this.parentDocument is EventMonster) && buff != null)
+                    {
+                        available = (data as cBuff).active;
+                        this.busyAnim.visible = buff.GetWaitingForServer();
+                    };
+                    panelSpecialist = null;
+                    if ((this.parentDocument is SpecialistPanel))
+                    {
+                        panelSpecialist = globalFlash.gui.mSpecialistPanel.GetSpecialist();
+                    };
+                    if (((buffType.indexOf(defines.ADD_RESOURCE_BUFF) == 0) || (buffType.indexOf(defines.FILL_DEPOSIT_BUFF) == 0)))
+                    {
+                        if (((!(resourceName == "")) && (CollectionsManager.getInstance().getShouldRenderResourceForBuff(buffType))))
+                        {
+                            this.foregroundIcon.visible = true;
+                            this.foregroundIcon.source = gAssetManager.GetResourceIcon(resourceName, available);
+                        }
+                        else
+                        {
+                            this.foregroundIcon.visible = false;
+                        };
+                        this.backgroundIcon.source = gAssetManager.GetBuffIcon(buffType, available);
+                        toolTip = buffType;
+                        this.amountLabel.text = quantity.toString();
+                    }
+                    else
+                    {
+                        if (((buffType == defines.BUILD_BUILDING_BUFF) || (buffType == defines.BUILD_DEFENSE_MODE_BUILDING_BUFF)))
+                        {
+                            this.foregroundIcon.visible = false;
+                            this.backgroundIcon.source = gAssetManager.GetBuildingIcon(resourceName, available);
+                            toolTip = buffType;
+                            this.amountLabel.text = quantity.toString();
+                        }
+                        else
+                        {
+                            if (buffType == defines.ADVENTURE_BUFF)
+                            {
+                                this.foregroundIcon.visible = false;
+                                this.backgroundIcon.source = cAdventureDefinition.GetAdventureIcon(resourceName, available);
+                                toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.ADVENTURE_NAME, resourceName);
+                                this.amountLabel.text = quantity.toString();
+                                this.starIcon.visible = ViewUtils.hasActiveSkillForAdventure(resourceName);
+                                this.starIcon.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "StarsOnAdventure");
+                                this.starIcon.setStyle("top", 16);
+                            }
+                            else
+                            {
+                                if (buffType == defines.HIRED_MILITARY_BUFF)
+                                {
+                                    this.foregroundIcon.visible = false;
+                                    this.backgroundIcon.source = gAssetManager.GetBuffIcon(((defines.HIRED_MILITARY_BUFF + "_") + resourceName), available);
+                                    toolTip = buffType;
+                                    this.amountLabel.text = quantity.toString();
+                                }
+                                else
+                                {
+                                    if (buffType.indexOf(defines.CHANGE_COLOR_SCHEME_BUFF) == 0)
+                                    {
+                                        this.foregroundIcon.visible = false;
+                                        this.backgroundIcon.source = gAssetManager.GetBuffIcon(((defines.CHANGE_COLOR_SCHEME_BUFF + "_") + resourceName), available);
+                                        toolTip = ((defines.CHANGE_COLOR_SCHEME_BUFF + "_") + resourceName);
+                                        this.amountLabel.text = quantity.toString();
+                                    }
+                                    else
+                                    {
+                                        if (buffType.indexOf(defines.PREMIUM_ACCOUNT_BUFF) == 0)
+                                        {
+                                            this.foregroundIcon.visible = false;
+                                            this.backgroundIcon.source = gAssetManager.GetBuffIcon(buffType, available);
+                                            this.amountLabel.text = quantity.toString();
+                                            toolTip = buffType;
+                                        }
+                                        else
+                                        {
+                                            this.foregroundIcon.visible = false;
+                                            this.backgroundIcon.source = gAssetManager.GetBuffIcon(buffType, available);
+                                            toolTip = buffType;
+                                            this.amountLabel.text = quantity.toString();
+                                        };
+                                    };
+                                };
+                            };
+                        };
+                    };
+                    if (((!(buff == null)) && (buff.isNotMerged())))
+                    {
+                        this.amountLabel.text = "";
+                    };
+                };
+            };
+            dispatchEvent(new FlexEvent(FlexEvent.DATA_CHANGE));
+        }
+
+        private function createItemToolTip(event:ToolTipEvent):void
+        {
+            var resourceName:String;
+            if (((!(data == null)) && (!(data is int))))
+            {
+                if ((data is cSpecialist))
+                {
+                    if (((((data as cSpecialist).GetSpecialistDescription().isGeneral()) || ((data as cSpecialist).GetSpecialistDescription().isAdmiral())) || ((data as cSpecialist).GetType() == SPECIALIST_TYPE.TMP_ARMY_TRANSPORTER)))
+                    {
+                        if ((data as cSpecialist).GetArmy().GetSquads_vector().length > 0)
+                        {
+                            if ((data as cSpecialist).GetArmy().GetSquads_vector()[0].IsCombat3())
+                            {
+                                cToolTipUtil.createToolTip(cToolTipUtil.SEND_ARMY_NEW_COMBAT, event, data);
+                            }
+                            else
+                            {
+                                cToolTipUtil.createToolTip(cToolTipUtil.SEND_ARMY, event, data);
+                            };
+                        }
+                        else
+                        {
+                            cToolTipUtil.createToolTip(cToolTipUtil.SPECIALIST_string, event, data);
+                        };
+                    }
+                    else
+                    {
+                        cToolTipUtil.createToolTip(cToolTipUtil.SPECIALIST_string, event, data);
+                    };
+                }
+                else
+                {
+                    if (((data is cBuff) && ((data as cBuff).GetType() == defines.ADVENTURE_BUFF)))
+                    {
+                        resourceName = (data is dBuffVO ? dBuffVO(data).resourceName_string : cBuff(data).GetResourceName_string());
+                        if (resourceName.indexOf("$Expedition") == -1)
+                        {
+                            cToolTipUtil.createToolTip(cToolTipUtil.ADVENTURE_string, event, (data as cBuff).GetResourceName_string());
+                        }
+                        else
+                        {
+                            cToolTipUtil.createToolTip(cToolTipUtil.EXPEDITION_ITEM_string, event, data);
+                        };
+                    }
+                    else
+                    {
+                        if ((((data is cBuff) && (!((data as cBuff).GetType() == defines.ADVENTURE_BUFF))) || ((data is dBuffVO) && (!((data as dBuffVO).buffName_string == defines.ADVENTURE_BUFF)))))
+                        {
+                            cToolTipUtil.createToolTip(cToolTipUtil.BUFF_string, event, data);
+                        }
+                        else
+                        {
+                            resourceName = (data is dBuffVO ? dBuffVO(data).resourceName_string : cBuff(data).GetResourceName_string());
+                            if (resourceName.indexOf("$Expedition") == -1)
+                            {
+                                cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+                            }
+                            else
+                            {
+                                cToolTipUtil.createToolTip(cToolTipUtil.EXPEDITION_ITEM_string, event, data);
+                            };
+                        };
+                    };
+                };
+            };
+        }
+
+        private function resetFilters():void
+        {
+            filters = [];
+            this.backgroundIcon.filters = [];
+            this.foregroundIcon.filters = [];
+            this.frame.filters = [];
+        }
+
+        private function createRemoveBuffTooltip(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        private function useItemClickHandler(mouseEvent:MouseEvent):void
+        {
+            var event:ItemClickEvent = new ItemClickEvent(cStarMenu.CLICK_ITEM, true);
+            if ((this.parentDocument is EventMonster))
+            {
+                event.item = this;
+            }
+            else
+            {
+                event.item = data;
+            };
+            this.dispatchEvent(event);
+        }
+    ]]></mx:Script>
+    <gui:Frame id="frame" />
+    <mx:Image id="backgroundIcon" />
+    <mx:Image id="foregroundIcon" />
+    <gui:RemoveBuffButton id="removeIcon"  top="5" right="5" />
+    <gui:UnassignManeuverButton id="unassignIcon" visible="false"  top="5" right="5" />
+    <mx:Image id="addIcon" visible="false"  top="5" right="3" />
+    <mx:Image id="starIcon" visible="false"  top="6" right="5" />
+    <gui:ProgressBar id="progress"  left="8" right="8" bottom="10" />
+    <gui:SpriteLibAnimation id="busyAnim" animationName="guianim_hourglass" visible="false" loop="true" width="48" height="48"  horizontalCenter="0" verticalCenter="0" />
+    <gui:CustomLabel id="amountLabel" width="50"  horizontalCenter="0" textAlign="center" fontWeight="bold" color="0xFFFFFF" bottom="7" />
+</mx:Canvas>
+

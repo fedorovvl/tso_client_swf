@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu:MenuSlot xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:menu="GUI.Components.circularmenu.*"
+    clipContent="false" horizontalScrollPolicy="off" verticalScrollPolicy="off"
+    minWidth="60" minHeight="45">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import flash.filters.GlowFilter;
+        import mx.events.FlexEvent;
+        import mx.events.ToolTipEvent;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+
+        private var _toggled:Boolean = false;
+
+        public function get toggled():Boolean
+        {
+            return (_toggled);
+        }
+
+        public function set toggled(value:Boolean):void
+        {
+            if (_toggled !== value)
+            {
+                _toggled = value;
+                dispatchEvent(new Event("toggleChangedEvent"));
+                refreshFromData();
+            };
+        }
+
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+            refreshFromData();
+        }
+
+        private function refreshFromData():void
+        {
+            if (!_CircleCenter_Image1 || !data)
+            {
+                return;
+            };
+            var tip:* = data.toolTip;
+            this.toolTip = ((tip == undefined) ? null : String(tip));
+            _CircleCenter_Image1.source = getAsset(toggled, isMouseOver);
+            _CircleCenter_Image2.source = data.icon;
+            _CircleCenter_Image2.alpha = (((isMouseOver) || (toggled)) ? 1 : 0.7);
+            _CircleCenter_CustomLabel1.visible = (int(data.amount) > -1);
+            var amount:* = data.amount;
+            _CircleCenter_CustomLabel1.text = ((amount == undefined) ? null : String(amount));
+        }
+
+        private function getAsset(toggled:Boolean, hovered:Boolean):Class
+        {
+            if (toggled)
+            {
+                return (gAssetManager.GetClass("CombatUIPlatePlayerNextOpened"));
+            };
+            if (hovered)
+            {
+                return (gAssetManager.GetClass("CombatUIPlatePlayerNextHovered"));
+            };
+            return (gAssetManager.GetClass("CombatUIPlatePlayerNext"));
+        }
+
+        public function clickHandler(event:MouseEvent):void
+        {
+            this.toggled = (!(this.toggled));
+        }
+
+        protected function completeHandler(event:FlexEvent = null):void
+        {
+            removeEventListener(FlexEvent.CREATION_COMPLETE, this.completeHandler);
+            stage.addEventListener(MouseEvent.CLICK, this.outsideClickHandler);
+        }
+
+        private function outsideClickHandler(event:MouseEvent):void
+        {
+            if (((this.toggled) && (!(parentDocument.contains(event.target)))))
+            {
+                this.toggled = false;
+            };
+        }
+
+        public function onToolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.MILITARY_UNIT_CONDENSED_string, event);
+        }
+
+        public function onAddedToStage(event:Event):void
+        {
+            completeHandler();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            var glow:GlowFilter = new GlowFilter();
+            glow.alpha = 0.8;
+            glow.blurX = 2;
+            glow.blurY = 2;
+            glow.color = 0;
+            glow.quality = 1;
+            glow.strength = 5;
+            _CircleCenter_CustomLabel1.filters = [glow];
+            addEventListener("toolTipCreate", onToolTipCreate);
+            addEventListener("addedToStage", onAddedToStage);
+            addEventListener("click", clickHandler);
+            addEventListener("rollOverChanged", refreshFromData);
+            refreshFromData();
+        }
+    ]]></mx:Script>
+    <mx:Image id="_CircleCenter_Image1" mouseChildren="false" mouseEnabled="false"  right="5" bottom="10" />
+    <mx:Image id="_CircleCenter_Image2"  bottom="15" horizontalCenter="-2" />
+    <gui:CustomLabel id="_CircleCenter_CustomLabel1"  bottom="10" color="0xFFFFFF" fontWeight="bold" horizontalCenter="0" textAlign="center" />
+</menu:MenuSlot>

@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    clipContent="false" cacheAsBitmap="true">
+    <mx:Script><![CDATA[
+        import flash.display.Sprite;
+        import flash.events.Event;
+        import flash.events.EventPhase;
+        import mx.controls.Alert;
+        import mx.controls.Button;
+        import mx.core.Application;
+        import mx.core.IFlexDisplayObject;
+        import mx.core.UIComponent;
+        import mx.events.FlexEvent;
+        import mx.managers.PopUpManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Events.DismissMailCloseEvent;
+
+        public static const ACCEPT:uint = 22;
+        public static const STYLE_DEFAULT:int = 0;
+        public static const STYLE_PAYMENT:int = 1;
+        public static const STYLE_CONFORMATION:int = 3;
+
+        private static var _localize:Boolean;
+
+        public var acceptBtn:StandardButton;
+
+        private var _text:String;
+        private var _buttonFlags:uint = 0;
+        private var _defaultButtonFlag:uint = 0;
+        private var _title:String;
+
+        protected var _resourceData:*;
+
+        private static function static_creationCompleteHandler(_arg_1:FlexEvent):void
+        {
+            if (((_arg_1.target is IFlexDisplayObject) && (_arg_1.eventPhase == EventPhase.AT_TARGET)))
+            {
+                (_arg_1.target as DismissMailsAlert).removeEventListener(FlexEvent.CREATION_COMPLETE, static_creationCompleteHandler);
+                (_arg_1.target as DismissMailsAlert).addButtons();
+                (_arg_1.target as DismissMailsAlert).setTexts();
+                PopUpManager.centerPopUp(IFlexDisplayObject(_arg_1.target));
+            };
+        }
+
+        public static function show(_arg_1:String="", _arg_2:String="", _arg_3:*=null, _arg_4:Function=null, _arg_5:Sprite=null, _arg_6:Boolean=true, _arg_7:int=0, _arg_8:int=0, _arg_9:int=0):void
+        {
+            var _local_14:DismissMailsAlert;
+            var _local_10:uint = Alert.CANCEL;
+            var _local_11:uint = _local_10;
+            var _local_12:Object;
+            _localize = _arg_6;
+            var _local_13:Boolean = ((_local_10 & Alert.NONMODAL) ? false : true);
+            if (!_arg_5)
+            {
+                _arg_5 = Sprite(Application.application);
+            };
+            _local_14 = new (DismissMailsAlert)();
+            if (((((_local_10 & Alert.OK) || (_local_10 & Alert.CANCEL)) || (_local_10 & Alert.YES)) || (_local_10 & Alert.NO)))
+            {
+                _local_14.buttonFlags = _local_10;
+            };
+            if (((((_local_11 == Alert.OK) || (_local_11 == Alert.CANCEL)) || (_local_11 == Alert.YES)) || (_local_11 == Alert.NO)))
+            {
+                _local_14.defaultButtonFlag = _local_11;
+            };
+            if (_local_12 == null)
+            {
+                _local_12 = gAssetManager.dummy;
+            };
+            if ((_local_12 is Class))
+            {
+                _local_12 = new (_local_12)();
+            };
+            _local_14.text = _arg_1;
+            _local_14.title = _arg_2;
+            _local_14.iconGfx = _local_12;
+            _local_14.resourceData = _arg_3;
+            if (_arg_4 != null)
+            {
+                _local_14.addEventListener(DismissMailCloseEvent.DISMISS, _arg_4);
+            };
+            if ((_arg_5 is UIComponent))
+            {
+                _local_14.moduleFactory = UIComponent(_arg_5).moduleFactory;
+            };
+            PopUpManager.addPopUp(_local_14, _arg_5, _local_13);
+            _local_14.addEventListener(FlexEvent.CREATION_COMPLETE, static_creationCompleteHandler);
+            _local_14.styleName = "customAlert";
+            _local_14.paymentOrnament.visible = false;
+            _local_14.titleLabel.visible = true;
+            _local_14.width = 350;
+            _local_14.minHeight = 175;
+            _local_14.buttonsList.setConstraintValue("bottom", 15);
+            _local_14.content.setStyle("paddingLeft", 0);
+            _local_14.content.setStyle("paddingRight", 4);
+            _local_14.width = 375;
+            _local_14.grpCollectable.visible = (_local_14.grpCollectable.includeInLayout = (_arg_7 > 0));
+            if (_local_14.grpCollectable.visible)
+            {
+                _local_14.txtCollectable.text = ((_arg_7 + " ") + cLocaManager.GetInstance().GetText(LOCA_GROUP.ALERT_MESSAGES, "DismissDialogCollectableMailsMsgs"));
+            };
+            _local_14.grpDeletable.visible = (_local_14.grpDeletable.includeInLayout = (_arg_8 > 0));
+            if (_local_14.grpDeletable.visible)
+            {
+                _local_14.txtDeletable.text = ((_arg_8 + " ") + cLocaManager.GetInstance().GetText(LOCA_GROUP.ALERT_MESSAGES, "DismissDialogDeletableMailsMsgs"));
+            };
+            _local_14.grpNotDismissable.visible = (_local_14.grpNotDismissable.includeInLayout = (_arg_9 > 0));
+            if (_local_14.grpNotDismissable.visible)
+            {
+                _local_14.txtNotDismissable.text = ((_arg_9 + " ") + cLocaManager.GetInstance().GetText(LOCA_GROUP.ALERT_MESSAGES, "DismissDialogNotDismissableMailsMsgs"));
+            };
+            _local_14.acceptBtn = new StandardButton();
+            _local_14.acceptBtn.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            _local_14.acceptBtn.addEventListener(FlexEvent.BUTTON_DOWN, _local_14.removeAlert);
+            _local_14.acceptBtn.width = 70;
+            _local_14.acceptBtn.height = 32;
+            _local_14.acceptBtn.name = "ACCEPT";
+            _local_14.buttonsList.addChildAt(_local_14.acceptBtn, 0);
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(titleBox);
+            LegacyMxmlContent.createChildren(content);
+            chkStorage.addEventListener("change", syncRadio);
+            chkStarMenu.addEventListener("change", syncRadio);
+            syncRadio();
+        }
+
+        private function syncRadio(event:Event = null):void
+        {
+            if (event != null && event.target == chkStorage)
+            {
+                chkStarMenu.selected = !chkStorage.selected;
+            }
+            else if (event != null && event.target == chkStarMenu)
+            {
+                chkStorage.selected = !chkStarMenu.selected;
+            }
+            else
+            {
+                chkStarMenu.selected = !chkStorage.selected;
+            };
+        }
+
+        public function set iconGfx(_arg_1:*):void
+        {
+            setIcon(_arg_1);
+        }
+
+        private function setIcon(_arg_1:*):void
+        {
+            _icon = _arg_1;
+        }
+
+        private var _icon:*;
+
+        public function set text(_arg_1:String):void
+        {
+            if (_localize)
+            {
+                this._text = cLocaManager.GetInstance().GetText(LOCA_GROUP.ALERT_MESSAGES, _arg_1);
+            }
+            else
+            {
+                this._text = _arg_1;
+            };
+        }
+
+        public function set title(_arg_1:String):void
+        {
+            if (((_localize) && (_arg_1.length > 0)))
+            {
+                this._title = cLocaManager.GetInstance().GetText(LOCA_GROUP.ALERT_TITLES, _arg_1);
+            }
+            else
+            {
+                this._title = _arg_1;
+            };
+        }
+
+        public function set resourceData(_arg_1:*):void
+        {
+            this._resourceData = _arg_1;
+        }
+
+        public function set buttonFlags(_arg_1:uint):void
+        {
+            this._buttonFlags = _arg_1;
+        }
+
+        public function set defaultButtonFlag(_arg_1:uint):void
+        {
+            this._defaultButtonFlag = _arg_1;
+        }
+
+        public function addCustomButton(_arg_1:StandardButton):void
+        {
+            _arg_1.addEventListener(FlexEvent.BUTTON_DOWN, this.removeAlert);
+            this.buttonsList.addChild(_arg_1);
+        }
+
+        protected function removeAlert(_arg_1:FlexEvent):void
+        {
+            var _local_2:String = Button(_arg_1.currentTarget).name;
+            this.visible = false;
+            var _local_3:DismissMailCloseEvent = new DismissMailCloseEvent(DismissMailCloseEvent.DISMISS);
+            if (_local_2 == "YES")
+            {
+                _local_3.detail = Alert.YES;
+            }
+            else
+            {
+                if (_local_2 == "NO")
+                {
+                    _local_3.detail = Alert.NO;
+                }
+                else
+                {
+                    if (_local_2 == "OK")
+                    {
+                        _local_3.detail = Alert.OK;
+                    }
+                    else
+                    {
+                        if (_local_2 == "CANCEL")
+                        {
+                            _local_3.detail = Alert.CANCEL;
+                        }
+                        else
+                        {
+                            if (_local_2 == "ACCEPT")
+                            {
+                                _local_3.detail = ACCEPT;
+                                _local_3.toStorage = this.chkStorage.selected;
+                            };
+                        };
+                    };
+                };
+            };
+            this.dispatchEvent(_local_3);
+            PopUpManager.removePopUp(this);
+        }
+
+        private function addButtons():void
+        {
+            var _local_3:StandardButton;
+            var _local_1:cLocaManager = cLocaManager.GetInstance();
+            var _local_2:uint = ((this._buttonFlags != 0) ? this._buttonFlags : this._defaultButtonFlag);
+            var _local_4:Array = new Array();
+            if ((_local_2 & Alert.OK))
+            {
+                _local_3 = new StandardButton();
+                _local_3.name = "OK";
+                _local_3.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+                _local_3.width = 70;
+                _local_3.height = 32;
+                _local_3.addEventListener(FlexEvent.BUTTON_DOWN, this.removeAlert);
+                _local_4.push(_local_3);
+            };
+            if ((_local_2 & Alert.CANCEL))
+            {
+                _local_3 = new StandardButton();
+                _local_3.name = "CANCEL";
+                _local_3.setStyle("icon", gAssetManager.GetClass("ButtonIconAbort"));
+                _local_3.width = 70;
+                _local_3.height = 32;
+                _local_3.addEventListener(FlexEvent.BUTTON_DOWN, this.removeAlert);
+                _local_4.push(_local_3);
+            };
+            if ((_local_2 & Alert.YES))
+            {
+                _local_3 = new StandardButton();
+                _local_3.name = "YES";
+                _local_3.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+                _local_3.width = 70;
+                _local_3.height = 32;
+                _local_3.addEventListener(FlexEvent.BUTTON_DOWN, this.removeAlert);
+                _local_4.push(_local_3);
+            };
+            if ((_local_2 & Alert.NO))
+            {
+                _local_3 = new StandardButton();
+                _local_3.name = "NO";
+                _local_3.setStyle("icon", gAssetManager.GetClass("ButtonIconAbort"));
+                _local_3.width = 70;
+                _local_3.height = 32;
+                _local_3.addEventListener(FlexEvent.BUTTON_DOWN, this.removeAlert);
+                _local_4.push(_local_3);
+            };
+            for each (_local_3 in _local_4)
+            {
+                this.buttonsList.addChild(_local_3);
+            };
+            if (this._resourceData == null)
+            {
+                this.buttonsList.setConstraintValue("bottom", 25);
+            };
+        }
+
+        private function setTexts():void
+        {
+            this.titleLabel.text = this._title;
+        }
+    ]]></mx:Script>
+    <mx:Image id="paymentOrnament" y="-25" horizontalCenter="0"
+        source="@Embed(source='../../../assets/embedded/alert/alert_alert_payment_ornament.png')" />
+    <mx:Box id="titleBox" percentWidth="100" horizontalAlign="center">
+        <gui:CustomLabel id="titleLabel" paddingTop="6" paddingLeft="10" paddingRight="10" paddingBottom="10" textAlign="center" color="0xFFFFFF" fontWeight="bold" />
+    </mx:Box>
+    <mx:VBox id="content" paddingTop="5" paddingBottom="25" paddingLeft="20" paddingRight="20" horizontalAlign="center" verticalGap="7">
+        <mx:Canvas id="grpCollectable" styleName="mailContentBorder" width="330" height="110">
+            <mx:Image id="collectIcon" x="2" y="7"
+                source="@Embed(source='../../../assets/embedded/mailwindow/mailwindow_icon_find_treasure.png')" />
+            <gui:CustomText id="txtCollectable" selectable="false" percentWidth="95" verticalCenter="0" horizontalCenter="0" color="0xFFFFFF" textAlign="center"
+                text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor" />
+            <mx:HBox id="checkRow" percentWidth="100" bottom="5" horizontalAlign="center" verticalAlign="middle">
+                <mx:Spacer percentWidth="100" />
+                <gui:StandardCheckBox id="chkStarMenu" />
+                <mx:Image id="starIcon" y="3"
+                    source="@Embed(source='../../../assets/embedded/starmenu/starmenu_icon_star_small.png')" />
+                <mx:Spacer percentWidth="25" />
+                <gui:StandardCheckBox id="chkStorage" />
+                <mx:Image id="storageIcon" y="3"
+                    source="@Embed(source='../../../assets/gAssetManager/StarMenuTabIconBuilding.png')" />
+                <mx:Spacer percentWidth="100" />
+            </mx:HBox>
+        </mx:Canvas>
+        <mx:Canvas id="grpNotDismissable" styleName="mailContentBorder" width="330" height="90">
+            <mx:Image id="repeatIcon" x="2" y="8"
+                source="@Embed(source='../../../assets/gAssetManager/IconMailReply.png')" />
+            <gui:CustomText id="txtNotDismissable" selectable="false" percentWidth="95" verticalCenter="5" horizontalCenter="0" color="0xFFFFFF" textAlign="center"
+                text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor" />
+        </mx:Canvas>
+        <mx:Canvas id="grpDeletable" styleName="mailContentBorder" width="330" height="90">
+            <mx:Image id="deleteIcon" x="2" y="7"
+                source="@Embed(source='../../../assets/embedded/mailwindow/mailwindow_icon_mail_delete.png')" />
+            <gui:CustomText id="txtDeletable" selectable="false" percentWidth="95" verticalCenter="5" horizontalCenter="0" color="0xFFFFFF" textAlign="center"
+                text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor" />
+        </mx:Canvas>
+        <mx:Spacer />
+        <mx:HBox id="buttonsList" />
+    </mx:VBox>
+</mx:Canvas>

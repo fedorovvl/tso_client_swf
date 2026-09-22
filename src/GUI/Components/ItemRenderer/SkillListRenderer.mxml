@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*">
+    <mx:Script><![CDATA[
+        import mx.containers.HBox;
+        import GUI.Components.CustomTextArea;
+        import GUI.Components.CustomText;
+        import GUI.Components.TSOImage;
+        import mx.containers.VBox;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import mx.events.PropertyChangeEvent;
+        import Skill.cSkill;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            var localValue2:String;
+            super.data = argument1;
+            if ((argument1 is cSkill))
+            {
+                localValue2 = (argument1 as cSkill).getName();
+                this.skillIcon.source = gAssetManager.GetBitmap((argument1 as cSkill).getDefinition().icon_string);
+                this.skillLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, localValue2);
+                this.skillDescription.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, localValue2);
+            };
+            refreshRendererPresentation();
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("verticalAlign", "middle");
+            this.setStyle("horizontalGap", 8);
+            this.verticalScrollPolicy = "off";
+            this.horizontalScrollPolicy = "off";
+            this.minHeight = 60;
+            this.minWidth = 300;
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <ui:TSOImage id="skillIcon" />
+    <mx:VBox id="viewVBox1" verticalScrollPolicy="off" horizontalScrollPolicy="off" percentWidth="100" horizontalAlign="center" verticalGap="0">
+        <ui:CustomText id="skillLabel" selectable="false"  color="0xFFFFFF" />
+        <ui:CustomTextArea id="skillDescription" percentWidth="100" styleName="noBackground" selectable="false" editable="false" horizontalScrollPolicy="off" verticalScrollPolicy="off"  color="0xFFFFFF" textAlign="left" />
+    </mx:VBox>
+</mx:HBox>

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    mouseEnabled="false" mouseChildren="false"
+    horizontalScrollPolicy="off" verticalScrollPolicy="off"
+    styleName="toolTip" minWidth="200">
+    <mx:Script><![CDATA[
+        import __AS3__.vec.Vector;
+        import ServerState.dResource;
+        import BuffSystem.cBuff;
+        import BuffSystem.cBuffDefinition;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import Collections.CollectionsConsts;
+        import GUI.Components.ItemRenderer.CollectibleMissingResourcesTipItemRenderer;
+
+        private const MAX_RESOURCE_ITEMS_MISSING:int = 3;
+        private const MISSING_RESOURCES_LIST_HEIGHT:int = 25;
+
+        private var _hardCurrencyAmountUnmodified:int;
+        private var _hardCurrencyAmount:int;
+        private var _missingResources:Vector.<dResource>;
+        private var _text:String;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this._missingResources = (_arg_1[0] as Vector.<dResource>);
+            this._hardCurrencyAmount = (_arg_1[1] as int);
+            this._hardCurrencyAmountUnmodified = (_arg_1[2] as int);
+        }
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this._text = _arg_1;
+            if (!headline || !vListBox)
+            {
+                return;
+            };
+            refreshContent();
+        }
+
+        private function addNewHorizontalMissingResourcesList():HBox
+        {
+            var _local_1:HBox = new HBox();
+            _local_1.height = this.MISSING_RESOURCES_LIST_HEIGHT;
+            this.vListBox.addChild(_local_1);
+            return (_local_1);
+        }
+
+        private function refreshContent():void
+        {
+            var _local_5:dResource;
+            var _local_6:dResource;
+            var _local_7:CollectibleMissingResourcesTipItemRenderer;
+            var _local_2:cBuffDefinition = cBuff.getBuffDefinitionByName(this._text);
+            this.headline.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, this._text);
+            if (_local_2 != null)
+            {
+                this.description.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, this._text, [_local_2.GetAmount(), _local_2.GetResourceName_string()]);
+            }
+            else
+            {
+                this.description.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, this._text);
+            };
+            this.missingResourcesLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, CollectionsConsts.BUILD_COLLECTION_MISSING_RESOURCES);
+            this.vListBox.removeAllChildren();
+            var _local_3:int;
+            this.vListBox.removeAllChildren();
+            var _local_4:HBox = this.addNewHorizontalMissingResourcesList();
+            for each (_local_5 in this._missingResources)
+            {
+                if (_local_3 >= this.MAX_RESOURCE_ITEMS_MISSING)
+                {
+                    _local_3 = 0;
+                    _local_4 = this.addNewHorizontalMissingResourcesList();
+                };
+                _local_7 = new CollectibleMissingResourcesTipItemRenderer();
+                _local_7.data = _local_5;
+                _local_4.addChild(_local_7);
+                _local_3++;
+            };
+            this.gemsText.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, CollectionsConsts.BUY_COLLECTIBLE_COMPONENTS_PRICE);
+            _local_6 = global.ui.mCurrentPlayerZone.GetResources(global.ui.mCurrentPlayer).GetPlayerResource(defines.HARD_CURRENCY_RESOURCE_NAME_string);
+            if (this._hardCurrencyAmountUnmodified == this._hardCurrencyAmount)
+            {
+                this.priceLabel.text = this._hardCurrencyAmount.toString();
+                this.priceLabel.lineThrough = false;
+                this.modifiedPriceLabel.visible = false;
+            }
+            else
+            {
+                this.priceLabel.text = this._hardCurrencyAmountUnmodified.toString();
+                this.modifiedPriceLabel.text = this._hardCurrencyAmount.toString();
+                this.modifiedPriceLabel.setStyle("color", ((_local_6.amount >= _local_5.amount) ? "#FFFFFF" : "#FF0000"));
+                this.priceLabel.lineThrough = true;
+                this.modifiedPriceLabel.visible = true;
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            renderer.resourceName = defines.HARD_CURRENCY_RESOURCE_NAME_string;
+            if (this._text != null)
+            {
+                refreshContent();
+            };
+        }
+    ]]></mx:Script>
+    <mx:VBox id="list" width="200" top="5" left="5" right="5" verticalGap="1">
+        <mx:Label id="headline"  fontWeight="bold" color="0xFFFFFF" />
+        <gui:CustomText id="description" width="200"  color="0xFFFFFF" />
+        <gui:CustomText id="missingResourcesLabel" width="200"  fontWeight="bold" color="0xFFFFFF" />
+        <mx:VBox id="vListBox"  verticalGap="2" />
+        <gui:CustomText id="gemsText" width="200"  fontWeight="bold" color="0xFFFFFF" />
+        <mx:HBox id="costsList" horizontalGap="0" verticalAlign="middle" paddingTop="-10">
+            <renderer:ResourceIconRenderer id="renderer" />
+            <gui:CustomLabel id="priceLabel" lineThrough="true"  color="0xFFFFFF" fontWeight="bold" />
+            <gui:CustomLabel id="modifiedPriceLabel"  color="0xFFFFFF" fontWeight="bold" paddingLeft="10" />
+        </mx:HBox>
+    </mx:VBox>
+</mx:Canvas>

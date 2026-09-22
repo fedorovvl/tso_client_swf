@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*" xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="600" height="400">
+    <mx:Script><![CDATA[
+        import GUI.Assets.gAssetManager;
+            import mx.events.EffectEvent;
+        import mx.core.ClassFactory;
+        import mx.effects.easing.Cubic;
+
+        [Embed(source="../../../assets/embedded/eventwindow/eventwindow_happy_hour_offer.png")]
+        private var happyHourOfferEmbed:Class;
+
+        [Embed(source="../../../assets/embedded/eventwindow/eventwindow_event_sparkles.png")]
+        private var happyHourSparklesEmbed:Class;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            pulsate.target = descriptionLabel;
+            pulseUp.easingFunction = Cubic.easeOut;
+            pulseDown.easingFunction = Cubic.easeIn;
+            fadeOut.addEventListener("effectEnd", __fadeOut_effectEnd);
+            buttonList.itemRenderer = new ClassFactory(EventButton);
+            happyHourOfferBackground.source = happyHourOfferEmbed;
+            happyHourSparkles.source = happyHourSparklesEmbed;
+            leftArrow.setStyle("upSkin", gAssetManager.GetClass("AvatarSelectionPanelArrowBackgroundNormal"));
+            leftArrow.setStyle("overSkin", gAssetManager.GetClass("AvatarSelectionPanelArrowBackgroundHighlight"));
+            leftArrow.setStyle("downSkin", gAssetManager.GetClass("AvatarSelectionPanelArrowBackgroundNormal"));
+            leftArrow.setStyle("disabledSkin", gAssetManager.GetClass("AvatarSelectionPanelArrowBackgroundDisabled"));
+            _EventInfoPanel_Image1.source = gAssetManager.GetClass("AvatarSelectionPanelLeftArrow");
+            rightArrow.setStyle("upSkin", gAssetManager.GetClass("AvatarSelectionPanelArrowBackgroundNormal"));
+            rightArrow.setStyle("overSkin", gAssetManager.GetClass("AvatarSelectionPanelArrowBackgroundHighlight"));
+            rightArrow.setStyle("downSkin", gAssetManager.GetClass("AvatarSelectionPanelArrowBackgroundNormal"));
+            rightArrow.setStyle("disabledSkin", gAssetManager.GetClass("AvatarSelectionPanelArrowBackgroundDisabled"));
+            _EventInfoPanel_Image2.source = gAssetManager.GetClass("AvatarSelectionPanelRightArrow");
+        }
+
+        public function happyHourVisible(visible:Boolean):void
+        {
+            happyHourNumber.visible = visible;
+            happyHourOfferBackground.visible = visible;
+            happyHourSparkles.visible = visible;
+        }
+
+        public function __fadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+    ]]></mx:Script>
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+    <mx:Sequence id="pulsate" repeatCount="0">
+        <mx:children><mx:Array>
+        <mx:Fade id="pulseUp" alphaFrom="0.2" alphaTo="1" duration="500" />
+        <mx:Fade id="pulseDown" alphaFrom="1" alphaTo="0.2" duration="800" />
+        </mx:Array></mx:children>
+    </mx:Sequence>
+    <mx:Canvas id="topSection" styleName="eventInfoTopBackground" height="130" verticalScrollPolicy="off" horizontalScrollPolicy="off" top="37" left="23" right="23">
+        <gui:TSOImage id="topBannerImage" top="8" horizontalCenter="0" />
+        <gui:TSOImage id="happyHourOfferBackground" top="8" horizontalCenter="0" visible="false" />
+        <gui:TSOImage id="happyHourNumber" horizontalCenter="0" verticalCenter="-2" visible="false" />
+        <gui:TSOImage id="happyHourSparkles" top="8" horizontalCenter="0" visible="false" />
+    </mx:Canvas>
+    <mx:Canvas id="middleSection" styleName="eventInfoMiddleBar" height="48" top="167" left="23" right="23">
+        <gui:TimeRemainingBar id="timeRemaining" left="170" right="170" top="0" bottom="8" />
+    </mx:Canvas>
+    <mx:Canvas styleName="eventInfoContent" horizontalScrollPolicy="off" top="209" left="23" right="23" bottom="41">
+        <mx:Canvas id="contentSection" percentWidth="100" percentHeight="100" verticalScrollPolicy="auto" horizontalScrollPolicy="off">
+            <mx:VBox top="8" left="15" right="15" bottom="15">
+                <gui:CustomText id="descriptionLabel" wordWrap="true" percentWidth="100" textAlign="center" color="0xFFFFFF" />
+                <mx:VBox id="bulletList" percentWidth="100" horizontalAlign="center" />
+            </mx:VBox>
+        </mx:Canvas>
+    </mx:Canvas>
+    <mx:Canvas styleName="eventInfoCurtainHeader" height="189" mouseEnabled="false" top="0" left="0" right="0" />
+    <gui:CloseButton id="btnClose" visible="true" top="10" right="24" />
+    <gui:CustomLabel id="titleLabel" height="20" top="15" right="50" left="50" textAlign="center" fontWeight="bold" />
+    <mx:Canvas id="bottomSection" styleName="questPanelFooter" height="50" bottom="0" left="20" right="20">
+        <renderer:RendererPoolBox id="buttonList" direction="horizontal" horizontalCenter="0" top="13" />
+    </mx:Canvas>
+    <mx:Canvas id="leftArrowCanvas" width="50" height="50" top="74" left="55">
+        <mx:Button id="leftArrow" width="50" height="50" />
+        <mx:Image id="_EventInfoPanel_Image1" mouseEnabled="false" left="10" verticalCenter="0" />
+    </mx:Canvas>
+    <mx:Canvas id="rightArrowCanvas" width="50" height="50" top="74" right="55">
+        <mx:Button id="rightArrow" width="50" height="50" label="&gt;" />
+        <mx:Image id="_EventInfoPanel_Image2" mouseEnabled="false" verticalCenter="0" horizontalCenter="0" />
+    </mx:Canvas>
+</mx:Canvas>

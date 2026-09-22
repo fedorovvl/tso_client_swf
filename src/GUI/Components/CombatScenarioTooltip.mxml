@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<bridge:NLibFlexBridge xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:bridge="com.bluebyte.tso.ui.bridge.*"
+    xmlns:gui="GUI.Components.*"
+    xmlns:menu="GUI.Components.circularmenu.*">
+    <mx:Script><![CDATA[
+        import mx.core.ClassFactory;
+        import mx.events.ResizeEvent;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ItemRenderer.Combat3ArmyToolTipRenderer;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            minWidth = 150;
+            horizontalScrollPolicy = "off";
+            verticalScrollPolicy = "off";
+            setStyle("horizontalAlign", "center");
+            setStyle("verticalGap", 0);
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            campUnitsList.itemRenderer = new ClassFactory(Combat3ArmyToolTipRenderer);
+            slot3.setStyle("showEffect", slotsShowEffect);
+            slot3.setStyle("hideEffect", slotsHideEffect);
+            slot2.setStyle("showEffect", slotsShowEffect);
+            slot2.setStyle("hideEffect", slotsHideEffect);
+            slot1.setStyle("showEffect", slotsShowEffect);
+            slot1.setStyle("hideEffect", slotsHideEffect);
+            addEventListener(ResizeEvent.RESIZE, resizeHandler);
+        }
+
+        override protected function measure():void
+        {
+            super.measure();
+        }
+
+        public function forceMeasure():void
+        {
+            this.measure();
+        }
+
+        protected function resizeHandler(event:ResizeEvent):void
+        {
+            x = (x - ((width - event.oldWidth) / 2));
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="500" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+    <mx:Fade id="slotsShowEffect" alphaFrom="0" alphaTo="1" duration="200" />
+    <mx:Fade id="slotsHideEffect" alphaFrom="1" alphaTo="0" duration="200" />
+
+    <mx:VBox id="topContainer" top="0" verticalGap="0" horizontalAlign="center" percentWidth="100">
+        <mx:HBox horizontalGap="0" verticalGap="0" horizontalAlign="center" verticalAlign="middle">
+            <mx:Canvas id="campUnitsCanvas" height="101" minWidth="56">
+                <gui:AlignedHorizontalList id="campUnitsList" top="15" backgroundAlpha="0" borderStyle="none"
+                    height="81" selectable="false" horizontalScrollPolicy="off" />
+            </mx:Canvas>
+        </mx:HBox>
+    </mx:VBox>
+
+    <mx:Canvas id="buildingClickZone" backgroundAlpha="0" backgroundColor="0"
+        width="120" height="100" includeInLayout="false" horizontalScrollPolicy="off" />
+
+    <mx:Canvas id="buffsContainer" borderStyle="none" horizontalScrollPolicy="off" verticalScrollPolicy="off"
+        visible="false" includeInLayout="false" clipContent="false">
+        <menu:ScenarioCircleSlot id="slot3" iconX="10" iconY="5"
+            posNormalX="165" posNormalY="-20" posHoveredX="167" posHoveredY="-22"
+            sliderRotation="-40" sliderX="30" sliderY="51" sliderWidth="68" visible="false"
+            imageHovered="{gAssetManager.GetClass('scenarioUICircle3Hoverd')}"
+            imageNormal="{gAssetManager.GetClass('scenarioUICircle3')}" />
+        <menu:ScenarioCircleSlot id="slot2" iconX="-3" iconY="0"
+            posNormalX="158" posNormalY="57" posHoveredX="162" posHoveredY="59"
+            sliderRotation="7" sliderX="45" sliderY="8" sliderWidth="87" visible="false"
+            imageHovered="{gAssetManager.GetClass('scenarioUICircle2Hoverd')}"
+            imageNormal="{gAssetManager.GetClass('scenarioUICircle2')}" />
+        <menu:ScenarioCircleSlot id="slot1" iconX="3" iconY="0"
+            posNormalX="45" posNormalY="62" posHoveredX="45" posHoveredY="65"
+            sliderRotation="79" sliderX="121" sliderY="20" sliderWidth="68" visible="false"
+            imageHovered="{gAssetManager.GetClass('scenarioUICircle1Hoverd')}"
+            imageNormal="{gAssetManager.GetClass('scenarioUICircle1')}" />
+    </mx:Canvas>
+</bridge:NLibFlexBridge>

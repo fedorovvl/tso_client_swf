@@ -1,0 +1,340 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="180">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.containers.VBox;
+        import mx.controls.Image;
+        import GUI.Components.CustomLabel;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import Communication.VO.dQuestElementVO;
+        import flash.events.MouseEvent;
+        import GUI.Assets.gAssetManager;
+        import Communication.VO.dQuestDefinitionTriggerVO;
+        import Communication.VO.TriggerVO;
+        import Trigger.Trigger;
+        import mx.events.FlexEvent;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import converted.bluebyte.tso.quests.logic.QuestManagerStatic;
+        import converted.bluebyte.tso.quests.trigger.QuestTriggerFactory;
+        import Interface.cGameInterface;
+        import Fulfilments.Identity;
+        import flash.events.Event;
+        import mx.controls.Text;
+        import Fulfilments.Trigger.FulfilmentTrigger;
+        import Communication.VO.dQuestTriggerVO;
+        import GUI.Components.CustomText;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        [Bindable]
+        private var _questName:String = "";
+
+        [Bindable]
+        private var _collapsed:Boolean = false;
+
+        public function onTrackedQuestItemRenderer_Canvas1_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.TRACKED_MISSION_string, argument1, data);
+        }
+
+        private function clickHandler(argument1:MouseEvent):void
+        {
+            globalFlash.gui.mQuestBook.SetPreselectedQuest((data as dQuestElementVO));
+            globalFlash.gui.mQuestBook.Show();
+        }
+
+        private function displayQuest():void
+        {
+            var localValue4:dQuestDefinitionTriggerVO;
+            var localValue5:TriggerVO;
+            var localValue6:Trigger;
+            var localValue7:TriggerVO;
+            var localValue8:Trigger;
+            var localValue1:int;
+            removeEventListener(FlexEvent.CREATION_COMPLETE, this.display);
+            var localValue2:dQuestElementVO = (data as dQuestElementVO);
+            this._questName = localValue2.getQuestName_string();
+            this.lblName.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.QUEST_LABELS, this._questName);
+            this.image.source = gAssetManager.GetResourceIcon(localValue2.mQuestDefinition.icon_string);
+            this.triggerList.removeAllChildren();
+            localValue1 = 0;
+            while (localValue1 < localValue2.mQuestDefinition.questTriggers_vector.length)
+            {
+                localValue4 = localValue2.mQuestDefinition.questTriggers_vector[localValue1];
+                if (localValue4.type != QuestManagerStatic.TYPE_NEW_QUEST_TRIGGER)
+                {
+                    this.handleLegacyTrigger(localValue2, localValue4);
+                };
+                localValue1++;
+            };
+            var localValue3:QuestTriggerFactory = new QuestTriggerFactory((global.ui as cGameInterface), localValue2);
+            localValue1 = 0;
+            while (localValue1 < localValue2.mQuestDefinition.endConditions_vector.length)
+            {
+                localValue5 = localValue2.mQuestDefinition.endConditions_vector[localValue1];
+                localValue6 = localValue3.createTrigger(localValue5, null);
+                localValue6.check();
+                this.handleNewTrigger(localValue6, localValue2);
+                localValue6.dispose();
+                localValue1++;
+            };
+            localValue1 = 0;
+            while (localValue1 < localValue2.mQuestDefinition.failConditions_vector.length)
+            {
+                localValue7 = localValue2.mQuestDefinition.failConditions_vector[localValue1];
+                localValue8 = localValue3.createTrigger(localValue7, null);
+                localValue8.check();
+                this.handleNewTrigger(localValue8, localValue2);
+                localValue8.dispose();
+                localValue1++;
+            };
+            this.triggerList.visible = this._collapsed;
+            this.triggerList.includeInLayout = this._collapsed;
+            invalidateSize();
+        }
+
+        private function display(argument1:Event=null):void
+        {
+            if ((data is dQuestElementVO))
+            {
+                this.displayQuest();
+            }
+            else
+            {
+                if ((data is Identity))
+                {
+                    this.displayTask();
+                };
+            };
+        }
+
+        private function handleNewTrigger(argument1:Trigger, argument2:dQuestElementVO):void
+        {
+            var localValue5:int;
+            var localValue7:Canvas;
+            if (argument1.getDefinition().triggerIdx > 0)
+            {
+                localValue7 = new Canvas();
+                localValue7.setConstraintValue("left", 5);
+                localValue7.width = 113;
+                localValue7.height = 1;
+                localValue7.setConstraintValue("backgroundColor", "#BBBBBB");
+                this.triggerList.addChild(localValue7);
+            };
+            var localValue3:int = global.ui.mQuestClientCallbacks.getNewTriggerTotal(argument1.getDefinition());
+            var localValue4:int = global.ui.mQuestClientCallbacks.getNewTriggerRemaining(argument1);
+            if (localValue4 > 0)
+            {
+                localValue5 = (localValue3 - localValue4);
+            }
+            else
+            {
+                localValue5 = localValue3;
+            };
+            var localValue6:Text = new Text();
+            localValue6.width = 123;
+            localValue6.selectable = false;
+            localValue6.setStyle("color", ((localValue4 == 0) ? "#999999" : "#FFFFFF"));
+            localValue6.text = (((((global.ui.mQuestClientCallbacks.getNewTriggerText(argument1.getDefinition(), argument1) + " (") + localValue5) + "/") + localValue3) + ")");
+            this.triggerList.addChild(localValue6);
+        }
+
+        private function arrowClickHandler(argument1:MouseEvent):void
+        {
+            this._collapsed = (!(this._collapsed));
+            this.triggerList.visible = this._collapsed;
+            this.triggerList.includeInLayout = this._collapsed;
+            invalidateSize();
+            argument1.stopPropagation();
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            if (this.image)
+            {
+                this.display();
+            }
+            else
+            {
+                addEventListener(FlexEvent.CREATION_COMPLETE, this.display);
+            };
+            refreshRendererPresentation();
+        }
+
+        private function displayTask():void
+        {
+            var localValue3:FulfilmentTrigger;
+            var localValue4:int;
+            var localValue5:int;
+            var localValue6:Text;
+            var localValue7:Canvas;
+            var localValue1:int;
+            removeEventListener(FlexEvent.CREATION_COMPLETE, this.display);
+            var localValue2:Identity = (data as Identity);
+            this._questName = localValue2.getDefinition().getName();
+            this.lblName.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.TASKS, this._questName);
+            this.image.source = gAssetManager.GetResourceIcon("QuestLong");
+            this.triggerList.removeAllChildren();
+            for each (localValue3 in localValue2.getTriggers())
+            {
+                if (localValue3.getDefinition().triggerIdx > 0)
+                {
+                    localValue7 = new Canvas();
+                    localValue7.setConstraintValue("left", 5);
+                    localValue7.width = 113;
+                    localValue7.height = 1;
+                    localValue7.setConstraintValue("backgroundColor", "#BBBBBB");
+                    this.triggerList.addChild(localValue7);
+                };
+                localValue4 = localValue3.getCurrentAmount();
+                localValue5 = global.ui.mQuestClientCallbacks.getNewTriggerTotal(localValue3.getDefinition());
+                localValue6 = new Text();
+                localValue6.width = 123;
+                localValue6.selectable = false;
+                localValue6.setStyle("color", ((localValue3.getFinished()) ? "#999999" : "#FFFFFF"));
+                localValue6.text = (((((global.ui.mQuestClientCallbacks.getNewTriggerText(localValue3.getDefinition()) + " (") + localValue4) + "/") + localValue5) + ")");
+                this.triggerList.addChild(localValue6);
+            };
+            this.triggerList.visible = this._collapsed;
+            this.triggerList.includeInLayout = this._collapsed;
+            invalidateSize();
+        }
+
+        private function handleLegacyTrigger(argument1:dQuestElementVO, argument2:dQuestDefinitionTriggerVO):void
+        {
+            var localValue5:int;
+            var localValue8:Canvas;
+            var localValue9:int;
+            if (argument2.triggerIdx > 0)
+            {
+                localValue8 = new Canvas();
+                localValue8.setConstraintValue("left", 5);
+                localValue8.width = 113;
+                localValue8.height = 1;
+                localValue8.setConstraintValue("backgroundColor", "#BBBBBB");
+                this.triggerList.addChild(localValue8);
+            };
+            var localValue3:dQuestTriggerVO = argument1.mQuestTriggersFinished_vector[argument2.triggerIdx];
+            var localValue4:int = global.ui.mQuestClientCallbacks.GetTotalValuesForQuestTrigger(global.ui.mCurrentPlayer, argument1, argument2.triggerIdx);
+            if (localValue3.status <= 0)
+            {
+                localValue9 = global.ui.mQuestClientCallbacks.GetRemainingValuesForQuestTrigger(global.ui.mCurrentPlayer, argument1, argument2.triggerIdx);
+                localValue5 = (localValue4 - ((localValue9 <= 0) ? 0 : localValue9));
+            }
+            else
+            {
+                localValue5 = localValue4;
+            };
+            var localValue6:String = global.ui.mQuestClientCallbacks.GetTriggerText(argument2, localValue4);
+            if (argument2.showAsPercentage)
+            {
+                localValue6 = (localValue6 + ((" (" + localValue5) + "%)"));
+            }
+            else
+            {
+                localValue6 = (localValue6 + ((((" (" + localValue5) + "/") + localValue4) + ")"));
+            };
+            var localValue7:CustomText = new CustomText();
+            localValue7.width = 123;
+            localValue7.selectable = false;
+            localValue7.setStyle("color", ((localValue3.status > 0) ? "#999999" : "#FFFFFF"));
+            localValue7.text = localValue6;
+            this.triggerList.addChild(localValue7);
+        }
+
+        private function readPresentationValue2():String
+        {
+            var localValue1:* = _questName;
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("disabledOverlayAlpha", 0);
+            this.setStyle("backgroundSize", "100%");
+            arrow.addEventListener("click", arrowClickHandler);
+            this.setStyle("backgroundImage", gAssetManager.GetClass("TrackedQuestBackground"));
+            this.width = 180;
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.addEventListener("click", this.clickHandler);
+            this.addEventListener("toolTipCreate", this.onTrackedQuestItemRenderer_Canvas1_toolTipCreate);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"],
+                [global, "propertyChange"],
+                [RendererPresentationUpdates.readPath(global, "ui_bindable"), "propertyChange"]]);
+                this.toolTip = readPresentationValue2();
+                this.enabled = !(global.ui_bindable.mPacketLost);
+                arrow.source = gAssetManager.GetClass(((_collapsed) ? "ArrowSmallNUp" : "ArrowSmallSUp"));
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Image id="image"  left="15" top="7" />
+    <ui:CustomLabel id="lblName" width="100"  top="9" left="42" color="0xFFFFFF" fontWeight="bold" />
+    <mx:Image id="arrow"  top="7" right="17" />
+    <mx:VBox id="triggerList" width="123"  right="17" top="32" verticalGap="1" />
+</mx:Canvas>

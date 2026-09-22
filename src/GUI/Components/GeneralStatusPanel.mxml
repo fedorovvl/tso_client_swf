@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="220" height="133" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.events.PropertyChangeEvent;
+        import mx.utils.ObjectProxy;
+        import GUI.Loca.cLocaManager;
+        import GUI.Assets.gAssetManager;
+        import Enums.GENERAL_STATE_SPRITE;
+
+        private var _progressProxy:ObjectProxy = new ObjectProxy();
+        public var specialistString:String = new String();
+        private var lm:cLocaManager = cLocaManager.GetInstance();
+
+        public function set progressProxy(value:ObjectProxy):void
+        {
+            var oldValue:Object = progressProxy;
+            if (oldValue !== value)
+            {
+                if (oldValue != null)
+                {
+                    oldValue.removeEventListener("propertyChange", onProgressChanged);
+                };
+                _progressProxy = value;
+                if (_progressProxy != null)
+                {
+                    _progressProxy.addEventListener("propertyChange", onProgressChanged);
+                };
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "progressProxy", oldValue, value));
+            };
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get progressProxy():ObjectProxy
+        {
+            return (_progressProxy);
+        }
+
+        private function onProgressChanged(event:PropertyChangeEvent):void
+        {
+            if (event.property == "progress")
+            {
+                recoveryProgress.value = progressProxy.progress;
+            };
+        }
+
+        override public function set data(value:Object):void
+        {
+            super.data = (value as int);
+            if (data == null)
+            {
+                throw (new Error("Incorrect data passed to GeneralStatusPanel, expected an integer value"));
+            };
+            switch ((data as int))
+            {
+                case GENERAL_STATE_SPRITE.STATE_ATTACK:
+                    topImage.source = gAssetManager.GetClass("GeneralStateIconAttack");
+                    height = 133;
+                    textArea.text = lm.getLabel("SpecialistAndTroopsAttack", [lm.getLabel(specialistString)]);
+                    recoveryLabel.visible = false;
+                    recoveryTimeRemaining.visible = false;
+                    recoveryProgress.visible = false;
+                    topImage.setStyle("left", 73);
+                    return;
+                case GENERAL_STATE_SPRITE.STATE_RECOVER:
+                    topImage.source = gAssetManager.GetClass("GeneralStateIconRecovery");
+                    height = 170;
+                    textArea.text = lm.getLabel("SpecialistAndTroopsRecover", [lm.getLabel(specialistString)]);
+                    recoveryLabel.visible = true;
+                    recoveryTimeRemaining.visible = true;
+                    recoveryProgress.visible = true;
+                    topImage.setStyle("left", 80);
+                    return;
+                case GENERAL_STATE_SPRITE.STATE_RETREAT:
+                    topImage.source = gAssetManager.GetClass("GeneralStateIconRetreat");
+                    height = 133;
+                    textArea.text = lm.getLabel("SpecialistAndTroopsReturnToGarrison", [lm.getLabel(specialistString)]);
+                    recoveryLabel.visible = false;
+                    recoveryTimeRemaining.visible = false;
+                    recoveryProgress.visible = false;
+                    topImage.setStyle("left", 72);
+                    return;
+                default:
+                    height = 133;
+                    topImage.source = null;
+                    textArea.text = "undefined";
+                    recoveryLabel.visible = false;
+                    recoveryTimeRemaining.visible = false;
+                    recoveryProgress.visible = false;
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            recoveryProgress.value = progressProxy.progress;
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="bottomCanvas" width="208" height="100" horizontalScrollPolicy="off"
+        verticalScrollPolicy="off" styleName="generalStatusPanelBottom" left="3" top="40" bottom="0">
+        <gui:CustomText id="textArea" height="38" wordWrap="true"  textAlign="center" color="0xFFFFFF" left="20" right="20" top="19" />
+        <mx:HBox id="statusBox" percentWidth="100" top="63" horizontalAlign="center">
+            <gui:CustomLabel id="recoveryLabel" visible="false"  color="0xFFFFFF" fontWeight="bold" />
+            <gui:CustomLabel id="recoveryTimeRemaining" visible="false"  color="0xFFFFFF" fontWeight="bold" />
+        </mx:HBox>
+        <gui:ProgressBar id="recoveryProgress" visible="false" />
+    </mx:Canvas>
+    <mx:Canvas id="topCanvas" width="220" height="49" horizontalScrollPolicy="off"
+        verticalScrollPolicy="off" styleName="generalStatusPanelTop"  left="0" top="13" />
+    <gui:TSOImage id="topImage" width="65" height="65"  left="80" top="0" />
+</mx:Canvas>

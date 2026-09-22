@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    mouseEnabled="false" mouseChildren="false"
+    minWidth="160" maxWidth="300" styleName="toolTip">
+    <mx:Script><![CDATA[
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+
+        private var _error:Boolean = false;
+        private var _text:String;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this._error = (_arg_1 as Boolean);
+        }
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this._text = _arg_1;
+            var loca:* = cLocaManager.GetInstance().GetTextPure(LOCA_GROUP.TOOLTIP, _arg_1);
+            if (loca != null)
+            {
+                this._text = loca;
+            };
+            applyText();
+        }
+
+        private function applyText():void
+        {
+            if (!tipLabel)
+            {
+                return;
+            };
+            tipLabel.text = this._text;
+            if (this._error)
+            {
+                tipLabel.setStyle("fontWeight", "normal");
+                tipLabel.setStyle("color", 0xFF0000);
+            }
+            else
+            {
+                tipLabel.setStyle("fontWeight", "bold");
+                tipLabel.setStyle("color", 0xFFFFFF);
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            applyText();
+        }
+    ]]></mx:Script>
+    <gui:CustomText id="tipLabel" wordWrap="true" maxWidth="250" percentWidth="100"  verticalCenter="0" horizontalCenter="0" fontWeight="bold" color="0xFFFFFF" />
+</mx:Canvas>

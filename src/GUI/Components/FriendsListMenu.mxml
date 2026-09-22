@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" minWidth="160">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+        import mx.events.PropertyChangeEvent;
+
+        private var observedUi:IEventDispatcher;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("borderStyle", "solid");
+            this.setStyle("borderThickness", 0);
+            this.setStyle("backgroundColor", 4601379);
+            this.setStyle("paddingLeft", 1);
+            this.setStyle("paddingRight", 1);
+            this.setStyle("paddingTop", 1);
+            this.setStyle("paddingBottom", 1);
+            this.setStyle("verticalGap", 1);
+            global.staticEventDispatcher.addEventListener("propertyChange", globalChanged, false, 0, true);
+            observeConnection();
+        }
+
+        private function globalChanged(event:PropertyChangeEvent):void
+        {
+            if (event.property == "ui_bindable") observeConnection();
+        }
+
+        private function observeConnection():void
+        {
+            if (observedUi) observedUi.removeEventListener("propertyChange", connectionChanged);
+            observedUi = global.ui_bindable as IEventDispatcher;
+            if (observedUi) observedUi.addEventListener("propertyChange", connectionChanged, false, 0, true);
+            updateEnabled();
+        }
+
+        private function connectionChanged(event:PropertyChangeEvent):void
+        {
+            if (event.property == "mPacketLost") updateEnabled();
+        }
+
+        private function updateEnabled():void
+        {
+            enabled = global.ui_bindable != null && !global.ui_bindable.mPacketLost;
+        }
+    ]]></mx:Script>
+</mx:VBox>

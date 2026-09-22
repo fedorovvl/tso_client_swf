@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    cacheAsBitmap="true" styleName="basicPanel"
+    enabled="{enabled &amp;&amp; true}">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.display.DisplayObject;
+        import mx.events.EffectEvent;
+        import mx.events.FlexEvent;
+        import mx.events.ResizeEvent;
+        import mx.events.ToolTipEvent;
+        import GUI.Components.ToolTips.cToolTipUtil;
+
+        private var _subComponents:Array = [];
+
+        public function set subComponents(value:Array):void
+        {
+            _subComponents = value == null ? [] : value;
+        }
+
+        public function get subComponents():Array
+        {
+            return _subComponents;
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            refreshHeadline();
+            addEventListener("creationComplete", onBasicPanelCreationComplete);
+            addEventListener("labelChanged", refreshHeadline, false, 0, true);
+            addEventListener(ResizeEvent.RESIZE, refreshHeadline, false, 0, true);
+            headline.addEventListener(ResizeEvent.RESIZE, refreshHeadline, false, 0, true);
+            headline.addEventListener("toolTipCreate", __headline_toolTipCreate);
+            fadeOut.addEventListener("effectEnd", __fadeOut_effectEnd);
+            btnPin.addEventListener("show", refreshHeadline, false, 0, true);
+            btnPin.addEventListener("hide", refreshHeadline, false, 0, true);
+        }
+
+        private function refreshHeadline(event:Event = null):void
+        {
+            headline.text = label == undefined ? null : String(label);
+            headline.maxWidth = width - 52;
+            var available:Number = width - (btnPin.visible ? 116 : 76);
+            var center:Number = headline.width > available ? (available - headline.width) / 2 : 0;
+            headline.setStyle("horizontalCenter", center);
+        }
+
+        private function addSubComponents():void
+        {
+            for each (var component:DisplayObject in _subComponents)
+            {
+                if (component.parent != content)
+                {
+                    content.addChild(component);
+                }
+            }
+        }
+
+        public function onBasicPanelCreationComplete(event:FlexEvent):void
+        {
+            addSubComponents();
+            refreshHeadline();
+        }
+
+        public function __fadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+
+        public function __headline_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <gui:PinButton id="btnPin" visible="false" top="5" right="35" />
+    <gui:HelpButton id="btnHelp" visible="false" top="4" right="40" />
+    <gui:CloseButton id="btnClose" top="5" right="15" />
+    <gui:CustomLabel id="headline" top="8" fontWeight="bold" textAlign="center" />
+    <mx:Canvas id="content" top="30" bottom="1" left="7" right="5"
+        clipContent="false" horizontalScrollPolicy="off" verticalScrollPolicy="off" />
+</mx:Canvas>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="500" height="230" cacheAsBitmap="true" clipContent="false"
+    horizontalScrollPolicy="off" verticalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import flash.utils.setInterval;
+        import mx.effects.easing.Cubic;
+        import mx.events.EffectEvent;
+
+        private var _tipText:String;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            tipOfTheDay.setStyle("showEffect", showTip);
+            tipOfTheDay.setStyle("hideEffect", hideTip);
+            pulsate.target = loadingLabel;
+            pulseUp.easingFunction = Cubic.easeOut;
+            pulseDown.easingFunction = Cubic.easeIn;
+            fadeOut.addEventListener("effectEnd", onFadeOut_effectEnd);
+            hideTip.addEventListener("effectEnd", onHideTip_effectEnd);
+        }
+
+        private function loca(key:String):String
+        { var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key); return value == undefined ? null : String(value); }
+
+        private function changeLogLabel():String
+        { var value:* = cLocaManager.GetInstance().getLabel("ChangeLog"); return value == undefined ? null : String(value); }
+
+        private function advisorBitmap():Object
+        { return gAssetManager.GetBitmap("QuestAdvisor"); }
+
+        private function okIcon():Class
+        { return gAssetManager.GetClass("ButtonIconOK"); }
+
+        public function set tipText(value:String):void
+        {
+            if (tipOfTheDay.text == "")
+            {
+                tipOfTheDay.text = value;
+            }
+            else
+            {
+                _tipText = value;
+                tipOfTheDay.visible = false;
+            }
+        }
+
+        public function onHideTip_effectEnd(event:EffectEvent):void
+        {
+            tipOfTheDay.text = _tipText;
+            setInterval(function ():void
+            {
+                tipOfTheDay.visible = true;
+            }, 50);
+        }
+
+        public function onFadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+    <mx:Fade id="showTip" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="hideTip" alphaFrom="1" alphaTo="0" duration="150" />
+    <mx:Sequence id="pulsate" repeatCount="0">
+        <mx:children><mx:Array>
+        <mx:Fade id="pulseUp" alphaFrom="0.5" alphaTo="1" duration="500" />
+        <mx:Fade id="pulseDown" alphaFrom="1" alphaTo="0.5" duration="800" />
+        </mx:Array></mx:children>
+    </mx:Sequence>
+
+    <mx:Canvas id="background" styleName="basicPanel" top="5" left="5" right="9" bottom="0" />
+    <mx:Canvas id="completedHeader" styleName="questPanelHeader" height="82" left="0" right="0" top="0" visible="true" />
+    <mx:Canvas id="bottomBox" styleName="newsPanelFooter" height="80" left="4" right="5" bottom="-5" />
+    <gui:CustomLabel id="headline" left="46" top="10" right="46" fontWeight="bold" textAlign="center" color="0" text="{loca('TipOfTheDay')}" />
+    <mx:Canvas id="content" top="35" bottom="1" left="17" right="19">
+        <mx:Canvas id="_NewsWindow_Canvas1" styleName="detailsHeader" height="100" left="2" right="2">
+            <mx:Image id="image" left="15" top="20" source="{advisorBitmap()}" />
+            <gui:CustomText id="tipOfTheDay" left="100" right="10" top="10" bottom="5" color="0xFFFFFF" fontWeight="normal" selectable="false" />
+        </mx:Canvas>
+        <mx:Canvas id="_NewsWindow_Canvas2" backgroundColor="3156255" backgroundAlpha="0.8" left="8" right="8" top="103" height="17">
+            <gui:CustomLabel id="loadingLabel" color="0xFFFFFF" fontWeight="bold" textAlign="center" top="0" left="5" right="5" text="{loca('LoginQueueInit')}" />
+        </mx:Canvas>
+        <mx:VBox id="bottomContainer" height="35" horizontalAlign="center" bottom="15" left="20" right="20" verticalAlign="top">
+            <mx:HBox id="buttonBox" horizontalAlign="center" verticalAlign="middle">
+                <gui:SpecialButton id="btnChangeLog" horizontalCenter="0" playSound="false" labelCenter="true" width="130" height="35" labelText="{changeLogLabel()}" />
+                <gui:StandardButton id="btnOK" horizontalCenter="0" playSound="false" visible="true" enabled="false" width="70" height="35" icon="{okIcon()}" />
+            </mx:HBox>
+        </mx:VBox>
+    </mx:Canvas>
+</mx:Canvas>

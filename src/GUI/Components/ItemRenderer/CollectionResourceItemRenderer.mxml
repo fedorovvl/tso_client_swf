@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" implements="Collections.ICollectionUpdate" width="82" height="34">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import Collections.ICollectionUpdate;
+        import Communication.VO.collectibles.CollectionResourceVO;
+        import mx.controls.Image;
+        import mx.controls.Label;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import mx.events.ListEvent;
+        import Collections.CollectionEvent;
+        import flash.events.MouseEvent;
+        import mx.events.PropertyChangeEvent;
+        import Collections.CollectionsManager;
+        import Collections.CollectionsConsts;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import Collections.CollectionUtils;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private var collectionResourceVO:CollectionResourceVO;
+
+        private function handleClick(argument1:MouseEvent):void
+        {
+            argument1.stopImmediatePropagation();
+            if (this.collectionResourceVO.getName() == null)
+            {
+                return;
+            };
+            var localValue2:ListEvent = new ListEvent(CollectionEvent.COLLECTION_RESOURCE_CLICKED, true);
+            localValue2.itemRenderer = this;
+            this.dispatchEvent(localValue2);
+        }
+
+        public function update(... _args):void
+        {
+            this.setProps(this.collectionResourceVO);
+        }
+
+        private function getResourceRarityClassName():String
+        {
+            var localValue1:int = CollectionsManager.getInstance().getResourceRarity(this.collectionResourceVO.getName());
+            var localValue2:String = CollectionsConsts.COLLECTION_RESOURCE_BACKGROUND_RARITY_MAP[localValue1];
+            return ((localValue2 != null) ? localValue2 : CollectionsConsts.COLLECTION_RESOURCE_BACKGROUND_NEUTRAL);
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            this.collectionResourceVO = (data as CollectionResourceVO);
+            if (this.collectionResourceVO.getName() == null)
+            {
+                this.resourceIcon.visible = false;
+                this.container.setStyle("backgroundImage", gAssetManager.GetClass(CollectionsConsts.COLLECTION_RESOURCE_BACKGROUND_NEUTRAL));
+                this.setProps(this.collectionResourceVO);
+                toolTip = "";
+            }
+            else
+            {
+                this.resourceIcon.source = gAssetManager.GetResourceIcon(this.collectionResourceVO.getName());
+                this.resourceIcon.visible = true;
+                this.container.setStyle("backgroundImage", gAssetManager.GetClass(this.getResourceRarityClassName()));
+                this.setProps(this.collectionResourceVO);
+                toolTip = ((((cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, this.collectionResourceVO.getName()) + ": ") + this.collectionResourceVO.getPlayerAmount()) + "/") + this.collectionResourceVO.getStorehouseCapacity());
+            };
+            refreshRendererPresentation();
+        }
+
+        private function createTooltip(argument1:ToolTipEvent):void
+        {
+            if (this.collectionResourceVO.getName() == null)
+            {
+                return;
+            };
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        private function setProps(argument1:CollectionResourceVO):void
+        {
+            if (argument1.getName() == null)
+            {
+                this.amountLabel.text = "";
+            }
+            else
+            {
+                this.amountLabel.text = ((CollectionUtils.formatNumberToThousands(argument1.getPlayerAmount()) + "/") + argument1.getAmount());
+                this.amountLabel.setStyle(CollectionsConsts.COLOR_PROPERTY_NAME, ((argument1.getHasNeededResources()) ? CollectionsConsts.COLLECTION_RESOURCE_TEXT_COLOR_AVAILABLE : CollectionsConsts.COLLECTION_RESOURCE_TEXT_COLOR_UNAVAILABLE));
+            };
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("borderThickness", 10);
+            this.width = 82;
+            this.height = 34;
+            this.addEventListener("toolTipCreate", this.createTooltip);
+            this.addEventListener("click", this.handleClick);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="container" width="81" height="31" x="1" backgroundAlpha="1" backgroundSize="100%">
+        <mx:Canvas id="viewCanvas1" x="0" width="32" height="31">
+            <mx:Image id="resourceIcon"  verticalCenter="0" horizontalCenter="0" />
+        </mx:Canvas>
+        <mx:Canvas id="viewCanvas2" width="45" height="31" right="3">
+            <mx:Label id="amountLabel"  right="0" fontWeight="bold" textAlign="right" verticalCenter="0" />
+        </mx:Canvas>
+    </mx:Canvas>
+</mx:Canvas>

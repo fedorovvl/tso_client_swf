@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+    height="128" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import mx.collections.ArrayCollection;
+        import com.bluebyte.tso.contentgenerator.view.ui.itemrenderer.ContentGeneratorRewardItemRenderer;
+
+        private var _dataProvider:ArrayCollection;
+
+        public function set dataPovider(value:ArrayCollection):void
+        {
+            if (this._dataProvider == value)
+            {
+                return;
+            };
+            this._dataProvider = value;
+            this.displayItems();
+        }
+
+        public function get dataProvider():ArrayCollection
+        {
+            return (this._dataProvider);
+        }
+
+        public function getRewardFrames():Array
+        {
+            var renderer:ContentGeneratorRewardItemRenderer;
+            var frames:Array = new Array();
+            for each (renderer in this.list.getChildren())
+            {
+                frames.push(renderer.frame);
+            };
+            return (frames);
+        }
+
+        private function displayItems():void
+        {
+            var item:Object;
+            var renderer:ContentGeneratorRewardItemRenderer;
+            this.list.removeAllChildren();
+            if (((this._dataProvider == null) || (this._dataProvider.length == 0)))
+            {
+                return;
+            };
+            for each (item in this._dataProvider)
+            {
+                renderer = new ContentGeneratorRewardItemRenderer();
+                renderer.data = item;
+                this.list.addChild(renderer);
+            };
+            this.list.invalidateProperties();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+        }
+    ]]></mx:Script>
+
+    <mx:HBox id="list" percentHeight="100" percentWidth="100" horizontalCenter="0" horizontalAlign="center" horizontalGap="5" />
+</mx:Canvas>

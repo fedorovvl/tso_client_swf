@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="69" height="16">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.events.FlexEvent;
+
+        private const ANIM_FRAMES:int = 10;
+        private var _value2:Number;
+        private var _stepWidth1:Number;
+        private var _currentValue1:Number;
+        private var _currentValue2:Number;
+        private var _stepWidth2:Number;
+        private var _maxValue:Number;
+        private var _value1:Number;
+
+        [Embed(source="../../../assets/embedded/battlewindow/battlewindow_battle_card_healthbar_full01.png")]
+        private var greenBarSkin:Class;
+
+        [Embed(source="../../../assets/embedded/battlewindow/battlewindow_battle_card_healthbar_tarnished01.png")]
+        private var redBarSkin:Class;
+
+        private function updateBarMask(event:Event):void
+        {
+            var greenRatio:Number;
+            var redRatio:Number;
+            if ((_currentValue1 - _stepWidth1) < _value1)
+            {
+                _currentValue1 = _value1;
+            }
+            else
+            {
+                _currentValue1 = (_currentValue1 - _stepWidth1);
+            };
+            if ((_currentValue2 - _stepWidth2) < _value2)
+            {
+                _currentValue2 = (_currentValue2 - _stepWidth2);
+            }
+            else
+            {
+                _currentValue2 = (_currentValue2 - _stepWidth2);
+            };
+            if (_maxValue == 0)
+            {
+                greenRatio = 0;
+            }
+            else
+            {
+                if (_currentValue1 > _maxValue)
+                {
+                    greenRatio = 1;
+                }
+                else
+                {
+                    greenRatio = (_currentValue1 / _maxValue);
+                };
+            };
+            if (_maxValue == 0)
+            {
+                redRatio = 0;
+            }
+            else
+            {
+                if (_currentValue2 > _maxValue)
+                {
+                    redRatio = 1;
+                }
+                else
+                {
+                    redRatio = (_currentValue2 / _maxValue);
+                };
+            };
+            if (((redBarMask) && (greenBarMask)))
+            {
+                greenBarMask.width = (greenBar.width * greenRatio);
+                redBarMask.width = (redBar.width * redRatio);
+            };
+            if (((_currentValue1 == _value1) && (_currentValue2 == _value2)))
+            {
+                removeEventListener(Event.ENTER_FRAME, updateBarMask);
+            };
+        }
+
+        public function set value1(newValue:Number):void
+        {
+            var oldValue:Number = _value1;
+            if (newValue < 0)
+            {
+                _value1 = 0;
+            }
+            else
+            {
+                _value1 = newValue;
+            };
+            _stepWidth1 = ((_currentValue1 - _value1) / ANIM_FRAMES);
+            if (((!(oldValue == _value1)) && (!(hasEventListener(Event.ENTER_FRAME)))))
+            {
+                addEventListener(Event.ENTER_FRAME, updateBarMask);
+            };
+        }
+
+        public function set value2(newValue:Number):void
+        {
+            var oldValue:Number = _value2;
+            if (newValue < 0)
+            {
+                _value2 = 0;
+            }
+            else
+            {
+                _value2 = newValue;
+            };
+            hitpointsLabel.text = Math.floor(_value2).toString();
+            _stepWidth2 = ((_currentValue2 - _value2) / ANIM_FRAMES);
+            if (((!(oldValue == _value2)) && (!(hasEventListener(Event.ENTER_FRAME)))))
+            {
+                addEventListener(Event.ENTER_FRAME, updateBarMask);
+            };
+        }
+
+        public function get value1():Number
+        {
+            return (_value1);
+        }
+
+        public function set maxValue(newValue:Number):void
+        {
+            if (newValue < 0)
+            {
+                maxValue = 0;
+            }
+            else
+            {
+                _maxValue = newValue;
+            };
+            _value1 = newValue;
+            _value2 = newValue;
+            _currentValue1 = newValue;
+            _currentValue2 = newValue;
+            _stepWidth1 = 0;
+            _stepWidth2 = 0;
+            hitpointsLabel.text = Math.floor(_value2).toString();
+            updateBarMask(null);
+        }
+
+        public function get value2():Number
+        {
+            return (_value2);
+        }
+
+        public function get maxValue():Number
+        {
+            return (_maxValue);
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundColor", 0);
+            redBar.setStyle("backgroundImage", redBarSkin);
+            greenBar.setStyle("backgroundImage", greenBarSkin);
+            redBar.mask = redBarMask;
+            greenBar.mask = greenBarMask;
+            redBarMask.addEventListener("creationComplete", onRedBarMask_creationComplete);
+            greenBarMask.addEventListener("creationComplete", onGreenBarMask_creationComplete);
+        }
+
+        public function onRedBarMask_creationComplete(event:FlexEvent):void
+        {
+            updateBarMask(event);
+        }
+
+        public function onGreenBarMask_creationComplete(event:FlexEvent):void
+        {
+            updateBarMask(event);
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="redBar" visible="true"  backgroundSize="100%" top="0" bottom="0" left="0" right="0" />
+    <mx:Canvas id="greenBar" visible="true"  backgroundSize="100%" top="0" bottom="0" left="0" right="0" />
+    <mx:Canvas id="redBarMask" x="0" width="0"  backgroundColor="0xFFFFFF" top="0" bottom="0" />
+    <mx:Canvas id="greenBarMask" x="0" width="0"  backgroundColor="0xFFFFFF" top="0" bottom="0" />
+    <gui:CustomLabel id="hitpointsLabel" percentWidth="100"  textAlign="center" horizontalCenter="0" color="0xFFFFFF" fontWeight="normal" />
+</mx:Canvas>

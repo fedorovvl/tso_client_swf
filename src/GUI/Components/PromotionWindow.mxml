@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:gui="GUI.Components.*" xmlns:renderers="GUI.Components.ItemRenderer.*"
+    width="750" height="475">
+    <mx:Script><![CDATA[
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <mx:Image id="dragon"  horizontalCenter="0" top="-130" />
+            <mx:HBox id="offers" left="8" right="12" top="30" bottom="10">
+                <renderers:PromotionPanel id="prom0" />
+                <renderers:PromotionPanel id="prom1" />
+                <renderers:PromotionPanel id="prom2" />
+                <renderers:PromotionPanel id="prom3" />
+            </mx:HBox>
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

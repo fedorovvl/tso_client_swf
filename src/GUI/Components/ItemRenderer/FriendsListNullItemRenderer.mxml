@@ -1,0 +1,133 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="71" height="87">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import GUI.Components.CustomText;
+        import mx.core.mx_internal;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import flash.events.MouseEvent;
+        import mx.events.FlexEvent;
+        import mx.events.PropertyChangeEvent;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private function OnRollOver():void
+        {
+            if (!globalFlash.gui.mMailWindow.IsVisible())
+            {
+                this.styleName = "addFriendBackgroundHighlight";
+            };
+        }
+
+        public function ShowContextMenu(argument1:MouseEvent):void
+        {
+            if (!globalFlash.gui.mMailWindow.IsVisible())
+            {
+                globalFlash.gui.ShowFriendListMenu(argument1, null);
+            };
+        }
+
+        private function OnRollOut():void
+        {
+            if (!globalFlash.gui.mMailWindow.IsVisible())
+            {
+                this.styleName = "addFriendBackground";
+            };
+        }
+
+        protected function canvas1_updateCompleteHandler(argument1:FlexEvent):void
+        {
+            if (!(styleName is String))
+            {
+                styleName = "addFriendBackground";
+            };
+        }
+
+        public function onFriendsListNullItemRenderer_Canvas1_rollOut(argument1:MouseEvent):void
+        {
+            this.OnRollOut();
+        }
+
+        public function onFriendsListNullItemRenderer_Canvas1_rollOver(argument1:MouseEvent):void
+        {
+            this.OnRollOver();
+        }
+
+        private function readPresentationValue1():String
+        {
+            var localValue1:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "AddFriends");
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.styleName = "addFriendBackground";
+            this.width = 71;
+            this.height = 87;
+            this.addEventListener("rollOver", this.onFriendsListNullItemRenderer_Canvas1_rollOver);
+            this.addEventListener("rollOut", this.onFriendsListNullItemRenderer_Canvas1_rollOut);
+            this.addEventListener("click", this.ShowContextMenu);
+            this.addEventListener("updateComplete", this.canvas1_updateCompleteHandler);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+                addText.text = readPresentationValue1();
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <ui:CustomText id="addText" width="61" selectable="false"  color="0x322000" fontWeight="bold" horizontalCenter="0" verticalCenter="0" textAlign="center" />
+</mx:Canvas>

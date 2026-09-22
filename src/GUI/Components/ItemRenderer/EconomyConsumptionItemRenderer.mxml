@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="110" height="50">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import GUI.Components.CustomLabel;
+        import mx.controls.Image;
+        import mx.core.mx_internal;
+        import mx.events.PropertyChangeEvent;
+        import flash.events.MouseEvent;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import mx.events.FlexEvent;
+        import ServerState.cEconomyOverviewData;
+        import GUI.Assets.gAssetManager;
+        import GO.cBuilding;
+        import flash.events.Event;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        private var useRollOver:Boolean = false;
+
+        private var bgColorPressed:String;
+
+        private var bgColorStd:String;
+
+        private var _selected:Boolean = false;
+
+        public function onEconomyConsumptionItemRenderer_Canvas1_rollOut(argument1:MouseEvent):void
+        {
+            this.RollOut();
+        }
+
+        private function FormatAmount(argument1:Number):String
+        {
+            if (argument1 > 999)
+            {
+                return (Math.floor((argument1 / 1000)).toString() + "k");
+            };
+            return (argument1.toString());
+        }
+
+        private function RollOver():void
+        {
+            if (this.useRollOver)
+            {
+                this.styleName = "economyConsumptionBgPrsd";
+                this.productionBg.styleName = this.bgColorPressed;
+            };
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            this.DisplayData();
+            refreshRendererPresentation();
+        }
+
+        public function get selected():Boolean
+        {
+            return (this._selected);
+        }
+
+        public function onEconomyConsumptionItemRenderer_Canvas1_rollOver(argument1:MouseEvent):void
+        {
+            this.RollOver();
+        }
+
+        public function onProductionCount_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        private function RollOut():void
+        {
+            if (this.useRollOver)
+            {
+                this.styleName = "economyConsumptionBgStd";
+                this.productionBg.styleName = this.bgColorStd;
+            };
+        }
+
+        public function onEconomyConsumptionItemRenderer_Canvas1_creationComplete(argument1:FlexEvent):void
+        {
+            this.DisplayData();
+        }
+
+        public function set selected(argument1:Boolean):void
+        {
+            this._selected = argument1;
+            if (argument1)
+            {
+                this.styleName = "economyConsumptionBgPrsd";
+                this.productionBg.styleName = this.bgColorPressed;
+            }
+            else
+            {
+                this.styleName = "economyConsumptionBgStd";
+                this.productionBg.styleName = this.bgColorStd;
+            };
+        }
+
+        private function DisplayData(argument1:Event=null):void
+        {
+            if ((((data == null) || (this.productionBg == null)) || (this.productionCount == null)))
+            {
+                return;
+            };
+            this.styleName = "economyConsumptionBgStd";
+            this.useRollOver = true;
+            var localValue2:cEconomyOverviewData = new cEconomyOverviewData();
+            var localValue3:int = localValue2.GetResourceConsumptionValue(data.GetBuildingName_string(), globalFlash.gui.mEconomyOverview.mSelectedTreeNode.name_string);
+            this.productionCount.text = ((localValue3 == 0) ? this.FormatAmount(localValue3) : ("-" + this.FormatAmount(localValue3)));
+            this.productionCount.toolTip = ((localValue3 == 0) ? ("" + localValue3) : ("-" + localValue3));
+            this.buildingIcon.source = gAssetManager.GetBuildingIcon((data as cBuilding).getProductionBuildingName());
+            if (localValue3 != 0)
+            {
+                this.bgColorStd = "economyConsumptionBgStdRed";
+                this.bgColorPressed = "economyConsumptionBgPrsdRed";
+            }
+            else
+            {
+                this.bgColorStd = "economyConsumptionBgStdGrey";
+                this.bgColorPressed = "economyConsumptionBgPrsdGrey";
+            };
+            this.productionBg.styleName = this.bgColorStd;
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            productionCount.addEventListener("toolTipCreate", onProductionCount_toolTipCreate);
+            this.width = 110;
+            this.height = 50;
+            this.clipContent = false;
+            this.addEventListener("rollOut", this.onEconomyConsumptionItemRenderer_Canvas1_rollOut);
+            this.addEventListener("rollOver", this.onEconomyConsumptionItemRenderer_Canvas1_rollOver);
+            this.addEventListener("creationComplete", this.onEconomyConsumptionItemRenderer_Canvas1_creationComplete);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="productionBg" width="55" percentHeight="100" styleName="economyConsumptionBgStdRed" left="0">
+        <ui:CustomLabel id="productionCount" x="10" y="17"  color="0xFFFFFF" textAlign="center" />
+    </mx:Canvas>
+    <mx:Image id="buildingIcon"  right="0" verticalCenter="0" />
+</mx:Canvas>

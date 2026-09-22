@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu:MenuSlot xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:menu="GUI.Components.circularmenu.*"
+    clipContent="false">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import mx.effects.Move;
+        import mx.effects.Resize;
+        import mx.events.EffectEvent;
+        import mx.events.SliderEvent;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+
+        private var _iconX:int = 0;
+        private var _iconY:int = 0;
+        private var _posNormalX:Number = 0;
+        private var _posNormalY:Number = 0;
+        private var _posHoveredX:Number = 0;
+        private var _posHoveredY:Number = 0;
+        private var _sliderX:Number = 0;
+        private var _sliderY:Number = 0;
+        private var _sliderWidth:Number = 65;
+        private var _sliderRotation:Number = 0;
+
+        public function get iconX():int
+        {
+            return (_iconX);
+        }
+
+        public function set iconX(value:int):void
+        {
+            _iconX = value;
+            refreshLayout();
+        }
+
+        public function get iconY():int
+        {
+            return (_iconY);
+        }
+
+        public function set iconY(value:int):void
+        {
+            _iconY = value;
+            refreshLayout();
+        }
+
+        public function get posNormalX():Number
+        {
+            return (_posNormalX);
+        }
+
+        public function set posNormalX(value:Number):void
+        {
+            _posNormalX = value;
+            refreshLayout();
+        }
+
+        public function get posNormalY():Number
+        {
+            return (_posNormalY);
+        }
+
+        public function set posNormalY(value:Number):void
+        {
+            _posNormalY = value;
+            refreshLayout();
+        }
+
+        public function get posHoveredX():Number
+        {
+            return (_posHoveredX);
+        }
+
+        public function set posHoveredX(value:Number):void
+        {
+            _posHoveredX = value;
+            refreshLayout();
+        }
+
+        public function get posHoveredY():Number
+        {
+            return (_posHoveredY);
+        }
+
+        public function set posHoveredY(value:Number):void
+        {
+            _posHoveredY = value;
+            refreshLayout();
+        }
+
+        public function get sliderX():Number
+        {
+            return (_sliderX);
+        }
+
+        public function set sliderX(value:Number):void
+        {
+            _sliderX = value;
+            refreshLayout();
+        }
+
+        public function get sliderY():Number
+        {
+            return (_sliderY);
+        }
+
+        public function set sliderY(value:Number):void
+        {
+            _sliderY = value;
+            refreshLayout();
+        }
+
+        public function get sliderWidth():Number
+        {
+            return (_sliderWidth);
+        }
+
+        public function set sliderWidth(value:Number):void
+        {
+            _sliderWidth = value;
+            refreshLayout();
+        }
+
+        public function get sliderRotation():Number
+        {
+            return (_sliderRotation);
+        }
+
+        public function set sliderRotation(value:Number):void
+        {
+            _sliderRotation = value;
+            refreshLayout();
+        }
+
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+            refreshLayout();
+        }
+
+        protected function moveEndHandler(event:EffectEvent):void
+        {
+            move(((this.isMouseOver) ? this.posHoveredX : this.posNormalX), ((this.isMouseOver) ? this.posHoveredY : this.posNormalY));
+            if (this.isMouseOver)
+            {
+                parent.setChildIndex(this, (parent.numChildren - 1));
+            };
+        }
+
+        public function amountSliderClickHandler(event:MouseEvent):void
+        {
+            event.stopImmediatePropagation();
+        }
+
+        public function onAmountSlider_click(event:MouseEvent):void
+        {
+            amountSliderClickHandler(event);
+        }
+
+        private function onSliderChange(event:SliderEvent):void
+        {
+            syncAmountLabel();
+        }
+
+        private function syncAmountLabel():void
+        {
+            if (!_ScenarioCircleSlot_Label1 || !data)
+            {
+                return;
+            };
+            var t:* = ((amountSlider.value + "/") + data.amountNeeded);
+            _ScenarioCircleSlot_Label1.text = ((t == undefined) ? null : String(t));
+            _ScenarioCircleSlot_Label1.x = image.x;
+            _ScenarioCircleSlot_Label1.y = (image.y + image.height) + 5;
+        }
+
+        private function refreshLayout(event:Event = null):void
+        {
+            if (!image || !amountSlider)
+            {
+                return;
+            };
+            x = ((this.isMouseOver) ? this.posHoveredX : this.posNormalX);
+            y = ((this.isMouseOver) ? this.posHoveredY : this.posNormalY);
+            if (data)
+            {
+                var tip:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, data.definiton.GetName_string());
+                this.toolTip = ((tip == undefined) ? null : String(tip));
+                image.source = data.icon;
+                amountSlider.maximum = data.amountNeeded;
+                amountSlider.value = data.amount;
+                amountSlider.limit = data.amount;
+            };
+            image.setStyle("horizontalCenter", String(iconX));
+            image.setStyle("verticalCenter", String(iconY));
+            image.scaleX = ((this.isMouseOver) ? 1 : 0.8);
+            image.scaleY = ((this.isMouseOver) ? 1 : 0.8);
+            amountSlider.x = sliderX;
+            amountSlider.y = sliderY;
+            amountSlider.slideBarwidth = sliderWidth;
+            amountSlider.rotation = sliderRotation;
+            amountSlider.visible = this.isMouseOver;
+            syncAmountLabel();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundSize", "100%");
+            var moveEff:Move = new Move();
+            moveEff.duration = 100;
+            moveEff.addEventListener("effectEnd", moveEndHandler);
+            setStyle("moveEffect", moveEff);
+            registerEffects(["moveEffect"]);
+            var resizeEff:Resize = new Resize();
+            resizeEff.duration = 150;
+            image.setStyle("resizeEffect", resizeEff);
+            amountSlider.addEventListener("click", onAmountSlider_click);
+            amountSlider.addEventListener("change", onSliderChange);
+            addEventListener("rollOverChanged", refreshLayout);
+            refreshLayout();
+        }
+    ]]></mx:Script>
+    <mx:Image id="image" autoLoad="true" mouseEnabled="false" smoothBitmapContent="true" />
+    <menu:ScenarioUISlider id="amountSlider" enabled="true" minimum="0" />
+    <mx:Label id="_ScenarioCircleSlot_Label1" mouseEnabled="false"  color="0xFFFFFF" />
+</menu:MenuSlot>

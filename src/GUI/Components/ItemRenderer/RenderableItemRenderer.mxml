@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="56" height="67">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import flash.filters.GlowFilter;
+        import mx.controls.Label;
+        import mx.controls.Image;
+        import GUI.Components.Frame;
+        import Interface.RenderableItem;
+        import mx.core.mx_internal;
+        import mx.events.PropertyChangeEvent;
+        import flash.events.MouseEvent;
+        import BuffSystem.cBuffDefinition;
+        import GUI.Assets.gAssetManager;
+        import GUI.Decorator.GUIDecorator;
+        import mx.events.ToolTipEvent;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private static const GLOW:GlowFilter = new GlowFilter(16777130);
+
+        private var tooltipType:String = null;
+
+        public var renderable:RenderableItem;
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            var localValue2:cBuffDefinition;
+            if (((argument1 == null) || (!(argument1 is RenderableItem))))
+            {
+                return;
+            };
+            super.data = argument1;
+            this.renderable = (argument1 as RenderableItem);
+            this.frame.type = this.renderable.getRenderFrameType();
+            this.foregroundIcon.source = this.renderable.getRenderGFXIcon();
+            this.backgroundIcon.source = null;
+            if (((!(this.renderable.getRenderGFXBackgroundName() == null)) && (this.renderable.getRenderGFXBackgroundName().length > 0)))
+            {
+                this.backgroundIcon.source = gAssetManager.GetBitmap(this.renderable.getRenderGFXBackgroundName());
+            };
+            this.resourceIcon.visible = false;
+            if (this.renderable.isRequiresResourceIcon())
+            {
+                this.resourceIcon.visible = true;
+                this.resourceIcon.source = gAssetManager.GetResourceIcon(this.renderable.getResourceGFXName(), true);
+            };
+            this.tooltipType = this.renderable.getRenderTooltipType();
+            toolTip = this.renderable.getRenderTooltip();
+            this.amount.text = this.renderable.getRenderAmount().toString();
+            this.amount.visible = true;
+            if (this.renderable.getRenderAmount() < 1)
+            {
+                localValue2 = cBuffDefinition.GetByName(this.renderable.getBuffName());
+                this.amount.visible = ((localValue2 == null) || (localValue2.GetAmount() > 0));
+            };
+            refreshRendererPresentation();
+        }
+
+        protected function canvas1_mouseOverHandler(argument1:MouseEvent):void
+        {
+            GUIDecorator.addFilter(this, GLOW);
+        }
+
+        private function CreateToolTip(argument1:ToolTipEvent):void
+        {
+            if (((((!(this.tooltipType == null)) && (!(toolTip == null))) && (this.tooltipType.length > 0)) && (toolTip.length > 0)))
+            {
+                cToolTipUtil.createToolTip(this.tooltipType, argument1, data);
+            };
+        }
+
+        protected function canvas1_mouseOutHandler(argument1:MouseEvent):void
+        {
+            GUIDecorator.removeFilter(this, GLOW);
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.width = 56;
+            this.height = 67;
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.addEventListener("toolTipCreate", this.CreateToolTip);
+            this.addEventListener("rollOver", this.canvas1_mouseOverHandler);
+            this.addEventListener("rollOut", this.canvas1_mouseOutHandler);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <ui:Frame id="frame" />
+    <mx:Image id="backgroundIcon"  horizontalCenter="0" verticalCenter="0" />
+    <mx:Image id="foregroundIcon"  horizontalCenter="0" verticalCenter="0" />
+    <mx:Image id="resourceIcon"  horizontalCenter="0" verticalCenter="0" />
+    <mx:Label id="amount" width="50"  horizontalCenter="0" textAlign="center" fontWeight="bold" color="0xFFFFFF" bottom="5" />
+</mx:Canvas>

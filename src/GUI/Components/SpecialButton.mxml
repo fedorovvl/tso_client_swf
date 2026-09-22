@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*">
+    <mx:Script><![CDATA[
+        import flash.display.Bitmap;
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import mx.events.FlexEvent;
+        import mx.events.PropertyChangeEvent;
+        import mx.events.ResizeEvent;
+        import mx.events.ToolTipEvent;
+        import flash.filters.BevelFilter;
+        import Sound.cSoundManager;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+
+        public var normalStyle:String = "ButtonNormal";
+        public var showShadow:Boolean = false;
+        public var hoverStyle:String = "ButtonHighlight";
+        public var selectedStyle:String = "ButtonHighlight";
+
+        private var _checkboxVisible:Boolean = false;
+        private var _iconCenter:int = 0;
+        private var _labelLeft:int = 0;
+        private var _iconLeft:int = 0;
+        private var _labelText:String = "";
+        private var _labelCenter:Boolean = false;
+        private var _playSound:Boolean = true;
+        private var _soundEffect:String = "ButtonClick";
+        private var _deleteClicked:Function = null;
+        private var _checkboxClicked:Function = null;
+        private var _deleteVisible:Boolean = false;
+        private var _selected:Boolean = false;
+        private var _iconImage:Bitmap = null;
+        private var bevelFilter:BevelFilter = new BevelFilter(2, 225, 0, 0, 0, 1, 4, 4);
+
+        public function set soundEffect(value:String):void
+        {
+            _soundEffect = value;
+        }
+
+        public function get soundEffect():String
+        {
+            return (_soundEffect);
+        }
+
+        public function set playSound(value:Boolean):void
+        {
+            _playSound = value;
+        }
+
+        public function get playSound():Boolean
+        {
+            return (_playSound);
+        }
+
+        public function set deleteClicked(value:Function):void
+        {
+            var oldValue:Object = _deleteClicked;
+            if (oldValue !== value)
+            {
+                _deleteClicked = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "deleteClicked", oldValue, value));
+            };
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get deleteClicked():Function
+        {
+            return (_deleteClicked);
+        }
+
+        public function set checkboxClicked(value:Function):void
+        {
+            var oldValue:Object = _checkboxClicked;
+            if (oldValue !== value)
+            {
+                _checkboxClicked = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "checkboxClicked", oldValue, value));
+            };
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get checkboxClicked():Function
+        {
+            return (_checkboxClicked);
+        }
+
+        public function set labelLeft(value:int):void
+        {
+            var oldValue:Object = _labelLeft;
+            if (oldValue !== value)
+            {
+                _labelLeft = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "labelLeft", oldValue, value));
+                refreshLayout();
+            };
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get labelLeft():int
+        {
+            return (_labelLeft);
+        }
+
+        public function set iconLeft(value:int):void
+        {
+            var oldValue:Object = _iconLeft;
+            if (oldValue !== value)
+            {
+                _iconLeft = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "iconLeft", oldValue, value));
+                refreshLayout();
+            };
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get iconLeft():int
+        {
+            return (_iconLeft);
+        }
+
+        public function set labelText(value:String):void
+        {
+            var oldValue:Object = _labelText;
+            if (oldValue !== value)
+            {
+                _labelText = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "labelText", oldValue, value));
+                refreshLayout();
+            };
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get labelText():String
+        {
+            return (_labelText);
+        }
+
+        public function set labelCenter(value:Boolean):void
+        {
+            var oldValue:Object = _labelCenter;
+            if (oldValue !== value)
+            {
+                _labelCenter = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "labelCenter", oldValue, value));
+                refreshLayout();
+            };
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get labelCenter():Boolean
+        {
+            return (_labelCenter);
+        }
+
+        public function set checkboxVisible(value:Boolean):void
+        {
+            var oldValue:Object = _checkboxVisible;
+            if (oldValue !== value)
+            {
+                _checkboxVisible = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "checkboxVisible", oldValue, value));
+                refreshLayout();
+            };
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get checkboxVisible():Boolean
+        {
+            return (_checkboxVisible);
+        }
+
+        public function set iconCenter(value:int):void
+        {
+            var oldValue:Object = _iconCenter;
+            if (oldValue !== value)
+            {
+                _iconCenter = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "iconCenter", oldValue, value));
+                refreshLayout();
+            };
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get iconCenter():int
+        {
+            return (_iconCenter);
+        }
+
+        public function set deleteVisible(value:Boolean):void
+        {
+            var oldValue:Object = _deleteVisible;
+            if (oldValue !== value)
+            {
+                _deleteVisible = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "deleteVisible", oldValue, value));
+                refreshLayout();
+            };
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get deleteVisible():Boolean
+        {
+            return (_deleteVisible);
+        }
+
+        public function set iconImage(value:Bitmap):void
+        {
+            _iconImage = value;
+            if (buttonIcon)
+            {
+                buttonIcon.visible = (!(value == null));
+                buttonIcon.source = value;
+            };
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get iconImage():Bitmap
+        {
+            return (_iconImage);
+        }
+
+        public function get checkboxSelected():Boolean
+        {
+            return (buttonCheckbox.selected);
+        }
+
+        public function set checkboxSelected(value:Boolean):void
+        {
+            buttonCheckbox.selected = value;
+        }
+
+        public function get selected():Boolean
+        {
+            return (_selected);
+        }
+
+        public function set selected(value:Boolean):void
+        {
+            _selected = value;
+            var skin:Class;
+            if (value)
+            {
+                if (showShadow)
+                {
+                    filters = [bevelFilter];
+                };
+                skin = gAssetManager.GetClass(selectedStyle);
+            }
+            else
+            {
+                if (showShadow)
+                {
+                    filters = [];
+                };
+                skin = gAssetManager.GetClass(normalStyle);
+            };
+            setStyle("backgroundImage", skin);
+        }
+
+        private function play():void
+        {
+            if (_playSound)
+            {
+                cSoundManager.getInstance().playEffect(_soundEffect);
+            };
+        }
+
+        private function rollOver():void
+        {
+            if (!_selected)
+            {
+                setStyle("backgroundImage", gAssetManager.GetClass(hoverStyle));
+            };
+        }
+
+        private function rollOut():void
+        {
+            if (!_selected)
+            {
+                setStyle("backgroundImage", gAssetManager.GetClass(normalStyle));
+            };
+        }
+
+        public function onButtonDelete_click(event:MouseEvent):void
+        {
+            if (deleteClicked != null)
+            {
+                deleteClicked(event);
+            };
+        }
+
+        public function onButtonCheckbox_click(event:MouseEvent):void
+        {
+            if (checkboxClicked != null)
+            {
+                checkboxClicked(event);
+            };
+        }
+
+        public function onButtonLabel_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function onToolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function onClick(event:MouseEvent):void
+        {
+            play();
+        }
+
+        public function onRollOver(event:MouseEvent):void
+        {
+            rollOver();
+        }
+
+        public function onRollOut(event:MouseEvent):void
+        {
+            rollOut();
+        }
+
+        public function onCreationComplete(event:FlexEvent):void
+        {
+            selected = _selected;
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundSize", "100%");
+            buttonIcon.visible = (!(_iconImage == null));
+            buttonIcon.source = _iconImage;
+            refreshLayout();
+            addEventListener("toolTipCreate", onToolTipCreate);
+            addEventListener("creationComplete", onCreationComplete);
+            addEventListener("click", onClick);
+            addEventListener("rollOver", onRollOver);
+            addEventListener("rollOut", onRollOut);
+            addEventListener(ResizeEvent.RESIZE, refreshLayout);
+            buttonLabel.addEventListener("toolTipCreate", onButtonLabel_toolTipCreate);
+            buttonCheckbox.addEventListener("click", onButtonCheckbox_click);
+            buttonDelete.addEventListener("click", onButtonDelete_click);
+        }
+
+        private function refreshLayout(event:Event = null):void
+        {
+            if (buttonIcon == null || buttonLabel == null || buttonCheckbox == null || buttonDelete == null)
+            {
+                return;
+            };
+            buttonIcon.setStyle("verticalCenter", String(_iconCenter));
+            buttonIcon.setStyle("left", String(_iconLeft));
+            buttonLabel.text = _labelText;
+            buttonLabel.setStyle("horizontalCenter", String((_labelCenter) ? 0 : undefined));
+            buttonLabel.setStyle("left", String((_labelCenter) ? undefined : _labelLeft));
+            buttonLabel.width = ((_labelCenter) ? undefined : (((width - _labelLeft) - ((_checkboxVisible) ? (buttonCheckbox.width + 7) : 0)) - ((_deleteVisible) ? 22 : 0)));
+            buttonCheckbox.visible = _checkboxVisible;
+            buttonCheckbox.setStyle("right", ((_deleteVisible) ? 25 : 5));
+            buttonDelete.visible = _deleteVisible;
+            buttonDelete.setStyle("right", ((_labelCenter) ? 6 : 0));
+        }
+    ]]></mx:Script>
+
+    <gui:TSOImage id="buttonIcon" />
+    <gui:CustomLabel id="buttonLabel"  fontWeight="bold" verticalCenter="-1" color="0" />
+    <gui:StandardCheckBox id="buttonCheckbox"  verticalCenter="-1" />
+    <mx:Button id="buttonDelete" styleName="delete" width="27" height="21"  verticalCenter="-2" />
+</mx:Canvas>

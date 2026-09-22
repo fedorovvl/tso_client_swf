@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" implements="mx.controls.listClasses.IDropInListItemRenderer">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.listClasses.IDropInListItemRenderer;
+        import mx.controls.listClasses.BaseListData;
+        import mx.core.mx_internal;
+        import mx.events.PropertyChangeEvent;
+        import mx.controls.dataGridClasses.DataGridListData;
+        import Communication.VO.dResourceVO;
+        import Communication.VO.dBuffVO;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private var _listData:BaseListData;
+
+        private var _object:Object;
+
+        public function get listData():BaseListData
+        {
+            return (this._listData);
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            this.buffRenderer.visible = false;
+            this.buffRenderer.includeInLayout = false;
+            this.tradeRenderer.visible = false;
+            this.tradeRenderer.includeInLayout = false;
+            if ((argument1[DataGridListData(this.listData).dataField] is dResourceVO))
+            {
+                this.tradeRenderer.data = argument1[DataGridListData(this.listData).dataField];
+                this.tradeRenderer.visible = true;
+                this.tradeRenderer.includeInLayout = true;
+                height = 26;
+            }
+            else
+            {
+                if ((argument1[DataGridListData(this.listData).dataField] is dBuffVO))
+                {
+                    this.buffRenderer.data = argument1[DataGridListData(this.listData).dataField];
+                    this.buffRenderer.visible = true;
+                    this.buffRenderer.includeInLayout = true;
+                    height = 68;
+                };
+            };
+            super.data = (this._object = argument1);
+            refreshRendererPresentation();
+        }
+
+        public function set listData(argument1:BaseListData):void
+        {
+            this._listData = argument1;
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.clipContent = false;
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <local:ResourceItemRenderer id="tradeRenderer" enableAmountCheck="false"  horizontalCenter="0" />
+    <local:StarMenuItemRenderer id="buffRenderer" x="10" />
+</mx:Canvas>

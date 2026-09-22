@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    implements="GUI.Components.IGUIList"
+    width="739" height="642">
+    <mx:Script><![CDATA[
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ItemRenderer.ShopItemRenderer;
+        import GUI.Components.ItemRenderer.ShopResourceItemRenderer;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Loca.cLocaManager;
+        import ShopSystem.cItemContent;
+        import ShopSystem.cShopItem;
+        import ShopSystem.cShopItemGroup;
+        import ServerState.dResource;
+        import __AS3__.vec.Vector;
+        import flash.display.DisplayObject;
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import mx.collections.ArrayCollection;
+        import mx.controls.dataGridClasses.DataGridColumn;
+        import mx.core.ClassFactory;
+        import mx.events.EffectEvent;
+        import mx.events.ListEvent;
+        import mx.events.ToolTipEvent;
+        import mx.states.RemoveChild;
+        import mx.states.SetProperty;
+        import mx.states.SetStyle;
+        import mx.states.State;
+
+        [Embed(source="../../../assets/vector/embedded/shop/shop_buy_item_headline_498.swf", symbol="GUI.Components.ShopWindow__embed_mxml_____data_src_gfx_embedded_shop_buy_item_headline_png_1855016836")]
+        private var _embed_mxml_____data_src_gfx_embedded_shop_buy_item_headline_png_1855016836:Class;
+
+        [Embed(source="../../../assets/embedded/shop/shop_buy_item_info.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_shop_buy_item_info_png_2092143637:Class;
+
+        [Embed(source="../../../assets/vector/embedded/shop/shop_categories_bg_501.swf", symbol="GUI.Components.ShopWindow__embed_mxml_____data_src_gfx_embedded_shop_categories_bg_png_1683905873")]
+        private var _embed_mxml_____data_src_gfx_embedded_shop_categories_bg_png_1683905873:Class;
+
+        [Embed(source="../../../assets/vector/embedded/shop/shop_categories_item_bg_504.swf", symbol="GUI.Components.ShopWindow__embed_mxml_____data_src_gfx_embedded_shop_categories_item_bg_png_2010612581")]
+        private var _embed_mxml_____data_src_gfx_embedded_shop_categories_item_bg_png_2010612581:Class;
+
+        [Embed(source="../../../assets/embedded/shop/shop_icon_xp_conversion_time.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_shop_icon_xp_conversion_time_png_1018735947:Class;
+
+        public var collapsedState:State;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(itemsList);
+            LegacyMxmlContent.createChildren(itemDetails);
+            itemsStack.addChild(itemsList);
+            itemsStack.addChild(itemDetails);
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            fadeOut.addEventListener("effectEnd", __fadeOut_effectEnd);
+            categoriesBackground.setStyle("backgroundImage", _embed_mxml_____data_src_gfx_embedded_shop_categories_bg_png_1683905873);
+            shopHeader.setStyle("backgroundImage", _embed_mxml_____data_src_gfx_embedded_shop_buy_item_headline_png_1855016836);
+            groups.setStyle("backgroundImage", _embed_mxml_____data_src_gfx_embedded_shop_categories_item_bg_png_2010612581);
+            remainingItemsBadgeImage.source = _embed_mxml_____data_src_gfx_embedded_shop_buy_item_info_png_2092143637;
+            itemOnCooldownImage.source = _embed_mxml_____data_src_gfx_embedded_shop_icon_xp_conversion_time_png_1018735947;
+            shopItems.itemRenderer = new ClassFactory(ShopItemRenderer);
+            costsList.itemRenderer = new ClassFactory(ShopResourceItemRenderer);
+            groupsList.labelFunction = GetGroupName;
+            groupsList.dataTipFunction = dataTipFunction;
+            btnBuy.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            _ShopWindow_StandardButton2.setStyle("icon", gAssetManager.GetClass("ButtonIconAbort"));
+            btnAddCash.setStyle("icon", gAssetManager.GetClass("ButtonIconHardCurrency"));
+            btnAddCash.setStyle("upSkin", gAssetManager.GetClass("ButtonAddCashUp"));
+            btnAddCash.setStyle("downSkin", gAssetManager.GetClass("ButtonAddCashOver"));
+            btnAddCash.setStyle("overSkin", gAssetManager.GetClass("ButtonAddCashOver"));
+            btnAddCash.setStyle("disabledSkin", gAssetManager.GetClass("ButtonAddCashDisabled"));
+            groupsList.addEventListener("itemClick", __groupsList_itemClick);
+            _ShopWindow_StandardButton2.addEventListener(MouseEvent.CLICK, onCancelClick);
+            hardCurrency.addEventListener("toolTipCreate", __hardCurrency_toolTipCreate);
+            btnAddCash.addEventListener("toolTipCreate", __btnAddCash_toolTipCreate);
+            remainingItemsBadge.addEventListener("toolTipCreate", __remainingItemsBadge_toolTipCreate);
+            itemOnCooldownBadge.addEventListener("toolTipCreate", __itemOnCooldownBadge_toolTipCreate);
+            btnBuy.addEventListener("toolTipCreate", __btnBuy_toolTipCreate);
+            buildStates();
+            refreshTitle();
+            refreshLabels();
+            addEventListener("labelChanged", refreshTitle, false, 0, true);
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function buildStates():void
+        {
+            var collapsed:State = new State();
+            collapsed.name = "collapsed";
+            var headerHeight:SetProperty = new SetProperty();
+            headerHeight.target = shopHeader;
+            headerHeight.name = "height";
+            headerHeight.value = 38;
+            var barAlpha:SetStyle = new SetStyle();
+            barAlpha.target = shopHeaderBar;
+            barAlpha.name = "backgroundAlpha";
+            barAlpha.value = 0;
+            var barTop:SetStyle = new SetStyle();
+            barTop.target = shopHeaderBar;
+            barTop.name = "top";
+            barTop.value = 2;
+            var dropAvatar:RemoveChild = new RemoveChild();
+            dropAvatar.target = giftPlayerAvatar;
+            var dropName:RemoveChild = new RemoveChild();
+            dropName.target = giftPlayerName;
+            var dropGiftTo:RemoveChild = new RemoveChild();
+            dropGiftTo.target = giftTo;
+            var centerAvailable:SetStyle = new SetStyle();
+            centerAvailable.target = available;
+            centerAvailable.name = "horizontalCenter";
+            centerAvailable.value = 0;
+            var shrink:SetProperty = new SetProperty();
+            shrink.name = "height";
+            shrink.value = 595;
+            collapsed.overrides = [headerHeight, barAlpha, barTop, dropAvatar, dropName, dropGiftTo, centerAvailable, shrink];
+            collapsedState = collapsed;
+            states = [collapsed];
+        }
+
+        private function refreshTitle(event:Event = null):void
+        {
+            var value:* = label;
+            _ShopWindow_CustomLabel1.text = value == undefined ? null : String(value);
+        }
+
+        private function loca(key:String):String
+        {
+            var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key);
+            return value == undefined ? null : String(value);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            giftTo.text = loca("MakeAGift");
+            _ShopWindow_CustomLabel3.text = loca("Available");
+            _ShopWindow_CustomLabel6.text = loca("Categories");
+            btnAddCash.toolTip = loca("BuyGemsInGiftWindow");
+        }
+
+        public function getAllItems(_arg_1:String):Vector.<DisplayObject>
+        {
+            var _local_3:ArrayCollection;
+            var _local_4:int;
+            if (_arg_1 == null)
+            {
+                return (null);
+            };
+            var _local_2:Vector.<DisplayObject> = new Vector.<DisplayObject>();
+            if (this.shopItems.dataProvider != null)
+            {
+                _local_3 = ArrayCollection(this.shopItems.dataProvider);
+                _local_4 = 0;
+                while (_local_4 < _local_3.length)
+                {
+                    if (_local_3[_local_4].GetName_string() == _arg_1)
+                    {
+                        _local_2.push((this.shopItems.indexToItemRenderer(_local_4) as DisplayObject));
+                    };
+                    _local_4++;
+                };
+            };
+            if (this.groupsList.dataProvider != null)
+            {
+                _local_3 = ArrayCollection(this.groupsList.dataProvider);
+                _local_4 = 0;
+                while (_local_4 < _local_3.length)
+                {
+                    if (_local_3[_local_4].GetName_string() == _arg_1)
+                    {
+                        _local_2.push((this.groupsList.indexToItemRenderer(_local_4) as DisplayObject));
+                    };
+                    _local_4++;
+                };
+            };
+            return (_local_2);
+        }
+
+        public function getFirstItem(_arg_1:String):DisplayObject
+        {
+            var _local_2:ArrayCollection;
+            var _local_3:int;
+            if (_arg_1 == null)
+            {
+                return (null);
+            };
+            if (this.shopItems.dataProvider != null)
+            {
+                _local_2 = ArrayCollection(this.shopItems.dataProvider);
+                _local_3 = 0;
+                while (_local_3 < _local_2.length)
+                {
+                    if (_local_2[_local_3].GetName_string() == _arg_1)
+                    {
+                        return (this.shopItems.indexToItemRenderer(_local_3) as DisplayObject);
+                    };
+                    _local_3++;
+                };
+            };
+            if (this.groupsList.dataProvider != null)
+            {
+                _local_2 = ArrayCollection(this.groupsList.dataProvider);
+                _local_3 = 0;
+                while (_local_3 < _local_2.length)
+                {
+                    if (_local_2[_local_3].GetName_string() == _arg_1)
+                    {
+                        return (this.groupsList.indexToItemRenderer(_local_3) as DisplayObject);
+                    };
+                    _local_3++;
+                };
+            };
+            return (null);
+        }
+
+        private function GetContent(_arg_1:cShopItem, _arg_2:DataGridColumn):String
+        {
+            var _local_4:cItemContent;
+            var _local_3:* = "";
+            for each (_local_4 in _arg_1.GetShopItemContent_vector())
+            {
+                _local_3 = (_local_3 + (((_local_4.GetCount() + " ") + _local_4.GetName_string()) + "\n"));
+            };
+            return (_local_3);
+        }
+
+        private function GetCosts(_arg_1:cShopItem, _arg_2:DataGridColumn):String
+        {
+            var _local_4:dResource;
+            var _local_3:* = "";
+            for each (_local_4 in _arg_1.GetCosts_vector())
+            {
+                _local_3 = (_local_3 + (((_local_4.amount + " ") + _local_4.name_string) + "\n"));
+            };
+            return (_local_3);
+        }
+
+        private function GetName(_arg_1:cShopItem, _arg_2:DataGridColumn):String
+        {
+            return (_arg_1.GetName_string());
+        }
+
+        private function GetGroupName(_arg_1:cShopItemGroup):String
+        {
+            return (cLocaManager.GetInstance().GetText(LOCA_GROUP.SHOP_GROUPS, _arg_1.name_string));
+        }
+
+        protected function dataTipFunction(_arg_1:cShopItemGroup):String
+        {
+            if (_arg_1.name_string == "Timed")
+            {
+                return (cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, ("ShopCategory_" + _arg_1.name_string)));
+            };
+            return (null);
+        }
+
+        public function __groupsList_itemClick(_arg_1:ListEvent):void
+        {
+            this.itemsStack.selectedIndex = 0;
+        }
+
+        private function onCancelClick(event:MouseEvent):void
+        {
+            this.itemsStack.selectedIndex = 0;
+        }
+
+        public function __fadeOut_effectEnd(_arg_1:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+
+        public function __btnAddCash_toolTipCreate(_arg_1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, _arg_1);
+        }
+
+        public function __hardCurrency_toolTipCreate(_arg_1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, _arg_1);
+        }
+
+        public function __remainingItemsBadge_toolTipCreate(_arg_1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, _arg_1);
+        }
+
+        public function __itemOnCooldownBadge_toolTipCreate(_arg_1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, _arg_1);
+        }
+
+        public function __btnBuy_toolTipCreate(_arg_1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_ERROR_string, _arg_1, (!(this.btnBuy.enabled)));
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <mx:Image id="dragon" top="0" horizontalCenter="0" />
+    <mx:Canvas id="content" left="18" right="18" top="104" bottom="0"
+        clipContent="false" horizontalScrollPolicy="off" verticalScrollPolicy="off" styleName="basicPanel">
+        <gui:CloseButton id="btnClose" top="5" right="15" />
+        <gui:CustomLabel id="_ShopWindow_CustomLabel1" left="42" top="8" right="46" fontWeight="bold" textAlign="center" />
+        <mx:Canvas id="categoriesBackground" width="176" height="428" bottom="0" left="7" backgroundSize="100%" />
+        <mx:Canvas height="83" styleName="shopFooter" bottom="-1" left="7" right="5" />
+        <mx:Canvas id="shopHeader" height="85" left="5" right="2" top="27" backgroundSize="100%">
+            <mx:Canvas id="shopHeaderBar" height="32" backgroundColor="0" backgroundAlpha="0.22" left="2" right="4" top="28">
+                <gui:CustomLabel id="giftTo" horizontalCenter="-150" verticalCenter="0" />
+                <mx:HBox id="available" horizontalCenter="150" verticalAlign="middle" verticalCenter="0">
+                    <gui:CustomLabel id="_ShopWindow_CustomLabel3" />
+                    <mx:HBox id="hardCurrency" verticalAlign="middle" toolTip="HardCurrency">
+                        <mx:Image id="resourceIconHardCurrency" />
+                        <gui:CustomLabel id="resourceLabelHardCurrency" color="0xFFFFFF" fontWeight="bold" />
+                    </mx:HBox>
+                </mx:HBox>
+                <mx:Button id="btnAddCash" labelPlacement="right" width="56" height="31" verticalCenter="0" right="40" />
+            </mx:Canvas>
+            <renderer:AvatarListItemRenderer id="giftPlayerAvatar" horizontalCenter="0" verticalCenter="-8" />
+            <gui:CustomLabel id="giftPlayerName" horizontalCenter="0" verticalCenter="29" />
+        </mx:Canvas>
+        <mx:Canvas id="groups" width="156" height="335" bottom="86" left="13" backgroundSize="100%">
+            <gui:CustomLabel id="_ShopWindow_CustomLabel6" color="0" top="3" horizontalCenter="0" />
+            <gui:CustomList id="groupsList" rowHeight="26" showDataTips="true" dataTipField="name_string"
+                textSelectedColor="0xFFFFFF" textRollOverColor="0" leading="-2" verticalAlign="middle" color="0"
+                rollOverColor="8811353" selectionColor="8087114" borderThickness="0" backgroundAlpha="0"
+                top="35" bottom="5" left="3" right="3" />
+        </mx:Canvas>
+        <mx:ViewStack id="itemsStack" height="336" left="184" right="9" bottom="85" creationPolicy="all" />
+            <!-- ViewStack pages: created here, attached to itemsStack in childrenCreated(). -->
+            <mx:Canvas id="itemsList" height="336" left="184" right="9" bottom="85">
+                <gui:CustomTileList id="shopItems" percentWidth="100" percentHeight="100" selectable="true"
+                    paddingBottom="0" paddingTop="0" paddingLeft="0" paddingRight="0"
+                    backgroundAlpha="0" borderThickness="0" useRollOver="false" />
+            </mx:Canvas>
+            <mx:Canvas id="itemDetails" percentWidth="100" percentHeight="100"
+                horizontalScrollPolicy="off" verticalScrollPolicy="off" styleName="shopItemDetails">
+                <mx:Canvas id="itemHeader" height="88" top="0" left="0" right="6" styleName="shopFooter">
+                    <mx:Canvas id="remainingItemsBadge" verticalCenter="0" right="20">
+                        <mx:Image id="remainingItemsBadgeImage" />
+                        <gui:CustomLabel id="remainingItems" rotation="7" fontWeight="bold" fontSize="28"
+                            color="0xFFFFFF" horizontalCenter="2" verticalCenter="-5" />
+                    </mx:Canvas>
+                    <mx:Canvas id="itemOnCooldownBadge" verticalCenter="0" right="20">
+                        <mx:Image id="itemOnCooldownImage" verticalCenter="-10" horizontalCenter="2" />
+                        <mx:Canvas top="47">
+                            <mx:Label id="itemOnCooldownTime" color="0" fontSize="14" />
+                        </mx:Canvas>
+                    </mx:Canvas>
+                    <mx:HBox id="headerContent" horizontalCenter="0" verticalCenter="0" verticalAlign="middle">
+                        <gui:Frame id="frame" type="specialist" contentType="shopitem" />
+                        <mx:VBox height="80" horizontalScrollPolicy="off" verticalScrollPolicy="off"
+                            verticalGap="0" verticalAlign="middle">
+                            <gui:CustomText id="nameLabel" maxWidth="320" selectable="false"
+                                color="0" fontSize="20" fontWeight="bold" />
+                            <mx:HBox id="costBox">
+                                <gui:CustomLabel id="costsLabel" fontWeight="bold" color="0" paddingTop="4" />
+                                <renderer:RendererPoolBox id="costsList" direction="horizontal" />
+                            </mx:HBox>
+                        </mx:VBox>
+                    </mx:HBox>
+                </mx:Canvas>
+                <mx:Canvas left="20" right="10" top="96" bottom="96" horizontalScrollPolicy="off" verticalScrollPolicy="auto">
+                    <mx:VBox verticalGap="8" left="0" right="15">
+                        <gui:CustomText id="itemDescription1" percentWidth="100" selectable="false" fontWeight="normal" />
+                        <gui:CustomText id="itemDescription2" percentWidth="100" selectable="false" textAlign="center" styleName="specialClaim" />
+                        <gui:CustomText id="itemDescription3" percentWidth="100" selectable="false" fontWeight="normal" />
+                        <gui:GeneralStatDetails id="itemGeneralStats" percentWidth="100" paddingLeft="4" />
+                    </mx:VBox>
+                </mx:Canvas>
+                <mx:Canvas height="88" bottom="6" left="0" right="6" backgroundColor="9271383">
+                    <gui:ReversableHBox id="buttonsBox" horizontalCenter="0" verticalCenter="0" horizontalGap="15">
+                        <gui:StandardButton id="btnBuy" width="110" height="40" />
+                        <gui:StandardButton id="_ShopWindow_StandardButton2" width="110" height="40" />
+                    </gui:ReversableHBox>
+                </mx:Canvas>
+            </mx:Canvas>
+        <gui:TSOImage id="bannerLarge1" scaleContent="false" width="227" height="70" left="10" bottom="6" />
+        <gui:TSOImage id="bannerLarge2" scaleContent="false" width="227" height="70" horizontalCenter="1" bottom="6" />
+        <gui:TSOImage id="bannerLarge3" scaleContent="false" width="227" height="70" right="8" bottom="6" />
+    </mx:Canvas>
+</mx:Canvas>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:CustomLabel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:ui="GUI.Components.*"
+    text="{getHeaderText(data)}">
+    <mx:Script><![CDATA[
+        import mx.controls.dataGridClasses.DataGridColumn;
+
+        private function getHeaderText(value:Object):String
+        {
+            var headerText:* = (value as DataGridColumn).headerText;
+            return ((headerText == undefined) ? null : String(headerText));
+        }
+    ]]></mx:Script>
+</ui:CustomLabel>

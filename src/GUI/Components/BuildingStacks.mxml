@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    styleName="detailsContentBox" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.collections.ArrayCollection;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GO.cBuilding;
+        import Communication.VO.dPersistedBuffApplianceVO;
+        import __AS3__.vec.Vector;
+
+        import mx.events.PropertyChangeEvent;
+
+        private var layoutDirection:String = "vertical";
+        private var _titleLoca:String = "DuplicateBonus";
+
+        public function set direction(value:String):void
+        {
+            layoutDirection = value;
+        }
+
+        public function SetData(building:cBuilding, tooltip:String):void
+        {
+            iconBuildings.source = gAssetManager.GetResourceIcon("Building");
+            iconClock.source = gAssetManager.GetResourceIcon("Clock");
+            var buffs:Vector.<dPersistedBuffApplianceVO> = building.mGeneralInterface.mZoneBuffManager.getExtraBuildingBuffs_vector(building.GetBuildingName_string());
+            var buffCount:int = ((buffs != null) ? buffs.length : 0);
+            var bonus:Number = building.getCooldownTimeBonus();
+            labelBuildings.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "DuplicatedBuildingsOnMap", [(buffCount + 1)]);
+            labelClock.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "DuplicatedBuildingsBonus");
+            bonusValue.text = (bonus + "%");
+            bonusValue.styleName = ((bonus > 100) ? "cultureBuildingbonusValuePositive" : "cultureBuildingbonusValueNeutral");
+            panel.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, tooltip, [(buffCount + 1), bonus]);
+            updateLayout();
+        }
+
+        protected function updateLayout():void
+        {
+            if (layoutDirection.toLowerCase() == "horizontal")
+            {
+                hLayoutContainer.addChild(buildings);
+                hLayoutContainer.addChild(clock);
+                hLayoutContainer.includeInLayout = (hLayoutContainer.visible = true);
+                vLayoutContainer.includeInLayout = (vLayoutContainer.visible = false);
+            }
+            else
+            {
+                if (layoutDirection.toLowerCase() == "vertical")
+                {
+                    vLayoutContainer.addChild(buildings);
+                    vLayoutContainer.addChild(clock);
+                    hLayoutContainer.includeInLayout = (hLayoutContainer.visible = false);
+                    vLayoutContainer.includeInLayout = (vLayoutContainer.visible = true);
+                };
+            };
+        }
+
+        public function set titleLoca(value:String):void
+        {
+            var oldValue:Object = _titleLoca;
+            if (oldValue !== value)
+            {
+                _titleLoca = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "titleLoca", oldValue, value));
+                refreshTitle();
+            };
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get titleLoca():String
+        {
+            return (_titleLoca);
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("top", 0);
+            this.setStyle("left", 0);
+            this.setStyle("bottom", 0);
+            iconBuildings.source = gAssetManager.GetClass("Building");
+            iconClock.source = gAssetManager.GetClass("Clock");
+            refreshTitle();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshTitle, false, 0, true);
+        }
+
+        private function refreshTitle(event:Event = null):void
+        {
+            var title:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, _titleLoca);
+            headerLabel.text = ((title == undefined) ? null : String(title));
+        }
+    ]]></mx:Script>
+
+    <mx:VBox id="panel" percentWidth="100" percentHeight="100" verticalGap="5" paddingLeft="-1" paddingRight="-1">
+        <mx:Canvas id="headerCanvas" styleName="detailsSubHeader" percentWidth="100" height="18">
+            <gui:CustomLabel id="headerLabel" y="1"  horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+        </mx:Canvas>
+        <mx:HBox id="hLayoutContainer" percentWidth="100" includeInLayout="false" visible="false" />
+        <mx:VBox id="vLayoutContainer" percentWidth="100" includeInLayout="false" visible="false" />
+        <mx:HBox id="buildings" percentWidth="100" paddingLeft="7">
+            <mx:Image id="iconBuildings" />
+            <gui:CustomText id="labelBuildings" wordWrap="true" selectable="false" percentWidth="100"  color="0xFFFFFF" fontWeight="normal" paddingTop="2" />
+        </mx:HBox>
+        <mx:HBox id="clock" percentWidth="100" paddingLeft="7">
+            <mx:Image id="iconClock" />
+            <gui:CustomLabel id="labelClock"  color="0xFFFFFF" fontWeight="normal" paddingTop="2" />
+            <gui:CustomText id="bonusValue" selectable="false" styleName="specialClaim"  paddingTop="2" paddingLeft="-5" />
+        </mx:HBox>
+    </mx:VBox>
+</mx:Canvas>

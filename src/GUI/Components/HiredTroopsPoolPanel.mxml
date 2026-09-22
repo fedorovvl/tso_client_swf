@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="180" clipContent="false">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.core.ClassFactory;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Components.ItemRenderer.HiredUnitsListItemRenderer;
+
+        [Embed(source="../../../assets/vector/HiredTroopsPoolPanel/_embed_mxml__740493501.swf", symbol="GUI.Components.HiredTroopsPoolPanel__embed_mxml__740493501")]
+        private var headlineBackground:Class;
+
+        [Embed(source="../../../assets/vector/embedded/quest/quest_hired_troops_infobar_495.swf", symbol="GUI.Components.HiredTroopsPoolPanel__embed_mxml_____data_src_gfx_embedded_quest_hired_troops_infobar_png_779956209")]
+        private var layoutBackground:Class;
+
+        [Embed(source="../../../assets/embedded/quest/quest_hired_troops_ornamental_left.png")]
+        private var leftOrnamental:Class;
+
+        [Embed(source="../../../assets/embedded/quest/quest_hired_troops_ornamental_right.png")]
+        private var rightOrnamental:Class;
+
+        [Embed(source="../../../assets/embedded/quest/quest_quest_ornamental3.png")]
+        private var topOrnamentalArt:Class;
+
+        [Embed(source="../../../assets/embedded/quest/quest_quest_ornamental4.png")]
+        private var bottomOrnamentalArt:Class;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundSize", "100%");
+            backgroundLayout.setStyle("backgroundImage", layoutBackground);
+            headline.setStyle("backgroundImage", headlineBackground);
+            manageHiredUnitsList.itemRenderer = new ClassFactory(HiredUnitsListItemRenderer);
+            topOrnamental.source = topOrnamentalArt;
+            bottomOrnamental.source = bottomOrnamentalArt;
+            backgroundOrnamentalLeft.source = leftOrnamental;
+            backgroundOrnamentalRight.source = rightOrnamental;
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var header:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "HiredTroops");
+            headlineLabel.text = ((header == undefined) ? null : String(header));
+            headlineLabel.toolTip = headlineLabel.text;
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="backgroundLayout" percentHeight="100" top="12" left="0" right="0" bottom="20" backgroundSize="100%" />
+    <mx:Canvas id="headline" visible="true" height="25" horizontalScrollPolicy="off" horizontalCenter="0" top="20" left="14" right="14" backgroundSize="100%">
+        <gui:CustomLabel id="headlineLabel" width="160" truncateToFit="true" horizontalCenter="0" top="3" fontWeight="bold" textAlign="center" color="0xFFFFFF" />
+    </mx:Canvas>
+    <gui:CustomList id="manageHiredUnitsList" horizontalScrollPolicy="off"
+        verticalScrollPolicy="auto" selectable="false" paddingLeft="0" paddingTop="0" paddingRight="0" paddingBottom="0" backgroundAlpha="0" left="22" top="52" bottom="15" borderThickness="0" />
+    <mx:Canvas id="topBar" styleName="questOrnamental" height="10" left="6" right="6" top="7" />
+    <mx:Image id="topOrnamental" horizontalCenter="0" top="0" />
+    <mx:Canvas id="bottomBar" styleName="questOrnamental" height="10" left="6" right="6" bottom="13" />
+    <mx:Image id="bottomOrnamental" horizontalCenter="0" bottom="0" />
+    <mx:Image id="backgroundOrnamentalLeft" verticalCenter="0" left="0" />
+    <mx:Image id="backgroundOrnamentalRight" verticalCenter="0" right="0" />
+</mx:Canvas>

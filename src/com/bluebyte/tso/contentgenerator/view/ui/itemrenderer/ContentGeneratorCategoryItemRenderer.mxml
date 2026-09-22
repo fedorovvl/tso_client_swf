@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="140" height="50">
+    <mx:Script><![CDATA[
+        import flash.events.MouseEvent;
+        import flash.filters.GlowFilter;
+        import converted.bluebyte.tso.contentgenerator.logic.ContentGeneratorCategory;
+        import converted.bluebyte.tso.contentgenerator.logic.ContentGeneratorContent;
+        import GUI.greyFilter;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+
+        private var category:ContentGeneratorCategory;
+
+        protected function canvas1_mouseOverHandler(event:MouseEvent):void
+        {
+            if (this.category.GetIsEnabled())
+            {
+                this.setStyle("styleName", "contentGeneratorCategoryButtonMouseOver");
+            };
+        }
+
+        protected function canvas1_mouseOutHandler(event:MouseEvent):void
+        {
+            if (this.category.GetIsEnabled())
+            {
+                if (!this.category.selected)
+                {
+                    this.setStyle("styleName", "contentGeneratorCategoryButton");
+                }
+                else
+                {
+                    this.setStyle("styleName", "contentGeneratorCategoryButtonSelected");
+                };
+            };
+        }
+
+        private function getMinLevelRequirement():int
+        {
+            var collection:ContentGeneratorContent;
+            var minLevel:* = 999999;
+            for each (collection in this.category.getCollections())
+            {
+                if (collection.getPlayerLevel() < minLevel)
+                {
+                    minLevel = collection.getPlayerLevel();
+                };
+            };
+            return (minLevel);
+        }
+
+        private function IsCollectionItemHighlighted():Boolean
+        {
+            var collection:ContentGeneratorContent;
+            for each (collection in this.category.getCollections())
+            {
+                if (((collection.GetIsEnabled()) && (!(globalFlash.gui.mContentGeneratorPanel.WasItemEnabled(collection.getName())))))
+                {
+                    return (true);
+                };
+            };
+            return (false);
+        }
+
+        override public function set data(value:Object):void
+        {
+            var filters:Array;
+            super.data = value;
+            this.category = (value as ContentGeneratorCategory);
+            if (this.category == null)
+            {
+                return;
+            };
+            filters = new Array();
+            if (this.category.selected)
+            {
+                this.setStyle("styleName", "contentGeneratorCategoryButtonSelected");
+            }
+            else
+            {
+                this.setStyle("styleName", "contentGeneratorCategoryButton");
+            };
+            if (!this.category.GetIsEnabled())
+            {
+                filters.push(greyFilter(0.5));
+                if (cLocaManager.GetInstance().IsInitialized())
+                {
+                    toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "disabledCategory", [this.getMinLevelRequirement()]);
+                };
+            }
+            else
+            {
+                if (cLocaManager.GetInstance().IsInitialized())
+                {
+                    toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, this.category.getName());
+                };
+            };
+            if ((((!(globalFlash.gui.mContentGeneratorPanel.WasItemEnabled(this.category.getName()))) && (this.category.GetIsEnabled())) || (this.IsCollectionItemHighlighted())))
+            {
+                filters.push(new GlowFilter(16441444, 1, 10, 10, 4));
+            };
+            this.filters = filters;
+            if (cLocaManager.GetInstance().IsInitialized())
+            {
+                this.buttonLabel.text = cLocaManager.GetInstance().getLabel(this.category.getName());
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.interactionCanvas.addEventListener(MouseEvent.MOUSE_OVER, canvas1_mouseOverHandler);
+            this.interactionCanvas.addEventListener(MouseEvent.MOUSE_OUT, canvas1_mouseOutHandler);
+        }
+    ]]></mx:Script>
+
+    <gui:CustomLabel id="buttonLabel" mouseEnabled="false" bottom="11" horizontalCenter="-2" verticalCenter="-3" color="0xFFFFFF" />
+    <mx:Canvas id="interactionCanvas" percentWidth="100" percentHeight="100" backgroundAlpha="0" />
+</mx:Canvas>

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="200" height="67">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import flash.events.TimerEvent;
+        import flash.utils.Timer;
+        import mx.controls.Alert;
+        import mx.controls.Image;
+        import mx.events.CloseEvent;
+        import mx.events.FlexEvent;
+        import mx.events.ToolTipEvent;
+        import Communication.VO.dPersistedBuffApplianceVO;
+        import Communication.VO.UpdateVO.dAdventureClientInfoVO;
+        import com.bluebyte.tso.adventure.logic.AdventureManager;
+        import BuffSystem.cBuffDefinition;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.CustomAlert;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import defines;
+
+        public static const REMOVE_BUFF_CLICK_string:String = "removeBuffClick";
+
+        private var buffAppliance:dPersistedBuffApplianceVO;
+        private var nameString:String;
+        private var refreshTimer:Timer = new Timer(1000, 0);
+
+        protected function timerTick(event:TimerEvent):void
+        {
+            UpdateRemainingTime();
+        }
+
+        private function removeBuffClickHandler(event:MouseEvent):void
+        {
+            CustomAlert.show(cLocaManager.GetInstance().GetText(LOCA_GROUP.ALERT_MESSAGES, "ConfirmRemoveZoneBuff", [cLocaManager.GetInstance().getLabel(nameString)]), cLocaManager.GetInstance().GetText(LOCA_GROUP.ALERT_TITLES, "ConfirmRemoveZoneBuff"), (Alert.OK | Alert.CANCEL), null, removeBuffConfirmHandler, null, 4, false);
+        }
+
+        protected function toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event, nameString);
+        }
+
+        private function removeBuffConfirmHandler(event:CloseEvent):void
+        {
+            if (event.detail != Alert.OK)
+            {
+                return;
+            };
+            var removeEvent:Event = new Event(REMOVE_BUFF_CLICK_string, true, true);
+            dispatchEvent(removeEvent);
+        }
+
+        override public function set data(value:Object):void
+        {
+            var definition:cBuffDefinition;
+            var adventureInfo:dAdventureClientInfoVO;
+            super.data = value;
+            buffAppliance = (value as dPersistedBuffApplianceVO);
+            if (buffAppliance != null)
+            {
+                if (buffAppliance.buffID == defines.PREMIUM_DUMMY_ZONE_BUFF_ID)
+                {
+                    btnItemClose.enabled = false;
+                    buffTitle.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "PremiumWindowTitle");
+                    buffTimeRemaining.text = cLocaManager.GetInstance().FormatDuration(global.ui.mCurrentPlayer.GetPremiumDuration());
+                    toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "PremiumAccountDaysTooltip", [buffTimeRemaining.text]);
+                    buffIcon.source = gAssetManager.GetClass("PremiumAccountGenericIcon");
+                }
+                else
+                {
+                    definition = cBuffDefinition.GetById(buffAppliance.buffID);
+                    nameString = ((buffAppliance.resourceName_string.length > 0) ? ((definition.GetName_string() + "_") + buffAppliance.resourceName_string) : definition.GetName_string());
+                    buffTitle.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, nameString);
+                    toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, nameString);
+                    buffTimeRemaining.text = cLocaManager.GetInstance().FormatDuration(((buffAppliance.startTime + definition.getDuration(buffAppliance.applianceMode)) - global.ui.GetClientTime()));
+                    buffIcon.source = gAssetManager.GetBuffIcon(nameString);
+                    adventureInfo = AdventureManager.getInstance().getAdventure(global.ui.mCurrentViewedZoneID);
+                    if (((((!(adventureInfo == null)) && (adventureInfo.ownerPlayerID == global.ui.mCurrentPlayer.getPlayerID())) || (global.ui.isOnHomzone())) && (definition.isZoneCancelable())))
+                    {
+                        btnItemClose.enabled = true;
+                    }
+                    else
+                    {
+                        btnItemClose.enabled = false;
+                        btnItemClose.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "NoCancelableZoneBuff", null);
+                    };
+                };
+                UpdateRemainingTime();
+            };
+        }
+
+        protected function creationCompleteHandler(event:FlexEvent):void
+        {
+            btnItemClose.addEventListener(MouseEvent.CLICK, removeBuffClickHandler);
+            refreshTimer.addEventListener(TimerEvent.TIMER, timerTick);
+            refreshTimer.start();
+        }
+
+        private function UpdateRemainingTime():void
+        {
+            var definition:cBuffDefinition;
+            var total:Number;
+            var remaining:Number;
+            if (buffAppliance.buffID == defines.PREMIUM_DUMMY_ZONE_BUFF_ID)
+            {
+                buffTimeRemaining.text = cLocaManager.GetInstance().FormatDuration(global.ui.mCurrentPlayer.GetPremiumDuration());
+            }
+            else
+            {
+                definition = cBuffDefinition.GetById(buffAppliance.buffID);
+                total = definition.getDuration(buffAppliance.applianceMode);
+                remaining = ((buffAppliance.startTime + total) - global.ui.GetClientTime());
+                buffTimeRemaining.visible = (total > 0);
+                buffTimeRemaining.text = cLocaManager.GetInstance().FormatDuration(remaining);
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+
+            refreshTip();
+            addEventListener("creationComplete", onCreationComplete);
+            addEventListener("toolTipCreate", onToolTipCreate);
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshTip, false, 0, true);
+        }
+
+        private function refreshTip(event:Event = null):void
+        {
+            var tip:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "cancelZoneBuff");
+            btnItemClose.toolTip = ((tip == undefined) ? null : String(tip));
+        }
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            creationCompleteHandler(event);
+        }
+
+        public function onToolTipCreate(event:ToolTipEvent):void
+        {
+            toolTipCreate(event);
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="background" percentHeight="100" styleName="zoneBuffItemBackground"
+        horizontalScrollPolicy="off" verticalScrollPolicy="off" left="0" right="0">
+        <mx:Image id="buffIcon" width="54" height="65"  top="2" left="0" />
+        <gui:CustomText id="buffTitle" selectable="false"  top="15" left="55" bottom="4" right="4" color="0" />
+        <gui:CustomText id="buffTimeRemaining" selectable="false"  left="55" top="35" right="4" color="0" />
+        <gui:StandardButton id="btnItemClose" width="68" height="30"  right="7" top="18" icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+    </mx:Canvas>
+</mx:Canvas>

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="500" height="530" cacheAsBitmap="true" clipContent="false">
+    <mx:Script><![CDATA[
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+        import flash.filters.ColorMatrixFilter;
+        import GUI.Assets.gAssetManager;
+        import GUI.coloringFilter;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Loca.cLocaManager;
+        import mx.events.EffectEvent;
+        import mx.events.ToolTipEvent;
+        import Skill.SkillDefinition;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(content);
+            LegacyMxmlContent.createChildren(backgroundFooter);
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            fadeOut.addEventListener(EffectEvent.EFFECT_END, __fadeOut_effectEnd);
+            goldBG.filters = [colorFilter("gold")];
+            silverBG.filters = [colorFilter("silver")];
+            bronzeBG.filters = [colorFilter("bronze")];
+            _SkillTreeWindow_Canvas13.filters = [colorFilter("gold")];
+            _SkillTreeWindow_Canvas15.filters = [colorFilter("silver")];
+            _SkillTreeWindow_Canvas17.filters = [colorFilter("bronze")];
+            btnRefund.addEventListener(ToolTipEvent.TOOL_TIP_CREATE, __btnRefund_toolTipCreate);
+            btnRefundPremium.addEventListener(ToolTipEvent.TOOL_TIP_CREATE, __btnRefundPremium_toolTipCreate);
+            btnApplySkillpoints.addEventListener(ToolTipEvent.TOOL_TIP_CREATE, __btnApplySkillpoints_toolTipCreate);
+            btnCancelSkillpoints.addEventListener(ToolTipEvent.TOOL_TIP_CREATE, __btnCancelSkillpoints_toolTipCreate);
+            btnBack.addEventListener(ToolTipEvent.TOOL_TIP_CREATE, __btnBack_toolTipCreate);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function loca(key:String):String
+        { var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key); return value == undefined ? null : String(value); }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            headline.text = loca("SkillTree");
+            _SkillTreeWindow_MultilineLabel1.text = loca("SkillpointsAva");
+            _SkillTreeWindow_MultilineLabel3.text = loca("Reset");
+            btnRefund.label = loca("RefundHalf");
+            btnRefund.toolTip = loca("Skilltree_RefundHalf");
+            btnRefundPremium.label = loca("RefundPremium");
+            btnApplySkillpoints.toolTip = loca("Skilltree_Confirm");
+            btnCancelSkillpoints.toolTip = loca("Skilltree_Cancel");
+            btnBack.toolTip = loca("Back");
+        }
+
+        private function colorFilter(param:String):ColorMatrixFilter
+        {
+            return coloringFilter(SkillDefinition.getColorByType(param));
+        }
+
+        public function __fadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+
+        public function __btnRefund_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.MULTILINE_string, event);
+        }
+
+        public function __btnRefundPremium_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.MULTILINE_string, event);
+        }
+
+        public function __btnApplySkillpoints_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnCancelSkillpoints_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnBack_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <mx:Canvas id="background" styleName="basicPanel" top="5" left="5" right="9" bottom="0" />
+    <mx:Image id="_SkillTreeWindow_Image1" horizontalCenter="0" top="-50" source="{gAssetManager.GetClass('PanelOrnamentalTop')}" />
+    <gui:CustomLabel id="headline" left="46" top="15" right="46" textAlign="center" color="0xFFFFFF" />
+    <gui:CloseButton id="btnClose" top="10" right="24" />
+    <mx:Image id="iconPlaceholder" x="225" y="-42" width="50" height="60" />
+    <mx:Canvas id="content" top="35" left="15" right="15" percentWidth="100" height="450" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+        <mx:Canvas id="contentBox" styleName="detailsSpecialContentBox" x="6" y="4" width="335">
+            <mx:Canvas id="skilltreeContainer" percentWidth="100" horizontalScrollPolicy="off">
+                <mx:Canvas width="335" height="440" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+                    <mx:Canvas id="goldBG" percentWidth="100" styleName="skillTreeBG" />
+                    <mx:Canvas id="silverBG" percentWidth="100" styleName="skillTreeBG" />
+                    <mx:Canvas id="bronzeBG" percentWidth="100" styleName="skillTreeBG" />
+                </mx:Canvas>
+                <gui:SkillTreeGrid id="skillTree" horizontalCenter="0" width="335" height="440" />
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas id="rightColumn" styleName="detailsContentBox" left="340" right="6" top="4" bottom="0" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+            <mx:Canvas styleName="goldhr" percentWidth="100" height="5" />
+            <gui:MultilineLabel id="_SkillTreeWindow_MultilineLabel1" top="10" textAlign="center" color="0xFFFFFF" width="120" height="50" />
+            <mx:VBox id="skillpoints" top="60" verticalGap="12" percentWidth="100">
+                <mx:Canvas percentWidth="100">
+                    <mx:Canvas id="_SkillTreeWindow_Canvas13" styleName="skillColorBG" percentWidth="100" height="45" />
+                    <renderer:ResourceItemRenderer id="goldSkillpoints" horizontalCenter="0" verticalCenter="0" color="0" enableAmountCheck="false" size="16" />
+                </mx:Canvas>
+                <mx:Canvas percentWidth="100">
+                    <mx:Canvas id="_SkillTreeWindow_Canvas15" styleName="skillColorBG" percentWidth="100" height="45" />
+                    <renderer:ResourceItemRenderer id="silverSkillpoints" horizontalCenter="0" verticalCenter="0" color="0" enableAmountCheck="false" size="16" />
+                </mx:Canvas>
+                <mx:Canvas percentWidth="100">
+                    <mx:Canvas id="_SkillTreeWindow_Canvas17" styleName="skillColorBG" percentWidth="100" height="45" />
+                    <renderer:ResourceItemRenderer id="bronzeSkillpoints" horizontalCenter="0" verticalCenter="0" color="0" enableAmountCheck="false" size="16" />
+                </mx:Canvas>
+            </mx:VBox>
+            <mx:VBox id="pointsBG" top="230" horizontalAlign="center" verticalGap="4" backgroundColor="12951664" percentWidth="100" height="93">
+                <mx:Canvas styleName="goldhr" percentWidth="100" height="5" />
+                <gui:MultilineLabel id="pointsText" textAlign="center" width="120" height="45" />
+                <gui:CustomLabel id="pointsCount" fontSize="22" fontWeight="bold" />
+            </mx:VBox>
+            <mx:VBox bottom="20" horizontalAlign="center" verticalGap="8" percentWidth="100">
+                <mx:Canvas styleName="goldhr" percentWidth="100" height="5" />
+                <gui:MultilineLabel id="_SkillTreeWindow_MultilineLabel3" bottom="75" textAlign="center" color="0xFFFFFF" percentWidth="100" />
+                <gui:StandardButton id="btnRefund" enabled="false" width="105" height="28" paddingLeft="4" paddingRight="4" />
+                <gui:StandardButton id="btnRefundPremium" enabled="false" width="105" height="28" paddingLeft="4" paddingRight="4" icon="{gAssetManager.GetClass('ButtonNormalIconHardCurrency')}" />
+            </mx:VBox>
+            <mx:Canvas left="-1" width="3" percentHeight="100" styleName="vr" />
+            <mx:Canvas right="-1" width="3" percentHeight="100" styleName="vr" />
+        </mx:Canvas>
+    </mx:Canvas>
+    <mx:Canvas id="backgroundFooter" styleName="questPanelFooter" left="10" bottom="0" width="480" height="60">
+        <mx:HBox width="335" percentHeight="100" horizontalAlign="center" verticalAlign="middle" top="10" left="5" horizontalGap="30">
+            <gui:StandardButton id="btnApplySkillpoints" width="100" height="30" icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+            <gui:StandardButton id="btnCancelSkillpoints" width="100" height="30" icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+        </mx:HBox>
+        <gui:StandardButton id="btnBack" top="20" right="23" width="100" height="30" icon="{gAssetManager.GetClass('LoopBackward')}" />
+    </mx:Canvas>
+</mx:Canvas>

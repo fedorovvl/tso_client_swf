@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    mouseEnabled="false" mouseChildren="false"
+    styleName="toolTip" minWidth="180" minHeight="100">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.events.FlexEvent;
+        import ServerState.dResource;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import Communication.VO.UpdateVO.dAdventureClientInfoVO;
+        import Communication.VO.ColonyVO;
+        import BuffSystem.cBuff;
+        import BuffSystem.cBuffDefinition;
+        import Utils.PVPUtil;
+        import GUI.helpers.PVPClientUtil;
+        import AdventureSystem.cAdventureDefinition;
+
+        private var mAdventureDifficulty:int;
+        private var mTroopLimit:int;
+        private var mGeneralsLimit:int;
+        private var mAdventureLevel:int = -1;
+        private var mRewardID:int = -1;
+        private var mNumPlayers:int = -1;
+        private var mState:int = -1;
+        private var mAdventureName:String;
+        private var mAdventure:dAdventureClientInfoVO;
+        private var mColony:ColonyVO;
+        private var _title:String;
+        private var _text:String;
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this._text = _arg_1;
+            invalidateProperties();
+        }
+
+        override protected function commitProperties():void
+        {
+            super.commitProperties();
+            this.headline.text = this._title;
+        }
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            var _local_2:cAdventureDefinition;
+            var _local_3:cBuff;
+            var _local_4:cBuffDefinition;
+            this.mAdventureDifficulty = -1;
+            this.mAdventureLevel = -1;
+            this.mTroopLimit = -1;
+            this.mRewardID = -1;
+            this.mNumPlayers = -1;
+            this.mState = -1;
+            this.mAdventure = null;
+            this.mColony = null;
+            if (_arg_1)
+            {
+                if ((_arg_1 is cBuff))
+                {
+                    _local_3 = (_arg_1 as cBuff);
+                    this.mAdventure = new dAdventureClientInfoVO();
+                    this.mAdventure.adventureName = _local_3.GetResourceName_string();
+                    _local_2 = cAdventureDefinition.FindAdventureDefinition(this.mAdventure.adventureName);
+                    this.mAdventure.mapLevel = _local_3.GetMapLevel();
+                    this.mAdventure.troopLimit = global.expeditionMapLevelGroupVO.CalcTroopLimit(_local_2.GetLevelRangeExpedition(), _local_3.GetMapLevel());
+                    this.mAdventure.zoneID = -(_local_3.GetAmount());
+                    _local_4 = _local_3.GetBuffDefinition();
+                }
+                else
+                {
+                    if ((_arg_1.colonyVO is ColonyVO))
+                    {
+                        this.mColony = (_arg_1.colonyVO as ColonyVO);
+                    }
+                    else
+                    {
+                        this.mAdventure = (_arg_1.adventureVO as dAdventureClientInfoVO);
+                    };
+                };
+                if (this.mAdventure != null)
+                {
+                    _local_2 = cAdventureDefinition.FindAdventureDefinition(this.mAdventure.adventureName);
+                    if (this.mAdventure.adventureName.indexOf("$Expedition") == -1)
+                    {
+                        this.mAdventureDifficulty = this.mAdventure.getDifficulty();
+                    }
+                    else
+                    {
+                        this.mAdventureDifficulty = PVPUtil.getColonyTier(this.mAdventure.getLevelRange());
+                    };
+                    this.mAdventureName = this.mAdventure.adventureName;
+                    this.mNumPlayers = this.mAdventure.getNumPlayers();
+                    this.mAdventureLevel = this.mAdventure.mapLevel;
+                    this.mTroopLimit = global.expeditionMapLevelGroupVO.CalcTroopLimit(_local_2.GetLevelRangeExpedition(), this.mAdventure.mapLevel);
+                    this.mGeneralsLimit = global.expeditionMapLevelGroupVO.GetGeneralsLimit(this.mAdventure.getLevelRange());
+                    this.mRewardID = this.mAdventure.rewardId;
+                    this.mState = this.mAdventure.status;
+                    this._title = cLocaManager.GetInstance().GetText(LOCA_GROUP.ADVENTURE_NAME, this.mAdventure.adventureName);
+                }
+                else
+                {
+                    if (this.mColony != null)
+                    {
+                        this.mAdventureDifficulty = PVPUtil.getColonyTier(this.mColony.getLevelRange());
+                        this.mAdventureName = this.mColony.adventureName;
+                        this.mAdventureLevel = this.mColony.mapLevel;
+                        this.mNumPlayers = this.mColony.getNumPlayers();
+                        this.mRewardID = this.mColony.rewardId;
+                        this.mState = this.mColony.state;
+                        this.mTroopLimit = global.expeditionMapLevelGroupVO.CalcTroopLimit(this.mColony.getLevelRange(), this.mColony.mapLevel);
+                        this.mGeneralsLimit = global.expeditionMapLevelGroupVO.GetGeneralsLimit(this.mColony.getLevelRange());
+                        this._title = cLocaManager.GetInstance().GetText(LOCA_GROUP.ADVENTURE_NAME, this.mColony.adventureName);
+                    };
+                };
+            };
+            updateValueLabels();
+            if (this.description)
+            {
+                this.SetData();
+            }
+            else
+            {
+                this.addEventListener(FlexEvent.CREATION_COMPLETE, this.SetData);
+            };
+        }
+
+        private function updateValueLabels():void
+        {
+            if (!diffValueLabel)
+            {
+                return;
+            };
+            diffValueLabel.text = String(mAdventureDifficulty);
+            troopValueLabel.text = String(mTroopLimit);
+            generalsValueLabel.text = String(mGeneralsLimit);
+        }
+
+        private function SetData(_arg_1:Event=null):void
+        {
+            var _local_7:String;
+            var _local_2:* = "";
+            if (((this.mAdventure == null) && (this.mColony == null)))
+            {
+                this.description.text = "";
+                return;
+            };
+            var _local_3:Boolean;
+            if (this.mAdventure != null)
+            {
+                _local_3 = this.mAdventure.IsFromMapPool();
+            }
+            else
+            {
+                if (this.mColony != null)
+                {
+                    _local_3 = this.mColony.IsFromMapPool();
+                };
+            };
+            var _local_4:* = "";
+            var _local_5:cAdventureDefinition = cAdventureDefinition.FindAdventureDefinition(this.mAdventureName);
+            var _local_6:dResource = PVPClientUtil.getColonyYieldPerTick(this.mRewardID, _local_5, _local_3);
+            if (_local_6.amount > 0)
+            {
+                _local_7 = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, _local_6.name_string);
+                _local_4 = (cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ColonyYieldRate", [_local_6.amount, _local_7, (global.colonyYieldTickTime / 3600), (_local_6.maxLimit / 86400)]) + "\n");
+            };
+            if (this.mColony != null)
+            {
+                _local_2 = (_local_2 + (((cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Tier") + " ") + PVPUtil.getColonyTier(this.mColony.getLevelRange())) + "\n"));
+            };
+            this.troopLimitHolder.includeInLayout = (this.troopLimitHolder.visible = (this.mTroopLimit > -1));
+            this.adventureDifficultyHolder.includeInLayout = (this.adventureDifficultyHolder.visible = (this.mGeneralsLimit > -1));
+            _local_2 = (_local_2 + _local_4);
+            this.description.text = _local_2;
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var t:*;
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ExpeditionDifficultyTooltip");
+            diffHintLabel.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ExpeditionTrooplimitTooltip");
+            troopHintLabel.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ExpeditionGeneralslimitTooltip");
+            generalsHintLabel.text = ((t == undefined) ? null : String(t));
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            diffIcon.source = gAssetManager.GetBitmap("IconSkull");
+            troopIcon.source = gAssetManager.GetBitmap("TroopLimit");
+            generalsIcon.source = gAssetManager.GetBitmap("General");
+            refreshLabels();
+            updateValueLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+    ]]></mx:Script>
+    <mx:VBox id="layoutBox" percentHeight="100" verticalScrollPolicy="off" left="3">
+        <gui:CustomText id="headline" minWidth="180"  color="0xFFFFFF" fontWeight="bold" />
+        <mx:HBox id="adventureDifficultyHolder">
+            <mx:Image id="diffIcon" />
+            <gui:CustomLabel id="diffValueLabel" width="30"  color="0xFFFFFF" fontWeight="bold" textAlign="right" />
+            <gui:CustomLabel id="diffHintLabel"  color="0xFFFFFF" />
+        </mx:HBox>
+        <mx:HBox id="troopLimitHolder">
+            <mx:Image id="troopIcon" />
+            <gui:CustomLabel id="troopValueLabel" width="35"  color="0xFFFFFF" fontWeight="bold" textAlign="right" />
+            <gui:CustomLabel id="troopHintLabel"  color="0xFFFFFF" />
+        </mx:HBox>
+        <mx:HBox id="generalsLimitHolder">
+            <mx:Image id="generalsIcon" />
+            <gui:CustomLabel id="generalsValueLabel" width="30"  color="0xFFFFFF" fontWeight="bold" textAlign="right" />
+            <gui:CustomLabel id="generalsHintLabel"  color="0xFFFFFF" />
+        </mx:HBox>
+        <gui:CustomText id="description" percentWidth="100" />
+    </mx:VBox>
+</mx:Canvas>

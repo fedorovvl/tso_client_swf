@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="232" horizontalScrollPolicy="off" verticalScrollPolicy="off" clipContent="false">
+    <mx:Script><![CDATA[
+        import mx.effects.Fade;
+        import mx.effects.Resize;
+        import mx.effects.Sequence;
+        import mx.events.FlexEvent;
+        import mx.events.MoveEvent;
+
+        public var collapseResize:Resize;
+        public var expand:Sequence;
+        public var collapse:Sequence;
+        public var expandResize:Resize;
+        public var resize:Resize;
+
+        private function syncArrow(event:MoveEvent = null):void
+        {
+            sidebarArrow.setStyle("top", String(-15 - this.y));
+            sidebarArrow.height = this.y + 36;
+        }
+
+        public function initEffects():void
+        {
+            this.expandResize = new Resize(this);
+            var _local_1:Fade = new Fade(this.list);
+            _local_1.alphaFrom = 0;
+            _local_1.alphaTo = 1;
+            this.collapseResize = new Resize(this);
+            this.collapseResize.heightTo = 30;
+            var _local_2:Fade = new Fade(this.list);
+            _local_2.alphaFrom = 1;
+            _local_2.alphaTo = 0;
+            this.expand = new Sequence();
+            this.expand.duration = 300;
+            this.expand.children = [this.expandResize, _local_1];
+            this.collapse = new Sequence();
+            this.collapse.duration = 300;
+            this.collapse.children = [_local_2, this.collapseResize];
+            this.resize = new Resize(this);
+            this.resize.duration = 300;
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            sidebarArrow.setStyle("backgroundImage", arrowEmbed);
+            btnItem.showShadow = true;
+            btnItem.height = 30;
+            btnItem.iconCenter = 1;
+            btnExpand.normalStyle = "ButtonNormalSmall";
+            btnExpand.hoverStyle = "ButtonHighlightSmall";
+            btnExpand.selectedStyle = "ButtonHighlightSmall";
+            syncArrow();
+            addEventListener("move", syncArrow);
+            initEffects();
+            addEventListener("initialize", onInitialize);
+        }
+
+        private function onInitialize(event:FlexEvent):void
+        {
+            if (!resize)
+            {
+                initEffects();
+            };
+        }
+
+        [Embed(source="../../../../../assets/vector/embedded/quest/quest_quest_sidebar_arrow_799.swf", symbol="GUI.Components.achievement.list.ExpandableAchievementCategoryViewComponent__embed_mxml_____data_src_gfx_embedded_quest_quest_sidebar_arrow_png_1630766322")]
+        private var arrowEmbed:Class;
+    ]]></mx:Script>
+    <mx:Canvas id="sidebarArrow" width="15" clipContent="false"  left="0" backgroundSize="100%" />
+    <mx:VBox id="list" clipContent="false"  left="0" right="7" top="30" bottom="0" verticalGap="1" />
+    <mx:Canvas id="itemCanvas" height="30" left="0" right="0">
+        <gui:SpecialButton id="btnItem"  left="0" right="1" />
+        <gui:SpecialButton id="btnExpand" width="22" height="28"  left="0" top="0" />
+    </mx:Canvas>
+</mx:Canvas>

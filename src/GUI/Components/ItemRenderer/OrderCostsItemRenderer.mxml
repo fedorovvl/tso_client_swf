@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="52" height="60">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Image;
+        import GUI.Components.CustomLabel;
+        import mx.core.mx_internal;
+        import mx.events.PropertyChangeEvent;
+        import MilitarySystem.cMilitaryUnitDescription;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private var resourceName:String;
+
+        private function CreateTooltip(argument1:ToolTipEvent):void
+        {
+            if (cMilitaryUnitDescription.GetUnitDescriptionForType(data.resource.name_string) != null)
+            {
+                cToolTipUtil.createToolTip(cToolTipUtil.MILITARY_UNIT_SKILL_string, argument1);
+            }
+            else
+            {
+                cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+            };
+        }
+
+        private function setTooltipValue():void
+        {
+            var localValue1:String = data.resource.name_string;
+            if (cMilitaryUnitDescription.GetUnitDescriptionForType(localValue1) != null)
+            {
+                toolTip = localValue1;
+            }
+            else
+            {
+                toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, localValue1);
+                if (data.inStorage != null)
+                {
+                    toolTip = (toolTip + ("\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "InStorage", [data.inStorage])));
+                };
+            };
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            this.resourceIcon.source = gAssetManager.GetResourceIcon(data.resource.name_string);
+            this.amountLabel.text = data.resource.amount;
+            this.setTooltipValue();
+            if (data.amount != null)
+            {
+                this.totalAmountLabel.text = String((data.resource.amount * data.amount));
+            };
+            if (data.canAfford)
+            {
+                this.totalAmountLabel.setStyle("color", 0xFFFFFF);
+            }
+            else
+            {
+                this.totalAmountLabel.setStyle("color", 0xFF0000);
+            };
+            refreshRendererPresentation();
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.width = 52;
+            this.height = 60;
+            this.addEventListener("toolTipCreate", this.CreateTooltip);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Image id="resourceIcon" width="26" height="25"  horizontalCenter="0" />
+    <ui:CustomLabel id="amountLabel"  top="24" color="0xFFFFFF" left="5" right="5" fontWeight="normal" textAlign="center" />
+    <ui:CustomLabel id="totalAmountLabel"  top="41" color="0xFFFFFF" left="5" right="5" horizontalCenter="0" fontWeight="bold" textAlign="center" />
+</mx:Canvas>

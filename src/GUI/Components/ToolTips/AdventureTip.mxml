@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    mouseEnabled="false" mouseChildren="false"
+    horizontalScrollPolicy="off" verticalScrollPolicy="off"
+    minWidth="230" minHeight="100" styleName="toolTip">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import Enums.ADVENTURE_TYPE;
+        import Enums.ADVENTURE_CAMPAIGN;
+        import AdventureSystem.cAdventureDefinition;
+        import Interface.RenderableItem;
+
+        private var _text:String;
+        private var adventure:cAdventureDefinition;
+        private var _description:String;
+        private var _title:String;
+
+        public function get descriptionText():String
+        {
+            return (this._description);
+        }
+
+        public function set descriptionText(_arg_1:String):void
+        {
+            this._description = _arg_1;
+            invalidateProperties();
+        }
+
+        public function get title():String
+        {
+            return (this._title);
+        }
+
+        public function set title(_arg_1:String):void
+        {
+            this._title = _arg_1;
+            invalidateProperties();
+        }
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this._text = _arg_1;
+            if (this.adventure == null)
+            {
+                this.adventure = cAdventureDefinition.FindAdventureDefinition(_arg_1);
+                invalidateProperties();
+            };
+        }
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            if ((_arg_1 is String))
+            {
+                this.adventure = cAdventureDefinition.FindAdventureDefinition((_arg_1 as String));
+                invalidateProperties();
+            }
+            else
+            {
+                if ((_arg_1 is RenderableItem))
+                {
+                    this.adventure = cAdventureDefinition.FindAdventureDefinition((_arg_1 as RenderableItem).getResourceGFXName());
+                    invalidateProperties();
+                };
+            };
+        }
+
+        override protected function commitProperties():void
+        {
+            var _local_1:cLocaManager;
+            super.commitProperties();
+            if (this.adventure != null)
+            {
+                _local_1 = cLocaManager.GetInstance();
+                this.lblText.text = _local_1.GetText(LOCA_GROUP.ADVENTURE_NAME, this.adventure.GetName());
+                this.typeText.text = _local_1.GetText(LOCA_GROUP.LABELS, ("Type_" + this.adventure.GetType_string()));
+                this.difficultyText.text = this.adventure.GetDifficulty().toString();
+                if (((this.adventure.GetType() == ADVENTURE_TYPE.COOP) || (this.adventure.mMaxPlayers == 1)))
+                {
+                    this.playersText.text = this.adventure.mMaxPlayers.toString();
+                }
+                else
+                {
+                    this.playersText.text = ("1 - " + this.adventure.mMaxPlayers.toString());
+                };
+                this.timeLimitText.text = _local_1.FormatDuration(this.adventure.GetDuration());
+                this.ThemeText.text = _local_1.GetText(LOCA_GROUP.LABELS, ("Theme_" + this.adventure.GetTheme_string()));
+                if (this.adventure.GetCampaign() != ADVENTURE_CAMPAIGN.NONE)
+                {
+                    this.CampaignText.text = _local_1.GetText(LOCA_GROUP.LABELS, ("Campaign_" + this.adventure.GetCampaign_string()));
+                    this.CampaignLabel.visible = true;
+                    this.CampaignText.visible = true;
+                    this.CampaignLabel.includeInLayout = true;
+                    this.CampaignText.includeInLayout = true;
+                }
+                else
+                {
+                    this.CampaignLabel.visible = false;
+                    this.CampaignText.visible = false;
+                    this.CampaignLabel.includeInLayout = false;
+                    this.CampaignText.includeInLayout = false;
+                };
+                this.eliteUnitsLabel.includeInLayout = this.adventure.UseElite();
+                this.eliteUnitsLabel.visible = this.adventure.UseElite();
+                this.refundLabel.includeInLayout = this.adventure.IsRecurring();
+                this.refundLabel.visible = this.adventure.IsRecurring();
+            };
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var t:*;
+            t = cLocaManager.GetInstance().getLabel("Type");
+            typeLabel.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().getLabel("Difficulty");
+            difficultyLabel.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().getLabel("Players");
+            playersLabel.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().getLabel("TimeLimit");
+            timeLimitLabel.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().getLabel("Theme");
+            ThemeLabel.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().getLabel("Campaign");
+            CampaignLabel.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().getLabel("CanUseElite");
+            eliteUnitsLabel.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().getLabel("AdvRecurring");
+            refundLabel.text = ((t == undefined) ? null : String(t));
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("paddingTop", 2);
+            this.setStyle("paddingBottom", 2);
+            this.setStyle("paddingLeft", 5);
+            this.setStyle("paddingRight", 5);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+    ]]></mx:Script>
+    <mx:VBox id="contentBox" percentWidth="100" percentHeight="100" verticalGap="3">
+        <mx:Label id="lblText" percentWidth="100" truncateToFit="false"  fontWeight="bold" color="0xFFFFFF" />
+        <mx:HBox id="typeRow" percentWidth="100">
+            <gui:CustomText id="typeLabel" percentWidth="100"  color="0xFFFFFF" />
+            <gui:CustomText id="typeText" percentWidth="100"  color="0xFFFFFF" />
+        </mx:HBox>
+        <mx:HBox id="difficultyRow" percentWidth="100">
+            <gui:CustomText id="difficultyLabel" percentWidth="100"  color="0xFFFFFF" />
+            <gui:CustomText id="difficultyText" percentWidth="100"  color="0xFFFFFF" />
+        </mx:HBox>
+        <mx:HBox id="playersRow" percentWidth="100">
+            <gui:CustomText id="playersLabel" percentWidth="100"  color="0xFFFFFF" />
+            <gui:CustomText id="playersText" percentWidth="100"  color="0xFFFFFF" />
+        </mx:HBox>
+        <mx:HBox id="timeLimitRow" percentWidth="100">
+            <gui:CustomText id="timeLimitLabel" percentWidth="100"  color="0xFFFFFF" />
+            <gui:CustomText id="timeLimitText" percentWidth="100"  color="0xFFFFFF" />
+        </mx:HBox>
+        <mx:HBox id="themeRow" percentWidth="100">
+            <gui:CustomText id="ThemeLabel" percentWidth="100"  color="0xFFFFFF" />
+            <gui:CustomText id="ThemeText" percentWidth="100"  color="0xFFFFFF" />
+        </mx:HBox>
+        <mx:HBox id="campaignRow" percentWidth="100">
+            <gui:CustomText id="CampaignLabel" percentWidth="100"  color="0xFFFFFF" />
+            <gui:CustomText id="CampaignText" percentWidth="100"  color="0xFFFFFF" />
+        </mx:HBox>
+        <gui:CustomText id="eliteUnitsLabel" percentWidth="100"
+            truncateToFit="false" wordWrap="true"  color="0xFFFFFF" />
+        <gui:CustomText id="refundLabel" percentWidth="100"
+            truncateToFit="false" wordWrap="true"  color="0xFFFFFF" />
+    </mx:VBox>
+</mx:VBox>

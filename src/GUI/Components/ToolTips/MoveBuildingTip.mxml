@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    width="190" height="135" mouseEnabled="false" mouseChildren="false" styleName="customAlert">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.core.ClassFactory;
+        import GO.cBuilding;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Components.ItemRenderer.ResourceItemRenderer;
+
+        private var _building:cBuilding;
+        private var _text:String;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this._building = (_arg_1 as cBuilding);
+        }
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            var _local_3:ResourceItemRenderer;
+            this._text = _arg_1;
+            if (!headline || !costsList || !gemRenderer)
+            {
+                return;
+            };
+            refreshContent();
+        }
+
+        private function refreshContent():void
+        {
+            var _local_3:ResourceItemRenderer;
+            this.headline.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Costs");
+            this.costsList.dataProvider = this._building.GetMovementCosts().cost;
+            if (this._building.GetMovementCosts().isModified())
+            {
+                this.gemRenderer.color = 5042178;
+                for each (_local_3 in this.costsList.getChildren())
+                {
+                    _local_3.color = 5042178;
+                };
+            };
+            var _local_2:Object = new Object();
+            _local_2.name_string = defines.HARD_CURRENCY_RESOURCE_NAME_string;
+            _local_2.amount = this._building.GetGemMovementCosts();
+            this.gemRenderer.data = _local_2;
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var text:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Or");
+            _MoveBuildingTip_CustomText2.text = ((text == undefined) ? null : String(text));
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            var poolFactory:ClassFactory = new ClassFactory(MoveBuildingTip_inlineComponent1);
+            poolFactory.properties = {"outerDocument":this};
+            costsList.itemRenderer = poolFactory;
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+            if (this._text != null)
+            {
+                refreshContent();
+            };
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="bgBox" styleName="detailsSubContentBox" x="10" y="8" width="165" height="112" />
+    <mx:Canvas id="headerBox" x="4" y="3" width="177" height="30" styleName="detailsHeader">
+        <gui:CustomText id="headline" x="13" y="7"  fontWeight="bold" color="0xFFFFFF" />
+    </mx:Canvas>
+    <renderer:RendererPoolBox id="costsList" direction="horizontal" x="25" y="38"  horizontalGap="2" />
+    <mx:Canvas id="orBox" x="10" y="64" width="165" height="25" styleName="detailsSubContentBox">
+        <gui:CustomText id="_MoveBuildingTip_CustomText2" x="13" y="7"  fontWeight="bold" color="0xFFFFFF" />
+    </mx:Canvas>
+    <renderer:ResourceItemRenderer id="gemRenderer" x="25" y="93" />
+</mx:Canvas>

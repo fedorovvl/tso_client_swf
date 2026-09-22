@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="116" height="48">
+    <mx:Script><![CDATA[
+        import Enums.LOCA_GROUP;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Loca.cLocaManager;
+        import flash.events.Event;
+        import mx.events.ToolTipEvent;
+        import global;
+
+        [Embed(source="../../../assets/embedded/options/options_camera_inactive.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_camera_inactive_png_614278347:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_camera_mouseover.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_camera_mouseover_png_2082985771:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_camera_standard.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_camera_standard_png_481275211:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_fullscreen_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_fullscreen_mo_png_140392779:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_fullscreen_standard.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_fullscreen_standard_png_1912455733:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_login_inactive.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_login_inactive_png_460316693:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_logout_mouseover.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_logout_mouseover_png_2099760075:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_logout_standard.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_logout_standard_png_1667322645:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_menu_close_mouseover.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_menu_close_mouseover_png_79158325:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_menu_close_standard.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_menu_close_standard_png_151395659:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_menu_inactive.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_menu_inactive_png_231324139:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_menu_open_mouseover.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_menu_open_mouseover_png_1912095413:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_menu_open_standard.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_menu_open_standard_png_31965365:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_music_inactive.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_music_inactive_png_728731317:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_music_mouseover.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_music_mouseover_png_479440075:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_music_off_mouseover.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_music_off_mouseover_png_1776106133:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_music_off.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_music_off_png_2121749483:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_music_standard.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_music_standard_png_594524373:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_options_menu_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_options_menu_mo_png_1013593781:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_options_menu_off_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_options_menu_off_mo_png_596057813:Class;
+
+        [Embed(source="../../../assets/gAssetManager/OptionsButtonOptions.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_options_menu_std_png_1125587125:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_sound_inactive.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_sound_inactive_png_795863253:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_sound_mouseover.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_sound_mouseover_png_546657771:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_sound_off_mouseover.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_sound_off_mouseover_png_1778000565:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_sound_off.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_sound_off_png_120680907:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_sound_standard.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_sound_standard_png_546341579:Class;
+
+        private var uiBindableSource:flash.events.IEventDispatcher;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.styleName = "optionsPanel";
+            this.cacheAsBitmap = true;
+            LegacyMxmlContent.createChildren(options);
+            btnPlayerOptions.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_options_menu_std_png_1125587125);
+            btnPlayerOptions.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_options_menu_mo_png_1013593781);
+            btnPlayerOptions.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_options_menu_mo_png_1013593781);
+            btnPlayerOptions.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_options_menu_off_mo_png_596057813);
+            btnToggleLoops.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_music_standard_png_594524373);
+            btnToggleLoops.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_music_mouseover_png_479440075);
+            btnToggleLoops.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_music_mouseover_png_479440075);
+            btnToggleLoops.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_music_inactive_png_728731317);
+            btnToggleLoops.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_music_off_png_2121749483);
+            btnToggleLoops.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_music_off_mouseover_png_1776106133);
+            btnToggleLoops.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_music_off_mouseover_png_1776106133);
+            btnToggleLoops.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_music_inactive_png_728731317);
+            btnToggleEffects.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_sound_standard_png_546341579);
+            btnToggleEffects.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_sound_mouseover_png_546657771);
+            btnToggleEffects.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_sound_mouseover_png_546657771);
+            btnToggleEffects.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_sound_inactive_png_795863253);
+            btnToggleEffects.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_sound_off_png_120680907);
+            btnToggleEffects.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_sound_off_mouseover_png_1778000565);
+            btnToggleEffects.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_sound_off_mouseover_png_1778000565);
+            btnToggleEffects.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_sound_inactive_png_795863253);
+            btnCamera.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_camera_standard_png_481275211);
+            btnCamera.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_camera_mouseover_png_2082985771);
+            btnCamera.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_camera_mouseover_png_2082985771);
+            btnCamera.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_camera_inactive_png_614278347);
+            btnExpandCollapse.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_menu_open_standard_png_31965365);
+            btnExpandCollapse.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_menu_open_mouseover_png_1912095413);
+            btnExpandCollapse.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_menu_open_mouseover_png_1912095413);
+            btnExpandCollapse.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_menu_inactive_png_231324139);
+            btnExpandCollapse.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_menu_close_standard_png_151395659);
+            btnExpandCollapse.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_menu_close_mouseover_png_79158325);
+            btnExpandCollapse.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_menu_close_mouseover_png_79158325);
+            btnExpandCollapse.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_menu_inactive_png_231324139);
+            btnFullScreen.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_fullscreen_standard_png_1912455733);
+            btnFullScreen.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_fullscreen_mo_png_140392779);
+            btnFullScreen.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_fullscreen_mo_png_140392779);
+            btnLogout.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_logout_standard_png_1667322645);
+            btnLogout.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_logout_mouseover_png_2099760075);
+            btnLogout.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_logout_mouseover_png_2099760075);
+            btnLogout.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_login_inactive_png_460316693);
+            expandResize.target = this;
+            _OptionsPanel_Resize2.target = this;
+            _OptionsPanel_Fade1.targets = [btnPlayerOptions, btnToggleLoops, btnToggleEffects, btnCamera, btnHelp, btnEventWindow, btnSupport, btnForum];
+            _OptionsPanel_Fade2.targets = [btnPlayerOptions, btnToggleLoops, btnToggleEffects, btnCamera, btnHelp, btnEventWindow, btnSupport, btnForum];
+            btnToggleLoops.addEventListener("toolTipCreate", __btnToggleLoops_toolTipCreate);
+            btnToggleEffects.addEventListener("toolTipCreate", __btnToggleEffects_toolTipCreate);
+            btnCamera.addEventListener("toolTipCreate", __btnCamera_toolTipCreate);
+            btnExpandCollapse.addEventListener("toolTipCreate", __btnExpandCollapse_toolTipCreate);
+            btnFullScreen.addEventListener("toolTipCreate", __btnFullScreen_toolTipCreate);
+            btnLogout.addEventListener("toolTipCreate", __btnLogout_toolTipCreate);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+            updateEnabled();
+            global.staticEventDispatcher.addEventListener("propertyChange", onGlobalChanged, false, 0, true);
+            connectUiBindable();
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var value:*;
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ToggleOptionsPanel");
+            btnPlayerOptions.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ToggleSoundLoop");
+            btnToggleLoops.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ToggleSoundEffects");
+            btnToggleEffects.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ToggleCameraPanel");
+            btnCamera.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Archive");
+            btnHelp.label = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "EventWindow");
+            btnEventWindow.label = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Support");
+            btnSupport.label = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Forum");
+            btnForum.label = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "OptionsExpandCollapse");
+            btnExpandCollapse.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Fullscreen");
+            btnFullScreen.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Logout");
+            btnLogout.toolTip = ((value == undefined) ? null : String(value));
+        }
+
+        private function onGlobalChanged(event:mx.events.PropertyChangeEvent):void
+        {
+            if (event.property == "ui_bindable")
+            {
+                connectUiBindable();
+                updateEnabled();
+            }
+        }
+
+        private function connectUiBindable():void
+        {
+            var dispatcher:flash.events.IEventDispatcher = global.ui_bindable as flash.events.IEventDispatcher;
+            if (uiBindableSource === dispatcher)
+            {
+                return;
+            }
+            if (uiBindableSource != null)
+            {
+                uiBindableSource.removeEventListener("propertyChange", onUiBindableChanged);
+            }
+            uiBindableSource = dispatcher;
+            if (uiBindableSource != null)
+            {
+                uiBindableSource.addEventListener("propertyChange", onUiBindableChanged, false, 0, true);
+            }
+        }
+
+        private function onUiBindableChanged(event:mx.events.PropertyChangeEvent):void
+        {
+            if (event.property == "mPacketLost")
+            {
+                updateEnabled();
+            }
+        }
+
+        private function updateEnabled():void
+        {
+            var enabled:Boolean = global.ui_bindable ? (!(global.ui_bindable.mPacketLost)) : true;
+            btnToggleLoops.enabled = enabled;
+            btnToggleEffects.enabled = enabled;
+            btnCamera.enabled = enabled;
+            btnHelp.enabled = enabled;
+        }
+
+        public function __btnToggleLoops_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnToggleEffects_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnCamera_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnExpandCollapse_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnFullScreen_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnLogout_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+
+    <mx:Parallel id="expand">
+        <mx:Resize id="expandResize" heightFrom="48" heightTo="160" />
+        <mx:Fade id="_OptionsPanel_Fade1" alphaFrom="0" alphaTo="1" duration="800" />
+    </mx:Parallel>
+    <mx:Parallel id="collapse">
+        <mx:Resize id="_OptionsPanel_Resize2" heightFrom="137" heightTo="48" />
+        <mx:Fade id="_OptionsPanel_Fade2" alphaFrom="1" alphaTo="0" duration="500" />
+    </mx:Parallel>
+
+    <mx:Canvas id="options" left="11" top="5" bottom="22" clipContent="false">
+        <mx:Button id="btnPlayerOptions" left="-5" top="3" width="30" height="31" alpha="0" />
+        <mx:Button id="btnToggleLoops" left="26" top="3" width="30" height="31" toggle="true" alpha="0" />
+        <mx:Button id="btnToggleEffects" left="55" top="3" width="30" height="31" toggle="true" alpha="0" />
+        <mx:Button id="btnCamera" left="84" top="3" width="30" height="31" alpha="0" />
+        <gui:OptionsMenuButton id="btnHelp" left="0" bottom="80" alpha="0" />
+        <gui:OptionsMenuButton id="btnEventWindow" left="0" bottom="60" alpha="0" />
+        <gui:OptionsMenuButton id="btnSupport" left="0" bottom="40" alpha="0" />
+        <gui:OptionsMenuButton id="btnForum" left="0" bottom="20" alpha="0" />
+        <mx:HBox horizontalAlign="center" horizontalGap="-2" left="-10" bottom="0" width="130">
+            <mx:Button id="btnExpandCollapse" toggle="true" width="44" height="21" />
+            <mx:Button id="btnFullScreen" width="44" height="21" />
+            <mx:Button id="btnLogout" width="44" height="21" />
+        </mx:HBox>
+    </mx:Canvas>
+</mx:Canvas>

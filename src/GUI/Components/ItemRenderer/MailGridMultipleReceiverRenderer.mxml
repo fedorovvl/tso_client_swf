@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Label xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*">
+    <mx:Script><![CDATA[
+        import mx.controls.Label;
+        import mx.styles.CSSStyleDeclaration;
+        import Communication.VO.Mail.dMailVO;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import Enums.MAIL_TYPE;
+        import Enums.NPC_NAMES;
+        import Interface.cGeneralInterface;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private function buildReceiverList():void
+        {
+            var localValue1:dMailVO = (super.data as dMailVO);
+            var localValue2:* = (cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "To") + " ");
+            if (localValue1.recipientNames_collection.length == 0)
+            {
+                if (localValue1.type == MAIL_TYPE.MAIL)
+                {
+                    this.toolTip = "";
+                }
+                else
+                {
+                    this.toolTip = this.formatSenderName(localValue1);
+                };
+                return;
+            };
+            var localValue3:int;
+            while (localValue3 < localValue1.recipientNames_collection.length)
+            {
+                if (localValue3 > 0)
+                {
+                    localValue2 = (localValue2 + ", ");
+                };
+                localValue2 = (localValue2 + localValue1.recipientNames_collection[localValue3]);
+                localValue3++;
+            };
+            this.toolTip = localValue2;
+        }
+
+        private function formatSenderName(argument1:dMailVO):String
+        {
+            switch (argument1.type)
+            {
+                case MAIL_TYPE.EXPEDITION_WON_LOOT:
+                case MAIL_TYPE.EXPEDITION_LOST_LOOT:
+                case MAIL_TYPE.ADVENTURE_WON_LOOT:
+                case MAIL_TYPE.ADVENTURE_LOST_LOOT:
+                case MAIL_TYPE.PVP_COMBAT_REPORT_ATTACKER_WON:
+                case MAIL_TYPE.PVP_COMBAT_REPORT_ATTACKER_LOST:
+                case MAIL_TYPE.PVP_COMBAT_REPORT_DEFENDER_WON:
+                case MAIL_TYPE.PVP_COMBAT_REPORT_DEFENDER_LOST:
+                case MAIL_TYPE.ADVENTURE_LOCKED_COMPENSATION:
+                case MAIL_TYPE.EXPEDITION_LOCKED_COMPENSATION:
+                if (argument1.senderName != null)
+                {
+                    return (cLocaManager.GetInstance().GetText(LOCA_GROUP.ADVENTURE_NAME, argument1.senderName));
+                };
+                return ("");
+                case MAIL_TYPE.NPC_MAIL:
+                case MAIL_TYPE.NPC_MAIL_LOOT:
+                return (cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, ("MailSender" + NPC_NAMES.toString(argument1.senderId))));
+                case MAIL_TYPE.BATTLE_REPORT:
+                case MAIL_TYPE.BATTLE_REPORT_INTERCEPTED:
+                case MAIL_TYPE.COLLECTIBLE_REWARDS:
+                if (global.ui.IsAdventureZoneID(argument1.senderId))
+                {
+                    return (cLocaManager.GetInstance().GetText(LOCA_GROUP.ADVENTURE_NAME, argument1.senderName));
+                };
+            };
+            return (cGeneralInterface.getComputedPlayerName(argument1.senderName));
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            var localValue3:dMailVO;
+            super.data = argument1;
+            var localValue2:* = "normal";
+            if ((argument1 is dMailVO))
+            {
+                localValue3 = (argument1 as dMailVO);
+                this.text = this.formatSenderName(localValue3);
+                if (!localValue3.read)
+                {
+                    localValue2 = "bold";
+                };
+                this.enabled = localValue3.isActive();
+                if (((localValue3.expirationTime > 0) && (localValue3.expirationTime <= ((24 * 60) * 1000))))
+                {
+                    this.setStyle("color", "#F28A31");
+                }
+                else
+                {
+                    this.setStyle("color", "#FFFFFF");
+                };
+            };
+            this.setStyle("fontWeight", localValue2);
+            this.buildReceiverList();
+            refreshRendererPresentation();
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("paddingLeft", 2);
+            this.setStyle("paddingRight", 2);
+
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+
+</mx:Label>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.containers.Canvas;
+        import mx.effects.Fade;
+        import mx.effects.Sequence;
+        import mx.effects.easing.Cubic;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import com.bluebyte.tso.util.TimeUtil;
+        import global;
+
+        public var guildQuestCompleteLabel:CustomLabel;
+        public var guildQuestInfoLabel:CustomLabel;
+        public var guildQuestProgressbar:Canvas;
+        public var guildQuestProgressbarBackground:Canvas;
+        public var guildQuestTimeLabel:CustomLabel;
+        public var guildQuestProgressRemainingLabel:CustomLabel;
+        public var guildQuestProgressLabel:CustomLabel;
+        public var progressContainer:TitleContainer;
+        public var pulsate:Sequence;
+
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+            guildQuestCompleteLabel.text = ((data.contributed) ? cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "guildQuestFinished") : cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "guildQuestNotFinished"));
+            guildQuestInfoLabel.text = ((data.contributed) ? cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "guildQuestFinishedInfo") : cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "guildQuestNotFinishedInfo"));
+            guildQuestProgressbar.styleName = ((data.contributed) ? "timeRemainingBarGreen" : "timeRemainingBar");
+            guildQuestProgressbar.percentWidth = ((1 - (data.remaining / data.total)) * 100);
+            guildQuestProgressRemainingLabel.text = (((data.total - data.remaining) + " / ") + data.total);
+            var now:Date = new Date(TimeUtil.getServerTimeWithGuildQuestOffset());
+            var remaining:Number = (((24 - now.getUTCHours()) * 3600000) - (now.getMinutes() * 60000));
+            guildQuestTimeLabel.text = ((cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "TimeRemaining") + " ") + cLocaManager.GetInstance().FormatDuration(remaining, cLocaManager.DURATION_FORMAT_SHORT));
+            pulsate.stop();
+            pulsate.play();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            var fadeUp:Fade = new Fade();
+            fadeUp.alphaFrom = 0.5;
+            fadeUp.alphaTo = 1;
+            fadeUp.duration = 500;
+            fadeUp.easingFunction = Cubic.easeOut;
+            var fadeDown:Fade = new Fade();
+            fadeDown.alphaFrom = 1;
+            fadeDown.alphaTo = 0.2;
+            fadeDown.duration = 800;
+            fadeDown.easingFunction = Cubic.easeIn;
+            pulsate = new Sequence();
+            pulsate.repeatCount = 0;
+            pulsate.children = [fadeUp, fadeDown];
+            progressContainer = new TitleContainer();
+            progressContainer.width = 429;
+            progressContainer.height = 150;
+            addChild(progressContainer);
+            guildQuestCompleteLabel = new CustomLabel();
+            guildQuestCompleteLabel.setStyle("top", 0);
+            guildQuestCompleteLabel.setStyle("horizontalCenter", 0);
+            guildQuestCompleteLabel.setStyle("color", 0xFFFFFF);
+            guildQuestCompleteLabel.setStyle("fontWeight", "bold");
+            guildQuestInfoLabel = new CustomLabel();
+            guildQuestInfoLabel.setStyle("top", 18);
+            guildQuestInfoLabel.setStyle("horizontalCenter", 0);
+            guildQuestInfoLabel.setStyle("color", 0xFFFFFF);
+            guildQuestProgressbarBackground = new Canvas();
+            guildQuestProgressbarBackground.styleName = "timeRemainingBackground";
+            guildQuestProgressbarBackground.width = 300;
+            guildQuestProgressbarBackground.height = 40;
+            guildQuestProgressbarBackground.setStyle("top", 40);
+            guildQuestProgressbarBackground.setStyle("horizontalCenter", 0);
+            guildQuestProgressbar = new Canvas();
+            guildQuestProgressbar.styleName = "timeRemainingBar";
+            guildQuestProgressbar.height = 34;
+            guildQuestProgressbar.setStyle("top", 3);
+            guildQuestProgressbar.setStyle("left", 2);
+            guildQuestProgressbarBackground.addChild(guildQuestProgressbar);
+            guildQuestProgressLabel = new CustomLabel();
+            guildQuestProgressLabel.setStyle("top", 83);
+            guildQuestProgressLabel.setStyle("horizontalCenter", 0);
+            guildQuestProgressLabel.setStyle("color", 0xFFFFFF);
+            guildQuestProgressRemainingLabel = new CustomLabel();
+            guildQuestProgressRemainingLabel.setStyle("top", 7);
+            guildQuestProgressRemainingLabel.setStyle("horizontalCenter", 0);
+            guildQuestProgressRemainingLabel.setStyle("color", 0xFFFFFF);
+            guildQuestProgressRemainingLabel.setStyle("fontWeight", "normal");
+            guildQuestProgressRemainingLabel.setStyle("fontSize", 20);
+            guildQuestProgressbarBackground.addChild(guildQuestProgressRemainingLabel);
+            guildQuestTimeLabel = new CustomLabel();
+            guildQuestTimeLabel.setStyle("top", 103);
+            guildQuestTimeLabel.setStyle("horizontalCenter", 0);
+            guildQuestTimeLabel.setStyle("color", 0xFFFFFF);
+            progressContainer.contentChild = [guildQuestCompleteLabel, guildQuestInfoLabel, guildQuestProgressbarBackground, guildQuestProgressLabel, guildQuestTimeLabel];
+            pulsate.target = guildQuestTimeLabel;
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var title:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "guildQuestProgression");
+            progressContainer.label = ((title == undefined) ? null : String(title));
+            var member:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "guildQuestMemberProgress");
+            guildQuestProgressLabel.text = ((member == undefined) ? null : String(member));
+            var remaining:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "TimeRemaining");
+            guildQuestTimeLabel.text = ((remaining == undefined) ? null : String(remaining));
+        }
+    ]]></mx:Script>
+</mx:Canvas>

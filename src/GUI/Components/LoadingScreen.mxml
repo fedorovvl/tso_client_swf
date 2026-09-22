@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    percentWidth="100" percentHeight="100" creationPolicy="all">
+    <mx:Script><![CDATA[
+        import com.bluebyte.tso.bootstrap.BootstrapEvent;
+        import GUI.LoadingScreen.LoadingScreenLoca;
+        import GUI.Assets.gLoadingScreenInterface;
+        import flash.desktop.NativeApplication;
+        import flash.events.InvokeEvent;
+        import com.bluebyte.tso.util.ClientLogger;
+        import Interface.gInitStaticForAllZones;
+        import nLib.cFilenameUtil;
+        import GUI.Loca.TSOStyleManager;
+        import flash.events.IEventDispatcher;
+        import mx.events.StyleEvent;
+        import mx.events.FlexEvent;
+        import flash.events.Event;
+
+        private var realmLang:String;
+        private var realmBeta:Boolean;
+        private var maxSteps:int;
+        private var progressbarOriginalWidth:Number;
+        private var currentStep:int;
+
+        public function handleNextStep(_arg_1:BootstrapEvent):void
+        {
+            this.currentStep = (this.currentStep + _arg_1.step.getProgressWeight());
+            this.loadingScreenProgressbar.width = (this.progressbarOriginalWidth - ((this.progressbarOriginalWidth / this.maxSteps) * (this.currentStep - 1)));
+            if (this.currentStep >= this.maxSteps)
+            {
+                this.loadingScreenProgressbar.width = 0;
+                global.getApplication().bootstrap.removeEventListener(BootstrapEvent.NEXT, this.handleNextStep);
+                global.getApplication().bootstrap.removeEventListener(BootstrapEvent.PROGRESS, this.handleProgressStep);
+            };
+            validateNow();
+        }
+
+        public function attachToBootstrap(_arg_1:int):void
+        {
+            this.maxSteps = _arg_1;
+            this.progressbarOriginalWidth = this.loadingScreenProgressbar.width;
+            this.currentStep = 0;
+            global.getApplication().bootstrap.addEventListener(BootstrapEvent.NEXT, this.handleNextStep);
+            global.getApplication().bootstrap.addEventListener(BootstrapEvent.PROGRESS, this.handleProgressStep);
+        }
+
+        public function updateImages(_arg_1:gLoadingScreenInterface):void
+        {
+            this.loadingScreenFrame.source = _arg_1.LoadIcon("LoadingScreenFrame");
+            this.loadingScreenLogo.source = LoadingScreenLoca.getLogoBitmap(_arg_1, this.realmLang, this.realmBeta);
+            this.loadingScreenOrnamentalLeft.source = _arg_1.LoadIcon("LoadingScreenOrnamental");
+            this.loadingScreenOrnamentalRight.source = _arg_1.LoadIcon("LoadingScreenOrnamental");
+            this.loadingScreenArtwork.source = _arg_1.LoadIcon("LoadingScreenArtwork");
+            this.loadingScreenBetaBanner.source = _arg_1.LoadIcon("LoadingScreenBetaBanner");
+            this.loadingScreenBetaBackground.setStyle("upSkin", _arg_1.getClass("LoadingScreenInfobox"));
+        }
+
+        public function init():void
+        {
+            NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, function (_arg_1:InvokeEvent):void
+            {
+                ClientLogger.log(("LoadingScreenLoader invokeEvent.arguments: " + _arg_1.arguments.toString()));
+                gInitStaticForAllZones.parseCommandLineArguments(_arg_1.arguments);
+                trueInit();
+            });
+        }
+
+        public function trueInit():void
+        {
+            if (global.getApplication().parameters.hasOwnProperty("realmLang"))
+            {
+                this.realmLang = global.getApplication().parameters["realmLang"];
+            };
+            if (((this.realmLang == null) || (this.realmLang == "")))
+            {
+                this.realmLang = defines.REALM_LANGUAGE;
+            };
+            if (global.staticFilesURLList == null)
+            {
+                global.staticFilesURLList = gInitStaticForAllZones.getStringParameter("s", "swmmo.static_url", defines.STATIC_FILES_URL).split("|");
+                cFilenameUtil.resetCDNs();
+            };
+            var _local_1:IEventDispatcher = new TSOStyleManager().loadStyleDeclarations(("loca/styles/" + LoadingScreenLoca.getStyleFilename(this.realmLang)));
+            _local_1.addEventListener(StyleEvent.COMPLETE, this._stylesLoaded, false, 0, true);
+        }
+
+        public function hide():void
+        {
+            this.loadingScreenFrame.source = null;
+            this.loadingScreenLogo.source = null;
+            this.loadingScreenOrnamentalLeft.source = null;
+            this.loadingScreenOrnamentalRight.source = null;
+            this.loadingScreenArtwork.source = null;
+            this.loadingScreenBetaBanner.source = null;
+            this.loadingScreenBetaBackground.setStyle("upSkin", null);
+            visible = false;
+            includeInLayout = false;
+            removeAllChildren();
+        }
+
+        private function onInitialize(event:FlexEvent):void
+        {
+            this.init();
+        }
+
+        public function handleProgressStep(_arg_1:BootstrapEvent):void
+        {
+            var _local_2:int = (this.progressbarOriginalWidth - ((this.progressbarOriginalWidth / this.maxSteps) * ((this.currentStep + (_arg_1.step.getProgress() * _arg_1.step.getProgressWeight())) - 1)));
+            if (_local_2 != this.loadingScreenProgressbar.width)
+            {
+                this.loadingScreenProgressbar.width = _local_2;
+                validateNow();
+            };
+        }
+
+        private function _stylesLoaded(_arg_1:Event):void
+        {
+            if (global.getApplication().parameters.hasOwnProperty("realmLang"))
+            {
+                this.realmLang = global.getApplication().parameters["realmLang"];
+            };
+            if (((this.realmLang == null) || (this.realmLang == "")))
+            {
+                this.realmLang = defines.REALM_LANGUAGE;
+            };
+            if (global.getApplication().parameters.hasOwnProperty("realmBeta"))
+            {
+                this.realmBeta = ((global.getApplication().parameters["realmBeta"] == "true") || (global.getApplication().parameters["realmBeta"] == "1"));
+            }
+            else
+            {
+                this.realmBeta = defines.REALM_BETA_STATE;
+            };
+            this.loadingScreenImpress.text = LoadingScreenLoca.getCopyrightText(this.realmLang);
+            if (this.realmBeta)
+            {
+                this.loadingScreenBetaBanner.visible = true;
+                this.loadingScreenBetaText.text = LoadingScreenLoca.getBetaText(this.realmLang);
+                this.betaInfo.visible = true;
+            };
+            if (((this.realmLang == "gr") || (this.realmLang == "cn")))
+            {
+                this.loadingScreenBetaText.setStyle("fontSize", 13);
+                this.loadingScreenImpress.setStyle("fontSize", 12);
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            loadingScreenBetaBackground.setStyle("fillColors", [0xFFFFFF, 0xCCCCCC, 0xFFFFFF, 0xEEEEEE]);
+            loadingScreenBetaBackground.setStyle("fillAlphas", [0.6, 0.4, 0.75, 0.65]);
+            loadingScreenBetaBackground.setStyle("highlightAlphas", [0.3, 0]);
+			setStyle("fontAntiAliasType", "advanced");
+            setStyle("fontGridFitType", "pixel");
+            setStyle("fontSharpness", 0);
+            setStyle("fontThickness", 0);
+			setStyle("backgroundColor", "16708586");
+            addEventListener("initialize", onInitialize);
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="centeredContent" creationPolicy="all" horizontalCenter="0" verticalCenter="0">
+        <mx:Canvas width="750" creationPolicy="all">
+            <mx:Image id="loadingScreenOrnamentalLeft" scaleX="-1" horizontalCenter="-10" />
+            <mx:Image id="loadingScreenLogo" horizontalCenter="0" />
+            <mx:Image id="loadingScreenOrnamentalRight" horizontalCenter="235" />
+        </mx:Canvas>
+        <mx:Canvas id="artworkContainer" width="732" creationPolicy="all" horizontalCenter="0" top="105">
+            <mx:Image id="loadingScreenArtwork" horizontalCenter="0" top="30" />
+            <mx:Canvas id="betaInfo" width="620" height="100" visible="false" creationPolicy="all" verticalCenter="25" horizontalCenter="0">
+                <mx:Button id="loadingScreenBetaBackground" width="620" height="100" fontAntiAliasType="advanced" fontGridFitType="pixel"
+                    borderColor="12040892" cornerRadius="0" themeColor="40447"
+                    mouseEnabled="false" focusEnabled="false" mouseChildren="false" mouseFocusEnabled="false" />
+                <gui:CustomTextArea id="loadingScreenBetaText" width="560" height="90" color="0xFFFFFF"
+                    verticalCenter="4" horizontalCenter="0" fontSize="11" textAlign="center" paddingTop="1"
+                    selectable="false" styleName="noBackground" leading="-2"
+                    horizontalScrollPolicy="off" verticalScrollPolicy="off" />
+            </mx:Canvas>
+            <mx:Image id="loadingScreenBetaBanner" visible="false" horizontalCenter="0" top="30" />
+            <mx:Image id="loadingScreenFrame" width="732" height="470" left="0" />
+            <mx:Canvas id="loadingScreenProgressbar" width="525" height="9" alpha="0.85" right="106" top="316" backgroundColor="597293" />
+            <mx:Canvas id="copyrightContainer" height="90" creationPolicy="all" horizontalCenter="-11" verticalCenter="184">
+                <gui:CustomTextArea id="loadingScreenImpress" width="370" height="90" horizontalCenter="0"
+                    verticalCenter="0" fontSize="11" textAlign="center"
+                    selectable="false" styleName="noBackground" leading="-2" editable="false"
+                    horizontalScrollPolicy="off" verticalScrollPolicy="off" />
+            </mx:Canvas>
+        </mx:Canvas>
+    </mx:Canvas>
+</mx:Canvas>

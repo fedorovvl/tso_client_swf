@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="408" height="305">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import mx.core.ClassFactory;
+        import mx.events.ToolTipEvent;
+        import mx.states.AddChild;
+        import mx.states.RemoveChild;
+        import mx.states.SetProperty;
+        import mx.states.State;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Components.ItemRenderer.ManageArmyItemRenderer;
+        import GUI.Components.ItemRenderer.ResourceItemRenderer;
+        import GUI.Components.ItemRenderer.WarehouseDetailsItemRenderer;
+        import GUI.Components.ToolTips.cToolTipUtil;
+
+        public var stateManageArmy:State;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(subcontent);
+            subcontent.removeChild(manageArmyContainer);
+            subcontent.removeChild(manageButtonsBox);
+            manageArmyList.itemRenderer = new ClassFactory(ManageArmyItemRenderer);
+            costsList.itemRenderer = new ClassFactory(ResourceItemRenderer);
+            unitsList.itemRenderer = new ClassFactory(WarehouseDetailsItemRenderer);
+            btnCommitArmyChanges.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            _WatchTowerInfoPanel_StandardButton2.setStyle("icon", gAssetManager.GetClass("ButtonIconAbort"));
+            btnUpgrade.setStyle("icon", gAssetManager.GetClass("ButtonIconUpgrade"));
+            btnKnockDown.setStyle("icon", gAssetManager.GetClass("ButtonIconBomb"));
+            btnRepair.setStyle("icon", gAssetManager.GetClass("ButtonIconTools"));
+            btnCommitArmyChanges.addEventListener("click", __btnCommitArmyChanges_click);
+            _WatchTowerInfoPanel_StandardButton2.addEventListener("click", onCancelClick);
+            btnManageArmy.addEventListener("click", __btnManageArmy_click);
+            btnManageArmy.addEventListener("toolTipCreate", __btnManageArmy_toolTipCreate);
+            btnUpgrade.addEventListener("toolTipCreate", __btnUpgrade_toolTipCreate);
+            upgradeTime.addEventListener("show", updateNotPossibleVisibility, false, 0, true);
+            upgradeTime.addEventListener("hide", updateNotPossibleVisibility, false, 0, true);
+            updateNotPossibleVisibility();
+            updateBottom();
+            globalFlash.staticEventDispatcher.addEventListener("propertyChange", updateBottom, false, 0, true);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+            buildStates();
+        }
+
+        private function buildStates():void
+        {
+            var manageArmy:State = new State();
+            manageArmy.name = "ManageArmy";
+            var heightOverride:SetProperty = new SetProperty();
+            heightOverride.target = this;
+            heightOverride.name = "height";
+            heightOverride.value = 309;
+            var dropLeft:RemoveChild = new RemoveChild();
+            dropLeft.target = leftColumn;
+            var dropRight:RemoveChild = new RemoveChild();
+            dropRight.target = rightColumn;
+            var addList:AddChild = new AddChild();
+            addList.relativeTo = subcontent;
+            addList.position = "lastChild";
+            addList.target = manageArmyContainer;
+            var addButtons:AddChild = new AddChild();
+            addButtons.relativeTo = subcontent;
+            addButtons.position = "lastChild";
+            addButtons.target = manageButtonsBox;
+            manageArmy.overrides = [heightOverride, dropLeft, dropRight, addList, addButtons];
+            stateManageArmy = manageArmy;
+            states = [manageArmy];
+        }
+
+        private function updateBottom(event:Event = null):void
+        {
+            setStyle("bottom", globalFlash.mainHudBottomPos);
+        }
+
+        private function updateNotPossibleVisibility(event:Event = null):void
+        {
+            _WatchTowerInfoPanel_CustomLabel5.visible = !(upgradeTime.visible);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var upgrade:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Upgrade");
+            _WatchTowerInfoPanel_CustomLabel3.text = ((upgrade == undefined) ? null : String(upgrade));
+            var notPossible:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, "NotPossible");
+            _WatchTowerInfoPanel_CustomLabel5.text = ((notPossible == undefined) ? null : String(notPossible));
+            var integrityTitle:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "BuildingIntegrity");
+            _WatchTowerInfoPanel_CustomLabel6.text = ((integrityTitle == undefined) ? null : String(integrityTitle));
+            var army:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Army");
+            _WatchTowerInfoPanel_CustomLabel7.text = ((army == undefined) ? null : String(army));
+            var manageArmy:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ManageArmy");
+            btnManageArmy.label = ((manageArmy == undefined) ? null : String(manageArmy));
+            btnManageArmy.toolTip = ((manageArmy == undefined) ? null : String(manageArmy));
+            var repair:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Repair");
+            btnRepair.toolTip = ((repair == undefined) ? null : String(repair));
+        }
+
+        public function __btnManageArmy_click(event:MouseEvent):void
+        {
+            this.currentState = "ManageArmy";
+        }
+
+        public function __btnCommitArmyChanges_click(event:MouseEvent):void
+        {
+            this.currentState = "";
+        }
+
+        private function onCancelClick(event:MouseEvent):void
+        {
+            this.currentState = "";
+        }
+
+        public function __btnManageArmy_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnUpgrade_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.UPGRADE_BUILDING_string, event);
+        }
+    ]]></mx:Script>
+    <gui:subComponents><mx:Array>
+        <mx:Canvas id="subcontent" percentWidth="100" percentHeight="100">
+            <mx:Canvas styleName="detailsHeader" height="60" left="2" right="2">
+                <mx:Image id="image" left="10" verticalCenter="1"/>
+                <gui:CustomText id="description" selectable="false" left="70" top="6" bottom="2" color="0xFFFFFF" fontWeight="normal"/>
+            </mx:Canvas>
+            <mx:Canvas id="leftColumn" width="155" top="62" left="7" bottom="5">
+                <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                    <gui:CustomLabel id="levelLabel" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold"/>
+                </mx:Canvas>
+                <mx:Canvas styleName="detailsContentBox" height="103" left="1" right="1" top="18">
+                    <mx:Canvas styleName="detailsSubContentBox" percentWidth="100" height="60">
+                        <gui:CustomLabel id="_WatchTowerInfoPanel_CustomLabel3" top="1" horizontalCenter="0" fontWeight="normal"/>
+                        <gui:CustomLabel id="upgradeTime" horizontalCenter="0" top="15" fontWeight="normal"/>
+                        <gui:CustomLabel id="_WatchTowerInfoPanel_CustomLabel5" horizontalCenter="0" top="15" fontWeight="normal"/>
+                        <renderer:RendererPoolBox id="costsList" top="32" horizontalCenter="0"/>
+                    </mx:Canvas>
+                    <gui:StandardButton id="btnUpgrade" enabled="false" playSound="false" width="68" height="39" bottom="2" horizontalCenter="0"/>
+                </mx:Canvas>
+                <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18" top="123">
+                    <gui:CustomLabel id="_WatchTowerInfoPanel_CustomLabel6" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold"/>
+                </mx:Canvas>
+                <mx:Canvas styleName="detailsContentBox" height="66" left="1" right="1" top="141">
+                    <gui:StandardButton id="btnKnockDown" enabled="false" playSound="false" width="68" height="39" left="5" top="5"/>
+                    <gui:StandardButton id="btnRepair" enabled="false" width="68" height="39" right="5" top="5"/>
+                    <gui:HealthBar id="integrity" left="2" right="0" top="50"/>
+                </mx:Canvas>
+            </mx:Canvas>
+            <mx:Canvas id="rightColumn" left="166" right="6" top="62" bottom="5">
+                <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                    <gui:CustomLabel id="_WatchTowerInfoPanel_CustomLabel7" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold"/>
+                </mx:Canvas>
+                <mx:Canvas styleName="detailsContentBox" left="1" right="1" top="18" bottom="0">
+                    <mx:Canvas styleName="detailsSubContentBox" percentWidth="100" height="36">
+                        <gui:StandardButton id="btnManageArmy" width="175" height="27" right="27" horizontalCenter="0" verticalCenter="0"/>
+                    </mx:Canvas>
+                </mx:Canvas>
+                <gui:CustomTileList id="unitsList" left="8" right="8" top="60" bottom="3" backgroundAlpha="0" borderThickness="0" useRollOver="false"/>
+            </mx:Canvas>
+            <mx:Canvas id="manageArmyContainer" left="7" right="6" top="62" bottom="42">
+                <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                    <gui:CustomLabel id="manageUnitsAmountLabel" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold"/>
+                </mx:Canvas>
+                <mx:Canvas styleName="detailsContentBox" left="1" right="1" top="18" bottom="0">
+                    <mx:TileList id="manageArmyList" selectable="false" backgroundAlpha="0" borderThickness="0" left="3" right="3" top="1" bottom="0" useRollOver="false"/>
+                </mx:Canvas>
+            </mx:Canvas>
+            <mx:HBox id="manageButtonsBox" horizontalCenter="0" bottom="5">
+                <gui:StandardButton id="btnCommitArmyChanges" width="70" height="32"/>
+                <gui:StandardButton id="_WatchTowerInfoPanel_StandardButton2" width="70" height="32"/>
+            </mx:HBox>
+        </mx:Canvas>
+    </mx:Array></gui:subComponents>
+</gui:BasicPanel>

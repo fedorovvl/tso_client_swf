@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="124" height="125">
+    <mx:Script><![CDATA[
+        import GUI.Assets.gAssetManager;
+
+        private var _difficulty:int;
+
+        public function SetData(arg1:int, arg2:int, arg3:int, arg4:int):void
+        {
+            _difficulty = arg1;
+            tier_1.visible = false;
+            tier_2.visible = false;
+            tier_3.visible = false;
+            switch (_difficulty)
+            {
+                case 1:
+                    tier_1.visible = true;
+                    return;
+                case 1:
+                    tier_2.visible = true;
+                    return;
+                default:
+                    tier_3.visible = true;
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundColor", 5720887);
+            tier_1.source = gAssetManager.GetClass("PvPTierIndicator01");
+            tier_2.source = gAssetManager.GetClass("PvPTierIndicator02");
+            tier_3.source = gAssetManager.GetClass("PvPTierIndicator03");
+        }
+    ]]></mx:Script>
+
+    <gui:TSOImage id="tier_1" percentWidth="100" percentHeight="100" />
+    <gui:TSOImage id="tier_2" percentWidth="100" percentHeight="100" />
+    <gui:TSOImage id="tier_3" percentWidth="100" percentHeight="100" />
+</mx:Canvas>

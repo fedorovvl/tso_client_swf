@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="mx.core.IToolTip"
+    mouseEnabled="false" mouseChildren="false"
+    horizontalScrollPolicy="off" verticalScrollPolicy="off" styleName="toolTip">
+    <mx:Script><![CDATA[
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+
+        private var _text:String;
+
+        public function set text(_arg_1:String):void
+        {
+            this._text = _arg_1;
+            var loca:* = cLocaManager.GetInstance().GetTextPure(LOCA_GROUP.TOOLTIP, _arg_1);
+            if (loca != null)
+            {
+                this._text = loca;
+            };
+            if (_MultilineTip_CustomText1)
+            {
+                _MultilineTip_CustomText1.text = this._text;
+            };
+        }
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("paddingTop", 2);
+            this.setStyle("paddingBottom", 2);
+            this.setStyle("paddingLeft", 5);
+            this.setStyle("paddingRight", 5);
+            _MultilineTip_CustomText1.text = this._text;
+        }
+    ]]></mx:Script>
+    <gui:CustomText id="_MultilineTip_CustomText1" minWidth="250" truncateToFit="false"  fontWeight="bold" color="0xFFFFFF" />
+</mx:VBox>

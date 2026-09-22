@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.effects.Fade;
+        import mx.effects.Sequence;
+        import mx.effects.easing.Cubic;
+        import mx.events.PropertyChangeEvent;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import Communication.VO.TriggerVO;
+        import Communication.VO.EventDonationPhaseVO;
+        import com.bluebyte.tso.util.TimeUtil;
+        import global;
+
+        private var _finished:Boolean = false;
+
+        public var pulsate:Sequence;
+
+        [Bindable(event="propertyChange")]
+        public function get finished():Boolean
+        {
+            return (_finished);
+        }
+
+        public function set finished(value:Boolean):void
+        {
+            var oldValue:Object = _finished;
+            if (oldValue !== value)
+            {
+                _finished = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "finished", oldValue, value));
+                updateFinished();
+            };
+        }
+
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+            var loca:cLocaManager = cLocaManager.GetInstance();
+            var trigger:TriggerVO = (value as TriggerVO);
+            var phase:EventDonationPhaseVO = global.eventDonations.getPhase(trigger.id);
+            if (phase != null)
+            {
+                progressbar.width = ((progressBarBackground.width - 6) * (Math.min(phase.limit, phase.current) / phase.limit));
+                progressLabel.text = ((loca.FormatNumber(phase.current) + " / ") + loca.FormatNumber(phase.limit));
+                progressLabel.maxWidth = (progressBarBackground.width - 10);
+                progressLabel.truncateToFit = true;
+            };
+            var stopDate:Number = global.ui.mEventManager.GetEventStopDate(trigger.name_string);
+            var remaining:Number = (stopDate - TimeUtil.getServerTime());
+            if (((stopDate == -1) || (remaining <= 0)))
+            {
+                timeLabel.text = loca.GetText(LOCA_GROUP.LABELS, "EventPhaseEnded");
+            }
+            else
+            {
+                timeLabel.text = ((loca.GetText(LOCA_GROUP.LABELS, "TimeRemaining") + " ") + loca.FormatDuration(remaining, cLocaManager.DURATION_FORMAT_SHORT));
+            };
+            pulsate.stop();
+            pulsate.play();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            var fadeUp:Fade = new Fade();
+            fadeUp.alphaFrom = 0.5;
+            fadeUp.alphaTo = 1;
+            fadeUp.duration = 500;
+            fadeUp.easingFunction = Cubic.easeOut;
+            var fadeDown:Fade = new Fade();
+            fadeDown.alphaFrom = 1;
+            fadeDown.alphaTo = 0.2;
+            fadeDown.duration = 800;
+            fadeDown.easingFunction = Cubic.easeIn;
+            pulsate = new Sequence();
+            pulsate.repeatCount = 0;
+            pulsate.children = [fadeUp, fadeDown];
+            pulsate.target = timeLabel;
+            refreshLabels();
+            updateFinished();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var title:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "EventProgression");
+            container.label = ((title == undefined) ? null : String(title));
+            var remaining:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "TimeRemaining");
+            timeLabel.text = ((remaining == undefined) ? null : String(remaining));
+        }
+
+        private function updateFinished():void
+        {
+            container.visible = (!_finished);
+            timeLabel.setStyle("color", ((_finished) ? 0 : 0xFFFFFF));
+        }
+    ]]></mx:Script>
+
+    <gui:TitleContainer id="container" width="429" height="150" />
+    <mx:Canvas id="overlayBox" width="429" height="150">
+        <mx:Canvas id="progressBarBackground" styleName="timeRemainingBackground" width="400" height="40" top="40" horizontalCenter="0">
+            <mx:Canvas id="progressbar" styleName="timeRemainingBarGreen" height="34"  top="3" left="3" />
+        </mx:Canvas>
+        <gui:CustomLabel id="progressLabel"  top="47" horizontalCenter="0" color="0xFFFFFF" fontWeight="normal" fontSize="20" />
+        <gui:CustomLabel id="timeLabel"  top="103" horizontalCenter="0" />
+    </mx:Canvas>
+</mx:Canvas>

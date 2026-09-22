@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    mouseEnabled="false" mouseChildren="false" minWidth="200" styleName="toolTip">
+    <mx:Script><![CDATA[
+        import mx.events.ResizeEvent;
+        import ShopSystem.cShopItem;
+        import ServerState.dResource;
+        import GUI.Components.ItemRenderer.TradeResourceItemRenderer;
+
+        private var _shopItem:cShopItem;
+        private var _text:String;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this._shopItem = (_arg_1 as cShopItem);
+        }
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            var _local_2:dResource;
+            var _local_3:TradeResourceItemRenderer;
+            var _local_4:dResource;
+            this._text = _arg_1;
+            if (!headline || !costsList)
+            {
+                return;
+            };
+            this.headline.text = this._text;
+            this.costsList.removeAllChildren();
+            if (this._shopItem != null)
+            {
+                for each (_local_2 in this._shopItem.GetCosts_vector())
+                {
+                    _local_3 = new TradeResourceItemRenderer();
+                    _local_4 = global.ui.mCurrentPlayerZone.GetResources(global.ui.mCurrentPlayer).GetPlayerResource(_local_2.name_string);
+                    _local_2.amount = Math.floor(_local_2.amount);
+                    _local_3.enoughAmount = (_local_4.amount >= _local_2.amount);
+                    _local_3.data = _local_2;
+                    this.costsList.addChild(_local_3);
+                };
+            };
+            syncTop();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("paddingLeft", 5);
+            this.setStyle("paddingRight", 5);
+            this.setStyle("paddingTop", 5);
+            this.setStyle("paddingBottom", 10);
+            headline.addEventListener(ResizeEvent.RESIZE, syncTop, false, 0, true);
+            syncTop();
+            if (this._text != null)
+            {
+                text = this._text;
+            };
+        }
+
+        private function syncTop(event:ResizeEvent = null):void
+        {
+            costsList.setStyle("top", String(headline.height + 10));
+        }
+    ]]></mx:Script>
+    <mx:Text id="headline"  top="5" left="5" right="5" fontWeight="bold" color="0xFFFFFF" />
+    <mx:HBox id="costsList" height="25"  left="5" right="5" />
+</mx:VBox>

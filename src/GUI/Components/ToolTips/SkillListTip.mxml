@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    mouseEnabled="false" mouseChildren="false"
+    horizontalScrollPolicy="off" verticalScrollPolicy="off"
+    styleName="toolTip" width="250" minHeight="61">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.core.ClassFactory;
+        import mx.collections.ArrayCollection;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ItemRenderer.SkillTipRenderer;
+        import Skill.SkillDefinition;
+        import Communication.VO.Skill.SkillVO;
+
+        private var additionalData:SkillToolTipData;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this.additionalData = (_arg_1 as SkillToolTipData).Clone();
+        }
+
+        public function get text():String
+        {
+            return (this.info.text);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            var _local_3:SkillDefinition;
+            var _local_4:SkillVO;
+            this.info.text = _arg_1;
+            _arg_1 = cLocaManager.GetInstance().GetTextPure(LOCA_GROUP.TOOLTIP, _arg_1);
+            if (_arg_1 != null)
+            {
+                this.info.text = _arg_1;
+            };
+            this.resourceIcon.source = this.additionalData.resourceIcon;
+            this.additional.includeInLayout = true;
+            this.requirements.includeInLayout = true;
+            this.skillInfo.includeInLayout = true;
+            this.infoList.includeInLayout = true;
+            this.skillInfo.visible = true;
+            if (this.additionalData.additionalText)
+            {
+                this.additional.text = this.additionalData.additionalText;
+            }
+            else
+            {
+                this.additional.text = "";
+                this.additional.includeInLayout = false;
+            };
+            if (this.additionalData.requirements)
+            {
+                this.requirements.text = this.additionalData.requirements;
+            }
+            else
+            {
+                this.requirements.text = "";
+                this.requirements.includeInLayout = false;
+            };
+            var _local_2:ArrayCollection = new ArrayCollection();
+            if (((this.additionalData.skills) && (this.additionalData.skills.length > 0)))
+            {
+                for each (_local_4 in this.additionalData.skills)
+                {
+                    _local_3 = global.skills_vector[_local_4.id];
+                    if ((((!(_local_3 == null)) && (!(_local_3.icon_string == null))) && (!(_local_3.icon_string == ""))))
+                    {
+                        _local_2.addItem(_local_4);
+                    };
+                };
+            }
+            else
+            {
+                this.skillInfo.visible = false;
+                if (((this.additional.includeInLayout) || (this.requirements.includeInLayout)))
+                {
+                    this.skillInfo.includeInLayout = false;
+                }
+                else
+                {
+                    this.infoList.includeInLayout = false;
+                };
+            };
+            this.innerInfoList.dataProvider = _local_2;
+            invalidateDisplayList();
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var text:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "AdditionalSkillInfo");
+            skillInfo.text = ((text == undefined) ? null : String(text));
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            innerInfoList.itemRenderer = new ClassFactory(SkillTipRenderer);
+
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="headerBox" y="5" percentWidth="100" height="49"
+        horizontalScrollPolicy="off" verticalScrollPolicy="off" backgroundSize="100%"
+        backgroundImage="{gAssetManager.GetClass('TooltipFrame')}">
+        <mx:HBox id="headRow" verticalCenter="0" horizontalCenter="0" verticalAlign="middle">
+            <mx:Image id="resourceIcon" />
+            <gui:CustomText id="info"  fontWeight="bold" color="0" />
+        </mx:HBox>
+    </mx:Canvas>
+    <mx:VBox id="infoList" y="60" percentWidth="100" paddingLeft="5" paddingRight="5" paddingBottom="5">
+        <gui:CustomText id="additional" percentWidth="100"  color="0xFFFFFF" />
+        <gui:CustomText id="requirements" percentWidth="100"  color="0xFF0000" />
+        <gui:CustomLabel id="skillInfo" percentWidth="100"  fontWeight="bold" color="13876873" />
+        <renderer:RendererPoolBox id="innerInfoList" direction="vertical"
+            percentWidth="100" verticalScrollPolicy="off" horizontalScrollPolicy="off" />
+    </mx:VBox>
+</mx:Canvas>

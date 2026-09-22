@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:quest="com.bluebyte.tso.quests.view.ui.component.*"
+    width="770" height="505">
+    <mx:Script><![CDATA[
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ItemRenderer.TaskItemRenderer;
+        import GUI.Components.ItemRenderer.TaskTriggerItemRenderer;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Loca.cLocaManager;
+        import mx.core.ClassFactory;
+        import mx.events.ToolTipEvent;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_disable_pvp_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_disable_pvp_mo_png_1864234859:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_disable_pvp_off_mo.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_disable_pvp_off_mo_png_758881227:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_disable_pvp_off_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_disable_pvp_off_std_png_712453813:Class;
+
+        [Embed(source="../../../assets/embedded/options/options_panel_icon_disable_pvp_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_options_panel_icon_disable_pvp_std_png_1013674197:Class;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.styleName = "specialPanel";
+            LegacyMxmlContent.createChildren(mainCanvas);
+            LegacyMxmlContent.createChildren(footerCanvas);
+            LegacyMxmlContent.createChildren(pvpCanvas);
+            LegacyMxmlContent.createChildren(busyOverlay);
+            _TaskBuildingPanel_Image1.source = gAssetManager.GetClass("PanelOrnamentalTop");
+            _TaskBuildingPanel_Image2.source = gAssetManager.GetClass("GuildBankIcon");
+            taskList.itemRenderer = new ClassFactory(TaskItemRenderer);
+            triggerList.itemRenderer = new ClassFactory(TaskTriggerItemRenderer);
+            btnOK.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            btnPay.setStyle("icon", gAssetManager.GetClass("ButtonIconPay"));
+            btnPay.visible = !(btnOK.visible);
+            btnClosePanel.setStyle("icon", gAssetManager.GetClass("ButtonIconAbort"));
+            btnClosePanel.addEventListener("toolTipCreate", __btnClosePanel_toolTipCreate);
+            pvpTaskBuildingTasksButton.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_disable_pvp_std_png_1013674197);
+            pvpTaskBuildingTasksButton.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_disable_pvp_mo_png_1864234859);
+            pvpTaskBuildingTasksButton.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_disable_pvp_mo_png_1864234859);
+            pvpTaskBuildingTasksButton.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_disable_pvp_std_png_1013674197);
+            pvpTaskBuildingTasksButton.setStyle("selectedUpSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_disable_pvp_off_std_png_712453813);
+            pvpTaskBuildingTasksButton.setStyle("selectedDownSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_disable_pvp_off_mo_png_758881227);
+            pvpTaskBuildingTasksButton.setStyle("selectedOverSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_disable_pvp_off_mo_png_758881227);
+            pvpTaskBuildingTasksButton.setStyle("selectedDisabledSkin", _embed_mxml_____data_src_gfx_embedded_options_panel_icon_disable_pvp_off_std_png_712453813);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var value:*;
+            value = cLocaManager.GetInstance().getLabel("ThisWeeksBonuses");
+            _TaskBuildingPanel_CustomLabel1.text = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().getLabel("ThisWeeksQuests");
+            _TaskBuildingPanel_CustomLabel2.text = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().getLabel("QuestDetails");
+            taskDetailLabel.text = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().getLabel("Tasks");
+            _TaskBuildingPanel_CustomLabel4.text = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().getLabel("QuestRewards");
+            _TaskBuildingPanel_CustomLabel5.text = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Close");
+            btnClosePanel.toolTip = ((value == undefined) ? null : String(value));
+            value = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "OptionButtonPvpTaskBuildingTasks");
+            pvpTaskBuildingTasksButton.toolTip = ((value == undefined) ? null : String(value));
+        }
+
+        public function __btnClosePanel_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function set busy(value:Boolean):void
+        {
+            this.busyOverlay.visible = value;
+            this.busyAnim.visible = value;
+        }
+    ]]></mx:Script>
+    <gui:subComponents><mx:Array>
+        <mx:Image id="_TaskBuildingPanel_Image1" horizontalCenter="0" top="-87"/>
+        <mx:Image id="_TaskBuildingPanel_Image2" horizontalCenter="0" top="-75"/>
+        <mx:Canvas id="mainCanvas" percentWidth="100" top="10" bottom="33">
+            <mx:VBox id="bonusesBox" styleName="detailsHeader" width="205" height="120" horizontalScrollPolicy="off" verticalScrollPolicy="off" left="37" verticalGap="0" paddingLeft="6" paddingRight="5">
+                <gui:CustomLabel id="_TaskBuildingPanel_CustomLabel1" percentWidth="100" height="24" paddingTop="6" verticalCenter="0" horizontalCenter="0" color="0xFFFFFF" textAlign="center"/>
+                <mx:Canvas id="bonusContent" styleName="detailsSubHeaderLight" percentWidth="100" height="95">
+                    <quest:QuestRewardList id="weeklyRewards" left="0" right="0" top="5" bottom="15" verticalCenter="0"/>
+                    <gui:ProgressBar id="rewardsProgressBar" height="8" showDeviders="true" top="84" left="10" right="10"/>
+                </mx:Canvas>
+            </mx:VBox>
+            <mx:VBox id="questListBox" styleName="detailsHeader" width="205" top="117" bottom="8" left="37" verticalGap="0" paddingLeft="6" paddingRight="5">
+                <gui:CustomLabel id="_TaskBuildingPanel_CustomLabel2" percentWidth="100" height="24" paddingTop="6" verticalCenter="0" horizontalCenter="0" color="0xFFFFFF" textAlign="center"/>
+                <mx:VBox id="questListContent" styleName="colonyCurrent" percentWidth="100" percentHeight="100" paddingLeft="4" paddingTop="5" paddingRight="6">
+                    <gui:CustomList id="taskList" selectable="false" percentWidth="100" percentHeight="100" useRollOver="false" backgroundAlpha="0" borderThickness="0" paddingBottom="1" paddingTop="0"/>
+                </mx:VBox>
+            </mx:VBox>
+            <mx:Canvas id="pvpSummaryDeco" styleName="pvpSummaryBottom" height="8" width="205" bottom="0" left="37" backgroundAlpha="0"/>
+            <mx:Canvas id="detailPanel" width="473" percentHeight="100" styleName="detailsHeader" right="37">
+                <gui:CustomLabel id="taskDetailLabel" height="24" left="3" right="3" top="4" color="0xFFFFFF" textAlign="center"/>
+                <mx:Canvas id="detailContent" styleName="detailsSubHeaderLight" percentHeight="100" top="24" left="3" right="3">
+                    <mx:Canvas id="descShadow" styleName="listBackgroundShadow" percentWidth="100" height="100" top="0">
+                        <mx:Canvas id="descBox" styleName="colonyCurrent" top="6" right="6" bottom="6" left="6">
+                            <gui:CustomText id="selectedQuestDetails" wordWrap="true" color="0xFFFFFF" left="6" right="6" bottom="6" top="6"/>
+                        </mx:Canvas>
+                    </mx:Canvas>
+                    <mx:Canvas id="triggerBox" percentWidth="100" height="150" styleName="detailsHeader" horizontalScrollPolicy="off" top="102">
+                        <gui:CustomLabel id="_TaskBuildingPanel_CustomLabel4" height="24" top="3" left="0" right="0" horizontalCenter="0" color="0xFFFFFF" textAlign="center"/>
+                        <mx:Canvas id="triggerContainer" verticalScrollPolicy="auto" horizontalScrollPolicy="off" left="0" right="7" top="18" bottom="0">
+                            <gui:CustomTileList id="triggerList" height="125" left="9" right="9" top="3" backgroundAlpha="0" borderStyle="none" useRollOver="false"/>
+                        </mx:Canvas>
+                    </mx:Canvas>
+                    <mx:Canvas id="rewardsHeader" percentWidth="100" height="18" styleName="detailsSubHeaderLight" top="260">
+                        <gui:CustomLabel id="_TaskBuildingPanel_CustomLabel5" percentWidth="100" height="18" paddingTop="4" verticalCenter="0" horizontalCenter="0" color="0xFFFFFF" textAlign="center"/>
+                    </mx:Canvas>
+                    <mx:Canvas id="rewardsShadow" styleName="listBackgroundShadow" height="90" verticalScrollPolicy="off" top="284" left="3" right="3">
+                        <quest:QuestRewardList id="rewards" height="70" verticalScrollPolicy="off" top="6" left="0" right="0"/>
+                    </mx:Canvas>
+                </mx:Canvas>
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas id="footerCanvas" width="471" height="56" styleName="questPanelFooter" right="37" bottom="30">
+            <gui:StandardButton id="btnOK" enabled="false" width="100" height="32" bottom="8" left="80"/>
+            <gui:StandardButton id="btnPay" enabled="false" width="100" height="32" bottom="8" left="80"/>
+            <gui:StandardButton id="btnClosePanel" width="100" height="32" bottom="8" right="80"/>
+        </mx:Canvas>
+        <mx:Canvas id="pvpCanvas" width="205" height="35" bottom="8" left="37">
+            <mx:HBox id="pvpBox" width="200" height="31" bottom="0" paddingLeft="7" verticalAlign="middle">
+                <gui:StandardButton id="pvpTaskBuildingTasksButton" width="30" height="31" toggle="true"/>
+                <gui:CustomLabel id="timeUntilResetLabel" width="120" color="0xFFFFFF" textAlign="center"/>
+            </mx:HBox>
+        </mx:Canvas>
+        <mx:Canvas id="busyOverlay" styleName="detailsContentBox" visible="false" left="20" right="20" top="5" bottom="5">
+            <gui:SpriteLibAnimation id="busyAnim" animationName="guianim_hourglass" loop="true" visible="false" width="48" height="48" horizontalCenter="0" verticalCenter="0"/>
+        </mx:Canvas>
+    </mx:Array></gui:subComponents>
+</gui:BasicPanel>

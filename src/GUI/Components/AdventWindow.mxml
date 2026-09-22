@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="873" height="425">
+    <mx:Script><![CDATA[
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ItemRenderer.AdventDoorRenderer;
+        import GUI.Components.ItemRenderer.AdventRewardRenderer;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Loca.cLocaManager;
+        import mx.core.ClassFactory;
+        import mx.events.CollectionEvent;
+        import mx.events.ToolTipEvent;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.styleName = "specialPanel";
+            LegacyMxmlContent.createChildren(mainCanvas);
+            LegacyMxmlContent.createChildren(rewardSelectionPanel);
+            _AdventWindow_TSOImage2.source = gAssetManager.GetClass("QuestionmarkGold");
+            close.setStyle("icon", gAssetManager.GetClass("Close"));
+            close.addEventListener("toolTipCreate", __close_toolTipCreate);
+            dayList.itemRenderer = new ClassFactory(AdventDoorRenderer);
+            rewardList.itemRenderer = new ClassFactory(AdventRewardRenderer);
+            rewardSelectionList.itemRenderer = new ClassFactory(AdventRewardRenderer);
+            selectRewardButton.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            cancelRewardButton.setStyle("icon", gAssetManager.GetClass("Close"));
+            syncModalPosition();
+            addEventListener("move", syncModalPosition, false, 0, true);
+            syncRewardSelectionWidth();
+            rewardSelectionList.addEventListener(CollectionEvent.COLLECTION_CHANGE, syncRewardSelectionWidth, false, 0, true);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function loca(key:String):String
+        { var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key); return value == undefined ? null : String(value); }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            close.toolTip = loca("Close");
+        }
+
+        private function syncModalPosition(event:Event = null):void
+        {
+            rewardSelectionModal.x = -(this.x) - 5;
+            rewardSelectionModal.y = -(this.y) - 30;
+        }
+
+        private function syncRewardSelectionWidth(event:Event = null):void
+        {
+            if (rewardSelectionList.dataProvider != null)
+                rewardSelectionList.width = 57 * rewardSelectionList.dataProvider.length;
+        }
+
+        public function __close_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+    <gui:subComponents><mx:Array>
+        <mx:Image id="headerImage" horizontalCenter="0" top="-85"/>
+        <mx:HRule width="837" left="13" bottom="47" strokeColor="0xC58B42" shadowColor="0x372F1C"/>
+        <mx:Canvas id="mainCanvas" left="24" right="15" top="10" bottom="10">
+            <gui:TSOImage id="backgroundImage" width="675" height="317"/>
+            <mx:TileList id="dayList" width="675" height="317" selectable="false" backgroundAlpha="0" borderThickness="0"/>
+            <mx:Canvas width="145" height="320" styleName="subpanel1" right="0">
+                <mx:Label id="headlineSubpanel1" top="4" horizontalCenter="0" color="0xFFFFFF"/>
+                <mx:TileList id="rewardList" width="125" height="222" selectable="false" left="18" top="22" backgroundAlpha="0" borderThickness="0"/>
+                <mx:VBox id="mysteryOverlay" width="115" height="222" visible="false" left="18" top="22" backgroundAlpha="0" horizontalAlign="center" paddingTop="10">
+                    <gui:TSOImage id="_AdventWindow_TSOImage2" width="23" height="30"/>
+                </mx:VBox>
+            </mx:Canvas>
+            <mx:Canvas width="145" height="200" styleName="subpanel2" visible="false" right="0" bottom="13">
+                <mx:Label id="headlineSubpanel2" top="4" horizontalCenter="0" color="0xFFFFFF"/>
+                <mx:Canvas y="25" height="57" left="6" right="5" backgroundColor="0x6A593F">
+                    <mx:Text id="featuredItemLbl" width="134" height="53" top="4" horizontalCenter="0" color="0xFFFFFF"/>
+                </mx:Canvas>
+                <renderer:AdventFeaturedItemRenderer id="featuredItemItm" horizontalCenter="0" bottom="42"/>
+            </mx:Canvas>
+            <gui:StandardButton id="close" horizontalCenter="0" bottom="0"/>
+        </mx:Canvas>
+        <gui:DarkenPanel id="rewardSelectionModal" visible="false"/>
+        <mx:Canvas id="rewardSelectionPanel" visible="false" styleName="basicPanel" width="420" height="260" clipContent="false" horizontalCenter="0" top="5">
+            <mx:Canvas styleName="questPanelHeader" height="82" left="-4" right="-8" top="-5">
+                <mx:Label id="rewardSelectionCaption" top="8" horizontalCenter="0" color="0x000000"/>
+            </mx:Canvas>
+            <mx:Canvas styleName="detailsHeader" height="45" verticalScrollPolicy="off" top="30" left="10" right="10">
+                <mx:Text id="rewardSelectionDescription" height="40" maxWidth="400" top="10" horizontalCenter="0" color="0xFFFFFF"/>
+            </mx:Canvas>
+            <mx:Canvas styleName="detailsSubHeader" height="120" top="80" left="15" right="15">
+                <mx:Label id="rewardCaption" top="2" horizontalCenter="0" color="0xFFFFFF"/>
+                <mx:Canvas styleName="detailsContentBox" top="20" left="2" right="2" bottom="2">
+                    <mx:TileList id="rewardSelectionList" height="70" selectable="false" horizontalCenter="0" verticalCenter="-3" backgroundAlpha="0" borderThickness="0"/>
+                </mx:Canvas>
+            </mx:Canvas>
+            <mx:HBox styleName="questPanelFooter" height="60" bottom="0" left="6" right="2" paddingBottom="10" horizontalAlign="center" verticalAlign="bottom" horizontalGap="10">
+                <gui:StandardButton id="selectRewardButton" width="60"/>
+                <gui:StandardButton id="cancelRewardButton" width="60"/>
+            </mx:HBox>
+        </mx:Canvas>
+    </mx:Array></gui:subComponents>
+</gui:BasicPanel>

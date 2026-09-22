@@ -1,0 +1,612 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*">
+    <mx:Script><![CDATA[
+        import __AS3__.vec.Vector;
+        import Communication.VO.dSquadVO;
+        import Enums.LOCA_GROUP;
+        import Enums.MILITARY_UNIT_ARMORTYPE;
+        import Enums.MILITARY_UNIT_CATEGORY;
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import GO.cBuilding;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.data.dCombatUnitData;
+        import GUI.Components.ItemRenderer.Combat3AdmiralUnitAllocationItemRenderer;
+        import GUI.Components.ItemRenderer.Combat3AdmiralUnitSelectionItemRenderer;
+        import GUI.Components.ItemRenderer.Combat3DefenseModeUnitAllocationItemRenderer;
+        import GUI.Components.ItemRenderer.Combat3DefenseModeUnitSelectionItemRenderer;
+        import GUI.Components.ItemRenderer.Combat3UnitBaseItemRenderer;
+        import GUI.Loca.cLocaManager;
+        import MilitarySystem.cArmy;
+        import MilitarySystem.cMilitaryUnitData;
+        import MilitarySystem.cSquad;
+        import MilitarySystem.iMilitaryUnitHolder;
+        import mx.collections.ArrayCollection;
+        import mx.events.FlexEvent;
+        import mx.events.SliderEvent;
+        import ServerState.dResource;
+        import Specialists.cSpecialist;
+
+        public static const TOGGLE_MODE_EVENT:String = "toggleModeEvent";
+        public static const DISABLE_COMMIT:String = "disableCommit";
+        public static const ENABLE_COMMIT:String = "enableCommit";
+
+        private var mHasChanged:Boolean = false;
+        private var mSelectedUnitTypes:Vector.<String>;
+        private var mTroopsAllocated:int = 0;
+        private var mTroopsAvailable:cArmy;
+        private var mResourcesInitiallyAllocated:cBasicResourceCollection;
+        private var mTroopsMax:int = 0;
+        private var mResourcesAvailable:cBasicResourceCollection;
+        private var mResourcesAllocated:cBasicResourceCollection;
+        private var mContainer:iMilitaryUnitHolder;
+        private var mUnitCostSource:int;
+
+        [Bindable]
+        public var mTroopPrimaryCost:String;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            unitSelectionList.itemDisplayMode = Combat3UnitSelection.MODE_SELECTION;
+            unitAllocationList.itemDisplayMode = Combat3UnitSelection.MODE_ALLOCATION;
+            btnUnloadUnits.setStyle("icon", gAssetManager.GetClass("UnloadTroopsIcon"));
+            creationCompleteHandler(null);
+            refreshLabels();
+            unitSelectionColumn.addEventListener("show", updateLayouts);
+            unitSelectionColumn.addEventListener("hide", updateLayouts);
+            updateLayouts();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function visibleToIncludeInLayout(value:Boolean):Boolean
+        {
+            return value;
+        }
+
+        private function updateLayouts(event:Event = null):void
+        {
+            unitSelectionHeader.includeInLayout = visibleToIncludeInLayout(unitSelectionColumn.visible);
+        }
+
+        private function getPrimaryCostIcon(cost:String):Object
+        {
+            return cost ? gAssetManager.GetResourceIcon(cost, true) : null;
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var selectUpTo:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "SelectUpToXUnits", [6]);
+            unitSelectionHeaderLabel.text = ((selectUpTo == undefined) ? null : String(selectUpTo));
+            var applyUnits:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ApplyUnits");
+            btnApplyUnits.label = ((applyUnits == undefined) ? null : String(applyUnits));
+            var selectSome:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "SelectSomeUnits");
+            emptyLabel.text = ((selectSome == undefined) ? null : String(selectSome));
+            var unloadUnits:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnloadUnits");
+            btnUnloadUnits.toolTip = ((unloadUnits == undefined) ? null : String(unloadUnits));
+            var available:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Available");
+            availableLabel.text = ((available == undefined) ? null : String(available));
+            var selected:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Selected");
+            selectedLabel.text = ((selected == undefined) ? null : String(selected));
+        }
+
+        private function ShowUnitAllocation():void
+        {
+            this.unitAllocationColumn.visible = true;
+            this.unitSelectionColumn.visible = false;
+            if (((this.unitAllocationList.selectArmyList.dataProvider == null) || (this.unitAllocationList.selectArmyList.dataProvider.length < 1)))
+            {
+                this.emptyLabel.visible = true;
+            }
+            else
+            {
+                this.emptyLabel.visible = false;
+            };
+            this.btnUnloadUnits.enabled = (this.unitAllocationList.selectArmyList.dataProvider.length > 1);
+        }
+
+        public function SetData(_arg_1:iMilitaryUnitHolder, _arg_2:String, _arg_3:Object, _arg_4:int, _arg_5:int):void
+        {
+            this.mHasChanged = false;
+            if ((_arg_3 is cBasicResourceCollection))
+            {
+                this.mResourcesAvailable = (_arg_3 as cBasicResourceCollection);
+            }
+            else
+            {
+                if ((_arg_3 is cArmy))
+                {
+                    this.mTroopsAvailable = (_arg_3 as cArmy);
+                };
+            };
+            this.mContainer = _arg_1;
+            this.mTroopPrimaryCost = _arg_2;
+            this.mUnitCostSource = _arg_5;
+            if (this.mTroopPrimaryCost != null)
+            {
+                this.costsBox.visible = true;
+                this.unitAllocationDetail.setStyle("bottom", 35);
+            }
+            else
+            {
+                this.costsBox.visible = false;
+                this.unitAllocationDetail.setStyle("bottom", 0);
+            };
+            this.mTroopsAllocated = 0;
+            this.mSelectedUnitTypes = new Vector.<String>();
+            this.mResourcesInitiallyAllocated = new cBasicResourceCollection();
+            this.mResourcesAllocated = new cBasicResourceCollection();
+            this.mTroopsMax = this.mContainer.GetMaxMilitaryUnits();
+            this.unitAllocationList.SetData(this.getAssignedTroopsArray(), this.getAllocationItemRenderer());
+            this.ShowUnitAllocation();
+            this.updateLabels();
+        }
+
+        private function btnSelectUnitsClickHandler(_arg_1:MouseEvent):void
+        {
+            var _local_2:Object;
+            this.mSelectedUnitTypes = new Vector.<String>();
+            for each (_local_2 in (this.unitAllocationList.selectArmyList.dataProvider as ArrayCollection))
+            {
+                if (_local_2 != null)
+                {
+                    if (!_local_2.isDummyAddIcon)
+                    {
+                        this.mSelectedUnitTypes.push(_local_2.name_string);
+                    };
+                };
+            };
+            this.unitSelectionList.SetData(this.GetAvailableTroopTypesForBuilding(), this.getSelectionItemRenderer(), this.getSelectionListRows());
+            this.ShowUnitSelection();
+            dispatchEvent(new Event(TOGGLE_MODE_EVENT, true, true));
+        }
+
+        private function updateLabels():void
+        {
+            this.mTroopsAllocated = this.unitAllocationList.GetAllocatedUnitsAmount();
+            this.manageUnitsAmountLabel.text = ((this.mTroopsAllocated.toString() + " / ") + this.mTroopsMax.toString());
+            this.btnUnloadUnits.enabled = (this.unitAllocationList.selectArmyList.dataProvider.length > 1);
+            if (this.mResourcesAvailable != null)
+            {
+                if (!this.mResourcesAvailable.HasResources(this.mResourcesAllocated))
+                {
+                    dispatchEvent(new Event(DISABLE_COMMIT, true, true));
+                    this.defensePointsAllocatedLabel.setStyle("color", "#FF0000");
+                }
+                else
+                {
+                    dispatchEvent(new Event(ENABLE_COMMIT, true, true));
+                    this.defensePointsAllocatedLabel.setStyle("color", "#FFFFFF");
+                };
+                this.defensePointsAllocatedLabel.text = this.mResourcesAllocated.GetResourceAmount(this.mTroopPrimaryCost).toString();
+                this.defensePointsAvailableLabel.text = this.mResourcesAvailable.GetResourceAmount(this.mTroopPrimaryCost).toString();
+            };
+        }
+
+        private function ShowUnitSelection():void
+        {
+            this.unitSelectionList.SetData(this.GetAvailableTroopTypesForBuilding(), this.getSelectionItemRenderer(), this.getSelectionListRows());
+            this.unitAllocationColumn.visible = false;
+            this.unitSelectionColumn.visible = true;
+        }
+
+        public function GetUnitAllocation():Vector.<dSquadVO>
+        {
+            return (this.unitAllocationList.getAllocatedSquads_vector());
+        }
+
+        private function unitAllocationChangeHandler(_arg_1:SliderEvent):void
+        {
+            var _local_7:dResource;
+            _arg_1.stopImmediatePropagation();
+            if (!this.mHasChanged)
+            {
+                dispatchEvent(new Event(ENABLE_COMMIT, true, true));
+            };
+            this.mHasChanged = true;
+            var _local_2:dCombatUnitData = (_arg_1.target.data as dCombatUnitData);
+            _local_2.isSelected = true;
+            var _local_3:int = _arg_1.target.data.current;
+            var _local_4:int = _arg_1.value;
+            var _local_5:int = (_local_4 - _local_3);
+            var _local_6:int;
+            for each (_local_7 in cMilitaryUnitData.GetUnitDataForType(_arg_1.target.data.name_string).GetCosts_vector())
+            {
+                if (_local_7.name_string == this.mTroopPrimaryCost)
+                {
+                    _local_6 = _local_7.amount;
+                };
+            };
+            if ((this.unitAllocationList.GetAllocatedUnitsAmount() + _local_5) <= this.mTroopsMax)
+            {
+                _local_2.current = _local_4;
+                _local_2.available = (_local_2.available + (_local_5 * _local_6));
+                _arg_1.target.data = _local_2;
+            }
+            else
+            {
+                _local_5 = (this.mTroopsMax - this.unitAllocationList.GetAllocatedUnitsAmount());
+                _local_2.current = (_local_3 + _local_5);
+                _local_2.available = (_local_2.available + (_local_5 * _local_6));
+                _arg_1.target.data = _local_2;
+            };
+            var _local_8:dResource = new dResource();
+            _local_8.amount = (_local_5 * _local_6);
+            _local_8.name_string = this.mTroopPrimaryCost;
+            this.mResourcesAllocated.AddResource(_local_8);
+            this.updateLabels();
+        }
+
+        private function btnApplyUnitsClickHandler(_arg_1:MouseEvent):void
+        {
+            this.mSelectedUnitTypes = this.unitSelectionList.GetSelectedUnitTypes();
+            this.updateAllocationUnitsWithSelections(this.mSelectedUnitTypes);
+            this.ShowUnitAllocation();
+            dispatchEvent(new Event(TOGGLE_MODE_EVENT, true, true));
+        }
+
+        protected function unitRemoveMeHandler(_arg_1:Event):void
+        {
+            var _local_4:Object;
+            var _local_2:Boolean = ((this.unitAllocationList.selectArmyList.dataProvider.length == this.unitAllocationList.maxSelections) && (!(this.unitAllocationList.selectArmyList.dataProvider[(this.unitAllocationList.maxSelections - 1)].isDummyAddIcon)));
+            this.unitAllocationList.selectArmyList.dataProvider.removeItemAt(this.unitAllocationList.selectArmyList.dataProvider.getItemIndex(_arg_1.target.data));
+            if (((this.unitAllocationList.itemDisplayMode == Combat3UnitSelection.MODE_ALLOCATION) && (_local_2)))
+            {
+                _local_4 = new Object();
+                _local_4.isDummyAddIcon = true;
+                this.unitAllocationList.selectArmyList.dataProvider.addItem(_local_4);
+            };
+            var _local_3:dResource = new dResource();
+            _local_3.amount = _arg_1.target.data.current;
+            _local_3.name_string = this.mTroopPrimaryCost;
+            this.mResourcesAllocated.SubtractResources(_local_3);
+            dispatchEvent(new Event(ENABLE_COMMIT, true, true));
+            this.updateLabels();
+        }
+
+        private function GetAvailableTroopTypesForBuilding():Array
+        {
+            var _local_2:cMilitaryUnitData;
+            var _local_3:Object;
+            var _local_4:String;
+            var _local_5:cMilitaryUnitData;
+            var _local_6:dCombatUnitData;
+            var _local_7:String;
+            var _local_8:cSquad;
+            var _local_9:cSquad;
+            var _local_1:Array = new Array();
+            if ((this.mContainer is cBuilding))
+            {
+                for each (_local_2 in cMilitaryUnitData.GetAllUnitDataInCategory(MILITARY_UNIT_CATEGORY.COMBAT_DEFENSE))
+                {
+                    _local_3 = _local_2.GetObjectForItemRenderer(this.mUnitCostSource);
+                    _local_3.isSelected = false;
+                    for each (_local_4 in this.mSelectedUnitTypes)
+                    {
+                        if (((!(_local_4 == null)) && (_local_2.GetType() == _local_4)))
+                        {
+                            _local_3.isSelected = true;
+                            break;
+                        };
+                        _local_3.isSelected = false;
+                    };
+                    if ((this.mContainer is cBuilding))
+                    {
+                        switch ((this.mContainer as cBuilding).GetDefenseModeType())
+                        {
+                            case defines.PLAYER_CAMP_TYPE_CAV_string:
+                                if (_local_2.GetArmorType() == MILITARY_UNIT_ARMORTYPE.HEAVY)
+                                {
+                                    _local_1.push(_local_3);
+                                };
+                                break;
+                            case defines.PLAYER_CAMP_TYPE_MELEE_string:
+                                if (_local_2.GetArmorType() == MILITARY_UNIT_ARMORTYPE.LIGHT)
+                                {
+                                    _local_1.push(_local_3);
+                                };
+                                break;
+                            case defines.PLAYER_CAMP_TYPE_RANGED_string:
+                                if (_local_2.GetArmorType() == MILITARY_UNIT_ARMORTYPE.MEDIUM)
+                                {
+                                    _local_1.push(_local_3);
+                                };
+                                break;
+                            case defines.PLAYER_CAMP_TYPE_MIXED_string:
+                                _local_1.push(_local_3);
+                                break;
+                        };
+                    }
+                    else
+                    {
+                        _local_1.push(_local_3);
+                    };
+                };
+            }
+            else
+            {
+                if ((this.mContainer is cSpecialist))
+                {
+                    for each (_local_5 in cMilitaryUnitData.GetAllUnitDataInCategory(MILITARY_UNIT_CATEGORY.EXPEDITION))
+                    {
+                        _local_6 = _local_5.GetObjectForItemRenderer(this.mUnitCostSource);
+                        _local_6.isSelected = false;
+                        for each (_local_7 in this.mSelectedUnitTypes)
+                        {
+                            if (((!(_local_7 == null)) && (_local_5.GetType() == _local_7)))
+                            {
+                                _local_6.isSelected = true;
+                                break;
+                            };
+                            _local_6.isSelected = false;
+                        };
+                        _local_8 = this.mTroopsAvailable.GetSquad(_local_5.GetType());
+                        _local_9 = this.mContainer.GetArmy().GetSquad(_local_5.GetType());
+                        if (_local_8 != null)
+                        {
+                            _local_6.available = _local_8.amount;
+                            _local_6.maximum = _local_8.amount;
+                            if (_local_9 != null)
+                            {
+                                _local_6.available = (_local_6.available + _local_9.amount);
+                                _local_6.maximum = (_local_6.maximum + _local_9.amount);
+                            };
+                        }
+                        else
+                        {
+                            if (_local_9 != null)
+                            {
+                                _local_6.maximum = _local_9.amount;
+                            };
+                        };
+                        _local_1.push(_local_6);
+                    };
+                };
+            };
+            _local_1.sortOn("name_string");
+            return (_local_1);
+        }
+
+        private function updateAllocationUnitsWithSelections(_arg_1:Vector.<String>):void
+        {
+            var _local_3:String;
+            var _local_4:Array;
+            var _local_6:ArrayCollection;
+            var _local_7:int;
+            var _local_8:int;
+            var _local_9:cMilitaryUnitData;
+            var _local_10:dCombatUnitData;
+            var _local_11:cSquad;
+            var _local_2:Array = new Array();
+            for each (_local_3 in _arg_1)
+            {
+                _local_2.push(_local_3);
+            };
+            _local_4 = new Array();
+            if (((!(this.unitAllocationList.selectArmyList.dataProvider == null)) && (this.unitAllocationList.selectArmyList.dataProvider.length > 0)))
+            {
+                _local_6 = (this.unitAllocationList.selectArmyList.dataProvider as ArrayCollection);
+                if (_local_6 != null)
+                {
+                    _local_7 = 0;
+                    while (_local_7 < _local_6.length)
+                    {
+                        if (!_local_6[_local_7].isDummyAddIcon)
+                        {
+                            _local_6[_local_7].isSelected = true;
+                            _local_8 = 0;
+                            while (_local_8 < _local_2.length)
+                            {
+                                if (_local_6[_local_7].name_string == _local_2[_local_8])
+                                {
+                                    _local_4.push(_local_6[_local_7]);
+                                    _local_2.splice(_local_8, 1);
+                                    break;
+                                };
+                                _local_8++;
+                            };
+                        };
+                        _local_7++;
+                    };
+                };
+            };
+            var _local_5:int;
+            while (_local_5 < _local_2.length)
+            {
+                _local_9 = cMilitaryUnitData.GetUnitDataForType(_local_2[_local_5]);
+                _local_10 = _local_9.GetObjectForItemRenderer(this.mUnitCostSource);
+                if (this.mTroopsAvailable)
+                {
+                    _local_11 = this.mTroopsAvailable.GetSquad(_local_9.GetType());
+                    if (_local_11 != null)
+                    {
+                        _local_10.available = (_local_11.amount + _local_10.current);
+                        if (_local_10.available < this.mContainer.GetMaxMilitaryUnits())
+                        {
+                            _local_10.maximum = (_local_11.amount + _local_10.current);
+                        }
+                        else
+                        {
+                            _local_10.maximum = this.mContainer.GetMaxMilitaryUnits();
+                        };
+                    }
+                    else
+                    {
+                        _local_10.available = _local_10.current;
+                        _local_10.maximum = _local_10.current;
+                    };
+                }
+                else
+                {
+                    _local_10.available = _local_10.current;
+                    _local_10.maximum = _local_10.current;
+                };
+                if ((this.mContainer is cBuilding))
+                {
+                    _local_10.maximum = this.mContainer.GetMaxMilitaryUnits();
+                };
+                _local_10.isSelected = true;
+                _local_4.push(_local_10);
+                _local_5++;
+            };
+            _local_4.sortOn("name_string");
+            this.unitAllocationList.SetData(_local_4, this.getAllocationItemRenderer());
+        }
+
+        protected function getSelectionListRows():int
+        {
+            if ((this.mContainer is cBuilding))
+            {
+                return (3);
+            };
+            return (4);
+        }
+
+        private function getAssignedTroopsArray():Array
+        {
+            var _local_5:cSquad;
+            var _local_6:cMilitaryUnitData;
+            var _local_7:dResource;
+            var _local_8:dCombatUnitData;
+            var _local_9:dResource;
+            var _local_10:cSquad;
+            var _local_1:cArmy = this.mContainer.GetArmy();
+            var _local_2:Array = new Array();
+            var _local_3:int;
+            var _local_4:cBasicResourceCollection = new cBasicResourceCollection();
+            if (_local_1 != null)
+            {
+                for each (_local_5 in _local_1.GetSquads_vector())
+                {
+                    _local_6 = cMilitaryUnitData.GetUnitDataForType(_local_5.GetType());
+                    for each (_local_7 in _local_6.GetCosts_vector())
+                    {
+                        _local_9 = _local_7.clone();
+                        _local_9.amount = (_local_9.amount * _local_5.amount);
+                        _local_4.AddResource(_local_9);
+                    };
+                    _local_8 = _local_6.GetObjectForItemRenderer(this.mUnitCostSource);
+                    _local_8.current = _local_5.GetAmount();
+                    if (this.mTroopsAvailable)
+                    {
+                        _local_10 = this.mTroopsAvailable.GetSquad(_local_6.GetType());
+                    };
+                    if (_local_10 != null)
+                    {
+                        _local_8.available = (_local_10.amount + _local_8.current);
+                    }
+                    else
+                    {
+                        _local_8.available = _local_8.current;
+                    };
+                    if (((_local_8.available < this.mContainer.GetMaxMilitaryUnits()) && (!(this.mContainer is cBuilding))))
+                    {
+                        _local_8.maximum = _local_8.available;
+                    }
+                    else
+                    {
+                        _local_8.maximum = this.mContainer.GetMaxMilitaryUnits();
+                    };
+                    _local_8.isSelected = true;
+                    _local_2.push(_local_8);
+                };
+            };
+            _local_2.sortOn("name_string");
+            this.mResourcesInitiallyAllocated = _local_4;
+            return (_local_2);
+        }
+
+        protected function getSelectionItemRenderer():Class
+        {
+            if ((this.mContainer is cBuilding))
+            {
+                return (Combat3DefenseModeUnitSelectionItemRenderer);
+            };
+            return (Combat3AdmiralUnitSelectionItemRenderer);
+        }
+
+        protected function creationCompleteHandler(_arg_1:FlexEvent):void
+        {
+            this.btnApplyUnits.addEventListener(MouseEvent.CLICK, this.btnApplyUnitsClickHandler);
+            this.btnUnloadUnits.addEventListener(MouseEvent.CLICK, this.btnUnloadUnitsHandler);
+            addEventListener(SliderEvent.CHANGE, this.unitAllocationChangeHandler);
+            addEventListener(Combat3UnitBaseItemRenderer.ADD_UNIT_EVENT, this.addUnitEventHandler);
+            addEventListener(Combat3UnitSelection.UNIT_MANAGER_REMOVE_ME_EVENT, this.unitRemoveMeHandler);
+        }
+
+        private function getAllocationItemRenderer():Class
+        {
+            if ((this.mContainer is cBuilding))
+            {
+                return (Combat3DefenseModeUnitAllocationItemRenderer);
+            };
+            return (Combat3AdmiralUnitAllocationItemRenderer);
+        }
+
+        protected function addUnitEventHandler(_arg_1:Event):void
+        {
+            _arg_1.stopPropagation();
+            this.btnSelectUnitsClickHandler(new MouseEvent(MouseEvent.CLICK));
+        }
+
+        protected function btnUnloadUnitsHandler(_arg_1:MouseEvent):void
+        {
+            var _local_2:Object;
+            var _local_3:dResource;
+            var _local_4:Object;
+            for each (_local_2 in this.unitAllocationList.selectArmyList.dataProvider)
+            {
+                _local_3 = new dResource();
+                _local_3.amount = _local_2.current;
+                _local_3.name_string = this.mTroopPrimaryCost;
+                this.mResourcesAllocated.SubtractResources(_local_3);
+            };
+            this.unitAllocationList.selectArmyList.dataProvider = new ArrayCollection();
+            if (this.unitAllocationList.itemDisplayMode == Combat3UnitSelection.MODE_ALLOCATION)
+            {
+                _local_4 = new dCombatUnitData();
+                _local_4.isDummyAddIcon = true;
+                this.unitAllocationList.selectArmyList.dataProvider.addItem(_local_4);
+            };
+            dispatchEvent(new Event(ENABLE_COMMIT, true, true));
+            this.updateLabels();
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="unitSelectionColumn" visible="false" left="0" right="0" top="0" bottom="0">
+        <mx:Canvas id="unitSelectionHeader" styleName="detailsSubHeader" height="18" left="0" right="0">
+            <gui:CustomLabel id="unitSelectionHeaderLabel" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+        </mx:Canvas>
+        <mx:Canvas id="unitSelectionDetail" styleName="detailsContentBox" left="1" right="1" top="18" bottom="0"
+            horizontalScrollPolicy="off" verticalScrollPolicy="auto">
+            <gui:Combat3UnitSelection id="unitSelectionList" left="8" right="8" top="0" bottom="40"
+                isSelectable="true" horizontalScrollPolicy="off" />
+        </mx:Canvas>
+        <gui:StandardButton id="btnApplyUnits" right="10" bottom="4" enabled="true" height="32" />
+    </mx:Canvas>
+    <mx:Canvas id="unitAllocationColumn" left="0" right="0" top="0" bottom="0">
+        <mx:Canvas styleName="detailsSubHeader" height="18" left="0" right="0" top="0">
+            <gui:CustomLabel id="manageUnitsAmountLabel" top="1" left="0" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+        </mx:Canvas>
+        <mx:Canvas id="unitAllocationDetail" styleName="detailsContentBox" left="1" right="1" top="18" bottom="0"
+            horizontalScrollPolicy="off" verticalScrollPolicy="auto">
+            <gui:Combat3UnitSelection id="unitAllocationList" left="8" right="8" top="0" bottom="40"
+                isSelectable="false" horizontalScrollPolicy="off" verticalScrollPolicy="off" />
+            <mx:HBox top="18" left="0" right="0" bottom="40" verticalAlign="middle" horizontalAlign="center">
+                <gui:CustomLabel id="emptyLabel" visible="false" horizontalCenter="0" textAlign="center" color="0xFFFFFF" />
+            </mx:HBox>
+            <gui:StandardButton id="btnUnloadUnits" right="10" bottom="4" enabled="true" height="32" />
+        </mx:Canvas>
+        <mx:Canvas id="bottomBox" height="40" bottom="0" left="3" right="3"
+            horizontalScrollPolicy="off" verticalScrollPolicy="off">
+            <mx:HBox id="costsBox" left="10" right="0" top="0" bottom="0" horizontalGap="10" verticalAlign="middle"
+                horizontalScrollPolicy="off" verticalScrollPolicy="off">
+                <gui:CustomLabel id="availableLabel" color="0xFFFFFF" />
+                <gui:CustomLabel id="defensePointsAvailableLabel" text="0" width="35" color="0xFFFFFF" />
+                <gui:CustomLabel id="selectedLabel" color="0xFFFFFF" />
+                <gui:CustomLabel id="defensePointsAllocatedLabel" text="0" width="35" color="0xFFFFFF" />
+                <mx:Image id="primaryCostIcon" source="{getPrimaryCostIcon(mTroopPrimaryCost)}" />
+            </mx:HBox>
+        </mx:Canvas>
+    </mx:Canvas>
+</mx:Canvas>

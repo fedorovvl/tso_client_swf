@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="350" height="245">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(headerBox);
+            LegacyMxmlContent.createChildren(contentBox);
+            LegacyMxmlContent.createChildren(buttonBox);
+            updateInputEnabled();
+            updateApplyEnabled();
+            refreshLabels();
+            amountSlider.addEventListener("enabledChanged", updateInputEnabled);
+            amountSlider.addEventListener("change", updateApplyEnabled);
+            amountSlider.addEventListener("valueCommit", updateApplyEnabled);
+            selectedAmount.addEventListener("textChanged", updateApplyEnabled);
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function updateInputEnabled(event:Event = null):void
+        {
+            selectedAmount.enabled = amountSlider.enabled;
+        }
+
+        private function updateApplyEnabled(event:Event = null):void
+        {
+            btnApply.enabled = ((int(selectedAmount.text) <= amountSlider.maximum) && (amountSlider.value > 0));
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var title:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "SelectResourceAmountTitle");
+            label = ((title == undefined) ? null : String(title));
+            var text:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "SelectResourceAmount");
+            description.text = ((text == undefined) ? null : String(text));
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <mx:Canvas id="headerBox" height="95" clipContent="false"
+                horizontalScrollPolicy="off" verticalScrollPolicy="off" styleName="detailsHeader" left="10" right="10" top="2">
+                <mx:VBox id="titleBox" height="55" percentWidth="100"
+                    horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalAlign="middle" left="10" right="10" top="10">
+                    <gui:CustomText id="description" selectable="false" percentWidth="100" color="0xFFFFFF" textAlign="center" />
+                </mx:VBox>
+                <mx:Canvas id="titleRuler" height="3" styleName="hr" left="6" right="5" top="65" />
+                <gui:CustomText id="resourceName" selectable="false" percentWidth="100" color="0xFFFFFF" top="70" left="15" right="15" textAlign="center" />
+            </mx:Canvas>
+            <mx:Canvas id="contentBox" height="65" clipContent="false"
+                horizontalScrollPolicy="off" verticalScrollPolicy="off" styleName="detailsContentBox" left="15" right="15" top="95">
+                <mx:HBox id="amountBox" horizontalCenter="0" top="5" verticalAlign="middle" horizontalAlign="center" horizontalGap="5">
+                    <renderer:ResourceIconRenderer id="resourceRenderer" top="23" left="15" />
+                    <gui:CustomTextInput id="selectedAmount" width="60" height="19" text=""
+                        restrict="0-9" styleName="standardInput" textAlign="right" color="0xFFFFFF" fontSize="12" />
+                    <gui:CustomLabel id="maximumCount" color="0xFFFFFF" fontWeight="normal" fontSize="12" />
+                </mx:HBox>
+                <gui:ExtendedHSlider id="amountSlider" percentWidth="100" top="45" left="35" right="35" />
+            </mx:Canvas>
+            <mx:Canvas id="bottomRuler" height="3" styleName="hr" left="6" right="5" bottom="40" />
+            <mx:HBox id="buttonBox" bottom="10" horizontalCenter="0" horizontalGap="10">
+                <gui:StandardButton id="btnApply" width="120" height="26" icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+                <gui:StandardButton id="btnCancel" width="120" height="26" icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+            </mx:HBox>
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

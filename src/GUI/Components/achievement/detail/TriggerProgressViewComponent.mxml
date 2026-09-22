@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="495"
+    verticalScrollPolicy="off" horizontalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import GUI.Assets.gAssetManager;
+        import GUI.achievement.view.detail.AchievementDetailView;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundSize", "100%");
+            height = AchievementDetailView.TRIGGER_PROGRESS_VIEW_COMPONENT_HEIGHT;
+            setStyle("backgroundImage", gAssetManager.GetClass("AchievementTriggerProgressBackground"));
+            progressBar.mask = progressBarMask;
+        }
+    ]]></mx:Script>
+    <mx:Label id="triggerName"  left="10" top="9" />
+    <mx:Canvas id="progressBarCanvas" height="12" top="25" left="10" right="70" backgroundImage="{gAssetManager.GetClass('AchievementTriggerProgressBackgroundProgressBar')}">
+        <mx:Canvas id="progressBar" top="2" left="9" right="10" bottom="3" backgroundImage="{gAssetManager.GetClass('AchievementTriggerProgressBar')}" />
+        <mx:Canvas id="progressBarMask"  backgroundColor="0xFF0000" />
+    </mx:Canvas>
+    <mx:Label id="progressLabel"  top="23" left="430" />
+</mx:Canvas>

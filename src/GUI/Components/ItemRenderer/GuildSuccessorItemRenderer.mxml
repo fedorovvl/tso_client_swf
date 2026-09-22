@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" width="100" height="20">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Button;
+        import mx.controls.Label;
+        import mx.core.mx_internal;
+        import mx.events.PropertyChangeEvent;
+        import flash.events.MouseEvent;
+        import Communication.VO.Guild.dGuildPlayerListItemVO;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import mx.events.ListEvent;
+        import GUI.GAME.cGuildWindow;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        public var guildSize:int;
+
+        public var successorAssignAllowed:Boolean;
+
+        public var isOwnGuild:Boolean;
+
+        public var successionInPlace:Boolean;
+
+        [Embed(source="../../../../assets/embedded/guild/guild_arrow_n_non.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_guild_arrow_n_non_png_909152459:Class;
+
+        [Embed(source="../../../../assets/embedded/guild/guild_arrow_n_sel.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_guild_arrow_n_sel_png_121605931:Class;
+
+        [Embed(source="../../../../assets/embedded/guild/guild_arrow_n_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_guild_arrow_n_std_png_420446507:Class;
+
+        [Embed(source="../../../../assets/embedded/guild/guild_arrow_s_non.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_guild_arrow_s_non_png_121061579:Class;
+
+        [Embed(source="../../../../assets/embedded/guild/guild_arrow_s_sel.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_guild_arrow_s_sel_png_2045997355:Class;
+
+        [Embed(source="../../../../assets/embedded/guild/guild_arrow_s_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_guild_arrow_s_std_png_104025899:Class;
+
+        public function onButtonLeft_click(argument1:MouseEvent):void
+        {
+            this.successorDown();
+        }
+
+        public function onButtonRight_click(argument1:MouseEvent):void
+        {
+            this.successorUp();
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            var localValue2:dGuildPlayerListItemVO;
+            var localValue3:int;
+            super.data = argument1;
+            if ((argument1 is dGuildPlayerListItemVO))
+            {
+                if (!this.isOwnGuild)
+                {
+                    this.buttonLeft.visible = false;
+                    this.buttonRight.visible = false;
+                    this.successorOrder.text = "-";
+                    return;
+                };
+                localValue2 = dGuildPlayerListItemVO(argument1);
+                localValue3 = dGuildPlayerListItemVO(argument1).successorOrder;
+                this.successorOrder.text = dGuildPlayerListItemVO(argument1).successorOrder.toString();
+                if (this.successorAssignAllowed)
+                {
+                    if (this.successionInPlace)
+                    {
+                        this.buttonLeft.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildSuccessionInPlace");
+                        this.buttonRight.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildSuccessionInPlace");
+                    };
+                    this.buttonLeft.enabled = ((!(this.successionInPlace)) && (!(globalFlash.gui.mGuildWindow.mIsChangingSuccession)));
+                    this.buttonRight.enabled = ((!(this.successionInPlace)) && (!(globalFlash.gui.mGuildWindow.mIsChangingSuccession)));
+                    this.buttonLeft.visible = true;
+                    this.buttonRight.visible = true;
+                }
+                else
+                {
+                    this.buttonLeft.enabled = false;
+                    this.buttonRight.enabled = false;
+                    this.buttonLeft.visible = false;
+                    this.buttonRight.visible = false;
+                };
+                this.successorCanvas.width = 18;
+                this.successorOrder.width = 18;
+                if (localValue2.successorOrder == 0)
+                {
+                    this.buttonLeft.visible = false;
+                    this.buttonRight.visible = false;
+                    this.buttonLeft.enabled = false;
+                    this.buttonRight.enabled = false;
+                    this.successorOrder.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildLeader");
+                    this.successorCanvas.width = 80;
+                    this.successorOrder.width = 80;
+                }
+                else
+                {
+                    if (localValue2.successorOrder == 1)
+                    {
+                        this.buttonLeft.enabled = false;
+                    };
+                };
+                if (((localValue2.successorOrder == global.guildMaxSuccessionLimit) || (localValue2.successorOrder == (this.guildSize - 1))))
+                {
+                    this.buttonRight.enabled = false;
+                };
+                if (localValue2.successorOrder > global.guildMaxSuccessionLimit)
+                {
+                    this.successorOrder.text = "-";
+                    this.buttonRight.enabled = false;
+                };
+            };
+            refreshRendererPresentation();
+        }
+
+        private function successorUp():void
+        {
+            this.dispatchEvent(new ListEvent(cGuildWindow.SUCCESSOR_UP, true, false, 0, data.id));
+        }
+
+        private function successorDown():void
+        {
+            this.dispatchEvent(new ListEvent(cGuildWindow.SUCCESSOR_DOWN, true, false, 0, data.id));
+        }
+
+        public function onButtonRight_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        public function onButtonLeft_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            buttonLeft.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_guild_arrow_s_std_png_104025899);
+            buttonLeft.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_guild_arrow_s_sel_png_2045997355);
+            buttonLeft.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_guild_arrow_s_sel_png_2045997355);
+            buttonLeft.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_guild_arrow_s_non_png_121061579);
+            buttonLeft.addEventListener("click", onButtonLeft_click);
+            buttonLeft.addEventListener("toolTipCreate", onButtonLeft_toolTipCreate);
+            buttonRight.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_guild_arrow_n_std_png_420446507);
+            buttonRight.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_guild_arrow_n_sel_png_121605931);
+            buttonRight.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_guild_arrow_n_sel_png_121605931);
+            buttonRight.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_guild_arrow_n_non_png_909152459);
+            buttonRight.addEventListener("click", onButtonRight_click);
+            buttonRight.addEventListener("toolTipCreate", onButtonRight_toolTipCreate);
+            this.width = 100;
+            this.height = 20;
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Button id="buttonLeft" width="12" height="12" rotation="90"  right="40" top="5" />
+    <mx:Canvas id="successorCanvas" width="18" horizontalCenter="0">
+        <mx:Label id="successorOrder"  top="1" textAlign="center" fontWeight="normal" />
+    </mx:Canvas>
+    <mx:Button id="buttonRight" width="12" height="12" rotation="90"  right="10" top="5" />
+</mx:Canvas>

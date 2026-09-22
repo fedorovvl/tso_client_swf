@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="73" height="67">
+    <mx:Script><![CDATA[
+        import GUI.Assets.gAssetManager;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            setStyle("backgroundImage", gAssetManager.GetClass("AchievementDetailHeaderAvatarBackground"));
+        }
+    ]]></mx:Script>
+    <gui:TSOImage id="avatar"  top="-2" horizontalCenter="0" />
+    <mx:Label id="playerName" width="67"  horizontalCenter="0" top="47" fontWeight="bold" textAlign="center" />
+</mx:Canvas>

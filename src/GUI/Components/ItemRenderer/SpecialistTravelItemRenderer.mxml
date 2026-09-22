@@ -1,0 +1,233 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="0xFF" height="84">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Image;
+        import GUI.Components.CustomLabel;
+        import GUI.Components.CustomText;
+        import mx.containers.HBox;
+        import mx.core.mx_internal;
+        import mx.events.ToolTipEvent;
+        import mx.events.PropertyChangeEvent;
+        import Specialists.cSpecialist;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Assets.gAssetManager;
+        import Specialists.cSpecialistSubTaskDefinition;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import Specialists.cSpecialistTask;
+        import Enums.SPECIALIST_TYPE;
+        import GUI.Decorator.GUIDecorator;
+        import Skill.cSkill;
+        import Modifier.ModifierVO;
+        import Modifier.Modifiers.Common.ZoneTravelSpeed;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        public var canUse:Boolean = true;
+
+        public var skillBonus:Number;
+
+        private function CreateToolTip(argument1:ToolTipEvent):void
+        {
+            var localValue2:cSpecialist;
+            if (data)
+            {
+                localValue2 = (data as SpecialistTravelItemData).specialist;
+                if (!this.canUse)
+                {
+                    cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+                }
+                else
+                {
+                    if (localValue2.GetSpecialistDescription().isGeneral())
+                    {
+                        cToolTipUtil.createToolTip(cToolTipUtil.SEND_ARMY, argument1, localValue2);
+                    }
+                    else
+                    {
+                        if (localValue2.GetSpecialistDescription().isAdmiral())
+                        {
+                            cToolTipUtil.createToolTip(cToolTipUtil.SEND_ARMY_NEW_COMBAT, argument1, localValue2);
+                        };
+                    };
+                };
+            };
+        }
+
+        private function CreateDescription(argument1:cSpecialist):String
+        {
+            var localValue4:cSpecialistSubTaskDefinition;
+            var localValue2:* = "";
+            localValue2 = (localValue2 + (cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "CurrentMission") + " "));
+            var localValue3:cSpecialistTask = argument1.GetTask();
+            if (localValue3 != null)
+            {
+                localValue4 = global.specialistTaskDefinitions_vector[localValue3.GetType()].subtasks_vector[localValue3.GetSubType()];
+                localValue2 = (localValue2 + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, ("SpecialistTask" + localValue4.mainTask.taskName_string), [localValue4.taskType_string]));
+            }
+            else
+            {
+                localValue2 = (localValue2 + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "SpecialistTaskNone"));
+            };
+            if (((argument1.GetTask()) && (argument1.GetTask().GetRemainingTime() > -1)))
+            {
+                localValue2 = (localValue2 + ((("\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "TimeRemaining")) + " ") + cLocaManager.GetInstance().FormatDuration(argument1.GetTask().GetRemainingTime())));
+            };
+            return (localValue2);
+        }
+
+        private function CreateSkilledToolTip(argument1:ToolTipEvent):void
+        {
+            if (this.skillBonus == 1)
+            {
+                this.CreateToolTip(argument1);
+            }
+            else
+            {
+                cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+            };
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            var localValue2:SpecialistTravelItemData;
+            var localValue4:Boolean;
+            super.data = argument1;
+            localValue2 = (argument1 as SpecialistTravelItemData);
+            var localValue3:cSpecialist = localValue2.specialist;
+            localValue4 = localValue2.usesCombatThree;
+            toolTip = SPECIALIST_TYPE.toString(localValue3.GetType());
+            this.specialistRenderer.SetUsesCombatThree(localValue4);
+            this.specialistRenderer.data = localValue3;
+            this.specialistType.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.SPECIALISTS, SPECIALIST_TYPE.toString(localValue3.GetType()));
+            this.currentMission.text = this.CreateDescription(localValue3);
+            this.cbCheckMark.visible = data.selected;
+            this.troopsLabel.text = ((localValue3.GetArmy().GetUnitsCount().toString() + " / ") + localValue3.GetMaxMilitaryUnits().toString());
+            this.canUse = ((localValue2.useElite) || (!(localValue3.GetArmy().HasEliteUnits())));
+            filters = [];
+            if (!this.canUse)
+            {
+                toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "CantUseEliteOnAdventure");
+                GUIDecorator.greyFilter(this);
+            };
+            this.checkForBonus(localValue3);
+            refreshRendererPresentation();
+        }
+
+        private function checkForBonus(argument1:cSpecialist):void
+        {
+            var localValue2:cSkill;
+            var localValue3:ModifierVO;
+            this.skillBonus = 1;
+            for each (localValue2 in argument1.skills.getItems_vector())
+            {
+                for each (localValue3 in localValue2.getDefinition().level_vector[(localValue2.getLevel() - 1)])
+                {
+                    if (localValue3.modifier_string == ZoneTravelSpeed.xml_string)
+                    {
+                        if (localValue3.value != 0)
+                        {
+                            this.skillBonus = localValue3.value;
+                        };
+                        this.skillBonus = ((this.skillBonus * localValue3.multiplier) + localValue3.adder);
+                    };
+                };
+            };
+            this.specialistRenderer.toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "TravelTimeSkillBonus", [(100 - (100 * this.skillBonus))]);
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            specialistRenderer.addEventListener("toolTipCreate", CreateSkilledToolTip);
+            backgroundImage.source = gAssetManager.GetClass("BackgroundSendSpecialistCombat3Standard");
+            configuredImage2.source = gAssetManager.GetClass("SwordsIconGeneral");
+            cbBackground.source = gAssetManager.GetClass("RadioButtonInactive");
+            cbCheckMark.source = gAssetManager.GetClass("CheckMarkYellow");
+            this.width = 0xFF;
+            this.height = 84;
+            this.addEventListener("toolTipCreate", this.CreateToolTip);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+                if (data != null)
+                {
+                    specialistType.setStyle("color", (data.selected === true) ? 0xFFEF00 : 0xFFFFFF);
+                }
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Image id="backgroundImage" width="0xFF" height="84" />
+    <mx:Canvas id="viewCanvas1" verticalScrollPolicy="off" horizontalScrollPolicy="off" left="10" right="5" top="3" bottom="2">
+        <mx:Canvas id="viewCanvas2" percentWidth="100" height="22">
+            <ui:CustomLabel id="specialistType"  horizontalCenter="20" verticalCenter="0" />
+        </mx:Canvas>
+        <ui:CustomText id="currentMission" selectable="false"  color="0xFFFFFF" textAlign="center" fontWeight="normal" left="56" right="20" bottom="2" top="24" />
+        <mx:HBox id="viewHBox1" horizontalAlign="center" left="56" right="20" top="53" verticalAlign="middle" horizontalGap="0">
+            <mx:Image id="configuredImage2" width="26" height="25" />
+            <ui:CustomLabel id="troopsLabel" text="0/0"  color="0xFFFFFF" />
+        </mx:HBox>
+        <mx:Image id="cbBackground" width="19" height="19"  right="4" top="24" />
+        <mx:Image id="cbCheckMark" width="20" height="20"  right="3" top="24" />
+    </mx:Canvas>
+    <local:StarMenuItemRenderer id="specialistRenderer"  left="10" top="7" />
+</mx:Canvas>

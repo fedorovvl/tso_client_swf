@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    mouseEnabled="false" mouseChildren="false"
+    styleName="toolTip">
+    <mx:Script><![CDATA[
+        import mx.events.FlexEvent;
+        import mx.core.ClassFactory;
+        import mx.collections.ArrayCollection;
+        import GUI.Components.CustomLabel;
+        import GUI.Components.ItemRenderer.RendererPoolBox;
+        import Communication.VO.dQuestElementVO;
+        import Communication.VO.dQuestDefinitionTriggerVO;
+        import Communication.VO.dQuestTriggerVO;
+        import Communication.VO.TriggerVO;
+        import Tasks.Task;
+        import Fulfilments.Trigger.FulfilmentTrigger;
+        import Trigger.Trigger;
+        import converted.bluebyte.tso.quests.logic.QuestManagerStatic;
+        import converted.bluebyte.tso.quests.trigger.QuestTriggerFactory;
+        import com.bluebyte.tso.quests.view.ui.itemrenderer.QuestTriggerTooltipItemRenderer;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+
+        private var _data:Object;
+        private var _text:String;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this._data = _arg_1;
+            if (this.headline)
+            {
+                this.SetData();
+            }
+            else
+            {
+                this.addEventListener(FlexEvent.CREATION_COMPLETE, this.SetData);
+            };
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this._text = _arg_1;
+        }
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        private function SetData(_arg_1:FlexEvent=null):void
+        {
+            this.removeEventListener(FlexEvent.CREATION_COMPLETE, this.SetData);
+            if ((this._data is dQuestElementVO))
+            {
+                this.SetDataQuest();
+            }
+            else
+            {
+                if ((this._data is Task))
+                {
+                    this.SetDataTask();
+                };
+            };
+        }
+
+        private function SetDataTask():void
+        {
+            var _local_1:Task;
+            var _local_3:int;
+            var _local_6:FulfilmentTrigger;
+            var _local_7:TriggerVO;
+            _local_1 = (this._data as Task);
+            this.headline.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.TASKS, _local_1.getDefinition().getName());
+            var _local_2:ArrayCollection = new ArrayCollection();
+            var _local_4:QuestTriggerTooltipItemRenderer;
+            var _local_5:Object;
+            for each (_local_6 in _local_1.getTriggers())
+            {
+                _local_7 = _local_6.getDefinition();
+                _local_5 = {
+                    "definition":_local_7,
+                    "total":global.ui.mQuestClientCallbacks.getNewTriggerTotal(_local_7),
+                    "remaining":(global.ui.mQuestClientCallbacks.getNewTriggerTotal(_local_7) - _local_6.getCurrentAmount()),
+                    "loca":global.ui.mQuestClientCallbacks.getNewTriggerText(_local_7),
+                    "isLegacyTrigger":false
+                };
+                _local_2.addItem(_local_5);
+            };
+            this.triggerList.dataProvider = _local_2;
+        }
+
+        private function SetDataQuest():void
+        {
+            var _local_3:int;
+            var _local_7:dQuestDefinitionTriggerVO;
+            var _local_8:dQuestTriggerVO;
+            var _local_9:int;
+            var _local_10:TriggerVO;
+            var _local_11:Trigger;
+            var _local_12:TriggerVO;
+            var _local_13:Trigger;
+            var _local_1:dQuestElementVO = (this._data as dQuestElementVO);
+            this.headline.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.QUEST_LABELS, _local_1.getQuestName_string());
+            var _local_2:ArrayCollection = new ArrayCollection();
+            var _local_4:QuestTriggerTooltipItemRenderer;
+            var _local_5:Object;
+            _local_3 = 0;
+            while (_local_3 < _local_1.mQuestDefinition.questTriggers_vector.length)
+            {
+                _local_7 = _local_1.mQuestDefinition.questTriggers_vector[_local_3];
+                if (_local_7.type != QuestManagerStatic.TYPE_NEW_QUEST_TRIGGER)
+                {
+                    _local_8 = _local_1.mQuestTriggersFinished_vector[_local_3];
+                    _local_9 = global.ui.mQuestClientCallbacks.GetTotalValuesForQuestTrigger(global.ui.mCurrentPlayer, _local_1, _local_3);
+                    _local_5 = {
+                        "definition":_local_7,
+                        "trigger":_local_8,
+                        "total":_local_9,
+                        "isLegacyTrigger":true
+                    };
+                    _local_2.addItem(_local_5);
+                };
+                _local_3++;
+            };
+            var _local_6:QuestTriggerFactory = new QuestTriggerFactory(global.ui, _local_1);
+            _local_3 = 0;
+            while (_local_3 < _local_1.mQuestDefinition.endConditions_vector.length)
+            {
+                _local_10 = _local_1.mQuestDefinition.endConditions_vector[_local_3];
+                _local_11 = _local_6.createTrigger(_local_10, null);
+                _local_11.check();
+                _local_5 = {
+                    "definition":_local_10,
+                    "total":global.ui.mQuestClientCallbacks.getNewTriggerTotal(_local_10),
+                    "remaining":global.ui.mQuestClientCallbacks.getNewTriggerRemaining(_local_11),
+                    "loca":global.ui.mQuestClientCallbacks.getNewTriggerText(_local_10, _local_11),
+                    "isLegacyTrigger":false
+                };
+                _local_11.dispose();
+                _local_2.addItem(_local_5);
+                _local_3++;
+            };
+            _local_3 = 0;
+            while (_local_3 < _local_1.mQuestDefinition.failConditions_vector.length)
+            {
+                _local_12 = _local_1.mQuestDefinition.failConditions_vector[_local_3];
+                _local_13 = _local_6.createTrigger(_local_12, null);
+                _local_13.check();
+                _local_5 = {
+                    "definition":_local_12,
+                    "total":global.ui.mQuestClientCallbacks.getNewTriggerTotal(_local_12),
+                    "remaining":global.ui.mQuestClientCallbacks.getNewTriggerRemaining(_local_13),
+                    "loca":global.ui.mQuestClientCallbacks.getNewTriggerText(_local_12, _local_13),
+                    "isLegacyTrigger":false
+                };
+                _local_13.dispose();
+                _local_2.addItem(_local_5);
+                _local_3++;
+            };
+            this.triggerList.dataProvider = _local_2;
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            var triggerFactory:ClassFactory = new ClassFactory(QuestTriggerTooltipItemRenderer);
+            triggerList.itemRenderer = triggerFactory;
+        }
+    ]]></mx:Script>
+    <gui:CustomLabel id="headline" top="5" left="5" right="5" fontWeight="bold" color="0xFFFFFF" textAlign="center" />
+    <mx:Canvas id="divider" left="5" right="5" top="25" height="1" backgroundColor="0xBBBBBB" />
+    <renderer:RendererPoolBox id="triggerList" left="5" right="5" bottom="5" top="28" direction="vertical" />
+</mx:Canvas>

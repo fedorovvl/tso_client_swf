@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<local:Combat3UnitBaseItemRenderer xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" width="127" height="129">
+    <mx:Script><![CDATA[
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import GUI.Assets.gAssetManager;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            mBackgroundSource = "BackgroundCombat3UnitAllocation";
+            mBackgroundSourceMouseOver = "BackgroundCombat3UnitAllocationMouseOver";
+            super.data = argument1;
+            if (data != null)
+            {
+                slash.visible = false;
+                slash.includeInLayout = false;
+                amountLabel.visible = false;
+                amountLabel.includeInLayout = false;
+                amountSlider.visible = true;
+                arrowSmall.visible = true;
+                btnRemove.visible = true;
+                resourceIcon.visible = true;
+                arrowSmall.visible = true;
+                amountCanvas.setStyle("top", 79);
+                costLabel.setStyle("paddingTop", 2);
+                costLabel.text = ((data.costAmount as int) * (data.current as int)).toString();
+                resourceIcon.source = gAssetManager.GetResourceIcon(data.costName, true);
+                invalidateDisplayList();
+            };
+            refreshRendererPresentation();
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundAlpha", 0);
+            this.width = 127;
+            this.height = 129;
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+
+</local:Combat3UnitBaseItemRenderer>

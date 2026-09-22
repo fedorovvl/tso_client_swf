@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    mouseChildren="false" mouseEnabled="false"
+    verticalScrollPolicy="off" horizontalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import mx.effects.Fade;
+        import mx.effects.Pause;
+        import mx.effects.Sequence;
+        import flash.filters.GlowFilter;
+
+        public var damageEffect:Sequence;
+
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+            refreshContent();
+            if (damageEffect && !damageEffect.isPlaying)
+            {
+                damageEffect.play([content]);
+            };
+        }
+
+        private function refreshContent():void
+        {
+            if (!content || !data)
+            {
+                return;
+            };
+            var amount:* = Math.round(data.amount);
+            content.text = ((amount == undefined) ? null : String(amount));
+            content.setStyle("fontSize", (data.hasBonus) ? 21 : 18);
+            content.setStyle("color", (data.hasBonus) ? 16746632 : 0xFFFFFF);
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            var glow:GlowFilter = new GlowFilter();
+            glow.alpha = 0.9;
+            glow.blurX = 2;
+            glow.blurY = 2;
+            glow.color = 0xFF0000;
+            glow.quality = 1;
+            glow.strength = 5;
+            content.filters = [glow];
+            var fade1:Fade = new Fade();
+            fade1.alphaFrom = 0;
+            fade1.alphaTo = 1;
+            fade1.duration = 200;
+            var pause:Pause = new Pause();
+            pause.duration = 800;
+            var fade2:Fade = new Fade();
+            fade2.alphaFrom = 1;
+            fade2.alphaTo = 0;
+            fade2.duration = 400;
+            var seq:Sequence = new Sequence();
+            seq.children = [fade1, pause, fade2];
+            damageEffect = seq;
+            refreshContent();
+        }
+    ]]></mx:Script>
+    <gui:CustomLabel id="content" minWidth="100"  fontWeight="bold" textAlign="center" />
+</mx:Canvas>

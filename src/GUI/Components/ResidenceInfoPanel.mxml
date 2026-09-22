@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderers="GUI.Components.ItemRenderer.*" width="321" height="363">
+    <mx:Script><![CDATA[
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(upgradeContainer);
+            LegacyMxmlContent.createChildren(capacityContainer);
+            updateBottom();
+            globalFlash.staticEventDispatcher.addEventListener("propertyChange", updateBottom, false, 0, true);
+            updateLabel();
+            cLocaManager.GetInstance().addEventListener("languageChanged", updateLabel, false, 0, true);
+        }
+
+        private function updateBottom(event:Event = null):void
+        {
+            setStyle("bottom", globalFlash.mainHudBottomPos);
+        }
+
+        private function updateLabel(event:Event = null):void
+        {
+            _ResidenceInfoPanel_CustomLabel1.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Capacity");
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <gui:BuildingWindowHeader id="buildingHeader" />
+            <mx:Canvas id="upgradeContainer" height="265" top="62" left="7">
+                <gui:BuildingUpgrade id="upgradeColumn" />
+            </mx:Canvas>
+            <mx:Canvas id="capacityContainer" width="139" top="62" right="7" bottom="5">
+                <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                    <gui:CustomLabel id="_ResidenceInfoPanel_CustomLabel1"  top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                </mx:Canvas>
+                <mx:Canvas id="capacityBox" styleName="detailsContentBox" left="1" right="1" top="18" bottom="0">
+                    <renderers:ResidenceDetailsItemRenderer id="population"  horizontalCenter="0" top="10" />
+                </mx:Canvas>
+            </mx:Canvas>
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

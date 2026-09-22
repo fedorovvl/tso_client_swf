@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="GUI.Components.IGUIList"
+    width="730" height="470">
+    <mx:Script><![CDATA[
+        import __AS3__.vec.Vector;
+        import Enums.LOCA_GROUP;
+        import flash.display.DisplayObject;
+        import flash.events.Event;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ItemRenderer.PvPColonyItemRenderer;
+        import GUI.Loca.cLocaManager;
+        import mx.core.ClassFactory;
+        import mx.events.EffectEvent;
+
+        private var _pricelistDataprovider:Object = null;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.cacheAsBitmap = true;
+            this.clipContent = false;
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            _PvPColoniesWindow_Image1.source = gAssetManager.GetClass("PanelOrnamentalTop");
+            _PvPColoniesWindow_Image2.source = gAssetManager.GetClass("ColonyWindowIcon");
+            coloniesList.itemRenderer = new ClassFactory(PvPColonyItemRenderer);
+            fadeOut.addEventListener("effectEnd", onFadeOut_effectEnd);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+            busyOverlay.addEventListener("show", updateBusy);
+            busyOverlay.addEventListener("hide", updateBusy);
+            updateBusy();
+        }
+
+        private function descriptionVisible(dataProvider:Object):Boolean
+        {
+            return (dataProvider != null && dataProvider.length > 0);
+        }
+
+        private function busyVisible(visible:Boolean):Boolean
+        {
+            return visible;
+        }
+
+        private function updateBusy(event:Event = null):void
+        {
+            _PvPColoniesWindow_SpriteLibAnimation1.visible = busyVisible(busyOverlay.visible);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var colonies:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Colonies");
+            headline.text = ((colonies == undefined) ? null : String(colonies));
+            var description:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, "PvPColoniesListDescription");
+            _PvPColoniesWindow_CustomText1.text = ((description == undefined) ? null : String(description));
+            var start:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "StartConquering");
+            btnStartConquering.label = ((start == undefined) ? null : String(start));
+            var discard:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "DiscardAllTargets");
+            btnDiscardAll.label = ((discard == undefined) ? null : String(discard));
+        }
+
+        public function onFadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+
+        public function getAllItems(_arg_1:String):Vector.<DisplayObject>
+        {
+            return null;
+        }
+
+        public function getFirstItem(_arg_1:String):DisplayObject
+        {
+            return null;
+        }
+
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+        }
+    ]]></mx:Script>
+
+    <mx:states>
+        <mx:State id="collapsedState" name="collapsed">
+            <mx:SetProperty name="height" value="595" />
+        </mx:State>
+        <mx:State id="defaultState" name="default" />
+    </mx:states>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <mx:Canvas id="background" styleName="basicPanel" top="5" left="5" right="9" bottom="0" />
+    <mx:Image id="_PvPColoniesWindow_Image1" horizontalCenter="0" top="-50" />
+    <mx:Image id="_PvPColoniesWindow_Image2" horizontalCenter="0" top="-40" />
+    <gui:CustomLabel id="headline" left="46" right="46" top="15" fontWeight="bold" textAlign="center" color="0xFFFFFF" />
+    <mx:Canvas id="mainBg" styleName="detailsHeader" left="14" right="16" top="33" bottom="4" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+        <mx:Canvas id="pvpColonies" left="33" right="33" top="15" bottom="71" horizontalCenter="0" backgroundAlpha="1">
+            <mx:Canvas styleName="detailsSubHeader" left="5" right="5" height="36" horizontalScrollPolicy="off" verticalScrollPolicy="off" backgroundColor="4472366">
+                <gui:CustomText id="_PvPColoniesWindow_CustomText1" percentWidth="100" top="1" horizontalCenter="0" fontWeight="bold" color="0xFFFFFF" visible="{descriptionVisible(coloniesList.dataProvider)}" />
+            </mx:Canvas>
+            <mx:Canvas id="listBackground" left="8" right="8" top="20" bottom="5" horizontalCenter="0" backgroundAlpha="0" borderThickness="0" horizontalScrollPolicy="off" verticalScrollPolicy="auto">
+                <gui:CustomTileList id="coloniesList" percentWidth="100" percentHeight="100" top="16" horizontalCenter="0" useRollOver="false" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0" backgroundAlpha="0" borderThickness="0" selectable="false" rowHeight="100" columnWidth="205" />
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas id="busyOverlay" styleName="detailsContentBox" left="0" right="0" top="0" bottom="0" visible="false">
+            <gui:SpriteLibAnimation id="_PvPColoniesWindow_SpriteLibAnimation1" animationName="guianim_hourglass" loop="true" width="48" height="48" horizontalCenter="0" verticalCenter="0" />
+        </mx:Canvas>
+        <gui:StandardButton id="btnStartConquering" left="45" bottom="25" width="220" height="39" enabled="false" visible="false" />
+        <gui:StandardButton id="btnDiscardAll" right="45" bottom="25" width="220" height="39" enabled="false" visible="false" />
+    </mx:Canvas>
+</mx:Canvas>

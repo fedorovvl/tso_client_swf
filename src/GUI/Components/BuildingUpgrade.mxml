@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*" xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="155">
+    <mx:Script><![CDATA[
+        import BuffSystem.cBuffDefinition;
+        import Communication.VO.ConditionVO;
+        import Communication.VO.dBuyOneClickShopItemVO;
+        import Enums.COMMAND;
+        import Enums.LOCA_GROUP;
+        import Enums.ONE_CLICK_SHOPITEM;
+        import flash.display.DisplayObject;
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import GO.cBuilding;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Effects.gHintManager;
+        import GUI.GAME.cBasicInfoPanel;
+        import GUI.Loca.cLocaManager;
+        import Interface.cGameInterface;
+        import mx.controls.Alert;
+        import mx.core.ClassFactory;
+        import mx.events.CloseEvent;
+        import mx.events.ToolTipEvent;
+        import nLib.gMisc;
+        import ServerState.cResourceCreation;
+        import ServerState.cResources;
+        import ServerState.dResource;
+        import ServerState.dResourceCreationDefinition;
+        import __AS3__.vec.Vector;
+
+        protected var mBuilding:cBuilding;
+        protected var mDisplayPanel:DisplayObject = null;
+        protected var mPanel:cBasicInfoPanel;
+        private var mGI:cGameInterface;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.percentHeight = 100;
+            var costsFactory:ClassFactory = new ClassFactory(BuildingUpgrade_inlineComponent1);
+            costsFactory.properties = {outerDocument: this};
+            costsList.itemRenderer = costsFactory;
+            btnUpgrade.addEventListener(ToolTipEvent.TOOL_TIP_CREATE, __btnUpgrade_toolTipCreate);
+            btnLink.addEventListener(ToolTipEvent.TOOL_TIP_CREATE, __btnLink_toolTipCreate);
+            btnInstantUpgrade.addEventListener(ToolTipEvent.TOOL_TIP_CREATE, __btnInstantUpgrade_toolTipCreate);
+            costText.addEventListener("show", syncCostLayout);
+            costText.addEventListener("hide", syncCostLayout);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function syncCostLayout(event:Event = null):void
+        {
+            costText.includeInLayout = costText.visible;
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var label:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Upgrade");
+            _BuildingUpgrade_CustomLabel1.text = ((label == undefined) ? null : String(label));
+            label = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Check");
+            checkText.text = ((label == undefined) ? null : String(label));
+            label = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Costs");
+            costText.text = ((label == undefined) ? null : String(label));
+            label = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Instant");
+            instantTime.text = ((label == undefined) ? null : String(label));
+            label = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Costs");
+            instantCostText.text = ((label == undefined) ? null : String(label));
+            costText.includeInLayout = costText.visible;
+        }
+
+        public function SetData(_arg_1:cBuilding, _arg_2:cBasicInfoPanel, _arg_3:DisplayObject):void
+        {
+            var _local_4:ConditionVO;
+            var _local_5:Number;
+            var _local_7:String;
+            var _local_8:String;
+            var _local_9:String;
+            var _local_10:cBuffDefinition;
+            var _local_11:cBuffDefinition;
+            var _local_12:Number;
+            var _local_13:Number;
+            var _local_14:cResourceCreation;
+            var _local_15:dResourceCreationDefinition;
+            var _local_16:String;
+            var _local_17:dResource;
+            var _local_18:Number;
+            var _local_19:String;
+            var _local_20:cBuffDefinition;
+            this.mBuilding = _arg_1;
+            this.mGI = (global.ui as cGameInterface);
+            this.mPanel = _arg_2;
+            this.mDisplayPanel = _arg_3;
+            this.levelDescription.visible = true;
+            if (_arg_1.GetUpgradeDuration() > 0)
+            {
+                _local_7 = "NewUpgrade";
+                _local_8 = "";
+                _local_9 = "";
+                _local_10 = this.mBuilding.GetUpgradeLevelBonusesForLevel(this.mBuilding.GetUpgradeLevel());
+                _local_11 = this.mBuilding.GetUpgradeLevelBonusesForLevel((this.mBuilding.GetUpgradeLevel() + 1));
+                if (this.mBuilding.ui == "timedproduction")
+                {
+                    _local_7 = (_local_7 + this.mBuilding.GetBuildingName_string());
+                    _local_8 = Math.round((((_local_11.getRecruitingTime() - _local_10.getRecruitingTime()) * 100) / _local_10.getRecruitingTime())).toString();
+                }
+                else
+                {
+                    if (this.mBuilding.ui == "achievementWarehouse")
+                    {
+                        _local_7 = (_local_7 + "AchievementWarehouse");
+                        _local_8 = (_local_11.getGoodsCapacity() - _local_10.getGoodsCapacity()).toString();
+                    }
+                    else
+                    {
+                        if (((this.mBuilding.ui == "genericLink") || (this.mBuilding.ui == "residence")))
+                        {
+                            _local_7 = (_local_7 + "Residence");
+                            _local_8 = (_local_11.getGoodsCapacity() - _local_10.getGoodsCapacity()).toString();
+                        }
+                        else
+                        {
+                            if (this.mBuilding.GetBuildingName_string() == "Tavern")
+                            {
+                                _local_7 = (_local_7 + "Tavern");
+                            }
+                            else
+                            {
+                                if ((((((this.mBuilding.GetBuildingName_string() == "Warehouse") || (this.mBuilding.GetBuildingName_string() == "Mayorhouse")) || (this.mBuilding.GetBuildingName_string() == "ImprovedWarehouse")) || (this.mBuilding.GetBuildingName_string() == defines.SPECIAL_WAREHOUSES_NAME_string)) || (this.mBuilding.GetBuildingName_string() == "StorageTower")))
+                                {
+                                    _local_7 = (_local_7 + "Warehouse");
+                                    _local_8 = (_local_11.getGoodsCapacity() - _local_10.getGoodsCapacity()).toString();
+                                }
+                                else
+                                {
+                                    _local_7 = (_local_7 + "Workyard");
+                                    _local_12 = ((_local_11.getProductivityInputPercent() - _local_10.getProductivityInputPercent()) / 100);
+                                    _local_13 = ((_local_11.getProductivityOutputPercent() - _local_10.getProductivityOutputPercent()) / 100);
+                                    _local_14 = this.mBuilding.GetResourceCreation();
+                                    if (_local_14 != null)
+                                    {
+                                        _local_15 = _local_14.GetResourceCreationDefinition();
+                                        if (_local_15 != null)
+                                        {
+                                            if (((!(_local_15.externalResource_string == "")) && (_local_15.amountRemoved >= 0)))
+                                            {
+                                                _local_7 = (_local_7 + "Deposit");
+                                                _local_8 = ((Math.round((((_local_15.amountRemoved == 0) ? 1 : _local_15.amountRemoved) * _local_13)).toString() + " ") + cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, _local_15.defaultSetting.resourceName_string));
+                                            }
+                                            else
+                                            {
+                                                _local_16 = "";
+                                                for each (_local_17 in _local_15.necessaryResources_vector)
+                                                {
+                                                    _local_18 = Math.round((_local_17.amount * _local_12));
+                                                    if (_local_18 > 0)
+                                                    {
+                                                        if (_local_16 != "")
+                                                        {
+                                                            _local_16 = (_local_16 + ", ");
+                                                        };
+                                                        _local_16 = (_local_16 + ((_local_18.toString() + " ") + cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, _local_17.name_string)));
+                                                    };
+                                                };
+                                                _local_8 = (Math.round((Math.abs(_local_15.amountRemoved) * _local_13)).toString() + " ");
+                                                if (_local_15.amountRemoved >= 0)
+                                                {
+                                                    _local_8 = (_local_8 + cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, _local_15.defaultSetting.resourceName_string));
+                                                }
+                                                else
+                                                {
+                                                    _local_8 = (_local_8 + cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, _local_15.externalResourceDeposit_string));
+                                                };
+                                                if (_local_16 != "")
+                                                {
+                                                    _local_7 = (_local_7 + "Input");
+                                                    _local_9 = _local_8;
+                                                    _local_8 = _local_16;
+                                                }
+                                                else
+                                                {
+                                                    _local_7 = (_local_7 + "NoInput");
+                                                };
+                                            };
+                                        };
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+                this.levelDescription.visible = ((!(_arg_1.IsProductionLevelTooLow())) && (!(this.mBuilding.GetBuildingName_string() == defines.PVPPROGRESSIONHOUSE_NAME_string)));
+                if (this.levelDescription.visible)
+                {
+                    _local_19 = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, _local_7, [_local_8, _local_9]);
+                    this.btnUpgrade.toolTip = _local_19;
+                    this.btnInstantUpgrade.toolTip = _local_19;
+                    this.levelDescription.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, ("Level" + _local_7));
+                }
+                else
+                {
+                    this.btnUpgrade.toolTip = "";
+                    this.btnInstantUpgrade.toolTip = "";
+                };
+            }
+            else
+            {
+                _local_19 = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, "NotPossible");
+                this.btnUpgrade.toolTip = _local_19;
+                this.btnInstantUpgrade.toolTip = _local_19;
+                this.levelDescription.text = _local_19;
+            };
+            this.btnUpgrade.enabled = _arg_1.IsUpgradeAllowed(true);
+            this.btnInstantUpgrade.enabled = _arg_1.IsInstantUpgradeAllowed(true);
+            if (_arg_1.IsInstantUpgradeEnabled())
+            {
+                this.upgradeCanvas.width = 75;
+                this.instantUpgradeCanvas.visible = true;
+                this.instantUpgradeCanvas.includeInLayout = true;
+                this.requirementsText.includeInLayout = false;
+                this.linkCanvas.visible = false;
+                this.linkCanvas.includeInLayout = false;
+                this.btnUpgrade.visible = true;
+            }
+            else
+            {
+                if (((this.mBuilding.ui == "achievementWarehouse") || (this.mBuilding.ui == "achievementWorkyard")))
+                {
+                    this.linkCanvas.visible = true;
+                    this.linkCanvas.includeInLayout = true;
+                    if (!((this.mBuilding.IsSpecialUpgradeAvailable()) && (!(this.mBuilding.IsUpgradeInProgress()))))
+                    {
+                        this.btnUpgrade.visible = false;
+                        this.upgradeTime.visible = false;
+                    }
+                    else
+                    {
+                        this.btnUpgrade.visible = true;
+                        this.upgradeTime.visible = true;
+                        this.linkCanvas.visible = false;
+                    };
+                }
+                else
+                {
+                    this.linkCanvas.visible = false;
+                    this.linkCanvas.includeInLayout = false;
+                    this.btnUpgrade.visible = true;
+                    this.upgradeTime.visible = true;
+                };
+                this.upgradeCanvas.width = 153;
+                this.instantUpgradeCanvas.visible = false;
+                this.instantUpgradeCanvas.includeInLayout = false;
+                this.requirementsText.includeInLayout = true;
+                this.invalidateDisplayList();
+            };
+            this.requirementsText.text = "";
+            this.requirementsText.includeInLayout = false;
+            for each (_local_4 in this.mBuilding.mGeneralInterface.mConditionManager.getConditionsForBuilding(this.mBuilding))
+            {
+                if (!_local_4.completed)
+                {
+                    this.requirementsText.text = this.mGI.mQuestClientCallbacks.getNewTriggerText(_local_4.trigger);
+                    this.upgradeCanvas.width--;
+                    this.requirementsText.includeInLayout = true;
+                };
+            };
+            _local_5 = 0;
+            if (this.mBuilding.IsUpgradeInProgress())
+            {
+                _local_20 = this.mBuilding.GetUpgradeLevelBonusesForLevel((this.mBuilding.GetUpgradeLevel() + 1));
+                if (_local_20 != null)
+                {
+                    _local_5 = (_local_20.GetProductionTime() - (this.mGI.GetClientTime() - this.mBuilding.GetUpgradeStartTime()));
+                };
+            };
+            this.levelLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Level", [_arg_1.GetUIUpgradeLevel().toString()]);
+            this.upgradeTime.text = cLocaManager.GetInstance().FormatDuration(_arg_1.GetUpgradeDuration(), cLocaManager.DURATION_FORMAT_SHORT);
+            this.upgradeTime.visible = this.btnUpgrade.visible;
+            var _local_6:Vector.<dResource> = _arg_1.GetUpgradeCosts_vector();
+            this.costText.visible = ((!(_local_6 == null)) && (_local_6.length > 0));
+            this.costsList.dataProvider = _local_6;
+            this.costsList.includeInLayout = this.costText.visible;
+            if (((this.costText.includeInLayout) || (this.costsList.includeInLayout)))
+            {
+                this.requirementsBox.setStyle("verticalAlign", "top");
+            }
+            else
+            {
+                this.requirementsBox.setStyle("verticalAlign", "middle");
+            };
+            if (_arg_1.GetUpgradeInstantCosts() != 0)
+            {
+                this.gemRederer.data = gMisc.GetGemResourceData(_arg_1.GetUpgradeInstantCosts());
+                this.gemRederer.visible = true;
+                this.instantCostText.visible = true;
+                this.instantTime.visible = true;
+            }
+            else
+            {
+                this.instantCostText.visible = false;
+                this.instantTime.visible = false;
+                this.gemRederer.visible = false;
+            };
+            this.btnUpgrade.addEventListener(MouseEvent.CLICK, this.UpgradeBuilding);
+            this.btnInstantUpgrade.addEventListener(MouseEvent.CLICK, this.InstantUpgradeBuilding);
+            this.btnLink.addEventListener(MouseEvent.CLICK, this.goToLink);
+        }
+
+        public function __btnUpgrade_toolTipCreate(_arg_1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.UPGRADE_BUILDING_string, _arg_1, "Upgrade");
+        }
+
+        public function __btnLink_toolTipCreate(_arg_1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.UPGRADE_BUILDING_string, _arg_1, "Upgrade");
+        }
+
+        public function __btnInstantUpgrade_toolTipCreate(_arg_1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.UPGRADE_BUILDING_string, _arg_1, "InstantUpgrade");
+        }
+
+        private function goToLink(_arg_1:Event):void
+        {
+            globalFlash.gui.OpenWindow(this.mBuilding.GetInfoPanelShortcut(), this.mBuilding.GetInfoPanelShortcutItem());
+        }
+
+        private function UpgradeBuilding(_arg_1:Event):void
+        {
+            if (!this.mBuilding.isSpecialUpgradeBuilding())
+            {
+                CustomAlert.show("UpgradeBuilding", "UpgradeBuilding", (Alert.OK | Alert.CANCEL), null, this.UpgradeBuildingHandler, null, Alert.OK, true, CustomAlert.STYLE_DEFAULT, this.mBuilding.GetUpgradeCosts_vector());
+            }
+            else
+            {
+                this.mBuilding.SetIsUpgradeInitiated(true);
+                this.mGI.mCurrentPlayerZone.UpgradeBuildingOnGridPosition(this.mBuilding.GetGrid());
+                if (this.mDisplayPanel != null)
+                {
+                    gHintManager.HideHintsForParent(this.mDisplayPanel, false);
+                };
+                this.mPanel.Hide();
+            };
+        }
+
+        private function UpgradeBuildingHandler(_arg_1:CloseEvent):void
+        {
+            if (_arg_1.detail != Alert.OK)
+            {
+                return;
+            };
+            if (this.mGI.mCurrentPlayerZone.UpgradeBuildingOnGridPosition(this.mBuilding.GetGrid()))
+            {
+                this.mBuilding.SetIsUpgradeInitiated(true);
+            };
+            if (this.mDisplayPanel != null)
+            {
+                gHintManager.HideHintsForParent(this.mDisplayPanel, false);
+            };
+            this.mPanel.Hide();
+        }
+
+        private function InstantUpgradeBuilding(_arg_1:Event):void
+        {
+            CustomAlert.show("InstantUpgradeBuilding", "InstantUpgradeBuilding", (Alert.OK | Alert.CANCEL), null, this.InstantUpgradeBuildingHandler, null, Alert.OK, true, CustomAlert.STYLE_DEFAULT, [gMisc.GetGemResourceData(this.mBuilding.GetUpgradeInstantCosts())]);
+        }
+
+        private function InstantUpgradeBuildingHandler(_arg_1:CloseEvent):void
+        {
+            if (_arg_1.detail != Alert.OK)
+            {
+                return;
+            };
+            this.mBuilding.SetIsUpgradeInitiatedWithGem(true);
+            var _local_2:cResources = this.mGI.mCurrentPlayerZone.GetResources(this.mGI.mCurrentPlayer);
+            if (_local_2.HasPlayerResource(defines.HARD_CURRENCY_RESOURCE_NAME_string, this.mBuilding.GetUpgradeInstantCosts()))
+            {
+                global.ui.mClientMessages.SendMessagetoServer(COMMAND.BUY_ONE_CLICK_SHOP_ITEM, this.mGI.mCurrentViewedZoneID, new dBuyOneClickShopItemVO().InitWithBuildingGrid(ONE_CLICK_SHOPITEM.INSTANT_BUILDING_UPGRADE, this.mBuilding.GetGrid()));
+            }
+            else
+            {
+                CustomAlert.show("MissingHardCurrency", "", (Alert.OK | Alert.CANCEL), null, this.AddHardCurrencyHandler, null, Alert.OK, true, CustomAlert.STYLE_PAYMENT);
+            };
+            if (this.mDisplayPanel != null)
+            {
+                gHintManager.HideHintsForParent(this.mDisplayPanel, false);
+            };
+            this.mPanel.Hide();
+        }
+
+        private function AddHardCurrencyHandler(_arg_1:CloseEvent):void
+        {
+            if (_arg_1.detail == Alert.OK)
+            {
+                globalFlash.gui.mShopWindow.AddHardCurrency(null);
+            };
+        }
+    ]]></mx:Script>
+    <mx:Canvas percentWidth="100" percentHeight="100" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+        <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+            <gui:CustomLabel id="_BuildingUpgrade_CustomLabel1" top="1" horizontalCenter="0" fontWeight="bold" />
+        </mx:Canvas>
+        <mx:Canvas styleName="detailsContentBox" height="97" left="1" right="1" top="18">
+            <gui:CustomLabel id="levelLabel" top="12" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+            <gui:CustomText id="levelDescription" left="15" right="15" top="30" bottom="5" color="0xFFFFFF" textAlign="center" fontWeight="normal" selectable="false" />
+        </mx:Canvas>
+        <mx:Canvas id="upgradeCanvas" styleName="detailsContentBox" width="75" left="1" top="115" bottom="0" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+            <mx:Canvas styleName="generalButtonBg" percentWidth="100" height="62" horizontalScrollPolicy="off" verticalScrollPolicy="off" horizontalCenter="0">
+                <mx:VBox top="5" verticalGap="-2" horizontalCenter="0" horizontalAlign="center">
+                    <gui:StandardButton id="btnUpgrade" playSound="false" enabled="false" width="67" height="39" icon="{gAssetManager.GetClass('ButtonIconUpgrade')}" />
+                    <gui:CustomLabel id="upgradeTime" width="75" textAlign="center" fontWeight="normal" />
+                </mx:VBox>
+                <mx:VBox id="linkCanvas" top="5" horizontalCenter="0" verticalGap="-2" horizontalAlign="center">
+                    <gui:StandardButton id="btnLink" playSound="false" width="67" height="39" icon="{gAssetManager.GetClass('StripedEgg')}" />
+                    <gui:CustomLabel id="checkText" width="75" textAlign="center" fontWeight="normal" />
+                </mx:VBox>
+            </mx:Canvas>
+            <mx:VBox id="requirementsBox" top="63" bottom="0" left="0" right="0" verticalGap="0" horizontalAlign="center" verticalAlign="top">
+                <gui:CustomLabel id="costText" fontWeight="bold" />
+                <gui:CustomText id="requirementsText" width="75" wordWrap="true" selectable="false" textAlign="center" fontWeight="normal" />
+                <renderer:RendererPoolBox id="costsList" direction="vertical" horizontalCenter="0" />
+            </mx:VBox>
+        </mx:Canvas>
+        <mx:Canvas id="instantUpgradeCanvas" styleName="detailsContentBox" width="75" right="1" top="115" bottom="0" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+            <mx:Canvas styleName="generalButtonBg" percentWidth="100" height="62" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+                <gui:StandardButton id="btnInstantUpgrade" playSound="false" enabled="false" height="39" focusEnabled="false" top="5" right="3" left="3" icon="{gAssetManager.GetClass('ButtonIconUpgradeGems')}" />
+                <gui:CustomLabel id="instantTime" width="75" horizontalCenter="0" bottom="2" textAlign="center" fontWeight="normal" />
+            </mx:Canvas>
+            <gui:CustomLabel id="instantCostText" horizontalCenter="0" top="63" fontWeight="bold" />
+            <renderer:ResourceItemRenderer id="gemRederer" top="80" horizontalCenter="0" />
+        </mx:Canvas>
+    </mx:Canvas>
+</mx:Canvas>

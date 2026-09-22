@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml">
+    <mx:Script><![CDATA[
+        import flash.events.MouseEvent;
+        import mx.containers.Canvas;
+        import mx.containers.HBox;
+        import mx.events.FlexEvent;
+        import GUI.event.VolumeBarClickEvent;
+
+        public static const VOLUME_BAR_CLICK:String = "volumeBarClick";
+
+        override public function set data(value:Object):void
+        {
+            if ((value is int))
+            {
+                super.data = value;
+                setBarState((data as int));
+            }
+            else
+            {
+                throw (new Error("incorrect data type passed to volume control, expected int"));
+            };
+        }
+
+        private function setBarState(level:int):void
+        {
+            var bar:Canvas;
+            var index:int;
+            for each (bar in barContainer.getChildren())
+            {
+                if (index < level)
+                {
+                    bar.setStyle("styleName", "volumeBar");
+                }
+                else
+                {
+                    bar.setStyle("styleName", "volumeBarDisabled");
+                };
+                index++;
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            addEventListener("creationComplete", onCreationComplete);
+        }
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            canvas1_creationCompleteHandler(event);
+        }
+
+        protected function canvas1_creationCompleteHandler(event:FlexEvent):void
+        {
+            vol1.addEventListener(MouseEvent.CLICK, volume1ClickHandler);
+            vol2.addEventListener(MouseEvent.CLICK, volume2ClickHandler);
+            vol3.addEventListener(MouseEvent.CLICK, volume3ClickHandler);
+            vol4.addEventListener(MouseEvent.CLICK, volume4ClickHandler);
+            vol5.addEventListener(MouseEvent.CLICK, volume5ClickHandler);
+            vol6.addEventListener(MouseEvent.CLICK, volume6ClickHandler);
+        }
+
+        protected function volume1ClickHandler(event:MouseEvent):void
+        {
+            dispatchEvent(new VolumeBarClickEvent(VolumeBarClickEvent.VOLUME_BAR_CLICK, true, true, 1));
+        }
+
+        protected function volume2ClickHandler(event:MouseEvent):void
+        {
+            dispatchEvent(new VolumeBarClickEvent(VolumeBarClickEvent.VOLUME_BAR_CLICK, true, true, 2));
+        }
+
+        protected function volume3ClickHandler(event:MouseEvent):void
+        {
+            dispatchEvent(new VolumeBarClickEvent(VolumeBarClickEvent.VOLUME_BAR_CLICK, true, true, 3));
+        }
+
+        protected function volume4ClickHandler(event:MouseEvent):void
+        {
+            dispatchEvent(new VolumeBarClickEvent(VolumeBarClickEvent.VOLUME_BAR_CLICK, true, true, 4));
+        }
+
+        protected function volume5ClickHandler(event:MouseEvent):void
+        {
+            dispatchEvent(new VolumeBarClickEvent(VolumeBarClickEvent.VOLUME_BAR_CLICK, true, true, 5));
+        }
+
+        protected function volume6ClickHandler(event:MouseEvent):void
+        {
+            dispatchEvent(new VolumeBarClickEvent(VolumeBarClickEvent.VOLUME_BAR_CLICK, true, true, 6));
+        }
+    ]]></mx:Script>
+
+    <mx:HBox id="barContainer" verticalAlign="bottom" horizontalGap="0">
+        <mx:Canvas id="vol1" width="8" height="8" />
+        <mx:Canvas id="vol2" width="8" height="12" />
+        <mx:Canvas id="vol3" width="8" height="16" />
+        <mx:Canvas id="vol4" width="8" height="20" />
+        <mx:Canvas id="vol5" width="8" height="24" />
+        <mx:Canvas id="vol6" width="8" height="28" />
+    </mx:HBox>
+</mx:Canvas>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<local:Combat3ArmyToolTipRenderer xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" width="56" height="77">
+    <mx:Script><![CDATA[
+        import mx.core.mx_internal;
+        import mx.events.FlexEvent;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        protected function combat3armytooltiprenderer1_creationCompleteHandler(argument1:FlexEvent):void
+        {
+            unitTypeIcon.visible = false;
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+
+            this.width = 56;
+            this.height = 77;
+            this.addEventListener("creationComplete", this.combat3armytooltiprenderer1_creationCompleteHandler);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+
+</local:Combat3ArmyToolTipRenderer>

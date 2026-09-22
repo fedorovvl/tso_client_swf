@@ -1,0 +1,308 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="56" height="77">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Image;
+        import mx.containers.Box;
+        import mx.collections.ArrayCollection;
+        import GUI.Components.CustomLabel;
+        import mx.core.mx_internal;
+        import mx.events.PropertyChangeEvent;
+        import GUI.Components.data.dCombatUnitData;
+        import GUI.Assets.gAssetManager;
+        import flash.events.MouseEvent;
+        import mx.events.ToolTipEvent;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import flash.filters.GlowFilter;
+        import MilitarySystem.cMilitaryUnitBase;
+        import __AS3__.vec.Vector;
+        import Modifier.ModifierVO;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import MilitarySystem.cMilitaryUnitDescription;
+        import GUI.Components.ToolTips.MilitaryUnitSkillTipData;
+        import MilitarySystem.cMilitaryUnitData;
+        import Enums.MILITARY_UNIT_ARMORTYPE;
+        import GUI.greyFilter;
+        import GUI.event.Combat3StartAttackEvent;
+        import mx.events.FlexEvent;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private var dataProvider:ArrayCollection;
+
+        private var _selected:Boolean = false;
+
+        protected function hover_mouseOutHandler(argument1:MouseEvent):void
+        {
+            if (((data is dCombatUnitData) && (data.isSelectable)))
+            {
+                if (data.isFirstUnit)
+                {
+                    this.backGround.source = gAssetManager.GetClass("FrameEnemyToolTipFirst");
+                }
+                else
+                {
+                    this.backGround.source = gAssetManager.GetClass("FrameEnemyToolTip");
+                };
+            }
+            else
+            {
+                if (((data is dCombatUnitData) && (!(data.isAttackable))))
+                {
+                    this.backGround.source = gAssetManager.GetClass("FrameInvincibleUnitStandard");
+                }
+                else
+                {
+                    this.backGround.source = gAssetManager.GetClass("FrameExpeditionUnitStandard");
+                };
+            };
+        }
+
+        public function get selected():Boolean
+        {
+            return (this._selected);
+        }
+
+        public function set selected(argument1:Boolean):void
+        {
+            this.unitIcon.filters = ((argument1) ? [new GlowFilter(16777130)] : []);
+            this._selected = argument1;
+        }
+
+        protected function hover_mouseOverHandler(argument1:MouseEvent):void
+        {
+            if (((data is dCombatUnitData) && (data.isSelectable)))
+            {
+                this.backGround.source = gAssetManager.GetClass("FrameExpeditionUnitMouseOver");
+            };
+        }
+
+        private function CreateTooltip(argument1:ToolTipEvent):void
+        {
+            var localValue2:cMilitaryUnitBase;
+            var localValue3:Object;
+            var localValue4:Vector.<ModifierVO>;
+            var localValue5:ArrayCollection;
+            var localValue6:ModifierVO;
+            if (((data is dCombatUnitData) && ((data as dCombatUnitData).isBuilding)))
+            {
+                cToolTipUtil.createToolTip(cToolTipUtil.BUILDINGHITPOINTS_string, argument1, data);
+            }
+            else
+            {
+                localValue2 = cMilitaryUnitBase.GetUnitBaseForType(data.name_string);
+                if (localValue2 != null)
+                {
+                    if ((localValue2 is cMilitaryUnitDescription))
+                    {
+                        localValue3 = (data as dCombatUnitData).specialist;
+                        if (((localValue3 == null) && (data.isNPC)))
+                        {
+                            localValue4 = global.ui.mZoneBuffManager.getActiveCombatModifiers_vector();
+                            localValue5 = new ArrayCollection();
+                            for each (localValue6 in localValue4)
+                            {
+                                localValue5.addItem(localValue6);
+                            };
+                            localValue3 = new MilitaryUnitSkillTipData(localValue5, new ArrayCollection());
+                        };
+                        cToolTipUtil.createToolTip(cToolTipUtil.MILITARY_UNIT_SKILL_string, argument1, localValue3);
+                    }
+                    else
+                    {
+                        if ((localValue2 is cMilitaryUnitData))
+                        {
+                            cToolTipUtil.createToolTip(cToolTipUtil.MILITARY_UNIT_VERBOSE_string, argument1, data.isFirstUnit);
+                        };
+                    };
+                };
+            };
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            var localValue2:dCombatUnitData = (argument1 as dCombatUnitData);
+            if (((!(localValue2 == null)) && (!(localValue2.isEmpty))))
+            {
+                this.hover.toolTip = data.name_string;
+                if (localValue2.armorType >= 0)
+                {
+                    this.unitTypeIcon.visible = true;
+                    switch (localValue2.armorType)
+                    {
+                        case MILITARY_UNIT_ARMORTYPE.LIGHT:
+                        this.unitTypeIcon.source = gAssetManager.GetClass("IconCombat3BonusMelee");
+                        break;
+                        case MILITARY_UNIT_ARMORTYPE.MEDIUM:
+                        this.unitTypeIcon.source = gAssetManager.GetClass("IconCombat3BonusRanged");
+                        break;
+                        case MILITARY_UNIT_ARMORTYPE.HEAVY:
+                        this.unitTypeIcon.source = gAssetManager.GetClass("IconCombat3BonusCavalry");
+                        break;
+                        case MILITARY_UNIT_ARMORTYPE.TANK:
+                        this.unitTypeIcon.source = gAssetManager.GetClass("IconCombat3BonusTank");
+                        break;
+                    };
+                }
+                else
+                {
+                    this.unitTypeIcon.visible = false;
+                };
+                if (data.hasACBonus)
+                {
+                    this.bonusIcon.visible = true;
+                    this.amountLabel.setStyle("horizontalCenter", 6);
+                }
+                else
+                {
+                    this.bonusIcon.visible = false;
+                    this.amountLabel.setStyle("horizontalCenter", 0);
+                };
+                this.hover_mouseOutHandler(null);
+                if (localValue2.isBuilding)
+                {
+                    this.unitIcon.source = gAssetManager.GetBuildingIcon(data.name_string);
+                }
+                else
+                {
+                    this.unitIcon.source = gAssetManager.GetMilitaryIcon(data.name_string);
+                };
+                this.unitIcon.visible = true;
+                if (data.current > 0)
+                {
+                    this.amountLabel.text = data.current;
+                    this.amountLabel.setStyle("color", "#FFFFFF");
+                    this.amountLabel.visible = true;
+                }
+                else
+                {
+                    this.amountLabel.visible = false;
+                };
+            }
+            else
+            {
+                this.unitIcon.visible = false;
+                this.unitTypeIcon.visible = false;
+                this.amountLabel.visible = false;
+                this.visible = true;
+            };
+            refreshRendererPresentation();
+        }
+
+        public function set greyOut(argument1:Boolean):void
+        {
+            this.unitIcon.filters = ((argument1) ? [greyFilter()] : []);
+        }
+
+        protected function mouseClickHandler(argument1:MouseEvent):void
+        {
+            var localValue2:Combat3StartAttackEvent = new Combat3StartAttackEvent(Combat3StartAttackEvent.INITIATE_COMBAT, data.name_string);
+            dispatchEvent(localValue2);
+        }
+
+        protected function creationCompleteHandler(argument1:FlexEvent):void
+        {
+            this.removeEventListener(FlexEvent.CREATION_COMPLETE, this.creationCompleteHandler);
+            this.addEventListener(MouseEvent.CLICK, this.mouseClickHandler);
+        }
+
+        private function readPresentationValue2():String
+        {
+            var localValue1:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UnitSkillBonusAcInTower");
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            hover.addEventListener("toolTipCreate", CreateTooltip);
+            hover.addEventListener("mouseOver", hover_mouseOverHandler);
+            hover.addEventListener("mouseOut", hover_mouseOutHandler);
+            backGround.source = gAssetManager.GetClass("FrameEnemyToolTip");
+            bonusIcon.source = gAssetManager.GetClass("BonusToolTip");
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.width = 56;
+            this.height = 77;
+            this.mouseEnabled = false;
+            this.addEventListener("creationComplete", this.creationCompleteHandler);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"],
+                [bonusIcon, "hide"],
+                [bonusIcon, "show"]]);
+                bonusIcon.toolTip = readPresentationValue2();
+                bonusIcon.includeInLayout = bonusIcon.visible;
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Image id="backGround" alpha="1" mouseEnabled="false"  left="2" right="2" top="2" bottom="2" />
+    <mx:Canvas id="viewCanvas1" x="2" y="2" width="48" height="61" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+        <mx:Image id="unitIcon" mouseEnabled="false" scaleContent="false"  horizontalCenter="0" verticalCenter="0" />
+    </mx:Canvas>
+    <mx:Image id="unitTypeIcon" mouseEnabled="false" width="24" height="24" visible="false"  top="2" left="2" />
+    <mx:Box id="firstUnitLabel" mouseEnabled="false" visible="false"  top="0" bottom="2" left="0" right="4" backgroundAlpha="0" borderStyle="solid" borderThickness="2" borderColor="4050403" />
+    <mx:Image id="bonusIcon" mouseEnabled="false" visible="true"  bottom="-1" left="-1" />
+    <ui:CustomLabel id="amountLabel" mouseEnabled="false" text=""  horizontalCenter="-5" bottom="2" color="0xFFFFFF" fontWeight="normal" />
+    <mx:Box id="hover" percentWidth="100" percentHeight="100"  backgroundAlpha="0" borderStyle="none" />
+</mx:Canvas>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml">
+    <mx:Script><![CDATA[
+        import mx.events.FlexEvent;
+
+        [Bindable]
+        public var digitGap:int = 0;
+        public var numberOfDigits:int = 0;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.addEventListener("creationComplete", creationCompleteHandler);
+        }
+
+        protected function creationCompleteHandler(_arg_1:FlexEvent):void
+        {
+            this.createSpinners();
+        }
+
+        private function getWheelGap(value:int):Number
+        {
+            return value;
+        }
+
+        private function createSpinners():void
+        {
+            var _local_2:Spinner;
+            this.wheelContainer.removeAllChildren();
+            var _local_1:int;
+            while (_local_1 < this.numberOfDigits)
+            {
+                _local_2 = new Spinner();
+                _local_2.percentHeight = 100;
+                _local_2.width = ((this.width - ((this.numberOfDigits - 1) * this.digitGap)) / this.numberOfDigits);
+                this.wheelContainer.addChild(_local_2);
+                _local_1++;
+            }
+        }
+
+        public function SetDesiredValue(_arg_1:int):void
+        {
+            var _local_2:String = this.addLeadingZeros(_arg_1, this.numberOfDigits);
+            var _local_3:int;
+            while (_local_3 < _local_2.length)
+            {
+                (this.wheelContainer.getChildAt(_local_3) as Spinner).targetNumber = int(_local_2.charAt(_local_3));
+                _local_3++;
+            }
+        }
+
+        private function addLeadingZeros(_arg_1:int, _arg_2:uint):String
+        {
+            var _local_3:String = _arg_1.toString();
+            var _local_4:int = _local_3.length;
+            while (_local_4 < _arg_2)
+            {
+                _local_3 = ("0" + _local_3);
+                _local_4++;
+            }
+            return _local_3;
+        }
+    ]]></mx:Script>
+    <mx:HBox id="wheelContainer" percentWidth="100" percentHeight="100" horizontalGap="{getWheelGap(digitGap)}" />
+</mx:Canvas>

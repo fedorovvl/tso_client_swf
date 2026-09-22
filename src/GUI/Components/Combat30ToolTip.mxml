@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<bridge:NLibFlexBridge xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:bridge="com.bluebyte.tso.ui.bridge.*" xmlns:gui="GUI.Components.*">
+    <mx:Script><![CDATA[
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ItemRenderer.Combat3ArmyToolTipRenderer;
+        import GUI.Components.ItemRenderer.Combat3BossToolTipRenderer;
+        import GUI.Loca.cLocaManager;
+        import flash.events.Event;
+        import mx.core.ClassFactory;
+
+        private function visibleToIncludeInLayout(value:Boolean):Boolean
+        {
+            return value;
+        }
+
+        private function loca(key:String):String
+        {
+            var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key);
+            return value == undefined ? null : String(value);
+        }
+
+        private function updateLayouts(event:Event = null):void
+        {
+            bossBox.includeInLayout = visibleToIncludeInLayout(bossBox.visible);
+            buildingClickZone.includeInLayout = visibleToIncludeInLayout(specialistUnitsContainer.visible);
+            chooseUnitLabel.includeInLayout = visibleToIncludeInLayout(chooseUnitLabel.visible);
+            specialistUnitsContainer.includeInLayout = visibleToIncludeInLayout(specialistUnitsContainer.visible);
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.minWidth = 150;
+            this.direction = "vertical";
+            this.mouseEnabled = false;
+            this.setStyle("horizontalAlign", "center");
+            this.setStyle("verticalGap", 0);
+            this.setStyle("showEffect", fadeIn);
+            this.setStyle("hideEffect", fadeOut);
+            bossBox.itemRenderer = new ClassFactory(Combat3BossToolTipRenderer);
+            campUnitsList.itemRenderer = new ClassFactory(Combat3ArmyToolTipRenderer);
+            specialistUnitsList.itemRenderer = new ClassFactory(Combat3ArmyToolTipRenderer);
+            bossBox.addEventListener("show", updateLayouts);
+            bossBox.addEventListener("hide", updateLayouts);
+            specialistUnitsContainer.addEventListener("show", updateLayouts);
+            specialistUnitsContainer.addEventListener("hide", updateLayouts);
+            chooseUnitLabel.addEventListener("show", updateLayouts);
+            chooseUnitLabel.addEventListener("hide", updateLayouts);
+            updateLayouts();
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="500" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <mx:VBox id="topContainer" percentWidth="100" mouseEnabled="false" top="0" horizontalCenter="0" verticalGap="0" horizontalAlign="center">
+        <gui:AlignedHorizontalList id="bossBox" selectable="false" backgroundAlpha="0" borderStyle="none" />
+        <mx:HBox horizontalGap="0" verticalGap="0" horizontalAlign="center" horizontalCenter="" verticalAlign="middle">
+            <mx:Canvas id="campUnitsCanvas" height="101" minWidth="56">
+                <gui:AlignedHorizontalList id="campUnitsList" height="81" selectable="false" horizontalScrollPolicy="off" top="20" backgroundAlpha="0" borderStyle="none" />
+                <mx:Image id="nextArrow" x="18" visible="false" source="{gAssetManager.GetClass('Combat3FirstUnitArrow')}" />
+            </mx:Canvas>
+        </mx:HBox>
+    </mx:VBox>
+    <mx:Canvas id="buildingClickZone" width="120" height="45" horizontalScrollPolicy="off" backgroundAlpha="0" />
+    <mx:Box id="chooseUnitLabel" styleName="detailsContentBox">
+        <gui:CustomLabel id="chooseUnitText" visible="true" text="{loca('ChooseUnitToAttack')}" horizontalCenter="0" textAlign="center" color="0xFFFFFF" fontWeight="bold" />
+    </mx:Box>
+    <mx:VBox id="specialistUnitsContainer" percentWidth="100" height="81" horizontalScrollPolicy="off" verticalScrollPolicy="off" visible="false" horizontalAlign="center" borderStyle="none">
+        <gui:AlignedHorizontalList id="specialistUnitsList" height="81" selectable="false" horizontalScrollPolicy="off" horizontalCenter="0" backgroundAlpha="0" borderStyle="none" />
+    </mx:VBox>
+</bridge:NLibFlexBridge>

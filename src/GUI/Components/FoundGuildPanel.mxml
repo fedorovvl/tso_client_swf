@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="330" height="415">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(formCanvas);
+            LegacyMxmlContent.createChildren(bannerBox);
+            LegacyMxmlContent.createChildren(bannerContentBox);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var label:*;
+            label = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildName");
+            _FoundGuildPanel_FormItem1.label = ((label == undefined) ? null : String(label));
+            label = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildTag");
+            _FoundGuildPanel_FormItem2.label = ((label == undefined) ? null : String(label));
+            label = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildBanner");
+            _FoundGuildPanel_CustomLabel1.text = ((label == undefined) ? null : String(label));
+            label = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildFound");
+            btnFound.label = ((label == undefined) ? null : String(label));
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <mx:Canvas id="formCanvas" styleName="detailsHeader" height="82" left="2" right="2"
+                horizontalScrollPolicy="off" verticalScrollPolicy="off">
+                <mx:Form id="form1" left="0" right="0">
+                    <mx:FormItem id="_FoundGuildPanel_FormItem1" percentWidth="100">
+                        <gui:CustomTextInput id="guildName" maxChars="20" styleName="standardInput" restrict="^\\" color="0xFFFFFF" fontWeight="normal" />
+                    </mx:FormItem>
+                    <mx:FormItem id="_FoundGuildPanel_FormItem2" percentWidth="100">
+                        <gui:CustomTextInput id="guildTag" maxChars="5" styleName="standardInput" color="0xFFFFFF" fontWeight="normal"
+                            restrict="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\-" />
+                    </mx:FormItem>
+                </mx:Form>
+            </mx:Canvas>
+            <mx:Canvas id="bannerBox" styleName="detailsSubHeader" height="18" left="8" right="7" top="84">
+                <gui:CustomLabel id="_FoundGuildPanel_CustomLabel1" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+            </mx:Canvas>
+            <mx:Canvas id="bannerContentBox" styleName="detailsContentBox" clipContent="true" left="9" right="8" top="102" bottom="7"
+                horizontalScrollPolicy="off" verticalScrollPolicy="off">
+                <gui:TSOImage id="selectedBanner" horizontalCenter="0" verticalCenter="-18" width="133" height="233" scaleContent="false" />
+                <mx:Button id="btnBannerLeft" left="10" verticalCenter="-20" width="25" height="23" upSkin="{gAssetManager.GetClass('ArrowLeft')}" overSkin="{gAssetManager.GetClass('ArrowLeftHighlight')}" downSkin="{gAssetManager.GetClass('ArrowLeftHighlight')}" disabledSkin="{gAssetManager.GetClass('ArrowLeftDisabled')}" />
+                <mx:Button id="btnBannerRight" right="10" verticalCenter="-20" width="25" height="23" upSkin="{gAssetManager.GetClass('ArrowRight')}" overSkin="{gAssetManager.GetClass('ArrowRightHighlight')}" downSkin="{gAssetManager.GetClass('ArrowRightHighlight')}" disabledSkin="{gAssetManager.GetClass('ArrowRightDisabled')}" />
+                <mx:Canvas id="footerBox" percentWidth="100" height="40" styleName="detailsContentBox" bottom="0">
+                    <gui:StandardButton id="btnFound" horizontalCenter="0" verticalCenter="0" enabled="false" />
+                </mx:Canvas>
+            </mx:Canvas>
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

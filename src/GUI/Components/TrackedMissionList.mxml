@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" clipContent="false">
+    <mx:Script><![CDATA[
+        import mx.core.UIComponent;
+
+        [Embed(source="../../../assets/embedded/quest/quest_quest_ornamental3.png")]
+        private var topDecoration:Class;
+        [Embed(source="../../../assets/embedded/quest/quest_quest_ornamental4.png")]
+        private var bottomDecoration:Class;
+        public var queue:UIComponent;
+        private var firstSet:Boolean = true;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            topOrnamental.source = topDecoration;
+            bottomOrnamental.source = bottomDecoration;
+        }
+
+        public function set topBinded(value:Number):void
+        {
+            var app:SWMMO = global.getApplication();
+            if (firstSet || (queue && app && app.stage &&
+                x > app.stage.stageWidth - width - queue.width && y < queue.y + queue.height))
+            {
+                firstSet = false;
+                y = value;
+            }
+        }
+    ]]></mx:Script>
+    <mx:VBox id="list"  top="14" bottom="21" verticalGap="0" />
+    <mx:Canvas id="topBar" styleName="questOrnamental" height="10"  left="6" right="6" top="7" />
+    <mx:Image id="topOrnamental"  horizontalCenter="0" top="0" />
+    <mx:Canvas id="bottomBar" styleName="questOrnamental" height="10"  left="6" right="6" bottom="13" />
+    <mx:Image id="bottomOrnamental"  horizontalCenter="0" bottom="0" />
+</mx:Canvas>

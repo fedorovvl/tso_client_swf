@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    mouseEnabled="false" mouseChildren="false"
+    horizontalScrollPolicy="off" verticalScrollPolicy="off"
+    styleName="toolTip" width="250" minHeight="61">
+    <mx:Script><![CDATA[
+        import mx.controls.Image;
+        import mx.controls.Spacer;
+        import mx.containers.Canvas;
+        import mx.containers.HBox;
+        import mx.containers.VBox;
+        import flash.utils.Dictionary;
+        import Skill.cSkill;
+        import GUI.Components.CustomText;
+        import GUI.Components.CustomLabel;
+        import Modifier.ModifierVO;
+        import __AS3__.vec.Vector;
+        import Modifier.Modifiers.Common.ChangeLootChance;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.coloringFilter;
+        import GUI.Assets.gAssetManager;
+
+        private var skill:cSkill;
+        private var points:Dictionary;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this.skill = (_arg_1.skill as cSkill);
+            this.points = (_arg_1.points as Dictionary);
+        }
+
+        public function get text():String
+        {
+            return (this.info.text);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            var _local_5:CustomText;
+            var _local_6:CustomText;
+            var _local_7:CustomText;
+            this.info.text = _arg_1;
+            this.headerBG.filters = [coloringFilter(this.skill.getDefinition().conceringColor)];
+            this.resourceIcon.source = gAssetManager.GetBitmap(this.skill.getDefinition().icon_string);
+            this.skillPointIcon.source = gAssetManager.GetResourceIcon(this.skill.getDefinition().concerningResource_string);
+            this.skillLevel.setStyle("color", this.skill.getDefinition().conceringColor);
+            this.skillLevel.text = ((this.skill.getLevel() + "/") + this.skill.getMaxLevel());
+            this.infoList.removeAllChildren();
+            if (this.skill.getLevel() > 0)
+            {
+                this.skillLevel.text = (this.skillLevel.text + ":");
+                _local_5 = this.generateDescription(this.skill.getLevel());
+                _local_5.setStyle("color", this.skill.getDefinition().conceringColor);
+                this.infoList.addChild(_local_5);
+            };
+            var _local_2:Spacer = new Spacer();
+            _local_2.height = 5;
+            this.infoList.addChild(_local_2);
+            var _local_3:CustomLabel = new CustomLabel();
+            _local_3.setStyle("color", "#FFFFFF");
+            var _local_4:int = (this.skill.getLevel() + 1);
+            if (_local_4 <= this.skill.getMaxLevel())
+            {
+                _local_3.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "NextLevel");
+                this.infoList.addChild(_local_3);
+                _local_5 = this.generateDescription(_local_4);
+                _local_5.setStyle("color", "#FFFFFF");
+                this.infoList.addChild(_local_5);
+                _local_6 = null;
+                if (global.ui.IsAdventureZone())
+                {
+                    _local_6 = new CustomText();
+                    _local_6.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "SkillPointsAdventureDisabled");
+                }
+                else
+                {
+                    if (!this.skill.getSkillTree().isPointApplyable(1))
+                    {
+                        _local_6 = new CustomText();
+                        _local_6.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "MaxSkillPoints");
+                    }
+                    else
+                    {
+                        if (global.ui.mCurrentPlayer.GetPlayerLevel() < this.skill.getDefinition().minimumLevel)
+                        {
+                            _local_6 = new CustomText();
+                            _local_6.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "LevelRequired", [this.skill.getDefinition().minimumLevel]);
+                        }
+                        else
+                        {
+                            if (this.skill.isLocked())
+                            {
+                                _local_6 = new CustomText();
+                                _local_6.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "SkillPointsRequired", [this.skill.getDefinition().numPointsAccumulated]);
+                            }
+                            else
+                            {
+                                if (this.points[this.skill.getDefinition().concerningResource_string].amount == 0)
+                                {
+                                    _local_6 = new CustomText();
+                                    _local_6.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "NoSkillPoints");
+                                };
+                            };
+                        };
+                    };
+                };
+                if (_local_6 != null)
+                {
+                    this.addErrorLabel(_local_6);
+                };
+            }
+            else
+            {
+                _local_3.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "MaxLevel");
+                this.infoList.addChild(_local_3);
+                if (global.ui.IsAdventureZone())
+                {
+                    _local_7 = new CustomText();
+                    _local_7.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "SkillPointsAdventureDisabled");
+                    this.addErrorLabel(_local_7);
+                };
+            };
+        }
+
+        private function generateDescription(_arg_1:int):CustomText
+        {
+            var _local_4:ModifierVO;
+            var _local_5:CustomText;
+            var _local_6:Number;
+            var _local_2:Vector.<ModifierVO> = this.skill.getDefinition().level_vector[(_arg_1 - 1)];
+            var _local_3:Array = [];
+            for each (_local_4 in _local_2)
+            {
+                if (_local_4.chance != 1)
+                {
+                    _local_6 = (_local_4.chance * 100);
+                }
+                else
+                {
+                    if (_local_4.modifier_string.toLowerCase() == ChangeLootChance.xml_string)
+                    {
+                        _local_6 = _local_4.value;
+                    }
+                    else
+                    {
+                        if (((_local_4.item_string.toLowerCase() == "starcoinsforxp") || (_local_4.item_string.toLowerCase() == "hiredmilitaryforxp")))
+                        {
+                            _local_6 = _local_4.multiplier;
+                        }
+                        else
+                        {
+                            if (((_local_4.item_string.toLowerCase() == "recoverlosttroops") || (_local_4.item_string.toLowerCase() == "gainskill_splash")))
+                            {
+                                _local_6 = (_local_4.multiplier * 100);
+                            }
+                            else
+                            {
+                                _local_6 = ((_local_4.multiplier - 1) * 100);
+                            };
+                        };
+                    };
+                };
+                _local_3.push(Math.round(Math.abs(_local_6)).toString());
+                _local_3.push(_local_4.value);
+                _local_3.push(int(((_local_4.multiplier - 1) * 100)));
+                _local_3.push(_local_4.adder);
+            };
+            _local_5 = new CustomText();
+            _local_5.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, this.skill.getName(), _local_3);
+            _local_5.percentWidth = 100;
+            return (_local_5);
+        }
+
+        private function addErrorLabel(_arg_1:CustomText):void
+        {
+            var _local_2:Spacer = new Spacer();
+            _local_2.height = 5;
+            this.infoList.addChild(_local_2);
+            _arg_1.setStyle("color", "#FF0000");
+            _arg_1.setStyle("fontWeight", "bold");
+            _arg_1.percentWidth = 100;
+            this.infoList.addChild(_arg_1);
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="headerBox" top="5" percentWidth="100" height="49">
+        <mx:Canvas id="headerBG" left="0" right="0" top="0" bottom="0" styleName="skillColorBG" />
+        <mx:HBox id="headRow" verticalCenter="0" horizontalCenter="0" verticalAlign="middle">
+            <mx:Image id="resourceIcon" />
+            <gui:CustomText id="info" fontWeight="bold" color="0" />
+        </mx:HBox>
+    </mx:Canvas>
+    <mx:VBox id="infoList" top="60" left="5" right="5" bottom="5" horizontalAlign="center" verticalGap="0">
+        <mx:HBox id="levelRow" verticalAlign="middle">
+            <mx:Image id="skillPointIcon" />
+            <gui:CustomLabel id="skillLevel" fontWeight="bold" fontSize="20" />
+        </mx:HBox>
+    </mx:VBox>
+</mx:Canvas>

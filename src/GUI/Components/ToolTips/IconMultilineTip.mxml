@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    minWidth="300" minHeight="52" styleName="toolTip">
+    <mx:Script><![CDATA[
+        import flash.display.Bitmap;
+
+        private var _icon:Bitmap;
+        private var _text:String;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this._icon = (_arg_1 as Bitmap);
+        }
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this._text = _arg_1;
+            if (_IconMultilineTip_CustomText1)
+            {
+                _IconMultilineTip_CustomText1.text = this._text;
+            };
+            if (toolTipIcon)
+            {
+                this.toolTipIcon.source = this._icon;
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            toolTipIcon.source = this._icon;
+            _IconMultilineTip_CustomText1.text = this._text;
+        }
+    ]]></mx:Script>
+    <mx:Image id="toolTipIcon" width="48" height="48" scaleContent="false"  top="2" left="5" />
+    <gui:CustomText id="_IconMultilineTip_CustomText1"  top="2" bottom="2" left="60" right="5" fontWeight="bold" color="0xFFFFFF" />
+</mx:Canvas>

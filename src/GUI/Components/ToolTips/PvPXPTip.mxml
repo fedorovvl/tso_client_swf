@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="mx.core.IToolTip"
+    width="250" height="65" styleName="toolTip">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import GUI.Components.data.dPvPLevelUnlockData;
+        import ServerState.cPlayerData;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+
+        private var _text:String;
+        private var unlockData:dPvPLevelUnlockData;
+        private var _title:String;
+        private var _description:String;
+
+        public function get descriptionText():String
+        {
+            return (this._description);
+        }
+
+        public function set descriptionText(_arg_1:String):void
+        {
+            this._description = _arg_1;
+            invalidateProperties();
+        }
+
+        public function get title():String
+        {
+            return (this._title);
+        }
+
+        public function set title(_arg_1:String):void
+        {
+            this._title = _arg_1;
+            invalidateProperties();
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this._text = _arg_1;
+            invalidateProperties();
+        }
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        override protected function commitProperties():void
+        {
+            super.commitProperties();
+            if (!cLocaManager.GetInstance().IsInitialized())
+            {
+                return;
+            };
+            var _local_2:cPlayerData = global.ui.mCurrentPlayer;
+            if (_local_2.GetPlayerPvPXp() >= _local_2.GetMaxPvPXP())
+            {
+                this.xpLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "PvPXPLimitReached", [cLocaManager.GetInstance().FormatNumber(_local_2.GetPlayerPvPXp())]);
+            }
+            else
+            {
+                this.xpLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "PvPXPNeeded", [cLocaManager.GetInstance().FormatNumber(_local_2.GetPlayerPvPXp()), cLocaManager.GetInstance().FormatNumber(_local_2.GetMissingPvPXPForNextLevel())]);
+            };
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            if (!cLocaManager.GetInstance().IsInitialized())
+            {
+                return;
+            };
+            invalidateProperties();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("paddingTop", 5);
+            this.setStyle("paddingLeft", 5);
+            this.setStyle("paddingRight", 5);
+            this.setStyle("paddingBottom", 5);
+            this.setStyle("horizontalAlign", "left");
+            this.setStyle("verticalGap", 5);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="headBox" percentWidth="100">
+        <gui:CustomText id="headline" wordWrap="false" textAlign="left" left="0" color="0xFFFFFF" fontWeight="bold" />
+        <gui:CustomText id="typeLabel" wordWrap="false" textAlign="right" right="0" color="0xFFFFFF" fontWeight="bold" />
+    </mx:Canvas>
+    <gui:CustomText id="xpLabel" percentWidth="100" percentHeight="100" wordWrap="true" color="0xFFFFFF" />
+</mx:VBox>

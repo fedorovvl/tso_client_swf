@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    height="91" percentWidth="100" implements="GUI.Components.IGUIList">
+    <mx:Script><![CDATA[
+        import mx.core.ClassFactory;
+        import GUI.Components.ItemRenderer.FriendsListItemRenderer;
+        import GUI.Components.ItemRenderer.FriendsListNullItemRenderer;
+        import GUI.Assets.gAssetManager;
+        import mx.collections.ArrayCollection;
+        import flash.display.DisplayObject;
+        import __AS3__.vec.Vector;
+        import flash.events.MouseEvent;
+        import flash.events.FocusEvent;
+        import mx.events.FlexEvent;
+        import mx.containers.Canvas;
+
+        private var itemsPerPage:int;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            setStyle("horizontalGap", 0);
+            list.itemRenderer = new ClassFactory(FriendsListItemRenderer);
+            list.nullItemRenderer = new ClassFactory(FriendsListNullItemRenderer);
+            _FriendsList_Button1.addEventListener(MouseEvent.CLICK, onButton1Click);
+            _FriendsList_Button2.addEventListener(MouseEvent.CLICK, onButton2Click);
+            _FriendsList_Button3.addEventListener(MouseEvent.CLICK, onButton3Click);
+            _FriendsList_Button4.addEventListener(MouseEvent.CLICK, onButton4Click);
+            _FriendsList_Button5.addEventListener(MouseEvent.CLICK, onButton5Click);
+            _FriendsList_Button6.addEventListener(MouseEvent.CLICK, onButton6Click);
+            list.addEventListener(FlexEvent.CREATION_COMPLETE, onListCreationComplete);
+            list.addEventListener(FocusEvent.FOCUS_IN, onListFocusIn);
+        }
+
+        private function isLeftScrollEnabled():Boolean
+        {
+            return (list != null && list.horizontalScrollPosition > 0);
+        }
+
+        private function isRightScrollEnabled():Boolean
+        {
+            return (list != null && list.maxHorizontalScrollPosition > list.horizontalScrollPosition);
+        }
+
+        private function onButton1Click(event:MouseEvent):void
+        {
+            StepLeft();
+        }
+
+        private function onButton2Click(event:MouseEvent):void
+        {
+            PageLeft();
+        }
+
+        private function onButton3Click(event:MouseEvent):void
+        {
+            EndLeft();
+        }
+
+        private function onButton4Click(event:MouseEvent):void
+        {
+            StepRight();
+        }
+
+        private function onButton5Click(event:MouseEvent):void
+        {
+            PageRight();
+        }
+
+        private function onButton6Click(event:MouseEvent):void
+        {
+            EndRight();
+        }
+
+        private function onListCreationComplete(event:FlexEvent):void
+        {
+            Init();
+        }
+
+        private function onListFocusIn(event:FocusEvent):void
+        {
+            setFocus();
+        }
+
+        private function StepRight():void
+        {
+            if (this.list.horizontalScrollPosition < this.list.maxHorizontalScrollPosition)
+            {
+                this.list.horizontalScrollPosition = (this.list.horizontalScrollPosition + 1);
+            };
+        }
+
+        private function StepLeft():void
+        {
+            if (this.list.horizontalScrollPosition > 0)
+            {
+                this.list.horizontalScrollPosition--;
+            };
+        }
+
+        private function EndRight():void
+        {
+            this.list.horizontalScrollPosition = this.list.maxHorizontalScrollPosition;
+        }
+
+        private function EndLeft():void
+        {
+            this.list.horizontalScrollPosition = 0;
+        }
+
+        private function PageRight():void
+        {
+            if ((this.list.horizontalScrollPosition + this.itemsPerPage) < this.list.maxHorizontalScrollPosition)
+            {
+                this.list.horizontalScrollPosition = (this.list.horizontalScrollPosition + this.itemsPerPage);
+            }
+            else
+            {
+                this.EndRight();
+            };
+        }
+
+        private function PageLeft():void
+        {
+            if ((this.list.horizontalScrollPosition - this.itemsPerPage) > 0)
+            {
+                this.list.horizontalScrollPosition = (this.list.horizontalScrollPosition - this.itemsPerPage);
+            }
+            else
+            {
+                this.EndLeft();
+            };
+        }
+
+        private function Init():void
+        {
+            this.itemsPerPage = (this.list.width / (this.list.itemRenderer.newInstance() as Canvas).width);
+        }
+
+        public function getAllItems(_arg_1:String):Vector.<DisplayObject>
+        {
+            var _local_2:Vector.<DisplayObject> = new Vector.<DisplayObject>();
+            var _local_3:ArrayCollection = ArrayCollection(this.list.dataProvider);
+            var _local_4:int;
+            while (_local_4 < _local_3.length)
+            {
+                if (((_arg_1 == null) && (_local_3[_local_4] == null)))
+                {
+                    _local_2.push((this.list.indexToItemRenderer(_local_4) as DisplayObject));
+                };
+                if (((!(_local_3[_local_4] == null)) && (_local_3[_local_4].username == _arg_1)))
+                {
+                    _local_2.push((this.list.indexToItemRenderer(_local_4) as DisplayObject));
+                };
+                _local_4++;
+            };
+            return (_local_2);
+        }
+
+        public function getFirstItem(_arg_1:String):DisplayObject
+        {
+            var _local_2:ArrayCollection = ArrayCollection(this.list.dataProvider);
+            var _local_3:int;
+            while (_local_3 < _local_2.length)
+            {
+                if (((_arg_1 == null) && (_local_2[_local_3] == null)))
+                {
+                    return (this.list.indexToItemRenderer(_local_3) as DisplayObject);
+                };
+                if (((!(_local_2[_local_3] == null)) && (_local_2[_local_3].username == _arg_1)))
+                {
+                    return (this.list.indexToItemRenderer(_local_3) as DisplayObject);
+                };
+                _local_3++;
+            };
+            return (null);
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas percentHeight="100" percentWidth="100" styleName="friendsListBackground" />
+
+    <mx:Canvas percentHeight="100" width="150" styleName="friendsListControllsLeft">
+        <mx:VBox width="31" height="79" styleName="friendsListArrowFrame" right="5" verticalCenter="0">
+            <mx:Button id="_FriendsList_Button1" width="25" height="23"
+                enabled="{isLeftScrollEnabled()}"
+                upSkin="{gAssetManager.GetClass('ArrowLeft')}"
+                overSkin="{gAssetManager.GetClass('ArrowLeftHighlight')}"
+                downSkin="{gAssetManager.GetClass('ArrowLeftHighlight')}"
+                disabledSkin="{gAssetManager.GetClass('ArrowLeftDisabled')}" />
+            <mx:Button id="_FriendsList_Button2" width="25" height="23"
+                enabled="{isLeftScrollEnabled()}"
+                upSkin="{gAssetManager.GetClass('ArrowLeftScroll')}"
+                overSkin="{gAssetManager.GetClass('ArrowLeftScrollHighlight')}"
+                downSkin="{gAssetManager.GetClass('ArrowLeftScrollHighlight')}"
+                disabledSkin="{gAssetManager.GetClass('ArrowLeftScrollDisabled')}" />
+            <mx:Button id="_FriendsList_Button3" width="25" height="23"
+                enabled="{isLeftScrollEnabled()}"
+                upSkin="{gAssetManager.GetClass('ArrowLeftEnd')}"
+                overSkin="{gAssetManager.GetClass('ArrowLeftEndHighlight')}"
+                downSkin="{gAssetManager.GetClass('ArrowLeftEndHighlight')}"
+                disabledSkin="{gAssetManager.GetClass('ArrowLeftEndDisabled')}" />
+        </mx:VBox>
+    </mx:Canvas>
+
+    <gui:FriendsListButtonBar id="optionButtons" percentHeight="100" width="71" styleName="friendsList" />
+
+    <mx:HorizontalList id="list" horizontalScrollPolicy="off" width="639" percentHeight="100"
+        styleName="friendsList" rowHeight="91" selectable="false" />
+
+    <gui:FriendsListFilterSelector id="filterSelector" percentHeight="100" width="71" styleName="friendsList" />
+
+    <mx:Canvas percentHeight="100" width="150" styleName="friendsListControllsRight">
+        <mx:VBox width="31" height="79" styleName="friendsListArrowFrame" left="5" verticalCenter="0">
+            <mx:Button id="_FriendsList_Button4" width="25" height="23"
+                enabled="{isRightScrollEnabled()}"
+                upSkin="{gAssetManager.GetClass('ArrowRight')}"
+                overSkin="{gAssetManager.GetClass('ArrowRightHighlight')}"
+                downSkin="{gAssetManager.GetClass('ArrowRightHighlight')}"
+                disabledSkin="{gAssetManager.GetClass('ArrowRightDisabled')}" />
+            <mx:Button id="_FriendsList_Button5" width="25" height="23"
+                enabled="{isRightScrollEnabled()}"
+                upSkin="{gAssetManager.GetClass('ArrowRightScroll')}"
+                overSkin="{gAssetManager.GetClass('ArrowRightScrollHighlight')}"
+                downSkin="{gAssetManager.GetClass('ArrowRightScrollHighlight')}"
+                disabledSkin="{gAssetManager.GetClass('ArrowRightScrollDisabled')}" />
+            <mx:Button id="_FriendsList_Button6" width="25" height="23"
+                enabled="{isRightScrollEnabled()}"
+                upSkin="{gAssetManager.GetClass('ArrowRightEnd')}"
+                overSkin="{gAssetManager.GetClass('ArrowRightEndHighlight')}"
+                downSkin="{gAssetManager.GetClass('ArrowRightEndHighlight')}"
+                disabledSkin="{gAssetManager.GetClass('ArrowRightEndDisabled')}" />
+        </mx:VBox>
+    </mx:Canvas>
+
+    <mx:Canvas percentHeight="100" percentWidth="100" styleName="friendsListBackground" />
+</mx:HBox>

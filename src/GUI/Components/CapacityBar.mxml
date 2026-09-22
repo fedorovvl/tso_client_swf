@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:mx="http://www.adobe.com/2006/mxml" width="8" height="33"
+    direction="vertical" creationPolicy="all">
+    <mx:Script><![CDATA[
+        private var currentMaximum:uint = 1;
+        private var currentValue:uint = 0;
+
+        public function get maximum():int { return currentMaximum; }
+        public function set maximum(value:int):void
+        {
+            currentMaximum = value;
+            updateBar();
+        }
+
+        public function get value():int { return currentValue; }
+        public function set value(value:int):void
+        {
+            currentValue = value;
+            updateBar();
+        }
+
+        override public function set direction(value:String):void
+        {
+            super.direction = value;
+            updateBar();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundColor", 4470822);
+            this.setStyle("borderColor", 9535066);
+            this.setStyle("borderStyle", "solid");
+            this.setStyle("borderThickness", 1);
+            this.setStyle("verticalAlign", "bottom");
+            this.setStyle("horizontalAlign", "left");
+            updateBar();
+        }
+
+        private function updateBar():void
+        {
+            if (!capacityBar) return;
+            var percent:Number = currentMaximum > 0 ? 100 * currentValue / currentMaximum : 0;
+            capacityBar.percentWidth = direction == "vertical" ? 100 : percent;
+            capacityBar.percentHeight = direction == "vertical" ? percent : 100;
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="capacityBar" percentWidth="0" percentHeight="0"  backgroundColor="8880699" />
+</mx:Box>

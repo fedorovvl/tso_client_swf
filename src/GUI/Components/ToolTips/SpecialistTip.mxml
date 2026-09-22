@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    mouseEnabled="false" mouseChildren="false"
+    horizontalScrollPolicy="off" minWidth="185" styleName="toolTip">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.collections.ArrayCollection;
+        import mx.core.ClassFactory;
+        import mx.events.FlexEvent;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import Specialists.cSpecialist;
+        import Specialists.cSpecialistSubTaskDefinition;
+        import Specialists.cSpecialistTask;
+        import MilitarySystem.cMilitaryUnitDescription;
+        import Utils.StringUtils;
+        import Interface.RenderableItem;
+        import GUI.Components.ItemRenderer.SkillIconRenderer;
+        import Skill.cSkill;
+
+        private var _value:Object = null;
+        private var _text:String;
+        private var _specialistType:String;
+        private var _specialist:cSpecialist;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            if (this._value != _arg_1)
+            {
+                this._value = _arg_1;
+                invalidateProperties();
+            };
+        }
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this._text = _arg_1;
+            invalidateProperties();
+        }
+
+        override protected function commitProperties():void
+        {
+            var _local_1:cMilitaryUnitDescription;
+            super.commitProperties();
+            if ((this._value is cSpecialist))
+            {
+                this._specialist = (this._value as cSpecialist);
+                if (((!(this._specialist.getMilitaryUnitType() == "Specialist")) && (!(StringUtils.contains("admiral", this._specialist.getMilitaryUnitType().toLowerCase())))))
+                {
+                    _local_1 = cMilitaryUnitDescription.GetUnitDescriptionForType(this._specialist.getMilitaryUnitType());
+                    this.combatantTypeIcon.source = gAssetManager.GetBitmap((_local_1.GetCombatantType() + ".png"));
+                    this.combatantTypeIcon.visible = (this.combatantTypeIcon.includeInLayout = true);
+                }
+                else
+                {
+                    this.combatantTypeIcon.visible = (this.combatantTypeIcon.includeInLayout = false);
+                };
+                if (!this.skills)
+                {
+                    addEventListener(FlexEvent.CREATION_COMPLETE, this.CreateSkillList);
+                }
+                else
+                {
+                    this.CreateSkillList();
+                };
+            }
+            else
+            {
+                if ((this._value is RenderableItem))
+                {
+                    this._specialist = null;
+                    this._specialistType = (this._value as RenderableItem).getResourceGFXName();
+                };
+            };
+            if (this._text)
+            {
+                this.headline.htmlText = ((this._specialist != null) ? this._specialist.getName(false) : (("<b>" + cLocaManager.GetInstance().GetText(LOCA_GROUP.SPECIALISTS, this._specialistType)) + "<\b>"));
+                this.description.text = this.CreateDescription();
+            };
+        }
+
+        private function CreateDescription():String
+        {
+            var _local_3:cSpecialistSubTaskDefinition;
+            var _local_1:* = "";
+            if (this._specialist == null)
+            {
+                return (cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, this._specialistType));
+            };
+            _local_1 = (_local_1 + (cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "CurrentMission") + "\n"));
+            var _local_2:cSpecialistTask = this._specialist.GetTask();
+            if (_local_2 != null)
+            {
+                _local_3 = global.specialistTaskDefinitions_vector[_local_2.GetType()].subtasks_vector[_local_2.GetSubType()];
+                _local_1 = (_local_1 + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, (("SpecialistTask" + _local_3.mainTask.taskName_string) + _local_3.taskType_string)));
+            }
+            else
+            {
+                _local_1 = (_local_1 + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "SpecialistTaskNone"));
+            };
+            if (((this._specialist.GetTask()) && (this._specialist.GetTask().GetRemainingTime() > -1)))
+            {
+                _local_1 = (_local_1 + ((("\n\n" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "TimeRemaining")) + "\n") + cLocaManager.GetInstance().FormatDuration(this._specialist.GetTask().GetRemainingTime())));
+            };
+            return (_local_1);
+        }
+
+        private function CreateSkillList(_arg_1:Event=null):void
+        {
+            var _local_3:cSkill;
+            var _local_2:ArrayCollection = new ArrayCollection();
+            if (this._specialist.getSkillTree().getItems_vector().length > 0)
+            {
+                for each (_local_3 in this._specialist.getSkillTree().getItems_vector())
+                {
+                    if (_local_3.getLevel() > 0)
+                    {
+                        _local_2.addItemAt(_local_3, 0);
+                    };
+                };
+                this.skillList.dataProvider = _local_2;
+                this.skillList.rowCount = Math.ceil((_local_2.length / this.skillList.columnCount));
+            };
+            this.skills.includeInLayout = (this.skills.visible = (_local_2.length > 0));
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var text:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "SpecialistSkills");
+            _SpecialistTip_Label1.text = ((text == undefined) ? null : String(text));
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("paddingLeft", 5);
+            this.setStyle("paddingTop", 5);
+            this.setStyle("paddingRight", 5);
+            this.setStyle("paddingBottom", 5);
+            skillList.itemRenderer = new ClassFactory(SkillIconRenderer);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+    ]]></mx:Script>
+    <mx:HBox id="headRow" percentWidth="100">
+        <gui:CustomLabel id="headline" minWidth="150" percentWidth="100"  horizontalCenter="0" color="0xFFFFFF" />
+        <gui:TSOImage id="combatantTypeIcon" />
+    </mx:HBox>
+    <gui:CustomText id="description" width="170"  color="0xFFFFFF" horizontalCenter="0" />
+    <mx:VBox id="skills" visible="false" includeInLayout="false" percentWidth="100">
+        <mx:Label id="_SpecialistTip_Label1"  horizontalCenter="0" fontWeight="bold" color="0xFFFFFF" />
+        <gui:CustomTileList id="skillList" percentWidth="100"
+            rowHeight="30" columnWidth="30" columnCount="10"  backgroundAlpha="0" borderThickness="0" />
+    </mx:VBox>
+</mx:VBox>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:CheckBox xmlns:mx="http://www.adobe.com/2006/mxml">
+    <mx:Script><![CDATA[
+        import mx.events.ToolTipEvent;
+        import GUI.Components.ToolTips.cToolTipUtil;
+
+        [Embed(source="../../../assets/StandardCheckBox/icon_half_selected.png")]
+        private static const icon_half_selected:Class;
+
+        [Embed(source="../../../assets/embedded/checkbox/checkbox_checkbox01_inactive.png")]
+        private static const icon_normal:Class;
+
+        [Embed(source="../../../assets/embedded/checkbox/checkbox_checkbox01_active_mouseover.png")]
+        private var iconActiveMouseOver:Class;
+
+        [Embed(source="../../../assets/embedded/checkbox/checkbox_checkbox01_active.png")]
+        private var iconActive:Class;
+
+        [Embed(source="../../../assets/embedded/radiobutton/radiobutton_radiobutton_inactive_mouseover.png")]
+        private var iconInactiveMouseOver:Class;
+
+        [Embed(source="../../../assets/embedded/checkbox/checkbox_checkbox01_inactive.png")]
+        private var iconInactive:Class;
+
+        private var _partiallyselected:Boolean = false;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("color", 0xFFFFFF);
+            this.setStyle("textRollOverColor", 0xFFFFFF);
+            this.setStyle("textSelectedColor", 0xFFFFFF);
+            setStyle("overIcon", iconInactiveMouseOver);
+            setStyle("downIcon", iconActiveMouseOver);
+            setStyle("selectedUpIcon", iconActive);
+            setStyle("selectedOverIcon", iconActiveMouseOver);
+            setStyle("selectedDownIcon", iconInactiveMouseOver);
+            setStyle("disabledIcon", iconInactive);
+            setStyle("selectedDisabledIcon", iconActive);
+            setStyle("upIcon", icon_normal);
+            addEventListener("toolTipCreate", onToolTipCreate);
+        }
+
+        public function set partiallyselected(value:Boolean):void
+        {
+            _partiallyselected = value;
+            if (value)
+            {
+                setStyle("upIcon", icon_half_selected);
+            }
+            else
+            {
+                setStyle("upIcon", icon_normal);
+            };
+        }
+
+        public function get partiallyselected():Boolean
+        {
+            return (_partiallyselected);
+        }
+
+        public function onToolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+</mx:CheckBox>

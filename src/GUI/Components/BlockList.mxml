@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="200" height="300">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.containers.Canvas;
+        import mx.containers.ViewStack;
+        import mx.controls.dataGridClasses.DataGridColumn;
+        import mx.core.ClassFactory;
+        import mx.events.ToolTipEvent;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Components.DataGrid.CustomDataGrid;
+        import GUI.Components.DataGrid.CustomDataGridHeaderBackgroundSkin;
+        import GUI.Components.DataGrid.CustomDataGridHeaderSeparator;
+        import GUI.Components.ItemRenderer.MailGridTextItemRenderer;
+
+        public var _BlockList_DataGridColumn1:DataGridColumn;
+        public var blockListGrid:CustomDataGrid;
+        public var subcontent:ViewStack;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            buildContent();
+            blockListGrid.setStyle("alternatingItemColors", []);
+            refreshHeaderText();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshHeaderText, false, 0, true);
+        }
+
+        private function buildContent():void
+        {
+            subcontent = new ViewStack();
+            subcontent.setStyle("left", 0);
+            subcontent.setStyle("right", 1);
+            subcontent.setStyle("top", 0);
+            subcontent.setStyle("bottom", 0);
+            var canvas1:Canvas = new Canvas();
+            canvas1.percentWidth = 100;
+            canvas1.percentHeight = 100;
+            subcontent.addChild(canvas1);
+            var canvas2:Canvas = new Canvas();
+            canvas2.percentHeight = 100;
+            canvas2.setStyle("left", 0);
+            canvas2.setStyle("right", 0);
+            canvas2.setStyle("top", 0);
+            canvas1.addChild(canvas2);
+            var canvas3:Canvas = new Canvas();
+            canvas3.styleName = "detailsHeader";
+            canvas3.percentWidth = 100;
+            canvas3.height = 25;
+            canvas2.addChild(canvas3);
+            var canvas4:Canvas = new Canvas();
+            canvas4.styleName = "detailsContentBox";
+            canvas4.setStyle("left", 6);
+            canvas4.setStyle("right", 5);
+            canvas4.setStyle("top", 25);
+            canvas4.setStyle("bottom", 10);
+            canvas2.addChild(canvas4);
+            _BlockList_DataGridColumn1 = new DataGridColumn();
+            _BlockList_DataGridColumn1.resizable = false;
+            _BlockList_DataGridColumn1.draggable = false;
+            _BlockList_DataGridColumn1.width = 300;
+            _BlockList_DataGridColumn1.dataField = "username";
+            var columnFactory:ClassFactory = new ClassFactory(MailGridTextItemRenderer);
+            _BlockList_DataGridColumn1.itemRenderer = columnFactory;
+            blockListGrid = new CustomDataGrid();
+            blockListGrid.sortableColumns = false;
+            blockListGrid.rowHeight = 25;
+            blockListGrid.headerHeight = 20;
+            blockListGrid.columns = [_BlockList_DataGridColumn1];
+            blockListGrid.setStyle("verticalAlign", "middle");
+            blockListGrid.setStyle("iconColor", 13077059);
+            blockListGrid.setStyle("selectionColor", 8482380);
+            blockListGrid.setStyle("rollOverColor", 7957587);
+            blockListGrid.setStyle("borderThickness", 0);
+            blockListGrid.setStyle("left", 12);
+            blockListGrid.setStyle("right", 13);
+            blockListGrid.setStyle("top", 5);
+            blockListGrid.setStyle("bottom", 0);
+            blockListGrid.setStyle("horizontalGridLines", false);
+            blockListGrid.setStyle("verticalGridLineColor", 7693901);
+            blockListGrid.setStyle("headerColors", [3155998]);
+            blockListGrid.setStyle("borderColor", 7693901);
+            blockListGrid.setStyle("headerStyleName", "mailDataGridHeader");
+            blockListGrid.setStyle("headerBackgroundSkin", CustomDataGridHeaderBackgroundSkin);
+            blockListGrid.setStyle("headerSeparatorSkin", CustomDataGridHeaderSeparator);
+            blockListGrid.setStyle("backgroundAlpha", 0);
+            blockListGrid.addEventListener("toolTipCreate", onBlockListGrid_toolTipCreate);
+            canvas2.addChild(blockListGrid);
+            subComponents = [subcontent];
+        }
+
+        private function refreshHeaderText(event:Event = null):void
+        {
+            var headerText:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "UserName");
+            _BlockList_DataGridColumn1.headerText = ((headerText == undefined) ? null : String(headerText));
+        }
+
+        public function onBlockListGrid_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+</gui:BasicPanel>

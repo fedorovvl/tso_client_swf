@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:TitleContainer xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*">
+    <mx:Script><![CDATA[
+        import mx.collections.ArrayCollection;
+        import mx.containers.HBox;
+        import mx.containers.VBox;
+        import mx.controls.Image;
+        import mx.controls.Spacer;
+        import mx.core.ClassFactory;
+        import mx.events.CollectionEvent;
+        import mx.events.FlexEvent;
+        import mx.events.PropertyChangeEvent;
+        import mx.events.ToolTipEvent;
+        import mx.core.IChildList;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+        import flash.geom.Point;
+        import Enums.PICKUP_PROVIDER_TYPE;
+        import GUI.Loca.cLocaManager;
+        import GUI.Assets.gAssetManager;
+        import GUI.FloatingItemsManager;
+        import GUI.Components.HealthBar;
+        import GUI.Components.CustomLabel;
+        import GUI.Components.StandardButton;
+        import GUI.Components.TSOImage;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Components.ItemRenderer.RendererPoolBox;
+        import GUI.Components.ColonyYieldPanel_inlineComponent1;
+        import GUI.Components.ColonyYieldPanel_inlineComponent2;
+        import GUI.Components.ItemRenderer.ResourceItemRenderer2;
+        import Communication.VO.dPersistedPickupItemVO;
+        import global;
+
+        public var production:RendererPoolBox;
+        public var pickups:RendererPoolBox;
+        public var poolSpaceLabel:CustomLabel;
+        public var btnPickup:StandardButton;
+        public var _ColonyYieldPanel_HealthBar1:HealthBar;
+        public var _ColonyYieldPanel_HBox2:HBox;
+        public var _ColonyYieldPanel_Image1:Image;
+        public var _ColonyYieldPanel_CustomLabel1:CustomLabel;
+        public var _ColonyYieldPanel_CustomLabel2:CustomLabel;
+        public var _ColonyYieldPanel_CustomLabel3:CustomLabel;
+        public var colonyYieldBuffBanner:TSOImage;
+        public var colonyYieldBuffIcon:TSOImage;
+        public var colonyResourcePoolBuffBanner:TSOImage;
+        public var colonyResourcePoolBuffIcon:TSOImage;
+
+        private var _yieldList:Array;
+        private var _pickupList:ArrayCollection;
+        private var _progress:Number = 0;
+        private var _yieldRemaining:Number;
+
+        [Bindable(event="propertyChange")]
+        public function get yieldList():Array
+        {
+            return (_yieldList);
+        }
+
+        public function set yieldList(value:Array):void
+        {
+            var oldValue:Object = _yieldList;
+            if (oldValue !== value)
+            {
+                _yieldList = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "yieldList", oldValue, value));
+                refreshYield();
+            };
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get progress():Number
+        {
+            return (_progress);
+        }
+
+        public function set progress(value:Number):void
+        {
+            var oldValue:Object = _progress;
+            if (oldValue !== value)
+            {
+                _progress = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "progress", oldValue, value));
+                refreshProgress();
+            };
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get yieldRemaining():Number
+        {
+            return (_yieldRemaining);
+        }
+
+        public function set yieldRemaining(value:Number):void
+        {
+            var oldValue:Object = _yieldRemaining;
+            if (oldValue !== value)
+            {
+                _yieldRemaining = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "yieldRemaining", oldValue, value));
+                refreshDurations();
+            };
+        }
+
+        public function Update():void
+        {
+            if (_pickupList != null && _pickupList.length > 0)
+            {
+                poolSpaceLabel.text = ((global.ui_bindable.pickupManager.getUsedSpace(PICKUP_PROVIDER_TYPE.PVP_COLONY) + " / ") + global.ui_bindable.pickupManager.getTotalSpace(PICKUP_PROVIDER_TYPE.PVP_COLONY));
+            }
+            else
+            {
+                poolSpaceLabel.text = cLocaManager.GetInstance().getLabel("nocolonyownedpool");
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            buildContent();
+            contentChild = [hbox1Holder, colonyYieldBuffBanner, colonyYieldBuffIcon, colonyResourcePoolBuffBanner, colonyResourcePoolBuffIcon];
+            var productionFactory:ClassFactory = new ClassFactory(ColonyYieldPanel_inlineComponent1);
+            productionFactory.properties = {"outerDocument":this};
+            production.itemRenderer = productionFactory;
+            var pickupsFactory:ClassFactory = new ClassFactory(ColonyYieldPanel_inlineComponent2);
+            pickupsFactory.properties = {"outerDocument":this};
+            pickups.itemRenderer = pickupsFactory;
+            _ColonyYieldPanel_Image1.source = gAssetManager.GetClass("ArrowSmallRight");
+            colonyYieldBuffBanner.source = gAssetManager.GetClass("ColonyBuffBanner");
+            colonyYieldBuffIcon.source = gAssetManager.GetClass("ColonyBuffYield");
+            colonyResourcePoolBuffBanner.source = gAssetManager.GetClass("ColonyBuffBanner");
+            colonyResourcePoolBuffIcon.source = gAssetManager.GetClass("ColonyBuffResourcePool");
+            _ColonyYieldPanel_HealthBar1.addEventListener("toolTipCreate", onHealthBar_toolTipCreate);
+            btnPickup.addEventListener("buttonDown", onBtnPickup_buttonDown);
+            colonyYieldBuffIcon.addEventListener("show", onBuffIconVisibility);
+            colonyYieldBuffIcon.addEventListener("hide", onBuffIconVisibility);
+            colonyResourcePoolBuffIcon.addEventListener("show", onBuffIconVisibility);
+            colonyResourcePoolBuffIcon.addEventListener("hide", onBuffIconVisibility);
+            addEventListener("creationComplete", onCreationComplete);
+            global.staticEventDispatcher.addEventListener("propertyChange", onGlobalChanged, false, 0, true);
+            connectPickupManager();
+            refreshAll();
+        }
+
+        private var hbox1Holder:HBox;
+
+        private function buildContent():void
+        {
+            var hbox1:HBox = new HBox();
+            hbox1.percentHeight = 100;
+            hbox1.setStyle("left", 5);
+            hbox1.setStyle("right", 0);
+            var vbox1:VBox = new VBox();
+            vbox1.percentWidth = 50;
+            vbox1.percentHeight = 100;
+            vbox1.setStyle("horizontalAlign", "center");
+            vbox1.setStyle("verticalGap", 4);
+            hbox1.addChild(vbox1);
+            var spacer:Spacer = new Spacer();
+            vbox1.addChild(spacer);
+            var vbox2:VBox = new VBox();
+            vbox2.styleName = "detailsContentBoxDark";
+            vbox2.percentWidth = 100;
+            vbox2.height = 85;
+            vbox2.setStyle("horizontalAlign", "center");
+            vbox2.setStyle("verticalAlign", "middle");
+            vbox1.addChild(vbox2);
+            _ColonyYieldPanel_CustomLabel1 = new CustomLabel();
+            _ColonyYieldPanel_CustomLabel1.truncateToFit = true;
+            _ColonyYieldPanel_CustomLabel1.setStyle("color", 0xFFFFFF);
+            vbox2.addChild(_ColonyYieldPanel_CustomLabel1);
+            production = new RendererPoolBox();
+            production.direction = "horizontal";
+            vbox2.addChild(production);
+            _ColonyYieldPanel_HealthBar1 = new HealthBar();
+            _ColonyYieldPanel_HealthBar1.percentWidth = 50;
+            vbox1.addChild(_ColonyYieldPanel_HealthBar1);
+            _ColonyYieldPanel_HBox2 = new HBox();
+            _ColonyYieldPanel_HBox2.percentWidth = 100;
+            _ColonyYieldPanel_HBox2.setStyle("verticalAlign", "middle");
+            _ColonyYieldPanel_HBox2.setStyle("horizontalAlign", "center");
+            _ColonyYieldPanel_HBox2.setStyle("paddingLeft", 3);
+            _ColonyYieldPanel_HBox2.setStyle("paddingRight", 3);
+            _ColonyYieldPanel_HBox2.setStyle("horizontalGap", 0);
+            vbox1.addChild(_ColonyYieldPanel_HBox2);
+            _ColonyYieldPanel_CustomLabel2 = new CustomLabel();
+            _ColonyYieldPanel_CustomLabel2.truncateToFit = true;
+            _ColonyYieldPanel_CustomLabel2.setStyle("color", 0xFFFFFF);
+            _ColonyYieldPanel_HBox2.addChild(_ColonyYieldPanel_CustomLabel2);
+            _ColonyYieldPanel_Image1 = new Image();
+            _ColonyYieldPanel_HBox2.addChild(_ColonyYieldPanel_Image1);
+            _ColonyYieldPanel_CustomLabel3 = new CustomLabel();
+            _ColonyYieldPanel_CustomLabel3.truncateToFit = true;
+            _ColonyYieldPanel_CustomLabel3.setStyle("color", 0xFFFFFF);
+            _ColonyYieldPanel_HBox2.addChild(_ColonyYieldPanel_CustomLabel3);
+            var vbox3:VBox = new VBox();
+            vbox3.percentWidth = 50;
+            vbox3.percentHeight = 100;
+            vbox3.setStyle("horizontalAlign", "center");
+            hbox1.addChild(vbox3);
+            var vbox4:VBox = new VBox();
+            vbox4.percentWidth = 100;
+            vbox4.height = 92;
+            vbox4.styleName = "yieldPanelResources";
+            vbox4.setStyle("horizontalAlign", "center");
+            vbox4.setStyle("verticalAlign", "middle");
+            vbox3.addChild(vbox4);
+            poolSpaceLabel = new CustomLabel();
+            poolSpaceLabel.truncateToFit = true;
+            poolSpaceLabel.setStyle("color", 0xFFFFFF);
+            vbox4.addChild(poolSpaceLabel);
+            pickups = new RendererPoolBox();
+            pickups.direction = "horizontal";
+            vbox4.addChild(pickups);
+            btnPickup = new StandardButton();
+            vbox3.addChild(btnPickup);
+            colonyYieldBuffBanner = new TSOImage();
+            colonyYieldBuffBanner.width = 71;
+            colonyYieldBuffBanner.height = 69;
+            colonyYieldBuffBanner.setStyle("top", -4);
+            colonyYieldBuffBanner.setStyle("left", -2);
+            colonyYieldBuffIcon = new TSOImage();
+            colonyYieldBuffIcon.width = 54;
+            colonyYieldBuffIcon.height = 65;
+            colonyYieldBuffIcon.visible = false;
+            colonyYieldBuffIcon.setStyle("top", 3);
+            colonyYieldBuffIcon.setStyle("left", -2);
+            colonyResourcePoolBuffBanner = new TSOImage();
+            colonyResourcePoolBuffBanner.width = 71;
+            colonyResourcePoolBuffBanner.height = 69;
+            colonyResourcePoolBuffBanner.setStyle("top", -5);
+            colonyResourcePoolBuffBanner.setStyle("left", 425);
+            colonyResourcePoolBuffIcon = new TSOImage();
+            colonyResourcePoolBuffIcon.width = 54;
+            colonyResourcePoolBuffIcon.height = 65;
+            colonyResourcePoolBuffIcon.visible = false;
+            colonyResourcePoolBuffIcon.setStyle("top", 0);
+            colonyResourcePoolBuffIcon.setStyle("left", 430);
+            hbox1Holder = hbox1;
+        }
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            genColonyPickupList();
+        }
+
+        private var pickupManagerSource:IEventDispatcher;
+
+        private function onGlobalChanged(event:PropertyChangeEvent):void
+        {
+            if (event.property == "ui_bindable" || event.property == "pickupManager")
+            {
+                connectPickupManager();
+                genColonyPickupList();
+                refreshPool();
+            };
+        }
+
+        private function connectPickupManager():void
+        {
+            var manager:Object = global.ui_bindable ? global.ui_bindable.pickupManager : null;
+            var dispatcher:IEventDispatcher = manager as IEventDispatcher;
+            if (pickupManagerSource === dispatcher)
+            {
+                return;
+            };
+            if (pickupManagerSource != null)
+            {
+                pickupManagerSource.removeEventListener("propertyChange", onPickupManagerChanged);
+            };
+            pickupManagerSource = dispatcher;
+            if (pickupManagerSource != null)
+            {
+                pickupManagerSource.addEventListener("propertyChange", onPickupManagerChanged, false, 0, true);
+            };
+        }
+
+        private function onPickupManagerChanged(event:PropertyChangeEvent):void
+        {
+            refreshPool();
+        }
+
+        private function onPickupListChanged(event:CollectionEvent):void
+        {
+            refreshPool();
+        }
+
+        private function onBuffIconVisibility(event:Event):void
+        {
+            refreshBuffBanners();
+        }
+
+        private function refreshAll():void
+        {
+            refreshLabels();
+            refreshYield();
+            refreshProgress();
+            refreshDurations();
+            refreshPool();
+            refreshBuffBanners();
+        }
+
+        private function refreshLabels():void
+        {
+            var labelText:* = cLocaManager.GetInstance().getLabel("ColonyYield");
+            this.label = ((labelText == undefined) ? null : String(labelText));
+            var nextText:* = cLocaManager.GetInstance().getLabel("ColonyYieldNext");
+            _ColonyYieldPanel_CustomLabel2.text = ((nextText == undefined) ? null : String(nextText));
+            var pickupText:* = cLocaManager.GetInstance().getLabel("PickupResources");
+            btnPickup.label = ((pickupText == undefined) ? null : String(pickupText));
+        }
+
+        private function refreshYield():void
+        {
+            var hasYield:Boolean = (_yieldList != null && _yieldList.length > 0);
+            var nextText:*;
+            var emptyText:*;
+            if (hasYield)
+            {
+                nextText = cLocaManager.GetInstance().getLabel("ColonyYieldNext");
+                _ColonyYieldPanel_CustomLabel1.text = ((nextText == undefined) ? null : String(nextText));
+            }
+            else
+            {
+                emptyText = cLocaManager.GetInstance().getLabel("nocolonyownedyield");
+                _ColonyYieldPanel_CustomLabel1.text = ((emptyText == undefined) ? null : String(emptyText));
+            };
+            production.dataProvider = _yieldList;
+            _ColonyYieldPanel_HealthBar1.visible = hasYield;
+            _ColonyYieldPanel_HBox2.visible = hasYield;
+        }
+
+        private function refreshProgress():void
+        {
+            _ColonyYieldPanel_HealthBar1.value = _progress;
+        }
+
+        private function refreshDurations():void
+        {
+            var durationText:* = cLocaManager.GetInstance().FormatDuration(_yieldRemaining, cLocaManager.DURATION_FORMAT_SHORT);
+            var durationString:String = ((durationText == undefined) ? null : String(durationText));
+            _ColonyYieldPanel_HealthBar1.toolTip = durationString;
+            _ColonyYieldPanel_CustomLabel3.text = durationString;
+        }
+
+        private function refreshPool():void
+        {
+            var manager:Object = global.ui_bindable ? global.ui_bindable.pickupManager : null;
+            var hasPickup:Boolean = (_pickupList != null && _pickupList.length > 0 && manager != null);
+            if (hasPickup)
+            {
+                poolSpaceLabel.text = ((manager.getUsedSpace(PICKUP_PROVIDER_TYPE.PVP_COLONY) + " / ") + manager.getTotalSpace(PICKUP_PROVIDER_TYPE.PVP_COLONY));
+            }
+            else
+            {
+                var emptyText:* = cLocaManager.GetInstance().getLabel("nocolonyownedpool");
+                poolSpaceLabel.text = ((emptyText == undefined) ? null : String(emptyText));
+            };
+            btnPickup.enabled = hasPickup;
+        }
+
+        private function refreshBuffBanners():void
+        {
+            colonyYieldBuffBanner.visible = colonyYieldBuffIcon.visible;
+            colonyResourcePoolBuffBanner.visible = colonyResourcePoolBuffIcon.visible;
+        }
+
+        private function genColonyPickupList():void
+        {
+            if (_pickupList != null)
+            {
+                _pickupList.removeEventListener(CollectionEvent.COLLECTION_CHANGE, onPickupListChanged);
+            };
+            _pickupList = new ArrayCollection();
+            _pickupList.filterFunction = filterByColonyPickups;
+            var manager:Object = global.ui_bindable ? global.ui_bindable.pickupManager : null;
+            if (manager != null)
+            {
+                _pickupList.list = manager.getPickups();
+            };
+            _pickupList.refresh();
+            _pickupList.addEventListener(CollectionEvent.COLLECTION_CHANGE, onPickupListChanged);
+            pickups.dataProvider = _pickupList;
+            refreshPool();
+        }
+
+        private function filterByColonyPickups(item:dPersistedPickupItemVO):Boolean
+        {
+            return ((!(item.executing)) && (item.providerType == PICKUP_PROVIDER_TYPE.PVP_COLONY));
+        }
+
+        public function onBtnPickup_buttonDown(event:FlexEvent):void
+        {
+            pickupButtonHandler(event);
+        }
+
+        private function pickupButtonHandler(event:FlexEvent):void
+        {
+            var index:int;
+            var childCount:int;
+            var renderer:ResourceItemRenderer2;
+            var children:IChildList = this.pickups.rawChildren;
+            childCount = this.pickups.rawChildren.numChildren;
+            index = 0;
+            while (index < childCount)
+            {
+                renderer = (children.getChildAt(index) as ResourceItemRenderer2);
+                if ((((renderer) && (renderer.data)) && (global.services.pickup.executePickup(renderer.data.uniqueID))))
+                {
+                    FloatingItemsManager.createJumpFlyDestroy(renderer, "GAMESTATE_ID_ACTIONBAR.actionBarCenter.btnActionBar04");
+                };
+                index++;
+            };
+            _pickupList.removeAll();
+            pickups.removeAllChildren();
+        }
+
+        private function createFlyOut(item:dPersistedPickupItemVO, position:Point):Frame
+        {
+            var flyOut:Frame = new Frame();
+            flyOut.initialize();
+            flyOut.setByPickup(item);
+            flyOut.width = 56;
+            flyOut.height = 70;
+            flyOut.move(position.x, position.y);
+            flyOut.validateNow();
+            return (flyOut);
+        }
+
+        public function onHealthBar_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+</gui:TitleContainer>

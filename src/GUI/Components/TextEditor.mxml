@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import mx.events.CloseEvent;
+        import mx.controls.Alert;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Components.CustomAlert;
+        import mx.events.ToolTipEvent;
+
+        [Embed(source="../../../assets/embedded/guild/guild_checkmark_disable.png")]
+        private var checkmarkDisabled:Class;
+
+        [Embed(source="../../../assets/embedded/guild/guild_checkmark_mouseover.png")]
+        private var checkmarkMouseOver:Class;
+
+        [Embed(source="../../../assets/embedded/buttons/buttons_checkmark_push.png")]
+        private var checkmarkPush:Class;
+
+        [Embed(source="../../../assets/gAssetManager/ButtonIconOK.png")]
+        private var checkmarkStandard:Class;
+
+        [Embed(source="../../../assets/embedded/guild/guild_icon_pencil_disable.png")]
+        private var pencilDisabled:Class;
+
+        [Embed(source="../../../assets/embedded/guild/guild_icon_pencil_mouseover.png")]
+        private var pencilMouseOver:Class;
+
+        [Embed(source="../../../assets/embedded/guild/guild_icon_pencil_push.png")]
+        private var pencilPush:Class;
+
+        [Embed(source="../../../assets/embedded/buttons/buttons_icon_pencil_standard.png")]
+        private var pencilStandard:Class;
+
+        [Embed(source="../../../assets/embedded/mailwindow/mailwindow_x_button_disable.png")]
+        private var discardDisabled:Class;
+
+        [Embed(source="../../../assets/embedded/mailwindow/mailwindow_x_button_mouseover.png")]
+        private var discardMouseOver:Class;
+
+        [Embed(source="../../../assets/embedded/mailwindow/mailwindow_x_button_push.png")]
+        private var discardPush:Class;
+
+        [Embed(source="../../../assets/embedded/mailwindow/mailwindow_x_button_standard.png")]
+        private var discardStandard:Class;
+
+        private var _text:String;
+        private var _editMode:Boolean = false;
+        private var _editable:Boolean = false;
+        private var _maxChars:int = 0;
+
+        private function edit():void
+        {
+            editMode = true;
+        }
+
+        private function discard():void
+        {
+            if (textfield.text == _text)
+            {
+                editMode = false;
+                return;
+            };
+            CustomAlert.show("ConfirmDiscardChanges", "ConfirmDiscardChanges", (Alert.OK | Alert.CANCEL), null, discardChanges);
+        }
+
+        private function set editMode(value:Boolean):void
+        {
+            _editMode = value;
+            btnEdit.visible = (!(value));
+            btnSave.visible = value;
+            btnDiscard.visible = value;
+            highlight.visible = value;
+            textfield.editable = value;
+            textfield.selectable = value;
+            if (value)
+            {
+                textfield.setFocus();
+                textfield.setSelection(0, ((value) ? textfield.text.length : 0));
+            };
+        }
+
+        private function discardChanges(event:CloseEvent):void
+        {
+            if (event.detail != Alert.OK)
+            {
+                return;
+            };
+            textfield.text = _text;
+            editMode = false;
+        }
+
+        private function save():void
+        {
+            editMode = false;
+            if (_text == textfield.text)
+            {
+                return;
+            };
+            _text = textfield.text;
+            dispatchEvent(new Event("SaveChanges"));
+        }
+
+        public function set maxChars(value:int):void
+        {
+            _maxChars = value;
+        }
+
+        public function get maxChars():int
+        {
+            return (_maxChars);
+        }
+
+        public function get text():String
+        {
+            return (_text);
+        }
+
+        public function set text(value:String):void
+        {
+            _text = value;
+            editMode = false;
+            textfield.text = _text;
+        }
+
+        public function set editable(value:Boolean):void
+        {
+            _editable = value;
+            editPanel.visible = value;
+        }
+
+        public function get editable():Boolean
+        {
+            return (_editable);
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            btnEdit.setStyle("upSkin", pencilStandard);
+            btnEdit.setStyle("downSkin", pencilPush);
+            btnEdit.setStyle("overSkin", pencilMouseOver);
+            btnEdit.setStyle("disabledSkin", pencilDisabled);
+            btnSave.setStyle("upSkin", checkmarkStandard);
+            btnSave.setStyle("downSkin", checkmarkPush);
+            btnSave.setStyle("overSkin", checkmarkMouseOver);
+            btnSave.setStyle("disabledSkin", checkmarkDisabled);
+            btnDiscard.setStyle("upSkin", discardStandard);
+            btnDiscard.setStyle("downSkin", discardPush);
+            btnDiscard.setStyle("overSkin", discardMouseOver);
+            btnDiscard.setStyle("disabledSkin", discardDisabled);
+            refreshTips();
+            btnEdit.addEventListener("click", onBtnEdit_click);
+            btnEdit.addEventListener("toolTipCreate", onBtnEdit_toolTipCreate);
+            btnSave.addEventListener("click", onBtnSave_click);
+            btnSave.addEventListener("toolTipCreate", onBtnSave_toolTipCreate);
+            btnDiscard.addEventListener("click", onBtnDiscard_click);
+            btnDiscard.addEventListener("toolTipCreate", onBtnDiscard_toolTipCreate);
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshTips, false, 0, true);
+        }
+
+        private function refreshTips(event:Event = null):void
+        {
+            var tip:*;
+            tip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildEdit");
+            btnEdit.toolTip = ((tip == undefined) ? null : String(tip));
+            tip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildSave");
+            btnSave.toolTip = ((tip == undefined) ? null : String(tip));
+            tip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildDiscard");
+            btnDiscard.toolTip = ((tip == undefined) ? null : String(tip));
+        }
+
+        public function onBtnEdit_click(event:MouseEvent):void
+        {
+            edit();
+        }
+
+        public function onBtnSave_click(event:MouseEvent):void
+        {
+            save();
+        }
+
+        public function onBtnDiscard_click(event:MouseEvent):void
+        {
+            discard();
+        }
+
+        public function onBtnEdit_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function onBtnSave_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function onBtnDiscard_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="highlight" visible="false" alpha="0.2" percentWidth="100" percentHeight="100"  backgroundColor="0xFFFFFF" />
+    <mx:Canvas id="editPanel" visible="false" width="23" right="0" top="0">
+        <mx:Button id="btnEdit" visible="true" width="27" height="21"  horizontalCenter="0" />
+        <mx:Button id="btnSave" visible="false" width="27" height="21"  horizontalCenter="0" />
+        <mx:Button id="btnDiscard" visible="false" width="27" height="21"  horizontalCenter="0" top="23" />
+    </mx:Canvas>
+    <mx:Canvas id="textCanvas"
+        horizontalScrollPolicy="off" verticalScrollPolicy="auto" left="10" top="5" right="25" bottom="3">
+        <gui:CustomTextArea id="textfield" restrict="^\\" percentWidth="100" percentHeight="100"
+            styleName="noBackground" editable="false" selectable="false"  paddingRight="10" color="0xFFFFFF" fontWeight="normal" />
+    </mx:Canvas>
+</mx:Canvas>

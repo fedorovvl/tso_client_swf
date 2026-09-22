@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    verticalScrollPolicy="off" horizontalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import mx.events.FlexEvent;
+        import mx.states.State;
+        import mx.states.SetProperty;
+        import GUI.Assets.gAssetManager;
+        import GUI.achievement.view.detail.SubcategoryDetailView;
+
+        public var showProgress:State;
+        public var hideProgress:State;
+        public var showProgress_event:State;
+        public var hideProgress_event:State;
+
+        private function makeSet(target:Object, name:String, value:Object):SetProperty
+        {
+            var sp:SetProperty = new SetProperty();
+            sp.target = target;
+            sp.name = name;
+            sp.value = value;
+            return (sp);
+        }
+
+        private function buildStates():void
+        {
+            showProgress = new State();
+            showProgress.name = "showProgress";
+            showProgress.overrides = [makeSet(categoryProgressCanvas, "visible", true),
+                makeSet(categoryProgressCanvas, "y", 20),
+                makeSet(categoryNameLabel, "y", 3),
+                makeSet(subCategoryCanvas, "height", 50)];
+            hideProgress = new State();
+            hideProgress.name = "hideProgress";
+            hideProgress.overrides = [makeSet(categoryProgressCanvas, "visible", false),
+                makeSet(categoryNameLabel, "y", 3),
+                makeSet(subCategoryCanvas, "height", 50)];
+            showProgress_event = new State();
+            showProgress_event.name = "showProgress_event";
+            showProgress_event.overrides = [makeSet(categoryProgressCanvas, "visible", true),
+                makeSet(categoryProgressCanvas, "y", 25),
+                makeSet(categoryNameLabel, "y", 8),
+                makeSet(subCategoryCanvas, "height", 60)];
+            hideProgress_event = new State();
+            hideProgress_event.name = "hideProgress_event";
+            hideProgress_event.overrides = [makeSet(categoryProgressCanvas, "visible", false),
+                makeSet(categoryNameLabel, "y", 8),
+                makeSet(subCategoryCanvas, "height", 60)];
+            states = [showProgress, hideProgress, showProgress_event, hideProgress_event];
+        }
+
+        private function syncBackground(event:FlexEvent = null):void
+        {
+            subCategoryCanvas.setStyle("backgroundImage", categoryImage.visible ?
+                gAssetManager.GetClass("AchievementCategoryEventBackground") :
+                gAssetManager.GetClass("AchievementCategoryBackground"));
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            width = SubcategoryDetailView.VIEW_COMPONENT_WIDTH;
+            height = SubcategoryDetailView.VIEW_COMPONENT_HEIGHT;
+            progressBar.mask = progressBarMask;
+            syncBackground();
+            categoryImage.addEventListener(FlexEvent.SHOW, syncBackground, false, 0, true);
+            categoryImage.addEventListener(FlexEvent.HIDE, syncBackground, false, 0, true);
+            buildStates();
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="subCategoryCanvas" height="50" width="235" bottom="1" left="12" backgroundSize="100%">
+        <mx:Label id="categoryNameLabel"  textAlign="center" horizontalCenter="-15" fontWeight="bold" fontSize="12" />
+        <mx:Canvas id="categoryProgressCanvas" width="235" height="28">
+            <mx:Canvas id="progressBarCanvas" width="180" height="12" left="13" backgroundSize="100%" backgroundImage="{gAssetManager.GetClass('AchievementCategoryProgressBackground')}">
+                <mx:Canvas id="progressBar" left="2" top="2" right="2" bottom="2" backgroundSize="100%" backgroundImage="{gAssetManager.GetClass('AchievementCategoryProgressBar')}" />
+                <mx:Canvas id="progressBarMask"  backgroundColor="0xFF0000" />
+            </mx:Canvas>
+            <mx:Label id="categoryProgressLabel"  textAlign="center" horizontalCenter="-15" bottom="0" />
+        </mx:Canvas>
+    </mx:Canvas>
+    <mx:Canvas id="pointsCanvas" width="60" height="64" backgroundImage="{gAssetManager.GetClass('AchievementCategoryRing')}"
+        verticalScrollPolicy="off" horizontalScrollPolicy="off" clipContent="false" right="0" bottom="-1">
+        <gui:TSOImage id="categoryImage" visible="false"  horizontalCenter="-1" />
+        <mx:Label id="pointsLabel"  verticalCenter="3" horizontalCenter="-1" textAlign="center" fontWeight="bold" fontSize="20" />
+    </mx:Canvas>
+</mx:Canvas>

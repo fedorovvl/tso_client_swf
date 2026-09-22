@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Button xmlns:mx="http://www.adobe.com/2006/mxml"
+    styleName="pin" width="25" height="23">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import mx.events.ToolTipEvent;
+        import Sound.cSoundManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Components.ToolTips.cToolTipUtil;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            refreshTip();
+            addEventListener("click", onClick);
+            addEventListener("toolTipCreate", onToolTipCreate);
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshTip, false, 0, true);
+        }
+
+        private function refreshTip(event:Event = null):void
+        {
+            var tip:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Pin");
+            toolTip = ((tip == undefined) ? null : String(tip));
+        }
+
+        public function onClick(event:MouseEvent):void
+        {
+            cSoundManager.getInstance().playEffect("MenuClose");
+        }
+
+        public function onToolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+</mx:Button>

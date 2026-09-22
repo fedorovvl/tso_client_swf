@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml">
+    <mx:Script><![CDATA[
+        import com.bluebyte.bluefire.api.model.vo.ChannelVO;
+
+        private function getBackgroundColor(value:Object):uint
+        {
+            var channel:ChannelVO = value as ChannelVO;
+            if (channel == null)
+            {
+                return 0xFFFFFF;
+            }
+            return ((channel.important && channel.newMessages) ? 0xFFFF0000 : 0xFFFFFF);
+        }
+
+        private function getLabelText(value:Object):String
+        {
+            var channel:ChannelVO = value as ChannelVO;
+            if (channel == null)
+            {
+                return null;
+            }
+            var label:* = (channel.newMessages ? ("*" + channel.name) : channel.name);
+            return ((label == undefined) ? null : String(label));
+        }
+
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+            this.setStyle("backgroundColor", getBackgroundColor(value));
+            if (_ButtonBarItemRenderer_Label1 != null)
+            {
+                _ButtonBarItemRenderer_Label1.text = getLabelText(value);
+            }
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("verticalCenter", 0);
+            this.setStyle("backgroundSize", "100%");
+            this.percentWidth = 25;
+            this.percentHeight = 50;
+            this.minWidth = 75;
+            this.maxWidth = 75;
+        }
+    ]]></mx:Script>
+
+    <mx:HBox>
+        <mx:Label id="_ButtonBarItemRenderer_Label1" left="0" percentWidth="100" percentHeight="100" text="{getLabelText(data)}" />
+    </mx:HBox>
+</mx:Canvas>

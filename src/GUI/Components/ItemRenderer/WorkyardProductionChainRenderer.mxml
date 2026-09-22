@@ -1,0 +1,183 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="185" height="330">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Image;
+        import mx.controls.Text;
+        import mx.controls.Label;
+        import mx.containers.HBox;
+        import GUI.Components.StandardButton;
+        import GUI.Components.HealthBar;
+        import GUI.Components.ButtonWithoutKeyboard;
+        import mx.core.mx_internal;
+        import mx.events.PropertyChangeEvent;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import GUI.event.CreateInGameTooltipEvent;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        public function onBtnChangeProduction_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        public function onBtnStartStop_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        public function onOutputIcon_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        private function handleRemainingTooltipCreate(argument1:ToolTipEvent):void
+        {
+            this.dispatchEvent(new CreateInGameTooltipEvent(argument1));
+        }
+
+        private function readPresentationValue1():String
+        {
+            var localValue1:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Production");
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private function readPresentationValue4():String
+        {
+            var localValue1:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "BuildingOverviewTabProductionWeek");
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private function readPresentationValue5():String
+        {
+            var localValue1:* = (cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "DetailsTotalTime") + ":");
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private function readPresentationValue6():String
+        {
+            var localValue1:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ProductionStatus");
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private function readPresentationValue8():String
+        {
+            var localValue1:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ChangeProduction");
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            outputIcon.addEventListener("toolTipCreate", onOutputIcon_toolTipCreate);
+            remaining.addEventListener("toolTipCreate", handleRemainingTooltipCreate);
+            btnStartStop.addEventListener("toolTipCreate", onBtnStartStop_toolTipCreate);
+            btnChangeProduction.addEventListener("toolTipCreate", onBtnChangeProduction_toolTipCreate);
+            configuredImage1.source = gAssetManager.GetBitmap("ProductionArrow");
+            bonusStar.source = gAssetManager.GetBitmap("SmallIconStar");
+            houseImage.source = gAssetManager.GetBitmap("HouseBg");
+            this.width = 185;
+            this.height = 330;
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+                configuredLabel1.text = readPresentationValue1();
+                bonusStar.toolTip = readPresentationValue4();
+                remainingTimeText.text = readPresentationValue5();
+                configuredLabel4.text = readPresentationValue6();
+                btnChangeProduction.label = readPresentationValue8();
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="viewCanvas1" styleName="detailsSubHeader" percentWidth="100" height="18">
+        <mx:Label id="configuredLabel1" top="1" horizontalCenter="0" fontWeight="bold" />
+    </mx:Canvas>
+    <mx:Canvas id="viewCanvas2" styleName="detailsContentBox" height="97" left="1" right="1" top="18" />
+    <mx:Canvas id="lowerContentCanvasBackground" styleName="detailsContentBox" height="147" left="1" right="1" top="115" />
+    <mx:Canvas id="productionPanel" percentWidth="100" percentHeight="100">
+        <mx:Canvas id="viewCanvas3" height="97" left="1" right="1" top="18">
+            <mx:HBox id="productionCycleListBox" top="7" horizontalCenter="0" verticalAlign="middle" horizontalGap="0">
+                <mx:HBox id="inputList" horizontalGap="-5" verticalAlign="middle" />
+                <mx:Image id="configuredImage1" />
+                <local:ResourceIconRenderer id="outputIcon" />
+            </mx:HBox>
+            <ui:HealthBar id="productionCycleStatus" toolTip="ProductionFinished" left="2" right="0" bottom="38" />
+            <mx:Image id="bonusStar" right="0" bottom="38" />
+            <mx:Canvas id="remaining" horizontalCenter="0" bottom="7">
+                <mx:Label id="remainingTimeText" fontWeight="bold" horizontalCenter="0" top="0" />
+                <mx:Label id="remainingTime" color="0xFFFFFF" fontWeight="bold" horizontalCenter="0" top="13" />
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas id="lowerContentCanvas" height="147" horizontalScrollPolicy="off" verticalScrollPolicy="off" left="1" right="1" top="115">
+            <mx:Canvas id="viewCanvas4" styleName="generalButtonBg" percentWidth="100" height="62">
+                <ui:StandardButton id="btnStartStop" width="68" height="39" horizontalCenter="0" top="5" />
+                <mx:HBox id="viewHBox1" bottom="2" horizontalCenter="0" horizontalGap="0">
+                    <mx:Label id="configuredLabel4" color="0xFFFFFF" fontWeight="normal" />
+                    <mx:Label id="statusLabel" color="0xFFFFFF" fontWeight="normal" />
+                </mx:HBox>
+            </mx:Canvas>
+            <mx:Image id="houseImage" horizontalCenter="0" bottom="20" />
+            <local:ResourceIconRenderer id="workerIcon" resourceName="Population" tooltipName="WorkyardSettler" horizontalCenter="0" bottom="23" />
+            <ui:ButtonWithoutKeyboard id="btnChangeProduction" visible="false" width="170" height="30" horizontalCenter="0" bottom="5" />
+        </mx:Canvas>
+    </mx:Canvas>
+    <mx:Text id="productionLockLabel" percentWidth="100" visible="false" selectable="false" color="0xFFFFFF" fontWeight="bold" verticalCenter="0" textAlign="center" />
+</mx:Canvas>

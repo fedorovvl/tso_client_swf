@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    mouseChildren="false" mouseEnabled="false" styleName="toolTip">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import GUI.Components.data.dCombatUnitData;
+        import GUI.Components.ItemRenderer.UnitAttributeRenderer;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+
+        private var _text:String;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this.data = _arg_1;
+            invalidateProperties();
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this._text = _arg_1;
+            invalidateProperties();
+        }
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        override protected function commitProperties():void
+        {
+            var _local_1:dCombatUnitData;
+            super.commitProperties();
+            if (!cLocaManager.GetInstance().IsInitialized())
+            {
+                return;
+            };
+            if (this.data)
+            {
+                this.headline.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.BUILDINGS, this.text);
+                this.description.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, "BuildingHitpoints");
+                _local_1 = (data as dCombatUnitData);
+                this.attribute.data = UnitAttributeRenderer.createAttributeObject("hitpoints", _local_1.hitPoints, _local_1.hitPoints);
+            };
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            if (!cLocaManager.GetInstance().IsInitialized())
+            {
+                return;
+            };
+            invalidateProperties();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("paddingBottom", 5);
+            this.setStyle("paddingLeft", 5);
+            this.setStyle("paddingRight", 5);
+            this.setStyle("paddingTop", 5);
+            this.setStyle("verticalGap", 2);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+    ]]></mx:Script>
+    <gui:CustomText id="headline" wordWrap="false" textAlign="left" color="0xFFFFFF" fontWeight="bold" />
+    <gui:CustomText id="description" text="" width="220" color="0xFFFFFF" />
+    <renderer:UnitAttributeRenderer id="attribute" />
+</mx:VBox>

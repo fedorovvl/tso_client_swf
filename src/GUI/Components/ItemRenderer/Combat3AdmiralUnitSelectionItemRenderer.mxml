@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<local:Combat3UnitBaseItemRenderer xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" width="127" height="113">
+    <mx:Script><![CDATA[
+        import mx.core.mx_internal;
+        import GUI.Components.data.dCombatUnitData;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            mBackgroundSource = "BackgroundCombat3UnitSelection";
+            mBackgroundSourceMouseOver = "BackgroundCombat3UnitSelectionMouseOver";
+            super.data = argument1;
+            var localValue2:dCombatUnitData = (argument1 as dCombatUnitData);
+            if (localValue2 != null)
+            {
+                btnRemove.visible = false;
+                btnRemove.includeInLayout = false;
+                resourceIcon.visible = false;
+                resourceIcon.includeInLayout = false;
+                arrowSmall.visible = false;
+                arrowSmall.includeInLayout = false;
+                amountLabel.visible = false;
+                amountLabel.includeInLayout = false;
+                amountInput.visible = false;
+                amountInput.includeInLayout = false;
+                amountSlider.visible = false;
+                amountSlider.includeInLayout = false;
+                slash.visible = false;
+                slash.includeInLayout = false;
+                topBox.setStyle("bottom", 22);
+                bottomBox.setStyle("horizontalAlign", "center");
+                costLabel.visible = true;
+                costLabel.includeInLayout = true;
+                costLabel.text = localValue2.available.toString();
+            };
+            refreshRendererPresentation();
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+
+            this.width = 127;
+            this.height = 113;
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+
+</local:Combat3UnitBaseItemRenderer>

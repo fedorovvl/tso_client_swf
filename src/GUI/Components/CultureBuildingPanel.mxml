@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="420" height="485">
+    <mx:Script><![CDATA[
+        import mx.core.ClassFactory;
+        import mx.events.PropertyChangeEvent;
+        import flash.events.Event;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Components.ItemRenderer.PMTimedProductionTypeItemRenderer;
+        import GUI.Components.ItemRenderer.OrderCostsCompactItemRenderer;
+
+        private var _478434353enableUpgradeColumn:Boolean = false;
+
+        [Bindable(event="propertyChange")]
+        public function get enableUpgradeColumn():Boolean
+        {
+            return _478434353enableUpgradeColumn;
+        }
+
+        public function set enableUpgradeColumn(value:Boolean):void
+        {
+            var old:Object = _478434353enableUpgradeColumn;
+            if (old !== value)
+            {
+                _478434353enableUpgradeColumn = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "enableUpgradeColumn", old, value));
+                updateUpgradeColumn();
+            }
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(mainBox);
+            availableOrdersList.itemRenderer = new ClassFactory(PMTimedProductionTypeItemRenderer);
+            orderCostsList.itemRenderer = new ClassFactory(OrderCostsCompactItemRenderer);
+            orderProductList.itemRenderer = new ClassFactory(OrderCostsCompactItemRenderer);
+            _CultureBuildingPanel_Image1.source = gAssetManager.GetClass("ProductionArrow");
+            btnOK.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            btnSkipCooldown.setStyle("upSkin", gAssetManager.GetClass("HalfTime"));
+            btnSkipCooldown.setStyle("downSkin", gAssetManager.GetClass("HalfTimeHighlight"));
+            btnSkipCooldown.setStyle("overSkin", gAssetManager.GetClass("HalfTimeHighlight"));
+            btnSkipCooldown.setStyle("disabledSkin", gAssetManager.GetClass("HalfTimeDisabled"));
+            btnOK.addEventListener("show", updateCooldownVisibility, false, 0, true);
+            btnOK.addEventListener("hide", updateCooldownVisibility, false, 0, true);
+            updateUpgradeColumn();
+            updateCooldownVisibility();
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function updateUpgradeColumn():void
+        {
+            this.width = _478434353enableUpgradeColumn ? 580 : 420;
+            if (_CultureBuildingPanel_VBox1)
+            {
+                _CultureBuildingPanel_VBox1.visible = _478434353enableUpgradeColumn;
+                _CultureBuildingPanel_VBox1.includeInLayout = _478434353enableUpgradeColumn;
+            }
+        }
+
+        private function updateCooldownVisibility(event:Event = null):void
+        {
+            var showCooldown:Boolean = !(btnOK.visible);
+            cooldownRemainingLabel.visible = showCooldown;
+            btnSkipCooldown.visible = showCooldown;
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var select:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Select");
+            _CultureBuildingPanel_CustomLabel1.text = ((select == undefined) ? null : String(select));
+            var details:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ProductionDetails");
+            _CultureBuildingPanel_CustomLabel2.text = ((details == undefined) ? null : String(details));
+            var effect:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Effect");
+            _CultureBuildingPanel_CustomLabel3.text = ((effect == undefined) ? null : String(effect));
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <gui:BuildingWindowHeader id="buildingHeader" />
+            <mx:HBox id="mainBox" horizontalGap="5" left="8" right="7" top="65" bottom="5" borderStyle="none">
+                <mx:VBox id="_CultureBuildingPanel_VBox1" percentHeight="100" verticalGap="0">
+                    <gui:BuildingUpgrade id="upgradeColumn" />
+                    <mx:Spacer height="3" />
+                </mx:VBox>
+                <mx:VBox percentWidth="100" percentHeight="100" verticalGap="0">
+                    <mx:VBox percentWidth="100">
+                        <gui:BuildingStacks id="buildingStacksPanel" percentWidth="100" height="54" direction="horizontal" />
+                        <mx:VBox percentWidth="100" percentHeight="100" verticalGap="0">
+                            <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                                <gui:CustomLabel id="_CultureBuildingPanel_CustomLabel1" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                            </mx:Canvas>
+                            <mx:Canvas styleName="detailsContentBox" percentWidth="100" height="62" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+                                <gui:CustomTileList id="availableOrdersList" columnWidth="53" maxRows="1" borderThickness="0" backgroundAlpha="0" useRollOver="false" horizontalCenter="0" top="7" bottom="10" />
+                            </mx:Canvas>
+                        </mx:VBox>
+                    </mx:VBox>
+                    <mx:Spacer height="8" width="1" />
+                    <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                        <gui:CustomLabel id="_CultureBuildingPanel_CustomLabel2" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                    </mx:Canvas>
+                    <mx:Canvas styleName="detailsContentBox" percentWidth="100" height="58" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+                        <mx:VBox width="150" x="10" verticalGap="1" verticalCenter="0">
+                            <gui:CustomText id="coolDownTimeLabel" width="150" wordWrap="true" horizontalCenter="0" color="0xFFFFFF" />
+                            <gui:CustomText id="coolDownTimeText" width="150" wordWrap="true" horizontalCenter="0" color="0xFFFFFF" />
+                        </mx:VBox>
+                        <mx:HBox verticalAlign="middle" right="5" verticalCenter="0">
+                            <renderer:RendererPoolBox id="orderCostsList" direction="horizontal" backgroundAlpha="0" borderThickness="0" />
+                            <mx:Image id="_CultureBuildingPanel_Image1" />
+                            <renderer:RendererPoolBox id="orderProductList" direction="horizontal" backgroundAlpha="0" borderThickness="0" />
+                        </mx:HBox>
+                    </mx:Canvas>
+                    <mx:Spacer height="8" width="1" />
+                    <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                        <gui:CustomLabel id="_CultureBuildingPanel_CustomLabel3" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                    </mx:Canvas>
+                    <mx:Canvas styleName="detailsContentBox" percentWidth="100" height="73" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+                        <mx:HBox percentHeight="100" top="2" bottom="4" horizontalGap="0" verticalAlign="middle">
+                            <mx:Spacer width="9" />
+                            <gui:Frame id="buffFrame" />
+                            <mx:Spacer width="7" />
+                            <mx:Canvas width="315" percentHeight="100" verticalScrollPolicy="auto" horizontalScrollPolicy="off">
+                                <gui:CustomText id="descriptionField" percentWidth="95" wordWrap="true" selectable="false" color="0xFFFFFF" fontWeight="normal" />
+                            </mx:Canvas>
+                        </mx:HBox>
+                    </mx:Canvas>
+                    <mx:Spacer height="8" width="1" />
+                    <mx:Canvas styleName="detailsContentBox" percentWidth="100" height="50" verticalCenter="0" horizontalCenter="0">
+                        <mx:HBox percentWidth="100" percentHeight="100" horizontalAlign="center" verticalAlign="middle" horizontalCenter="0">
+                            <gui:StandardButton id="btnOK" enabled="false" width="70" height="32" />
+                        </mx:HBox>
+                        <mx:HBox percentWidth="100" height="30" top="14" horizontalAlign="center" horizontalCenter="0">
+                            <gui:CustomLabel id="cooldownRemainingLabel" height="20" color="0xFFFFFF" textAlign="center" />
+                            <mx:Button id="btnSkipCooldown" enabled="true" toolTip="SkipCooldown" width="25" height="23" />
+                        </mx:HBox>
+                        <mx:Canvas id="busy" percentWidth="100" percentHeight="100" visible="false" backgroundColor="6970177" backgroundAlpha="0.7">
+                            <gui:SpriteLibAnimation id="busyAnim" animationName="guianim_hourglass" loop="true" visible="false" width="48" height="48" horizontalCenter="0" verticalCenter="0" />
+                        </mx:Canvas>
+                    </mx:Canvas>
+                </mx:VBox>
+            </mx:HBox>
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

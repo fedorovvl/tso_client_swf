@@ -1,0 +1,940 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="397" height="295" clipContent="false" creationPolicy="all" implements="GUI.Components.IGUIList">
+    <mx:Script><![CDATA[
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ItemRenderer.ManageArmyItemRenderer;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Loca.cLocaManager;
+        import GUI.coloringFilter;
+        import Skill.SkillDefinition;
+        import flash.display.DisplayObject;
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import flash.filters.ColorMatrixFilter;
+        import mx.collections.ArrayCollection;
+        import mx.core.ClassFactory;
+        import mx.events.PropertyChangeEvent;
+        import mx.events.ToolTipEvent;
+        import mx.states.AddChild;
+        import mx.states.RemoveChild;
+        import mx.states.SetProperty;
+        import mx.states.SetStyle;
+        import mx.states.State;
+        import mx.utils.ObjectProxy;
+
+        private var _progressProxy:ObjectProxy = new ObjectProxy();
+        private var _progressVisible:Boolean = true;
+        private var _isOnHomezone:Boolean = true;
+        private var _switchToNewUnits:Boolean = true;
+        private var _taskDuration:String = "";
+
+        [Bindable(event="propertyChange")]
+        public function get progressProxy():ObjectProxy
+        {
+            return _progressProxy;
+        }
+
+        public function set progressProxy(value:ObjectProxy):void
+        {
+            var old:Object = _progressProxy;
+            if (old !== value)
+            {
+                if (_progressProxy)
+                    _progressProxy.removeEventListener(PropertyChangeEvent.PROPERTY_CHANGE, onProgressProxyChanged);
+                _progressProxy = value;
+                if (_progressProxy)
+                    _progressProxy.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, onProgressProxyChanged, false, 0, true);
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "progressProxy", old, value));
+                syncProgress();
+            }
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get progressVisible():Boolean
+        {
+            return _progressVisible;
+        }
+
+        public function set progressVisible(value:Boolean):void
+        {
+            var old:Object = _progressVisible;
+            if (old !== value)
+            {
+                _progressVisible = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "progressVisible", old, value));
+                syncProgress();
+            }
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get isOnHomezone():Boolean
+        {
+            return _isOnHomezone;
+        }
+
+        public function set isOnHomezone(value:Boolean):void
+        {
+            var old:Object = _isOnHomezone;
+            if (old !== value)
+            {
+                _isOnHomezone = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "isOnHomezone", old, value));
+                refreshTravel();
+            }
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get switchToNewUnits():Boolean
+        {
+            return _switchToNewUnits;
+        }
+
+        public function set switchToNewUnits(value:Boolean):void
+        {
+            var old:Object = _switchToNewUnits;
+            if (old !== value)
+            {
+                _switchToNewUnits = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "switchToNewUnits", old, value));
+                refreshSwitchIcon();
+            }
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get taskDuration():String
+        {
+            return _taskDuration;
+        }
+
+        public function set taskDuration(value:String):void
+        {
+            var old:Object = _taskDuration;
+            if (old !== value)
+            {
+                _taskDuration = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "taskDuration", old, value));
+                syncTaskDuration();
+            }
+        }
+
+        public var stateGeneral:State;
+        public var stateAdmiral:State;
+        public var stateExplorer:State;
+        public var stateGeologist:State;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.styleName = "specialPanel";
+            LegacyMxmlContent.createChildren(skills);
+            LegacyMxmlContent.createChildren(specHeader);
+            LegacyMxmlContent.createChildren(confirmFooter);
+            LegacyMxmlContent.createChildren(stateHolder);
+            stateHolder.removeChild(generalLeftColumn);
+            stateHolder.removeChild(generalRightColumn);
+            stateHolder.removeChild(admiralLeftColumn);
+            stateHolder.removeChild(admiralBottom);
+            stateHolder.removeChild(admiralRightColumn);
+            stateHolder.removeChild(explorerCommandsHeader);
+            stateHolder.removeChild(subContentExplorerBase);
+            stateHolder.removeChild(subContentExplore);
+            stateHolder.removeChild(subContentFindAdventure);
+            stateHolder.removeChild(subContentFindTreasure);
+            stateHolder.removeChild(explorerCostsBox);
+            stateHolder.removeChild(subContentFindExpedition);
+            stateHolder.removeChild(geologistCommandsHeader);
+            stateHolder.removeChild(geologistDepositList);
+            stateHolder.removeChild(geologistTaskDuration);
+            buildStates();
+            _SpecialistPanel_Image32.source = gAssetManager.GetClass("PanelOrnamentalTop");
+            var starIcons:Array = [StarIconExplore, StarIconExploreSector, StarIconExploreIsland,
+                StarIconFindTreasure, StarIconFindTreasureShort, StarIconFindTreasureLong,
+                StarIconFindTreasureProlonged, StarIconFindTreasureBeanACollada, StarIconFindTreasureMedium,
+                StarIconFindTreasureEvenLonger, StarIconFindTreasureTravellingErudite,
+                StarIconFindAdventureZone, StarIconFindAdventureZoneShort, StarIconFindAdventureZoneLong,
+                StarIconFindAdventureZoneMedium, StarIconFindAdventureZoneVeryLong,
+                StarIconFindExpedition, StarIconFindExpeditionPvPSmall, StarIconFindExpeditionPvPBig,
+                StarIconFindExpeditionPvE, StarIconFindExpeditionPvPMedium, StarIconFindExpeditionGenerated,
+                StarIconFindDepositStone, StarIconFindDepositMarble, StarIconFindDepositCoal,
+                StarIconFindDepositGranite, StarIconFindDepositSalpeter, StarIconFindDepositBronzeOre,
+                StarIconFindDepositIronOre, StarIconFindDepositGoldOre, StarIconFindDepositTitaniumOre];
+            for each (var icon:mx.controls.Image in starIcons)
+                icon.source = gAssetManager.GetBitmap("SmallIconStar");
+            btnAttack.setStyle("icon", gAssetManager.GetClass("ButtonIconSwords"));
+            btnAttackAdmiral.setStyle("icon", gAssetManager.GetClass("ButtonIconSwords"));
+            btnFindExpeditionPvPSmall.setStyle("icon", gAssetManager.GetClass("ButtonIconSwords"));
+            btnFindExpeditionPvPBig.setStyle("icon", gAssetManager.GetClass("ButtonIconSwords"));
+            btnFindExpeditionPvPMedium.setStyle("icon", gAssetManager.GetClass("ButtonIconSwords"));
+            btnPreCombat.setStyle("icon", gAssetManager.GetClass("ButtonIconBattleTest"));
+            btnTransfer.setStyle("icon", gAssetManager.GetClass("ButtonIconTrumpet"));
+            btnTransferAdmiral.setStyle("icon", gAssetManager.GetClass("ButtonIconTrumpet"));
+            btnRetreat.setStyle("icon", gAssetManager.GetClass("ButtonIconFlag"));
+            btnRetreatAdmiral.setStyle("icon", gAssetManager.GetClass("ButtonIconFlag"));
+            btnStartTravel.setStyle("icon", gAssetManager.GetClass("ButtonIconSendToOtherZone"));
+            btnGeneralReturnToStar.setStyle("icon", gAssetManager.GetClass("ReturnToStarIcon"));
+            btnAdmiralReturnToStar.setStyle("icon", gAssetManager.GetClass("ReturnToStarIcon"));
+            btnCommitArmyChanges.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            btnCommitArmyChangesAdmiral.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            btnOK.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            btnResetArmyChanges.setStyle("icon", gAssetManager.GetClass("ButtonIconAbort"));
+            btnResetArmyChangesAdmiral.setStyle("icon", gAssetManager.GetClass("ButtonIconAbort"));
+            btnCancel.setStyle("icon", gAssetManager.GetClass("ButtonIconAbort"));
+            btnUnloadUnits.setStyle("icon", gAssetManager.GetClass("UnloadTroopsIcon"));
+            btnExplore.setStyle("icon", gAssetManager.GetClass("ButtonIconExploreSector"));
+            btnExploreSector.setStyle("icon", gAssetManager.GetClass("ButtonIconExploreSector"));
+            btnExploreIsland.setStyle("icon", gAssetManager.GetClass("ButtonIconExploreFarSector"));
+            btnFindTreasure.setStyle("icon", gAssetManager.GetClass("ButtonIconFindTreasure"));
+            btnFindAdventureZone.setStyle("icon", gAssetManager.GetClass("ButtonIconFindAdventure"));
+            btnFindExpedition.setStyle("icon", gAssetManager.GetClass("ButtonIconFindAdventure"));
+            btnFindExpeditionPvE.setStyle("icon", gAssetManager.GetClass("ButtonIconFindAdventure"));
+            btnFindExpeditionGenerated.setStyle("icon", gAssetManager.GetClass("ButtonIconFindAdventure"));
+            btnFindAdventureZoneShort.setStyle("icon", gAssetManager.GetClass("ButtonIconTaskShort"));
+            btnFindTreasureShort.setStyle("icon", gAssetManager.GetClass("ButtonIconTaskShort"));
+            btnFindAdventureZoneLong.setStyle("icon", gAssetManager.GetClass("ButtonIconTaskLong"));
+            btnFindTreasureLong.setStyle("icon", gAssetManager.GetClass("ButtonIconTaskLong"));
+            btnFindAdventureZoneMedium.setStyle("icon", gAssetManager.GetClass("ButtonIconTaskMedium"));
+            btnFindTreasureMedium.setStyle("icon", gAssetManager.GetClass("ButtonIconTaskMedium"));
+            btnFindAdventureZoneVeryLong.setStyle("icon", gAssetManager.GetClass("ButtonIconTaskEvenLonger"));
+            btnFindTreasureEvenLonger.setStyle("icon", gAssetManager.GetClass("ButtonIconTaskEvenLonger"));
+            btnFindTreasureProlonged.setStyle("icon", gAssetManager.GetClass("ButtonIconTaskLongest"));
+            btnFindTreasureBeanACollada.setStyle("icon", gAssetManager.GetClass("ButtonIconBeanACollada"));
+            btnFindTreasureTravellingErudite.setStyle("icon", gAssetManager.GetClass("ButtonIconTravellingErudite"));
+            btnFindDepositStone.setStyle("icon", gAssetManager.GetClass("ButtonIconStone"));
+            btnFindDepositMarble.setStyle("icon", gAssetManager.GetClass("ButtonIconMarble"));
+            btnFindDepositCoal.setStyle("icon", gAssetManager.GetClass("ButtonIconCoal"));
+            btnFindDepositGranite.setStyle("icon", gAssetManager.GetClass("ButtonIconGranite"));
+            btnFindDepositSalpeter.setStyle("icon", gAssetManager.GetClass("ButtonIconSalpeter"));
+            btnFindDepositBronzeOre.setStyle("icon", gAssetManager.GetClass("ButtonIconBronze"));
+            btnFindDepositIronOre.setStyle("icon", gAssetManager.GetClass("ButtonIconIron"));
+            btnFindDepositGoldOre.setStyle("icon", gAssetManager.GetClass("ButtonIconGold"));
+            btnFindDepositTitaniumOre.setStyle("icon", gAssetManager.GetClass("ButtonIconTitanium"));
+            skillTreeBtn.setStyle("icon", gAssetManager.GetClass("SkillTreeBtnIcon"));
+            bronzeSkill.filters = [colorFilter("bronze")];
+            silverSkill.filters = [colorFilter("silver")];
+            goldSkill.filters = [colorFilter("gold")];
+            manageArmyList.itemRenderer = new ClassFactory(ManageArmyItemRenderer);
+            btnAttack.addEventListener("toolTipCreate", __btnAttack_toolTipCreate, false, 0, true);
+            btnAttackAdmiral.addEventListener("toolTipCreate", __btnAttackAdmiral_toolTipCreate, false, 0, true);
+            btnTransfer.addEventListener("toolTipCreate", __btnTransfer_toolTipCreate, false, 0, true);
+            btnTransferAdmiral.addEventListener("toolTipCreate", __btnTransferAdmiral_toolTipCreate, false, 0, true);
+            btnRetreat.addEventListener("toolTipCreate", __btnRetreat_toolTipCreate, false, 0, true);
+            btnRetreatAdmiral.addEventListener("toolTipCreate", __btnRetreatAdmiral_toolTipCreate, false, 0, true);
+            btnPreCombat.addEventListener("toolTipCreate", __btnPreCombat_toolTipCreate, false, 0, true);
+            btnStartTravel.addEventListener("toolTipCreate", __btnStartTravel_toolTipCreate, false, 0, true);
+            btnGeneralReturnToStar.addEventListener("toolTipCreate", __btnGeneralReturnToStar_toolTipCreate, false, 0, true);
+            btnAdmiralReturnToStar.addEventListener("toolTipCreate", __btnAdmiralReturnToStar_toolTipCreate, false, 0, true);
+            btnSwitch.addEventListener("toolTipCreate", __btnSwitch_toolTipCreate, false, 0, true);
+            skillTreeBtn.addEventListener("toolTipCreate", __skillTreeBtn_toolTipCreate, false, 0, true);
+            btnExplore.addEventListener("click", __btnExplore_click, false, 0, true);
+            btnFindTreasure.addEventListener("click", __btnFindTreasure_click, false, 0, true);
+            btnFindAdventureZone.addEventListener("click", __btnFindAdventureZone_click, false, 0, true);
+            btnFindExpedition.addEventListener("click", __btnFindExpedition_click, false, 0, true);
+            btnAttackAdmiral.addEventListener("enabledChanged", syncAdmiralTabs, false, 0, true);
+            btnTransferAdmiral.addEventListener("enabledChanged", syncAdmiralTabs, false, 0, true);
+            btnRetreatAdmiral.addEventListener("enabledChanged", syncAdmiralTabs, false, 0, true);
+            btnCommitArmyChangesAdmiral.addEventListener("enabledChanged", syncAdmiralTabs, false, 0, true);
+            btnResetArmyChangesAdmiral.addEventListener("enabledChanged", syncAdmiralTabs, false, 0, true);
+            if (_progressProxy)
+                _progressProxy.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, onProgressProxyChanged, false, 0, true);
+            refreshSwitchIcon();
+            syncProgress();
+            syncTaskDuration();
+            syncAdmiralTabs();
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function loca(key:String):String
+        {
+            var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key);
+            return value == undefined ? null : String(value);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            _SpecialistPanel_CustomLabel1.text = loca("Commands");
+            _SpecialistPanel_CustomLabel4.text = loca("Commands");
+            _SpecialistPanel_CustomLabel5.text = loca("Commands");
+            _SpecialistPanel_CustomLabel8.text = loca("Commands");
+            _SpecialistPanel_CustomLabel2.text = loca("CurrentMission");
+            _SpecialistPanel_CustomLabel11.text = loca("CostsDuration");
+            _SpecialistPanel_CustomText1.text = loca("Attack");
+            _SpecialistPanel_CustomText8.text = loca("Attack");
+            _SpecialistPanel_CustomText2.text = loca("CombatPreview");
+            _SpecialistPanel_CustomText3.text = loca("Transfer");
+            _SpecialistPanel_CustomText9.text = loca("Transfer");
+            _SpecialistPanel_CustomText4.text = loca("Retreat");
+            _SpecialistPanel_CustomText10.text = loca("Retreat");
+            _SpecialistPanel_CustomText6.text = loca("ReturnToStar_short");
+            _SpecialistPanel_CustomText11.text = loca("ReturnToStar_short");
+            textExplore.text = loca("Explore");
+            textFindTreasure.text = loca("FindTreasure");
+            textFindAdventureZone.text = loca("FindAdventure");
+            textFindExpedition.text = loca("FindExpedition");
+            textExploreSector.text = loca("ExploreSector");
+            textExploreIsland.text = loca("ExploreIsland");
+            textFindAdventureZoneShort.text = loca("FindAdventureShort");
+            textFindAdventureZoneLong.text = loca("FindAdventureLong");
+            textFindAdventureZoneMedium.text = loca("FindAdventureMedium");
+            textFindAdventureZoneVeryLong.text = loca("FindAdventureVeryLong");
+            textFindTreasureShort.text = loca("FindTreasureShort");
+            textFindTreasureLong.text = loca("FindTreasureLong");
+            textFindTreasureProlonged.text = loca("FindTreasureLongest");
+            textFindTreasureBeanACollada.text = loca("FindTreasureBeanACollada");
+            textFindTreasureMedium.text = loca("FindTreasureMedium");
+            textFindTreasureEvenLonger.text = loca("FindTreasureEvenLonger");
+            textFindTreasureTravellingErudite.text = loca("FindTreasureTravellingErudite");
+            textFindExpeditionPvPSmall.text = loca("FindExpeditionPvPSmall");
+            textFindExpeditionPvPBig.text = loca("FindExpeditionPvPBig");
+            textFindExpeditionPvE.text = loca("FindExpeditionPvE");
+            textFindExpeditionPvPMedium.text = loca("FindExpeditionPvPMedium");
+            textFindExpeditionGenerated.text = loca("FindExpeditionAdventure");
+            textFindDepositStone.text = loca("FindDepositStone");
+            textFindDepositMarble.text = loca("FindDepositMarble");
+            textFindDepositCoal.text = loca("FindDepositCoal");
+            textFindDepositGranite.text = loca("FindDepositGranite");
+            textFindDepositSalpeter.text = loca("FindDepositSalpeter");
+            textFindDepositBronzeOre.text = loca("FindDepositBronze");
+            textFindDepositIronOre.text = loca("FindDepositIron");
+            textFindDepositGoldOre.text = loca("FindDepositGold");
+            textFindDepositTitaniumOre.text = loca("FindDepositAlloy");
+            btnAttack.toolTip = loca("Attack");
+            btnAttackAdmiral.toolTip = loca("Attack");
+            btnPreCombat.toolTip = loca("CombatPreview");
+            btnTransfer.toolTip = loca("Transfer");
+            btnTransferAdmiral.toolTip = loca("Transfer");
+            btnRetreat.toolTip = loca("Retreat");
+            btnRetreatAdmiral.toolTip = loca("Retreat");
+            btnGeneralReturnToStar.toolTip = loca("ReturnToStar_short");
+            btnAdmiralReturnToStar.toolTip = loca("ReturnToStar_short");
+            btnUnloadUnits.toolTip = loca("UnloadUnits");
+            skillTreeBtn.toolTip = loca("SkilltreeTooltip");
+            var garrison:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "GarrisonSwitch");
+            btnSwitch.toolTip = ((garrison == undefined) ? null : String(garrison));
+            refreshTravel();
+        }
+
+        private function refreshTravel(event:Event = null):void
+        {
+            var text:String = loca(_isOnHomezone ? "TravelToAdventure" : "TravelToHomezone");
+            _SpecialistPanel_CustomText5.text = text;
+            btnStartTravel.toolTip = text;
+        }
+
+        private function refreshSwitchIcon(event:Event = null):void
+        {
+            btnSwitch.setStyle("icon", _switchToNewUnits ? gAssetManager.GetClass("ButtonIconUnitSwitchToNew") : gAssetManager.GetClass("ButtonIconUnitSwitchToOld"));
+        }
+
+        private function syncProgress(event:Event = null):void
+        {
+            var value:* = _progressProxy ? _progressProxy.progress : undefined;
+            progress.value = ((value == undefined) ? 0 : value);
+            progress.visible = _progressVisible;
+            generalRecovering.visible = _progressVisible;
+            admiralRecovering.visible = _progressVisible;
+            generalStatusPanel.progressProxy = _progressProxy;
+            admiralStatusPanel.progressProxy = _progressProxy;
+        }
+
+        private function onProgressProxyChanged(event:PropertyChangeEvent):void
+        {
+            if (event.property == "progress")
+                syncProgress();
+        }
+
+        private function syncTaskDuration(event:Event = null):void
+        {
+            var text:String = ((_taskDuration == undefined) ? null : String(_taskDuration));
+            _SpecialistPanel_CustomLabel6.text = text;
+            geologistTaskDuration.text = text;
+        }
+
+        private function syncAdmiralTabs(event:Event = null):void
+        {
+            btnAttackAdmiral.tabEnabled = btnAttackAdmiral.enabled;
+            btnTransferAdmiral.tabEnabled = btnTransferAdmiral.enabled;
+            btnRetreatAdmiral.tabEnabled = btnRetreatAdmiral.enabled;
+            btnCommitArmyChangesAdmiral.tabEnabled = btnCommitArmyChangesAdmiral.enabled;
+            btnResetArmyChangesAdmiral.tabEnabled = btnResetArmyChangesAdmiral.enabled;
+        }
+
+        private function addTo(target:DisplayObject, relativeTo:mx.core.Container = null):AddChild
+        {
+            var add:AddChild = new AddChild();
+            add.relativeTo = relativeTo;
+            add.position = "lastChild";
+            add.target = target;
+            return add;
+        }
+
+        private function prop(target:Object, name:String, value:Object):SetProperty
+        {
+            var set:SetProperty = new SetProperty();
+            set.target = target;
+            set.name = name;
+            set.value = value;
+            return set;
+        }
+
+        private function buildStates():void
+        {
+            var general:State = new State();
+            general.name = "General";
+            general.overrides = [prop(this, "width", 603), prop(this, "height", 385),
+                prop(specHeader, "height", 60),
+                setStyleOf(specHeader, "left", 185), setStyleOf(specHeader, "top", 77),
+                prop(hr1, "visible", true), prop(hr1, "width", 390), prop(hr1, "x", 190),
+                prop(skills, "visible", true), prop(skills, "x", 190), prop(skills, "width", 400),
+                prop(bronzeSkill, "width", 87), prop(silverSkill, "width", 87), prop(goldSkill, "width", 95),
+                prop(hr2, "visible", true), prop(hr2, "width", 390), prop(hr2, "x", 190),
+                drop(confirmFooter),
+                addTo(generalLeftColumn), addTo(generalRightColumn)];
+            stateGeneral = general;
+            var admiral:State = new State();
+            admiral.name = "Admiral";
+            admiral.overrides = [prop(this, "width", 650), prop(this, "height", 502),
+                drop(confirmFooter),
+                addTo(admiralLeftColumn), addTo(admiralBottom), addTo(admiralRightColumn)];
+            stateAdmiral = admiral;
+            var explorer:State = new State();
+            explorer.name = "Explorer";
+            explorer.overrides = [prop(this, "height", 396),
+                prop(hr1, "visible", true), prop(hr2, "visible", true), prop(skills, "visible", true),
+                setStyleOf(specHeader, "top", 77),
+                addTo(explorerCommandsHeader), addTo(subContentExplorerBase),
+                addTo(subContentExplore), addTo(subContentFindAdventure),
+                addTo(subContentFindTreasure), addTo(explorerCostsBox, costsHolder),
+                addTo(subContentFindExpedition)];
+            stateExplorer = explorer;
+            var geologist:State = new State();
+            geologist.name = "Geologist";
+            geologist.overrides = [prop(this, "height", 524),
+                prop(hr1, "visible", true), prop(hr2, "visible", true), prop(skills, "visible", true),
+                setStyleOf(specHeader, "top", 77),
+                addTo(geologistCommandsHeader), addTo(geologistDepositList),
+                addTo(geologistTaskDuration, costsHolder)];
+            stateGeologist = geologist;
+            states = [general, admiral, explorer, geologist];
+        }
+
+        private function setStyleOf(target:Object, name:String, value:Object):SetStyle
+        {
+            var set:SetStyle = new SetStyle();
+            set.target = target;
+            set.name = name;
+            set.value = value;
+            return set;
+        }
+
+        private function drop(target:Object):RemoveChild
+        {
+            var remove:RemoveChild = new RemoveChild();
+            remove.target = target;
+            return remove;
+        }
+
+        private function colorFilter(param:String):ColorMatrixFilter
+        {
+            return coloringFilter(SkillDefinition.getColorByType(param));
+        }
+
+        public function getAllItems(param:String):Vector.<DisplayObject>
+        {
+            var list:ArrayCollection = null;
+            var index:int = 0;
+            if (param == null)
+                return null;
+            var result:Vector.<DisplayObject> = new Vector.<DisplayObject>();
+            if (this.manageArmyList != null && this.manageArmyList.dataProvider != null)
+            {
+                list = ArrayCollection(this.manageArmyList.dataProvider);
+                index = 0;
+                while (index < list.length)
+                {
+                    if ("Army" + list[index].name_string == param)
+                        result.push(this.manageArmyList.indexToItemRenderer(index) as DisplayObject);
+                    index++;
+                }
+            }
+            if (hasOwnProperty(param))
+                result.push(this[param]);
+            return result;
+        }
+
+        public function getFirstItem(param:String):DisplayObject
+        {
+            var list:ArrayCollection = null;
+            var index:int = 0;
+            if (param == null)
+                return null;
+            if (this.manageArmyList != null && this.manageArmyList.dataProvider != null)
+            {
+                list = ArrayCollection(this.manageArmyList.dataProvider);
+                index = 0;
+                while (index < list.length)
+                {
+                    if ("Army" + list[index].name_string == param)
+                        return this.manageArmyList.indexToItemRenderer(index) as DisplayObject;
+                    index++;
+                }
+            }
+            if (hasOwnProperty(param))
+                return this[param];
+            return null;
+        }
+
+        public function set busy(value:Boolean):void
+        {
+            switch (this.currentState)
+            {
+                case "TransporterGeneral":
+                case "General":
+                    this.generalBusy.visible = value;
+                    this.generalBusyAnim.visible = value;
+                    break;
+                case "Admiral":
+                    this.admiralBusy.visible = value;
+                    this.admiralBusyAnim.visible = value;
+                    break;
+            }
+        }
+
+        public function __btnExplore_click(event:MouseEvent):void
+        {
+            this.subContentExplore.visible = true;
+            this.subContentExplorerBase.visible = false;
+        }
+
+        public function __btnFindTreasure_click(event:MouseEvent):void
+        {
+            this.subContentFindTreasure.visible = true;
+            this.subContentExplorerBase.visible = false;
+            height = 484;
+        }
+
+        public function __btnFindAdventureZone_click(event:MouseEvent):void
+        {
+            this.subContentFindAdventure.visible = true;
+            this.subContentExplorerBase.visible = false;
+        }
+
+        public function __btnFindExpedition_click(event:MouseEvent):void
+        {
+            this.subContentFindExpedition.visible = true;
+            this.subContentExplorerBase.visible = false;
+        }
+
+        public function __skillTreeBtn_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnRetreat_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnPreCombat_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnStartTravel_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnSwitch_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnTransfer_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnAttack_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnAttackAdmiral_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnTransferAdmiral_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnRetreatAdmiral_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnGeneralReturnToStar_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnAdmiralReturnToStar_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+
+        <mx:Image id="_SpecialistPanel_Image32" horizontalCenter="0" top="-52" />
+        <mx:Image id="iconPlaceholder" horizontalCenter="0" y="-45" width="50" height="60" />
+        <gui:CustomLabel id="title" y="10" width="300" height="30" selectable="false" color="0xFFFFFF" textAlign="center" horizontalCenter="0" />
+        <gui:CustomTextInput id="nameInput" horizontalCenter="0" y="8" width="200" visible="false" maxChars="20" styleName="standardInput" />
+        <gui:EditControl id="editcontrol" top="6" right="43" />
+        <gui:CloseButton id="close" top="7" right="22" />
+        <mx:Canvas id="hr1" visible="false" styleName="hr" x="25" y="31" width="354" height="3" />
+        <mx:HBox id="skills" visible="false" x="31" y="31" width="340" height="45" horizontalScrollPolicy="off" verticalScrollPolicy="off" horizontalGap="3" verticalAlign="middle">
+            <mx:Canvas>
+                <mx:Canvas id="bronzeSkill" styleName="skillColorBG" width="72" height="33" />
+                <renderer:ResourceItemRenderer id="bronzeResource" verticalCenter="0" horizontalCenter="0" color="0x000000" enableAmountCheck="false" />
+            </mx:Canvas>
+            <mx:Canvas>
+                <mx:Canvas id="silverSkill" styleName="skillColorBG" width="72" height="33" />
+                <renderer:ResourceItemRenderer id="silverResource" verticalCenter="0" horizontalCenter="0" color="0x000000" enableAmountCheck="false" />
+            </mx:Canvas>
+            <mx:Canvas>
+                <mx:Canvas id="goldSkill" styleName="skillColorBG" width="80" height="33" />
+                <renderer:ResourceItemRenderer id="goldResource" verticalCenter="0" horizontalCenter="0" color="0x000000" enableAmountCheck="false" />
+            </mx:Canvas>
+            <gui:StandardButton id="skillTreeBtn" enabled="true" playSound="false" width="110" height="35" />
+        </mx:HBox>
+        <mx:Canvas id="hr2" visible="false" styleName="hr" x="24" y="73" width="350" height="3" />
+        <mx:Canvas id="specHeader" styleName="detailsHeader" height="90" left="26" right="24" top="32">
+            <gui:CustomText id="description" selectable="false" left="18" top="5" right="15" bottom="2" color="0xFFFFFF" fontWeight="normal" />
+        </mx:Canvas>
+        <mx:Canvas id="confirmFooter" left="31" right="28" bottom="13">
+            <mx:Canvas styleName="detailsSubHeader" height="18" percentWidth="100">
+                <gui:CustomLabel id="_SpecialistPanel_CustomLabel11" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+            </mx:Canvas>
+            <mx:Canvas styleName="detailsContentBox" height="80" left="1" right="1" top="18">
+                <mx:Canvas styleName="detailsSubContentBox" percentWidth="100" height="37">
+                    <mx:HBox id="costsHolder" horizontalCenter="0" verticalCenter="0" verticalAlign="middle" horizontalGap="25">
+                        <mx:Canvas id="resourceHolder" />
+                    </mx:HBox>
+                </mx:Canvas>
+                <gui:ReversableHBox id="okCancelButtonBox" horizontalCenter="0" bottom="5">
+                    <gui:StandardButton id="btnOK" enabled="false" playSound="false" width="70" height="32" />
+                    <gui:StandardButton id="btnCancel" width="70" height="32" />
+                </gui:ReversableHBox>
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas id="stateHolder" width="0" height="0">
+            <mx:Canvas id="generalLeftColumn" width="155" creationPolicy="all" left="31" top="31">
+                <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                    <gui:CustomLabel id="_SpecialistPanel_CustomLabel1" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                </mx:Canvas>
+                <mx:Canvas styleName="detailsContentBox" height="267" left="1" right="1" top="18">
+                    <mx:VBox percentWidth="100" percentHeight="100" horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalGap="3" paddingTop="6" paddingBottom="6" paddingLeft="6" paddingRight="6" verticalAlign="top">
+                        <mx:Canvas id="attackButtonContainer" percentWidth="100">
+                            <mx:Canvas styleName="detailsSubContentBox" left="0" right="10" top="1" bottom="1">
+                                <gui:CustomText id="_SpecialistPanel_CustomText1" selectable="false" left="5" right="50" verticalCenter="0" color="0xFFFFFF" />
+                            </mx:Canvas>
+                            <gui:StandardButton id="btnAttack" enabled="false" width="49" height="39" right="0" />
+                        </mx:Canvas>
+                        <mx:Canvas id="precombatButtonContainer" percentWidth="100">
+                            <mx:Canvas styleName="detailsSubContentBox" left="0" right="10" top="1" bottom="1">
+                                <gui:CustomText id="_SpecialistPanel_CustomText2" selectable="false" left="5" right="50" verticalCenter="0" color="0xFFFFFF" />
+                            </mx:Canvas>
+                            <gui:StandardButton id="btnPreCombat" enabled="false" width="49" height="39" right="0" />
+                        </mx:Canvas>
+                        <mx:Canvas id="transferButtonContainer" percentWidth="100">
+                            <mx:Canvas styleName="detailsSubContentBox" left="0" right="10" top="1" bottom="1">
+                                <gui:CustomText id="_SpecialistPanel_CustomText3" selectable="false" left="5" right="50" verticalCenter="0" color="0xFFFFFF" />
+                            </mx:Canvas>
+                            <gui:StandardButton id="btnTransfer" enabled="false" width="49" height="39" right="0" />
+                        </mx:Canvas>
+                        <mx:Canvas id="retreatButtonContainer" percentWidth="100">
+                            <mx:Canvas styleName="detailsSubContentBox" left="0" right="10" top="1" bottom="1">
+                                <gui:CustomText id="_SpecialistPanel_CustomText4" selectable="false" left="5" right="50" verticalCenter="0" color="0xFFFFFF" />
+                            </mx:Canvas>
+                            <gui:StandardButton id="btnRetreat" playSound="false" enabled="false" width="49" height="39" right="0" />
+                        </mx:Canvas>
+                        <mx:Canvas id="startTravel" percentWidth="100">
+                            <mx:Canvas styleName="detailsSubContentBox" left="0" right="10" top="1" bottom="1">
+                                <gui:CustomText id="_SpecialistPanel_CustomText5" selectable="false" left="5" right="50" verticalCenter="0" color="0xFFFFFF" />
+                            </mx:Canvas>
+                            <gui:StandardButton id="btnStartTravel" enabled="true" width="49" height="39" right="0" />
+                        </mx:Canvas>
+                        <mx:Canvas id="returnToStarContainer" percentWidth="100">
+                            <mx:Canvas styleName="detailsSubContentBox" left="0" right="10" top="1" bottom="1">
+                                <gui:CustomText id="_SpecialistPanel_CustomText6" selectable="false" left="5" right="50" verticalCenter="0" color="0xFFFFFF" />
+                            </mx:Canvas>
+                            <gui:StandardButton id="btnGeneralReturnToStar" enabled="true" width="49" height="39" right="0" />
+                        </mx:Canvas>
+                    </mx:VBox>
+                </mx:Canvas>
+                <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18" top="280">
+                    <gui:CustomLabel id="_SpecialistPanel_CustomLabel2" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                </mx:Canvas>
+                <mx:Canvas styleName="detailsContentBox" height="42" verticalScrollPolicy="off" horizontalScrollPolicy="off" left="1" right="1" top="298">
+                    <gui:CustomText id="currentTask" selectable="false" horizontalCenter="0" top="10" color="0xFFFFFF" />
+                    <gui:ProgressBar id="progress" left="10" right="10" bottom="10" />
+                </mx:Canvas>
+            </mx:Canvas>
+            <mx:Canvas id="generalRightColumn" left="188" right="28" top="134">
+                <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                    <gui:CustomLabel id="manageUnitsAmountLabel" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                </mx:Canvas>
+                <mx:Canvas styleName="detailsContentBox" height="220" left="1" right="1" top="18">
+                    <mx:Canvas styleName="detailsSubContentBox" percentWidth="100" height="170">
+                        <mx:TileList id="manageArmyList" selectable="false" left="6" right="3" top="4" bottom="0" backgroundAlpha="0" borderThickness="0" useRollOver="false" />
+                    </mx:Canvas>
+                    <gui:StandardButton id="btnSwitch" enabled="true" width="84" height="39" left="10" bottom="5" />
+                    <gui:ReversableHBox id="armyChangesButtonBox" horizontalCenter="0" bottom="8">
+                        <gui:StandardButton id="btnCommitArmyChanges" enabled="false" width="70" height="32" />
+                        <gui:StandardButton id="btnResetArmyChanges" enabled="false" width="70" height="32" />
+                    </gui:ReversableHBox>
+                    <gui:StandardButton id="btnUnloadUnits" enabled="true" height="39" right="10" bottom="5" />
+                    <mx:Canvas id="generalBusy" percentWidth="100" percentHeight="100" visible="false" backgroundColor="6970177" backgroundAlpha="0.7">
+                        <gui:SpriteLibAnimation id="generalBusyAnim" animationName="guianim_hourglass" loop="true" visible="false" width="48" height="48" horizontalCenter="0" verticalCenter="0" />
+                    </mx:Canvas>
+                    <mx:Canvas id="generalRecovering" percentWidth="100" percentHeight="100" backgroundColor="6970177" backgroundAlpha="0" bottom="30">
+                        <mx:Box percentWidth="100" percentHeight="100" verticalAlign="middle" horizontalAlign="center">
+                            <gui:GeneralStatusPanel id="generalStatusPanel" specialistString="General" width="220" height="150" />
+                        </mx:Box>
+                    </mx:Canvas>
+                </mx:Canvas>
+            </mx:Canvas>
+            <mx:Canvas id="admiralLeftColumn" width="180" horizontalScrollPolicy="off" verticalScrollPolicy="off" left="31" top="124" bottom="0">
+                <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                    <gui:CustomLabel id="_SpecialistPanel_CustomLabel4" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                </mx:Canvas>
+                <mx:Canvas styleName="detailsContentBox" left="1" right="1" top="18" bottom="53">
+                    <mx:VBox percentWidth="100" percentHeight="100" horizontalScrollPolicy="off" verticalScrollPolicy="off" verticalGap="3" paddingTop="6" paddingBottom="6" paddingLeft="6" paddingRight="6" verticalAlign="top">
+                        <mx:Canvas id="attackAdmiralButtonContainer" percentWidth="100">
+                            <mx:Canvas styleName="detailsSubContentBox" left="0" right="10" top="1" bottom="1">
+                                <gui:CustomText id="_SpecialistPanel_CustomText8" selectable="false" left="5" right="50" verticalCenter="0" color="0xFFFFFF" />
+                            </mx:Canvas>
+                            <gui:StandardButton id="btnAttackAdmiral" enabled="false" width="49" height="39" right="0" />
+                        </mx:Canvas>
+                        <mx:Canvas id="transferAdmiralButtonContainer" percentWidth="100">
+                            <mx:Canvas styleName="detailsSubContentBox" left="0" right="10" top="1" bottom="1">
+                                <gui:CustomText id="_SpecialistPanel_CustomText9" selectable="false" left="5" right="50" verticalCenter="0" color="0xFFFFFF" />
+                            </mx:Canvas>
+                            <gui:StandardButton id="btnTransferAdmiral" enabled="false" width="49" height="39" right="0" />
+                        </mx:Canvas>
+                        <mx:Canvas id="retreatAdmiralButtonContainer" percentWidth="100">
+                            <mx:Canvas styleName="detailsSubContentBox" left="0" right="10" top="1" bottom="1">
+                                <gui:CustomText id="_SpecialistPanel_CustomText10" selectable="false" left="5" right="50" verticalCenter="0" color="0xFFFFFF" />
+                            </mx:Canvas>
+                            <gui:StandardButton id="btnRetreatAdmiral" playSound="false" enabled="false" width="49" height="39" right="0" />
+                        </mx:Canvas>
+                        <mx:Canvas id="admiralReturnToStarContainer" percentWidth="100">
+                            <mx:Canvas styleName="detailsSubContentBox" left="0" right="10" top="1" bottom="1">
+                                <gui:CustomText id="_SpecialistPanel_CustomText11" selectable="false" left="5" right="50" verticalCenter="0" color="0xFFFFFF" />
+                            </mx:Canvas>
+                            <gui:StandardButton id="btnAdmiralReturnToStar" enabled="true" width="49" height="39" right="0" />
+                        </mx:Canvas>
+                    </mx:VBox>
+                </mx:Canvas>
+            </mx:Canvas>
+            <mx:Canvas id="admiralBottom" height="55" left="31" right="28" bottom="0" backgroundAlpha="0">
+                <gui:ReversableHBox id="armyChangesButtonBoxAdmiral" horizontalCenter="0" top="0" left="1" right="1" bottom="0" horizontalAlign="center" verticalAlign="middle" backgroundAlpha="0">
+                    <gui:StandardButton id="btnCommitArmyChangesAdmiral" enabled="false" width="70" height="32" />
+                    <gui:StandardButton id="btnResetArmyChangesAdmiral" enabled="false" width="70" height="32" />
+                </gui:ReversableHBox>
+            </mx:Canvas>
+            <mx:Canvas id="admiralRightColumn" left="215" right="28" top="124" bottom="0">
+                <gui:Combat3UnitManager id="admiralUnitManager" left="0" right="0" top="0" bottom="52" />
+                <mx:Canvas id="admiralBusy" visible="false" backgroundColor="6970177" backgroundAlpha="0.7" top="0" left="0" right="0" bottom="52">
+                    <gui:SpriteLibAnimation id="admiralBusyAnim" animationName="guianim_hourglass" loop="true" visible="false" width="48" height="48" horizontalCenter="0" verticalCenter="0" />
+                </mx:Canvas>
+                <mx:Canvas id="admiralRecovering" percentWidth="100" percentHeight="100" backgroundColor="6970177" backgroundAlpha="0.7" bottom="52">
+                    <mx:Box percentWidth="100" percentHeight="100" verticalAlign="middle" horizontalAlign="center">
+                        <gui:GeneralStatusPanel id="admiralStatusPanel" specialistString="Admiral" width="220" height="150" />
+                    </mx:Box>
+                </mx:Canvas>
+            </mx:Canvas>
+            <mx:Canvas id="explorerCommandsHeader" styleName="detailsSubHeader" height="18" left="31" right="28" top="169">
+                <gui:CustomLabel id="_SpecialistPanel_CustomLabel5" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+            </mx:Canvas>
+            <mx:Canvas id="subContentExplorerBase" styleName="detailsContentBox" height="93" left="32" right="29" top="187">
+                <mx:Canvas id="boxExplore" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" left="5" top="7">
+                    <gui:CustomText id="textExplore" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnExplore" width="49" height="39" left="112" top="6" />
+                <mx:Image id="StarIconExplore" visible="false" mouseEnabled="false" left="140" top="9" />
+                <mx:Canvas id="boxFindTreasure" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" left="5" top="49">
+                    <gui:CustomText id="textFindTreasure" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindTreasure" width="49" height="39" left="112" top="48" />
+                <mx:Image id="StarIconFindTreasure" visible="false" mouseEnabled="false" left="140" top="51" />
+                <mx:Canvas id="boxFindAdventureZone" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" right="13" top="7">
+                    <gui:CustomText id="textFindAdventureZone" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindAdventureZone" width="49" height="39" right="5" top="6" />
+                <mx:Image id="StarIconFindAdventureZone" visible="false" mouseEnabled="false" right="11" top="9" />
+                <mx:Canvas id="boxFindExpedition" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" right="13" top="49">
+                    <gui:CustomText id="textFindExpedition" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindExpedition" width="49" height="39" right="5" top="48" />
+                <mx:Image id="StarIconFindExpedition" visible="false" mouseEnabled="false" right="11" top="51" />
+            </mx:Canvas>
+            <mx:Canvas id="subContentExplore" styleName="detailsContentBox" height="53" visible="false" left="32" right="29" top="187">
+                <mx:Canvas id="boxExploreSector" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" left="5" top="7">
+                    <gui:CustomText id="textExploreSector" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnExploreSector" width="49" height="39" left="112" top="6" />
+                <mx:Image id="StarIconExploreSector" visible="false" mouseEnabled="false" left="140" top="9" />
+                <mx:Canvas id="boxExploreIsland" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" right="13" top="7">
+                    <gui:CustomText id="textExploreIsland" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnExploreIsland" width="49" height="39" right="5" top="6" />
+                <mx:Image id="StarIconExploreIsland" visible="false" mouseEnabled="false" right="11" top="9" />
+            </mx:Canvas>
+            <mx:Canvas id="subContentFindAdventure" styleName="detailsContentBox" height="93" visible="false" left="32" right="29" top="187">
+                <mx:Canvas id="boxFindAdventureZoneShort" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" left="5" top="7">
+                    <gui:CustomText id="textFindAdventureZoneShort" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindAdventureZoneShort" width="49" height="39" left="112" top="6" />
+                <mx:Image id="StarIconFindAdventureZoneShort" visible="false" mouseEnabled="false" left="140" top="9" />
+                <mx:Canvas id="boxFindAdventureZoneLong" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" left="5" top="49">
+                    <gui:CustomText id="textFindAdventureZoneLong" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindAdventureZoneLong" width="49" height="39" left="112" top="48" />
+                <mx:Image id="StarIconFindAdventureZoneLong" visible="false" mouseEnabled="false" left="140" top="51" />
+                <mx:Canvas id="boxFindAdventureZoneMedium" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" right="13" top="7">
+                    <gui:CustomText id="textFindAdventureZoneMedium" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindAdventureZoneMedium" width="49" height="39" right="5" top="6" />
+                <mx:Image id="StarIconFindAdventureZoneMedium" visible="false" mouseEnabled="false" right="11" top="9" />
+                <mx:Canvas id="boxFindAdventureZoneVeryLong" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" right="13" top="49">
+                    <gui:CustomText id="textFindAdventureZoneVeryLong" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindAdventureZoneVeryLong" width="49" height="39" right="5" top="48" />
+                <mx:Image id="StarIconFindAdventureZoneVeryLong" visible="false" mouseEnabled="false" right="11" top="51" />
+            </mx:Canvas>
+            <mx:Canvas id="subContentFindTreasure" styleName="detailsContentBox" height="179" visible="false" left="32" right="29" top="187">
+                <mx:Canvas id="boxFindTreasureShort" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" left="5" top="7">
+                    <gui:CustomText id="textFindTreasureShort" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindTreasureShort" width="49" height="39" left="112" top="6" />
+                <mx:Image id="StarIconFindTreasureShort" visible="false" mouseEnabled="false" left="140" top="9" />
+                <mx:Canvas id="boxFindTreasureLong" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" left="5" top="49">
+                    <gui:CustomText id="textFindTreasureLong" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindTreasureLong" width="49" height="39" left="112" top="48" />
+                <mx:Image id="StarIconFindTreasureLong" visible="false" mouseEnabled="false" left="140" top="51" />
+                <mx:Canvas id="boxFindTreasureProlonged" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" left="5" top="91">
+                    <gui:CustomText id="textFindTreasureProlonged" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindTreasureProlonged" width="49" height="39" left="112" top="90" />
+                <mx:Image id="StarIconFindTreasureProlonged" visible="false" mouseEnabled="false" left="140" top="93" />
+                <mx:Canvas id="boxFindTreasureBeanACollada" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" left="5" top="135">
+                    <gui:CustomText id="textFindTreasureBeanACollada" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindTreasureBeanACollada" width="49" height="39" left="112" top="134" />
+                <mx:Image id="StarIconFindTreasureBeanACollada" visible="false" mouseEnabled="false" left="140" top="137" />
+                <mx:Canvas id="boxFindTreasureMedium" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" right="13" top="7">
+                    <gui:CustomText id="textFindTreasureMedium" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindTreasureMedium" width="49" height="39" right="5" top="6" />
+                <mx:Image id="StarIconFindTreasureMedium" visible="false" mouseEnabled="false" right="11" top="9" />
+                <mx:Canvas id="boxFindTreasureEvenLonger" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" right="13" top="49">
+                    <gui:CustomText id="textFindTreasureEvenLonger" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindTreasureEvenLonger" width="49" height="39" right="5" top="48" />
+                <mx:Image id="StarIconFindTreasureEvenLonger" visible="false" mouseEnabled="false" right="11" top="51" />
+                <mx:Canvas id="boxFindTreasureTravellingErudite" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" right="13" top="91">
+                    <gui:CustomText id="textFindTreasureTravellingErudite" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindTreasureTravellingErudite" width="49" height="39" right="5" top="90" />
+                <mx:Image id="StarIconFindTreasureTravellingErudite" visible="false" mouseEnabled="false" right="11" top="93" />
+            </mx:Canvas>
+            <mx:VBox id="explorerCostsBox" verticalGap="0">
+                <gui:CustomLabel id="_SpecialistPanel_CustomLabel6" color="0xFFFFFF" />
+                <gui:CustomLabel id="taskExpRecovery" color="0xFFFFFF" />
+            </mx:VBox>
+            <mx:Canvas id="subContentFindExpedition" styleName="detailsContentBox" height="93" visible="false" horizontalScrollPolicy="off" verticalScrollPolicy="off" left="32" right="29" top="187">
+                <mx:Canvas id="boxFindExpeditionPvPSmall" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" left="5" top="7">
+                    <gui:CustomText id="textFindExpeditionPvPSmall" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindExpeditionPvPSmall" width="49" height="39" left="112" top="6" />
+                <mx:Image id="StarIconFindExpeditionPvPSmall" visible="false" mouseEnabled="false" left="140" top="9" />
+                <mx:Canvas id="boxFindExpeditionPvPBig" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" left="5" top="49">
+                    <gui:CustomText id="textFindExpeditionPvPBig" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindExpeditionPvPBig" width="49" height="39" left="112" top="48" />
+                <mx:Image id="StarIconFindExpeditionPvPBig" visible="false" mouseEnabled="false" left="140" top="51" />
+                <mx:Canvas id="boxFindExpeditionPvE" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" visible="false" includeInLayout="false" left="5" top="91">
+                    <gui:CustomText id="textFindExpeditionPvE" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindExpeditionPvE" width="49" height="39" visible="false" includeInLayout="false" left="112" top="90" />
+                <mx:Image id="StarIconFindExpeditionPvE" visible="false" mouseEnabled="false" left="140" top="93" />
+                <mx:Canvas id="boxFindExpeditionPvPMedium" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" right="13" top="7">
+                    <gui:CustomText id="textFindExpeditionPvPMedium" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindExpeditionPvPMedium" width="49" height="39" right="5" top="6" />
+                <mx:Image id="StarIconFindExpeditionPvPMedium" visible="false" mouseEnabled="false" right="11" top="9" />
+                <mx:Canvas id="boxFindExpeditionGenerated" styleName="detailsSubContentBox" width="150" height="37" verticalScrollPolicy="off" visible="false" includeInLayout="false" right="13" top="49">
+                    <gui:CustomText id="textFindExpeditionGenerated" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindExpeditionGenerated" width="49" height="39" visible="false" includeInLayout="false" right="5" top="48" />
+                <mx:Image id="StarIconFindExpeditionGenerated" visible="false" mouseEnabled="false" right="11" top="51" />
+            </mx:Canvas>
+            <mx:Canvas id="geologistCommandsHeader" styleName="detailsSubHeader" height="18" left="31" right="28" top="169">
+                <gui:CustomLabel id="_SpecialistPanel_CustomLabel8" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+            </mx:Canvas>
+            <mx:Canvas id="geologistDepositList" styleName="detailsContentBox" height="219" left="32" right="29" top="187">
+                <mx:Canvas id="boxFindDepositStone" styleName="detailsSubContentBox" width="150" height="37" left="5" top="7">
+                    <gui:CustomText id="textFindDepositStone" selectable="false" left="5" right="50" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindDepositStone" enabled="false" width="49" height="39" left="112" top="6" />
+                <mx:Image id="StarIconFindDepositStone" visible="false" mouseEnabled="false" left="140" top="9" />
+                <mx:Canvas id="boxFindDepositMarble" styleName="detailsSubContentBox" width="150" height="37" left="5" top="49">
+                    <gui:CustomText id="textFindDepositMarble" selectable="false" left="5" right="47" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindDepositMarble" enabled="false" width="49" height="39" left="112" top="48" />
+                <mx:Image id="StarIconFindDepositMarble" visible="false" mouseEnabled="false" left="140" top="51" />
+                <mx:Canvas id="boxFindDepositCoal" styleName="detailsSubContentBox" width="150" height="37" left="5" top="91">
+                    <gui:CustomText id="textFindDepositCoal" selectable="false" left="5" right="50" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindDepositCoal" enabled="false" width="49" height="39" left="112" top="90" />
+                <mx:Image id="StarIconFindDepositCoal" visible="false" mouseEnabled="false" left="140" top="93" />
+                <mx:Canvas id="boxFindDepositGranite" styleName="detailsSubContentBox" width="150" height="37" left="5" top="133">
+                    <gui:CustomText id="textFindDepositGranite" selectable="false" left="5" right="50" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindDepositGranite" enabled="false" width="49" height="39" left="112" top="132" />
+                <mx:Image id="StarIconFindDepositGranite" visible="false" mouseEnabled="false" left="140" top="133" />
+                <mx:Canvas id="boxFindDepositSalpeter" styleName="detailsSubContentBox" width="150" height="37" left="5" top="175">
+                    <gui:CustomText id="textFindDepositSalpeter" selectable="false" left="5" right="50" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindDepositSalpeter" enabled="false" width="49" height="39" left="112" top="175" />
+                <mx:Image id="StarIconFindDepositSalpeter" visible="false" mouseEnabled="false" left="140" top="173" />
+                <mx:Canvas id="boxFindDepositBronzeOre" styleName="detailsSubContentBox" width="150" height="37" right="13" top="7">
+                    <gui:CustomText id="textFindDepositBronzeOre" selectable="false" left="5" right="50" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindDepositBronzeOre" enabled="false" width="49" height="39" right="5" top="6" />
+                <mx:Image id="StarIconFindDepositBronzeOre" visible="false" mouseEnabled="false" right="11" top="9" />
+                <mx:Canvas id="boxFindDepositIronOre" styleName="detailsSubContentBox" width="150" height="37" right="13" top="49">
+                    <gui:CustomText id="textFindDepositIronOre" selectable="false" left="5" right="50" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindDepositIronOre" enabled="false" width="49" height="39" right="5" top="48" />
+                <mx:Image id="StarIconFindDepositIronOre" visible="false" mouseEnabled="false" right="11" top="51" />
+                <mx:Canvas id="boxFindDepositGoldOre" styleName="detailsSubContentBox" width="150" height="37" right="13" top="91">
+                    <gui:CustomText id="textFindDepositGoldOre" selectable="false" left="5" right="50" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindDepositGoldOre" enabled="false" width="49" height="39" right="5" top="90" />
+                <mx:Image id="StarIconFindDepositGoldOre" visible="false" mouseEnabled="false" right="11" top="93" />
+                <mx:Canvas id="boxFindDepositTitaniumOre" styleName="detailsSubContentBox" width="150" height="37" right="13" top="133">
+                    <gui:CustomText id="textFindDepositTitaniumOre" selectable="false" left="5" right="50" verticalCenter="2" color="0xFFFFFF" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnFindDepositTitaniumOre" enabled="false" width="49" height="39" right="5" top="132" />
+                <mx:Image id="StarIconFindDepositTitaniumOre" visible="false" mouseEnabled="false" right="11" top="133" />
+            </mx:Canvas>
+            <gui:CustomLabel id="geologistTaskDuration" color="0xFFFFFF" />
+        </mx:Canvas>
+</mx:Canvas>

@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="810" height="500" cacheAsBitmap="true" clipContent="false">
+    <mx:Script><![CDATA[
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+        import flash.filters.BevelFilter;
+        import flash.filters.BitmapFilterQuality;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Loca.cLocaManager;
+        import mx.events.EffectEvent;
+        import mx.events.ToolTipEvent;
+
+        public var _HelpOverview_BevelFilter1:BevelFilter;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            _HelpOverview_BevelFilter1 = new BevelFilter();
+            _HelpOverview_BevelFilter1.distance = 1;
+            _HelpOverview_BevelFilter1.angle = 225;
+            _HelpOverview_BevelFilter1.highlightColor = 0xFFFFFF;
+            _HelpOverview_BevelFilter1.highlightAlpha = 0.5;
+            _HelpOverview_BevelFilter1.shadowColor = 0;
+            _HelpOverview_BevelFilter1.shadowAlpha = 0.5;
+            _HelpOverview_BevelFilter1.blurX = 4;
+            _HelpOverview_BevelFilter1.blurY = 4;
+            _HelpOverview_BevelFilter1.strength = 1;
+            _HelpOverview_BevelFilter1.quality = BitmapFilterQuality.MEDIUM;
+            bevelBox.filters = [_HelpOverview_BevelFilter1];
+            fadeOut.addEventListener("effectEnd", __fadeOut_effectEnd);
+            btnHelpReset.addEventListener("toolTipCreate", __btnHelpReset_toolTipCreate);
+            btnClose2.addEventListener("toolTipCreate", __btnClose2_toolTipCreate);
+            btnHelpPreviousEnd.addEventListener("toolTipCreate", __btnHelpPreviousEnd_toolTipCreate);
+            btnHelpPrevious.addEventListener("toolTipCreate", __btnHelpPrevious_toolTipCreate);
+            btnHelpNext.addEventListener("toolTipCreate", __btnHelpNext_toolTipCreate);
+            btnHelpNextEnd.addEventListener("toolTipCreate", __btnHelpNextEnd_toolTipCreate);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function loca(key:String):String
+        {
+            var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key);
+            return value == undefined ? null : String(value);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            headline.text = loca("HelpWindow");
+            btnHelpReset.toolTip = loca("HelpReset");
+            btnClose2.toolTip = loca("Close");
+            btnHelpPreviousEnd.toolTip = loca("FirstPage");
+            btnHelpPrevious.toolTip = loca("Previous");
+            btnHelpNext.toolTip = loca("Next");
+            btnHelpNextEnd.toolTip = loca("LastPage");
+        }
+
+        public function __fadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+
+        public function __btnHelpReset_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnClose2_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnHelpPreviousEnd_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnHelpPrevious_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnHelpNext_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnHelpNextEnd_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <mx:Canvas id="background" styleName="basicPanel" top="5" left="5" right="9" bottom="0" />
+    <mx:Image id="_HelpOverview_Image1" horizontalCenter="0" top="-53" source="{gAssetManager.GetClass('HelpOrnamentalTop')}" />
+    <gui:CustomLabel id="headline" left="46" top="15" right="46" fontWeight="bold" textAlign="center" color="0xFFFFFF" />
+    <mx:Canvas id="detailsHeader" styleName="detailsHeader" left="14" right="16" top="33" bottom="10">
+        <mx:HBox id="contentContainer" left="13" right="15" top="8" bottom="3" horizontalGap="2">
+            <mx:Canvas id="listContainer" width="262" height="446">
+                <mx:Canvas id="bevelBox" width="245" height="446" left="0" top="0" backgroundColor="0x31281E" />
+                <gui:GroupedHelpList id="list" width="259" height="440" left="3" top="3" />
+            </mx:Canvas>
+            <mx:Canvas styleName="vr" width="3" height="446" />
+            <mx:Canvas id="detailsContainer" width="470" height="446" clipContent="false">
+                <mx:Canvas left="0" right="0" top="0" styleName="economyTitleBg" height="31" />
+                <gui:CustomLabel id="helpHeadline" left="15" right="15" top="6" color="0x000000" fontWeight="bold" textAlign="center" fontSize="14" />
+                <mx:Canvas top="43" horizontalCenter="0" width="434" height="142">
+                    <gui:TSOImage id="helpImage" percentWidth="100" percentHeight="100" />
+                    <gui:StandardButton id="btnInImageButton" />
+                </mx:Canvas>
+                <mx:Canvas top="38" horizontalCenter="0" styleName="questOrnamental" width="450" height="10" />
+                <mx:Canvas top="200" horizontalCenter="0" styleName="detailsSubHeader" width="434" height="175">
+                    <gui:CustomTextArea id="description" left="5" top="5" bottom="4" color="0xFFFFFF" width="424" styleName="noBackground" selectable="false" editable="false" />
+                </mx:Canvas>
+                <mx:Canvas left="-3" right="-3" bottom="48" styleName="hr" height="3" />
+                <gui:ReversableHBox id="buttonBox" left="7" bottom="7" right="7" verticalAlign="middle">
+                    <gui:StandardButton id="btnHelpReset" height="32" width="150" icon="{gAssetManager.GetClass('BackIcon')}" />
+                    <gui:StandardButton id="btnClose2" height="32" width="100" icon="{gAssetManager.GetClass('Close')}" />
+                    <mx:Spacer percentWidth="100" />
+                    <mx:HBox id="pageBox" verticalAlign="middle">
+                        <mx:Button id="btnHelpPreviousEnd" width="25" height="23"
+                            upSkin="{gAssetManager.GetClass('ArrowLeftEnd')}"
+                            overSkin="{gAssetManager.GetClass('ArrowLeftEndHighlight')}"
+                            downSkin="{gAssetManager.GetClass('ArrowLeftEndHighlight')}"
+                            disabledSkin="{gAssetManager.GetClass('ArrowLeftEndDisabled')}" />
+                        <mx:Button id="btnHelpPrevious" width="25" height="23"
+                            upSkin="{gAssetManager.GetClass('ArrowLeft')}"
+                            overSkin="{gAssetManager.GetClass('ArrowLeftHighlight')}"
+                            downSkin="{gAssetManager.GetClass('ArrowLeftHighlight')}"
+                            disabledSkin="{gAssetManager.GetClass('ArrowLeftDisabled')}" />
+                        <gui:CustomLabel id="pageLabel" color="0xFFFFFF" />
+                        <mx:Button id="btnHelpNext" width="25" height="23"
+                            upSkin="{gAssetManager.GetClass('ArrowRight')}"
+                            overSkin="{gAssetManager.GetClass('ArrowRightHighlight')}"
+                            downSkin="{gAssetManager.GetClass('ArrowRightHighlight')}"
+                            disabledSkin="{gAssetManager.GetClass('ArrowRightDisabled')}" />
+                        <mx:Button id="btnHelpNextEnd" width="25" height="23"
+                            upSkin="{gAssetManager.GetClass('ArrowRightEnd')}"
+                            overSkin="{gAssetManager.GetClass('ArrowRightEndHighlight')}"
+                            downSkin="{gAssetManager.GetClass('ArrowRightEndHighlight')}"
+                            disabledSkin="{gAssetManager.GetClass('ArrowRightEndDisabled')}" />
+                    </mx:HBox>
+                </gui:ReversableHBox>
+            </mx:Canvas>
+            <mx:Canvas styleName="vr" width="3" height="446" />
+        </mx:HBox>
+    </mx:Canvas>
+    <gui:CloseButton id="btnClose" top="10" right="24" />
+</mx:Canvas>

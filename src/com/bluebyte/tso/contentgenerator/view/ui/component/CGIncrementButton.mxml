@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="25" height="23">
+    <mx:Script><![CDATA[
+        import flash.events.MouseEvent;
+        import GUI.Assets.gAssetManager;
+
+        protected function mouseOverHandler(event:MouseEvent):void
+        {
+            this.bg.source = gAssetManager.GetClass("congen_up_highlight");
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            setStyle("backgroundAlpha", 0);
+            addEventListener(MouseEvent.MOUSE_OVER, mouseOverHandler);
+            this.bg.source = gAssetManager.GetClass("congen_up");
+        }
+    ]]></mx:Script>
+
+    <gui:TSOImage id="bg" percentWidth="100" percentHeight="100" mouseEnabled="false" />
+</mx:Canvas>

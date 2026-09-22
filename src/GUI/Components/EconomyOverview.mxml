@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="750" height="473" cacheAsBitmap="true" clipContent="false"
+    currentState="select" implements="GUI.Components.IGUIList">
+    <mx:Script><![CDATA[
+        import __AS3__.vec.Vector;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ItemRenderer.EconomyConsumptionItemRenderer;
+        import GUI.Components.ItemRenderer.EconomyProductionItemRenderer;
+        import GUI.Components.ItemRenderer.EconomySubConsumptionItemRenderer;
+        import GUI.Components.ItemRenderer.EconomySubProductionItemRenderer;
+        import GUI.Components.ItemRenderer.TreeNodeRenderer;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Loca.cLocaManager;
+        import flash.display.DisplayObject;
+        import flash.events.Event;
+        import mx.collections.ArrayCollection;
+        import mx.core.ClassFactory;
+        import mx.core.Container;
+        import mx.events.EffectEvent;
+        import mx.events.ToolTipEvent;
+        import mx.states.AddChild;
+        import mx.states.RemoveChild;
+        import mx.states.State;
+
+        public var selectState:State;
+        public var treeViewState:State;
+        public var detailViewState:State;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(stateHolder);
+            stateHolder.removeChild(_EconomyOverview_CustomLabel1);
+            stateHolder.removeChild(treeContainer);
+            stateHolder.removeChild(detailHeaderBar);
+            stateHolder.removeChild(hrDetailTop);
+            stateHolder.removeChild(productionPanel);
+            stateHolder.removeChild(consumptionPanel);
+            stateHolder.removeChild(hrDetailMid);
+            stateHolder.removeChild(statusBgTotalProduction);
+            stateHolder.removeChild(detailViewCloseDetail);
+            stateHolder.removeChild(productionSubListPanel);
+            stateHolder.removeChild(consumptionSubListPanel);
+            stateHolder.removeChild(hrDetailBottom);
+            productionList.itemRenderer = new ClassFactory(EconomyProductionItemRenderer);
+            consumptionList.itemRenderer = new ClassFactory(EconomyConsumptionItemRenderer);
+            productionSubList.itemRenderer = new ClassFactory(EconomySubProductionItemRenderer);
+            consumptionSubList.itemRenderer = new ClassFactory(EconomySubConsumptionItemRenderer);
+            _EconomyOverview_Image1.source = gAssetManager.GetClass("PanelOrnamentalTop");
+            _EconomyOverview_Image2.source = gAssetManager.GetClass("EconomyOverviewIcon");
+            detailViewCloseDetail.setStyle("icon", gAssetManager.GetClass("LoopBackward"));
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            fadeOut.addEventListener("effectEnd", __fadeOut_effectEnd);
+            productionListTotalBg.addEventListener("toolTipCreate", __productionListTotalBg_toolTipCreate);
+            consumptionListTotalBg.addEventListener("toolTipCreate", __consumptionListTotalBg_toolTipCreate);
+            productionSubListTotalBg.addEventListener("toolTipCreate", __productionSubListTotalBg_toolTipCreate);
+            consumptionSubListTotalBg.addEventListener("toolTipCreate", __consumptionSubListTotalBg_toolTipCreate);
+            totalProductionCount.addEventListener("toolTipCreate", __totalProductionCount_toolTipCreate);
+            buildStates();
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function loca(key:String):String
+        {
+            var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key);
+            return value == undefined ? null : String(value);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            if (!cLocaManager.GetInstance().IsInitialized()) return;
+            headline.text = loca("ProductionOverview");
+            _EconomyOverview_CustomLabel1.text = loca("PleaseSelect");
+            _EconomyOverview_CustomLabel3.text = loca("InStock");
+            _EconomyOverview_CustomLabel4.text = loca("Production");
+            _EconomyOverview_CustomLabel6.text = loca("Consumption");
+        }
+
+        public function __fadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+
+        public function __consumptionListTotalBg_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __productionSubListTotalBg_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __consumptionSubListTotalBg_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __totalProductionCount_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __productionListTotalBg_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        private function addTo(target:DisplayObject, relativeTo:Container = null, position:String = "lastChild"):AddChild
+        {
+            var add:AddChild = new AddChild();
+            add.relativeTo = relativeTo;
+            add.position = position;
+            add.target = target;
+            return add;
+        }
+
+        private function drop(target:Object):RemoveChild
+        {
+            var remove:RemoveChild = new RemoveChild();
+            remove.target = target;
+            return remove;
+        }
+
+        private function buildStates():void
+        {
+            var select:State = new State();
+            select.name = "select";
+            select.overrides = [addTo(_EconomyOverview_CustomLabel1, mainBg), drop(economyHeader)];
+            selectState = select;
+            var treeView:State = new State();
+            treeView.name = "treeView";
+            treeView.overrides = [addTo(treeContainer, mainBg)];
+            treeViewState = treeView;
+            var detailView:State = new State();
+            detailView.name = "detailView";
+            detailView.overrides = [addTo(detailHeaderBar, mainBg), addTo(hrDetailTop, mainBg),
+                addTo(productionPanel, mainBg), addTo(consumptionPanel, mainBg),
+                addTo(hrDetailMid, mainBg), addTo(statusBgTotalProduction, mainBg),
+                addTo(detailViewCloseDetail, mainBg), addTo(productionSubListPanel, mainBg),
+                addTo(consumptionSubListPanel, mainBg), addTo(hrDetailBottom, mainBg)];
+            detailViewState = detailView;
+            states = [select, treeView, detailView];
+        }
+
+        public function getAllItems(_arg_1:String):Vector.<DisplayObject>
+        {
+            var _local_3:int;
+            var _local_4:DisplayObject;
+            var _local_5:ArrayCollection;
+            if (_arg_1 == null)
+            {
+                return (null);
+            };
+            var _local_2:Vector.<DisplayObject> = new Vector.<DisplayObject>();
+            if (_arg_1 == "tree")
+            {
+                _local_2.push(this);
+            };
+            if (((this.currentState == "treeView") && (!(this.treeSprite == null))))
+            {
+                _local_3 = 0;
+                while (_local_3 < this.treeSprite.numChildren)
+                {
+                    _local_4 = this.treeSprite.getChildAt(_local_3);
+                    if (((_local_4 is TreeNodeRenderer) && ((_local_4 as TreeNodeRenderer).data.resource.name_string == _arg_1)))
+                    {
+                        _local_2.push(_local_4);
+                    };
+                    _local_3++;
+                };
+            }
+            else
+            {
+                if (((this.currentState == "detailView") && (!(this.detailViewTitleResource == null))))
+                {
+                    if (this.detailViewTitleResource.data.name_string == _arg_1)
+                    {
+                        _local_2.push(this);
+                    };
+                    _local_5 = ArrayCollection(this.productionList.dataProvider);
+                    _local_3 = 0;
+                    while (_local_3 < _local_5.length)
+                    {
+                        if (_local_5[_local_3].GetBuildingName_string() == _arg_1)
+                        {
+                            _local_2.push((this.productionList.indexToItemRenderer(_local_3) as DisplayObject));
+                        };
+                        _local_3++;
+                    };
+                    _local_5 = ArrayCollection(this.consumptionList.dataProvider);
+                    _local_3 = 0;
+                    while (_local_3 < _local_5.length)
+                    {
+                        if (_local_5[_local_3].GetBuildingName_string() == _arg_1)
+                        {
+                            _local_2.push((this.consumptionList.indexToItemRenderer(_local_3) as DisplayObject));
+                        };
+                        _local_3++;
+                    };
+                };
+            };
+            if (hasOwnProperty(_arg_1))
+            {
+                _local_2.push(this[_arg_1]);
+            };
+            return (_local_2);
+        }
+
+        public function getFirstItem(_arg_1:String):DisplayObject
+        {
+            var _local_2:int;
+            var _local_3:DisplayObject;
+            var _local_4:ArrayCollection;
+            if (_arg_1 == null)
+            {
+                return (null);
+            };
+            if (_arg_1 == "tree")
+            {
+                return (this);
+            };
+            if (((this.currentState == "treeView") && (!(this.treeSprite == null))))
+            {
+                _local_2 = 0;
+                while (_local_2 < this.treeSprite.numChildren)
+                {
+                    _local_3 = this.treeSprite.getChildAt(_local_2);
+                    if (((_local_3 is TreeNodeRenderer) && ((_local_3 as TreeNodeRenderer).data.resource.name_string == _arg_1)))
+                    {
+                        return (_local_3);
+                    };
+                    _local_2++;
+                };
+            }
+            else
+            {
+                if (((this.currentState == "detailView") && (!(this.detailViewTitleResource == null))))
+                {
+                    if (this.detailViewTitleResource.data.name_string == _arg_1)
+                    {
+                        return (this);
+                    };
+                    _local_4 = ArrayCollection(this.productionList.dataProvider);
+                    _local_2 = 0;
+                    while (_local_2 < _local_4.length)
+                    {
+                        if (_local_4[_local_2].GetBuildingName_string() == _arg_1)
+                        {
+                            return (this.productionList.indexToItemRenderer(_local_2) as DisplayObject);
+                        };
+                        _local_2++;
+                    };
+                    _local_4 = ArrayCollection(this.consumptionList.dataProvider);
+                    _local_2 = 0;
+                    while (_local_2 < _local_4.length)
+                    {
+                        if (_local_4[_local_2].GetBuildingName_string() == _arg_1)
+                        {
+                            return (this.consumptionList.indexToItemRenderer(_local_2) as DisplayObject);
+                        };
+                        _local_2++;
+                    };
+                };
+            };
+            if (hasOwnProperty(_arg_1))
+            {
+                return (this[_arg_1]);
+            };
+            return (null);
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <mx:Canvas id="background" styleName="basicPanel" top="5" left="5" right="9" bottom="0" />
+    <mx:Image id="_EconomyOverview_Image1" horizontalCenter="0" top="-50" />
+    <mx:Image id="_EconomyOverview_Image2" horizontalCenter="0" top="-50" />
+    <gui:CustomLabel id="headline" left="46" top="15" right="46" fontWeight="bold" textAlign="center" color="0xFFFFFF" />
+    <gui:CloseButton id="btnClose" top="10" right="24" />
+    <mx:Canvas id="mainBg" left="14" right="16" top="33" bottom="4" horizontalScrollPolicy="off" verticalScrollPolicy="off" styleName="detailsHeader">
+        <mx:Canvas id="economyHeader" x="193.7" y="6" width="516.26" height="47.6">
+            <mx:Canvas horizontalCenter="0" width="505" height="38" styleName="economyConsumptionBgStd" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+                <mx:Canvas left="4" right="4" top="4" bottom="4" styleName="economyTitleBg" />
+                <renderer:ResourceIconRenderer id="selectedResourceIcon" x="17" verticalCenter="0" />
+                <gui:CustomLabel id="selectedResourceName" text="Label" color="0" fontWeight="bold" verticalCenter="0" left="75" right="auto" />
+                <gui:CustomLabel id="calculationTypeName" text="Label" textAlign="right" verticalCenter="0" fontWeight="bold" color="0" left="auto" right="15" />
+            </mx:Canvas>
+            <mx:Canvas x="0" y="37" percentWidth="100" height="10" styleName="questOrnamental" />
+        </mx:Canvas>
+    </mx:Canvas>
+    <gui:GroupedResourceList id="list" x="28" y="43" width="170" height="418" clipContent="true" verticalScrollPolicy="auto" />
+    <mx:Canvas x="202" y="38" width="3" height="431" styleName="vr" />
+
+    <mx:Canvas id="stateHolder" width="0" height="0">
+        <gui:CustomLabel id="_EconomyOverview_CustomLabel1" x="389" y="139.7" color="0xFFFFFF" />
+        <mx:Canvas id="treeContainer" x="195" y="57.15" width="518.8" height="372.40002" clipContent="true">
+            <mx:Canvas id="treeSprite" />
+        </mx:Canvas>
+        <mx:Canvas id="detailHeaderBar" x="200" y="53" width="502.3" height="29.5" styleName="economyConsumptionBgStd">
+            <gui:CustomLabel id="detailViewTitle" x="17" width="299.7" height="18" text="Label" color="0xFFFFFF" verticalCenter="1" />
+            <gui:CloseButton id="detailViewClose" x="467" verticalCenter="1" />
+            <renderer:ResourceItemRenderer id="detailViewTitleResource" x="400" formatAsNumber="false" verticalCenter="3" />
+            <gui:CustomLabel id="_EconomyOverview_CustomLabel3" x="324.7" width="69.333336" height="18" color="0xFFFFFF" textAlign="right" verticalCenter="2" />
+        </mx:Canvas>
+        <mx:Canvas id="hrDetailTop" x="197" y="82" width="508" height="3" styleName="hr" />
+        <mx:Canvas id="productionPanel" x="318" width="130" top="87" bottom="86" styleName="economyListBg">
+            <mx:Canvas percentWidth="100" height="4" bottom="35" styleName="hr" />
+            <gui:CustomTileList id="productionList" percentWidth="100" top="19" bottom="39" backgroundAlpha="0" borderThickness="0" paddingBottom="1" paddingLeft="5" paddingRight="0" paddingTop="0" selectionColor="8482380" useRollOver="false" />
+            <gui:CustomLabel id="_EconomyOverview_CustomLabel4" x="0" y="1.5" width="130" color="0" fontSize="10" fontWeight="bold" textAlign="center" />
+            <mx:Canvas id="productionListTotalBg" x="56" width="55" height="35" bottom="0" styleName="economyProductionTotal">
+                <gui:CustomLabel id="productionListTotal" width="49" text="Label" color="0xFFFFFF" fontSize="13" fontWeight="bold" horizontalCenter="0" textAlign="center" verticalCenter="0" />
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas id="consumptionPanel" x="455" width="130" top="87" bottom="86" styleName="economyListBg">
+            <mx:Canvas percentWidth="100" height="4" bottom="35" styleName="hr" />
+            <gui:CustomTileList id="consumptionList" percentWidth="100" top="19" bottom="39" backgroundAlpha="0" borderThickness="0" paddingBottom="1" paddingLeft="5" paddingRight="0" paddingTop="0" useRollOver="false" />
+            <gui:CustomLabel id="_EconomyOverview_CustomLabel6" x="0" y="1.5" width="130" color="0" fontSize="10" fontWeight="bold" textAlign="center" />
+            <mx:Canvas id="consumptionListTotalBg" x="0" width="55" height="35" bottom="0" styleName="economyConsumptionTotal">
+                <gui:CustomLabel id="consumptionListTotal" width="49" text="Label" color="0xFFFFFF" fontSize="13" fontWeight="bold" horizontalCenter="0" textAlign="center" verticalCenter="0" />
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas id="hrDetailMid" x="318" width="267" height="4" bottom="79" styleName="hr" />
+        <mx:Canvas id="statusBgTotalProduction" x="392" width="120" height="35" bottom="40" styleName="economyItemBgRed">
+            <renderer:ResourceIconRenderer id="detailViewBtnResource" x="14" y="-2" />
+            <gui:CustomLabel id="totalProductionCount" x="48" y="2" width="72" height="24" text="-99/h" color="0xFFFFFF" fontSize="22" fontWeight="bold" textAlign="center" />
+        </mx:Canvas>
+        <gui:StandardButton id="detailViewCloseDetail" x="397" width="110" height="27" bottom="4" />
+        <mx:Canvas id="productionSubListPanel" x="200" width="115" top="92" bottom="40" styleName="economySubListBg" visible="true">
+            <mx:Canvas percentWidth="100" height="4" bottom="30" styleName="hr" />
+            <gui:CustomTileList id="productionSubList" percentWidth="100" top="15" bottom="34" backgroundAlpha="0" borderThickness="0" paddingBottom="1" paddingLeft="5" paddingRight="0" paddingTop="0" useRollOver="false" />
+            <gui:CustomLabel id="productionSubListTitle" x="0" width="115" height="18" text="Label" top="-1.5" color="0" fontSize="10" fontWeight="bold" textAlign="center" />
+            <mx:Canvas id="productionSubListTotalBg" x="53" width="45" height="30" bottom="0" styleName="economyProductionTotal">
+                <gui:CustomLabel id="productionSubListTotal" width="39" text="Label" color="0xFFFFFF" fontSize="13" fontWeight="bold" horizontalCenter="0" textAlign="center" verticalCenter="0" />
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas id="consumptionSubListPanel" x="588" width="115" top="92" bottom="40" styleName="economySubListBg" visible="true">
+            <mx:Canvas percentWidth="100" height="4" bottom="30" styleName="hr" />
+            <gui:CustomTileList id="consumptionSubList" percentWidth="100" top="15" bottom="34" backgroundAlpha="0" borderThickness="0" paddingBottom="1" paddingRight="0" paddingLeft="5" paddingTop="0" useRollOver="false" />
+            <gui:CustomLabel id="consumptionSubListTitle" x="0" width="115" height="18" text="Label" top="-1.5" color="0" fontSize="10" fontWeight="bold" textAlign="center" />
+            <mx:Canvas id="consumptionSubListTotalBg" x="0" width="45" height="30" bottom="0" styleName="economyConsumptionTotal">
+                <gui:CustomLabel id="consumptionSubListTotal" width="39" text="Label" color="0xFFFFFF" fontSize="13" fontWeight="bold" horizontalCenter="0" textAlign="center" verticalCenter="0" />
+            </mx:Canvas>
+        </mx:Canvas>
+        <mx:Canvas id="hrDetailBottom" x="197" width="508" height="3" bottom="34" styleName="hr" />
+    </mx:Canvas>
+</mx:Canvas>

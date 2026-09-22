@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="557" height="400" implements="GUI.Components.IGUIList">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.display.DisplayObject;
+        import mx.core.ClassFactory;
+        import mx.collections.ArrayCollection;
+        import mx.events.PropertyChangeEvent;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import GUI.Components.ItemRenderer.StarMenuItemRenderer;
+        import GUI.Components.ItemRenderer.StarMenuNullItemRenderer;
+        import BuffSystem.cBuff;
+        import Specialists.cSpecialist;
+        import Enums.SPECIALIST_TYPE;
+
+        [Embed(source="../../../assets/vector/StarMenu/_embed_mxml__105903956.swf", symbol="GUI.Components.StarMenu__embed_mxml__105903956")]
+        private var toolbarSkin:Class;
+        private var sortAscending:Boolean = true;
+        // Лока недоступна в конструкторе (панель создаётся до загрузки loca):
+        // строится лениво в updateTexts() по IsInitialized/languageChanged.
+        private var sortOptions:ArrayCollection;
+
+        [Bindable(event="propertyChange")]
+        public function get comboBoxData():ArrayCollection { return sortOptions; }
+        public function set comboBoxData(value:ArrayCollection):void
+        {
+            if (sortOptions == value) return;
+            var previous:ArrayCollection = sortOptions;
+            sortOptions = value;
+            if (sortCombo) sortCombo.dataProvider = value;
+            dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "comboBoxData", previous, value));
+        }
+
+        public function get ascending():Boolean { return sortAscending; }
+        public function set ascending(value:Boolean):void
+        {
+            sortAscending = value;
+            updateSortArrow();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(toolbar);
+            toolbar.setStyle("backgroundImage", toolbarSkin);
+            sortCombo.itemRenderer = new ClassFactory(StarMenuComboBoxItem);
+            sortCombo.dataProvider = sortOptions;
+            searchIcon.source = gAssetManager.GetClass("SearchBtnIcon");
+            itemList.nullItemRenderer = new ClassFactory(StarMenuNullItemRenderer);
+            itemList.itemRenderer = new ClassFactory(StarMenuItemRenderer);
+            for each (var padding:String in ["paddingLeft", "paddingRight", "paddingTop", "paddingBottom"])
+                itemList.setStyle(padding, 0);
+            dragon.addEventListener("resize", updateDragonPosition);
+            headline.addEventListener("resize", updateDragonPosition);
+            cLocaManager.GetInstance().addEventListener("languageChanged", updateTexts, false, 0, true);
+            updateTexts();
+            updateSortArrow();
+            updateDragonPosition();
+        }
+
+        private function updateSortArrow():void
+        {
+            if (!btnArrow) return;
+            var prefix:String = sortAscending ? "ArrowSmallN" : "ArrowSmallS";
+            btnArrow.setStyle("upSkin", gAssetManager.GetClass(prefix + "Up"));
+            btnArrow.setStyle("overSkin", gAssetManager.GetClass(prefix + "Over"));
+            btnArrow.setStyle("downSkin", gAssetManager.GetClass(prefix + "Up"));
+        }
+
+        private function updateTexts(event:Event = null):void
+        {
+            if (!cLocaManager.GetInstance().IsInitialized()) return;
+            label = cLocaManager.GetInstance().getLabel("StarMenu");
+            btnArrow.toolTip = cLocaManager.GetInstance().getLabel("ChangeSortingOrder");
+            if (sortOptions == null)
+            {
+                comboBoxData = new ArrayCollection([
+                    {label:cLocaManager.GetInstance().getLabel("Default"), data:0},
+                    {label:cLocaManager.GetInstance().getLabel("Name"), data:1},
+                    {label:cLocaManager.GetInstance().getLabel("Date"), data:2},
+                    {label:cLocaManager.GetInstance().getLabel("Type"), data:3},
+                    {label:cLocaManager.GetInstance().getLabel("Amount"), data:4}
+                ]);
+            }
+            if (event && sortOptions)
+            {
+                var names:Array = ["Default", "Name", "Date", "Type", "Amount"];
+                for each (var option:Object in sortOptions)
+                    if (option.data >= 0 && option.data < names.length)
+                        option.label = cLocaManager.GetInstance().getLabel(names[option.data]);
+                sortOptions.refresh();
+            }
+        }
+
+        private function updateDragonPosition(event:Event = null):void
+        {
+            dragon.setStyle("top", -dragon.height - headline.height);
+        }
+
+        private function matchesItem(item:Object, type:String):Boolean
+        {
+            if (item is cBuff) return cBuff(item).GetResourceName_string() == type;
+            if (item is cSpecialist) return SPECIALIST_TYPE.toString(cSpecialist(item).GetType()) == type;
+            return false;
+        }
+
+        public function getAllItems(type:String):Vector.<DisplayObject>
+        {
+            var result:Vector.<DisplayObject> = new Vector.<DisplayObject>();
+            var items:ArrayCollection = itemList ? itemList.dataProvider as ArrayCollection : null;
+            if (items)
+                for (var index:int = 0; index < items.length; index++)
+                {
+                    if (type == null || items[index] == null) break;
+                    if (matchesItem(items[index], type))
+                        result.push(itemList.indexToItemRenderer(index) as DisplayObject);
+                }
+            return result;
+        }
+
+        public function getFirstItem(type:String):DisplayObject
+        {
+            var items:ArrayCollection = itemList ? itemList.dataProvider as ArrayCollection : null;
+            if (items)
+                for (var index:int = 0; index < items.length; index++)
+                {
+                    if (type == null || items[index] == null) break;
+                    if (matchesItem(items[index], type))
+                        return itemList.indexToItemRenderer(index) as DisplayObject;
+                }
+            return null;
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <mx:Image id="dragon" horizontalCenter="0" />
+            <mx:Canvas id="toolbar" mouseEnabled="true" height="30" percentWidth="100" left="5" right="5" backgroundSize="100%">
+                <mx:HBox id="sortingControls" mouseEnabled="true" verticalAlign="middle" left="0" horizontalGap="5">
+                    <mx:ComboBox id="sortCombo" width="150" selectedIndex="0" styleName="ComboBox" rowCount="6" />
+                    <gui:StandardButton id="btnArrow" label="" labelPlacement="left" width="20" />
+                </mx:HBox>
+                <mx:HBox id="searchControls" mouseEnabled="true" verticalAlign="middle" right="5" horizontalGap="5">
+                    <gui:CustomTextInput id="searchInput" styleName="standardInput" height="20" width="200" />
+                    <mx:Image id="searchIcon" />
+                </mx:HBox>
+            </mx:Canvas>
+            <gui:CustomTileList id="itemList" rowHeight="70" columnWidth="56" useRollOver="false" borderThickness="0" backgroundAlpha="0" left="11" right="10" top="30" bottom="32" />
+            <mx:Canvas id="separator" styleName="hr" height="3" left="2" right="2" bottom="27" />
+            <gui:CustomToggleButtonBar id="buttonBar" buttonStyleName="tab" selectedButtonTextStyleName="tabSelected" bottom="0" left="5" right="5" />
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

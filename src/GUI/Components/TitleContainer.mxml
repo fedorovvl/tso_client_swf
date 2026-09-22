@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    styleName="detailsContentBox" creationPolicy="all">
+    <mx:Script><![CDATA[
+        import flash.display.DisplayObject;
+        import flash.events.Event;
+
+        private var contentComponents:Array;
+        private var contentReady:Boolean = false;
+
+        public function set contentChild(value:Array):void
+        {
+            contentComponents = value;
+            if (contentReady) updateContent();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            addEventListener("labelChanged", updateTitle);
+            updateTitle();
+            contentReady = true;
+            updateContent();
+        }
+
+        private function updateTitle(event:Event = null):void
+        {
+            _TitleContainer_CustomLabel1.text = label;
+        }
+
+        private function updateContent():void
+        {
+            container.removeAllChildren();
+            for each (var component:DisplayObject in contentComponents)
+                container.addChild(component);
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="header" height="18" styleName="detailsSubHeader"
+        horizontalScrollPolicy="off" verticalScrollPolicy="off" left="0" right="0">
+        <gui:CustomLabel id="_TitleContainer_CustomLabel1" truncateToFit="true"  top="1" color="0xFFFFFF" fontWeight="bold" left="1" right="1" textAlign="center" />
+    </mx:Canvas>
+    <mx:Canvas id="container" horizontalScrollPolicy="off" verticalScrollPolicy="off" creationPolicy="all"  left="5" right="5" top="23" bottom="5" />
+</mx:Canvas>
+

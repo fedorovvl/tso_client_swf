@@ -1,0 +1,779 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:datagrid="GUI.Components.DataGrid.*" xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="600" height="552" implements="GUI.Components.IGUIList">
+    <mx:Script><![CDATA[
+        import __AS3__.vec.Vector;
+        import Communication.VO.Guild.dGuildRankListItemVO;
+        import converted.bluebyte.tso.quests.logic.QuestManagerStatic;
+        import Enums.LOCA_GROUP;
+        import flash.display.DisplayObject;
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import flash.events.TimerEvent;
+        import flash.utils.Timer;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.DataGrid.CustomDataGridHeaderBackgroundSkin;
+        import GUI.Components.DataGrid.CustomDataGridHeaderSeparator;
+        import GUI.Components.ItemRenderer.GuildListItemRenderer;
+        import GUI.Components.ItemRenderer.GuildLogItemRenderer;
+        import GUI.Components.ItemRenderer.GuildMarketItemRenderer;
+        import GUI.Components.ItemRenderer.MailGridTextItemRenderer;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Loca.cLocaManager;
+        import mx.collections.ArrayCollection;
+        import mx.controls.dataGridClasses.DataGridColumn;
+        import mx.core.ClassFactory;
+        import mx.events.PropertyChangeEvent;
+        import mx.events.ToolTipEvent;
+
+        [Embed(source="../../../assets/gAssetManager/icon_go_shop.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_buttons_icon_go_shop_png_1155013963:Class;
+
+        [Embed(source="../../../assets/embedded/buttons/buttons_icon_next_vote.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_buttons_icon_next_vote_png_460324533:Class;
+
+        [Embed(source="../../../assets/embedded/buttons/buttons_icon_recast_vote.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_buttons_icon_recast_vote_png_549861195:Class;
+
+        [Embed(source="../../../assets/embedded/buttons/buttons_icon_view_vote.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_buttons_icon_view_vote_png_546337131:Class;
+
+        [Embed(source="../../../assets/embedded/guild/guild_arrow_n_non.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_guild_arrow_n_non_png_909152459:Class;
+
+        [Embed(source="../../../assets/embedded/guild/guild_arrow_n_sel.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_guild_arrow_n_sel_png_121605931:Class;
+
+        [Embed(source="../../../assets/embedded/guild/guild_arrow_n_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_guild_arrow_n_std_png_420446507:Class;
+
+        [Embed(source="../../../assets/embedded/guild/guild_arrow_s_non.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_guild_arrow_s_non_png_121061579:Class;
+
+        [Embed(source="../../../assets/embedded/guild/guild_arrow_s_sel.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_guild_arrow_s_sel_png_2045997355:Class;
+
+        [Embed(source="../../../assets/embedded/guild/guild_arrow_s_std.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_guild_arrow_s_std_png_104025899:Class;
+
+        public var _GuildWindow_DataGridColumn1:DataGridColumn;
+        public var _GuildWindow_DataGridColumn2:DataGridColumn;
+        public var _GuildWindow_DataGridColumn3:DataGridColumn;
+        public var _GuildWindow_DataGridColumn4:DataGridColumn;
+        public var _GuildWindow_DataGridColumn5:DataGridColumn;
+        public var _GuildWindow_DataGridColumn6:DataGridColumn;
+        public var _GuildWindow_DataGridColumn7:DataGridColumn;
+        public var _GuildWindow_DataGridColumn8:DataGridColumn;
+        public var _GuildWindow_DataGridColumn9:DataGridColumn;
+
+        public var rankMappings:Object;
+        public var resetGuildMarketLabelColorTimer:Timer = new Timer(200);
+
+        private var _288373714editPermissionsAllowed:Boolean = false;
+
+        [Bindable(event="propertyChange")]
+        public function get editPermissionsAllowed():Boolean
+        {
+            return _288373714editPermissionsAllowed;
+        }
+
+        public function set editPermissionsAllowed(value:Boolean):void
+        {
+            var old:Object = _288373714editPermissionsAllowed;
+            if (old !== value)
+            {
+                _288373714editPermissionsAllowed = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "editPermissionsAllowed", old, value));
+                syncPermissions();
+            }
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(guildListPage);
+            LegacyMxmlContent.createChildren(guildDetailsPage);
+            resetVoteCosts.setStyle("paddingTop", 5);
+            // ViewStack pages are declared as siblings (Halo ViewStack children must
+            // implement INavigatorContent); attach them to their stacks here.
+            subcontent.addChild(guildListPage);
+            subcontent.addChild(guildDetailsPage);
+            guildDetailsStack.addChild(detailInfoPage);
+            guildDetailsStack.addChild(detailMembersPage);
+            guildDetailsStack.addChild(administration);
+            guildDetailsStack.addChild(guildmarket);
+            _GuildWindow_ViewStack3.addChild(infoApplyPage);
+            _GuildWindow_ViewStack3.addChild(infoActionsPage);
+            myGuildDescriptionLogView.addChild(descPublicPage);
+            myGuildDescriptionLogView.addChild(descMembersPage);
+            // The pages now live inside subcontent; keep them out of subComponents so
+            // BasicPanel.addSubComponents() does not re-parent them to content.
+            subComponents = [_GuildWindow_Image1, _GuildWindow_Image2, subcontent];
+            _GuildWindow_Image1.source = gAssetManager.GetClass("PanelOrnamentalTop");
+            _GuildWindow_Image2.source = gAssetManager.GetClass("IconGuildShield");
+            _GuildWindow_Image3.source = gAssetManager.GetClass("GuildmarketOrnamental");
+            _GuildWindow_Image4.source = gAssetManager.GetClass("GuildmarketOrnamental");
+            nextVoteIcon.source = _embed_mxml_____data_src_gfx_embedded_buttons_icon_next_vote_png_460324533;
+            btnSaveRankChanges.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            btnDiscardRankChanges.setStyle("icon", gAssetManager.GetClass("ButtonIconAbort"));
+            btnSaveBannerChanges.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            btnDiscardBannerChanges.setStyle("icon", gAssetManager.GetClass("ButtonIconAbort"));
+            btnGuildMarketSendSelection.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            btnGuildMarketResetSelection.setStyle("icon", gAssetManager.GetClass("ButtonIconAbort"));
+            btnBannerLeft.setStyle("upSkin", gAssetManager.GetClass("ArrowLeft"));
+            btnBannerLeft.setStyle("overSkin", gAssetManager.GetClass("ArrowLeftHighlight"));
+            btnBannerLeft.setStyle("downSkin", gAssetManager.GetClass("ArrowLeftHighlight"));
+            btnBannerLeft.setStyle("disabledSkin", gAssetManager.GetClass("ArrowLeftDisabled"));
+            btnBannerRight.setStyle("upSkin", gAssetManager.GetClass("ArrowRight"));
+            btnBannerRight.setStyle("overSkin", gAssetManager.GetClass("ArrowRightHighlight"));
+            btnBannerRight.setStyle("downSkin", gAssetManager.GetClass("ArrowRightHighlight"));
+            btnBannerRight.setStyle("disabledSkin", gAssetManager.GetClass("ArrowRightDisabled"));
+            btnRankUp.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_guild_arrow_n_std_png_420446507);
+            btnRankUp.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_guild_arrow_n_sel_png_121605931);
+            btnRankUp.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_guild_arrow_n_sel_png_121605931);
+            btnRankUp.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_guild_arrow_n_non_png_909152459);
+            btnRankDown.setStyle("upSkin", _embed_mxml_____data_src_gfx_embedded_guild_arrow_s_std_png_104025899);
+            btnRankDown.setStyle("downSkin", _embed_mxml_____data_src_gfx_embedded_guild_arrow_s_sel_png_2045997355);
+            btnRankDown.setStyle("overSkin", _embed_mxml_____data_src_gfx_embedded_guild_arrow_s_sel_png_2045997355);
+            btnRankDown.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_guild_arrow_s_non_png_121061579);
+            btnGuildMarketResetVote.setStyle("icon", _embed_mxml_____data_src_gfx_embedded_buttons_icon_recast_vote_png_549861195);
+            btnGuildMarketToShop.setStyle("icon", _embed_mxml_____data_src_gfx_embedded_buttons_icon_go_shop_png_1155013963);
+            btnGuildMarketToggleHistory.setStyle("icon", _embed_mxml_____data_src_gfx_embedded_buttons_icon_view_vote_png_546337131);
+            GuildMarketUniqueItems.itemRenderer = new ClassFactory(GuildMarketItemRenderer);
+            GuildMarketDefaultItems.itemRenderer = new ClassFactory(GuildMarketItemRenderer);
+            guildLog.itemRenderer = new ClassFactory(GuildLogItemRenderer);
+            var rankTabFactory:ClassFactory = new ClassFactory(GuildWindow_inlineComponent1);
+            rankTabFactory.properties = {outerDocument: this};
+            manageRankTabItemList.itemRenderer = rankTabFactory;
+            buildGridColumns();
+            guildList.setStyle("alternatingItemColors", []);
+            membersList.setStyle("alternatingItemColors", []);
+            guildList.setStyle("headerBackgroundSkin", CustomDataGridHeaderBackgroundSkin);
+            guildList.setStyle("headerSeparatorSkin", CustomDataGridHeaderSeparator);
+            guildList.setStyle("headerColors", [3155998]);
+            membersList.setStyle("headerBackgroundSkin", CustomDataGridHeaderBackgroundSkin);
+            membersList.setStyle("headerSeparatorSkin", CustomDataGridHeaderSeparator);
+            membersList.setStyle("headerColors", [3155998]);
+            guildList.addEventListener("toolTipCreate", __guildList_toolTipCreate, false, 0, true);
+            btnFoundGuild.addEventListener("toolTipCreate", __btnFoundGuild_toolTipCreate, false, 0, true);
+            btnStepDown.addEventListener("toolTipCreate", __btnStepDown_toolTipCreate, false, 0, true);
+            membersList.addEventListener("toolTipCreate", __membersList_toolTipCreate, false, 0, true);
+            memberName.addEventListener("toolTipCreate", __memberName_toolTipCreate, false, 0, true);
+            memberRank.addEventListener("toolTipCreate", __memberRank_toolTipCreate, false, 0, true);
+            rankName1.addEventListener("rollOver", __rankName1_rollOver, false, 0, true);
+            rankName2.addEventListener("rollOver", __rankName2_rollOver, false, 0, true);
+            rankName3.addEventListener("rollOver", __rankName3_rollOver, false, 0, true);
+            rankName4.addEventListener("rollOver", __rankName4_rollOver, false, 0, true);
+            btnGuildMarketSendSelection.addEventListener("toolTipCreate", __btnGuildMarketSendSelection_toolTipCreate, false, 0, true);
+            btnGuildMarketResetSelection.addEventListener("toolTipCreate", __btnGuildMarketResetSelection_toolTipCreate, false, 0, true);
+            btnGuildMarketResetVote.addEventListener("toolTipCreate", __btnGuildMarketResetVote_toolTipCreate, false, 0, true);
+            btnGuildMarketToShop.addEventListener("toolTipCreate", __btnGuildMarketToShop_toolTipCreate, false, 0, true);
+            btnGuildMarketToggleHistory.addEventListener("toolTipCreate", __btnGuildMarketToggleHistory_toolTipCreate, false, 0, true);
+            buttonBar.addEventListener("toolTipCreate", __buttonBar_toolTipCreate, false, 0, true);
+            btnFoundGuild.addEventListener("enabledChanged", syncFoundGuildTooltip, false, 0, true);
+            myGuildDescriptionLogView.addEventListener("change", syncDetailView, false, 0, true);
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+            refreshLabels();
+            syncPermissions();
+            syncMarketVisibility();
+            syncDetailView();
+        }
+
+        private function loca(key:String):String
+        {
+            var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key);
+            return value == undefined ? null : String(value);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            _GuildWindow_DataGridColumn1.headerText = loca("Guild");
+            _GuildWindow_DataGridColumn2.headerText = loca("GuildTag");
+            _GuildWindow_DataGridColumn3.headerText = loca("GuildPlayerCount");
+            _GuildWindow_DataGridColumn4.headerText = loca("GuildMember");
+            _GuildWindow_DataGridColumn5.headerText = loca("GuildLevel");
+            _GuildWindow_DataGridColumn6.headerText = loca("GuildRank");
+            _GuildWindow_DataGridColumn7.headerText = loca("GuildOnlineLast24");
+            _GuildWindow_DataGridColumn8.headerText = loca("GuildQuestStatus");
+            _GuildWindow_DataGridColumn9.headerText = loca("GuildSuccession");
+            btnMyGuild.label = loca("GuildMy");
+            btnFoundGuild.label = loca("GuildFound");
+            btnApply.label = loca("GuildApply");
+            btnInvite.label = loca("GuildInvite");
+            btnMail.label = loca("GuildMail");
+            btnLeave.label = loca("GuildLeave");
+            btnStepDown.label = loca("GuildStepDown");
+            btnIncrease.label = loca("GuildIncreaseSizeButton");
+            btnBackToList.label = loca("GuildList");
+            btnKick.label = loca("GuildKick");
+            _GuildWindow_CustomLabel1.text = loca("GuildInfo");
+            _GuildWindow_CustomLabel2.text = loca("GuildLeader");
+            _GuildWindow_Label1.text = loca("GuildMOTD");
+            _GuildWindow_CustomLabel4.text = loca("GuildDescription");
+            _GuildWindow_Label2.text = loca("GuildDescription");
+            _GuildWindow_CustomLabel5.text = loca("GuildLog");
+            _GuildWindow_CustomLabel6.text = loca("GuildMemberDetails");
+            _GuildWindow_CustomLabel10.text = loca("GuildOfficerNote");
+            _GuildWindow_CustomLabel11.text = loca("GuildNote");
+            _GuildWindow_CustomLabel12.text = loca("GuildEditRanks");
+            _GuildWindow_CustomLabel13.text = loca("GuildEdit");
+            _GuildWindow_FormItem1.label = loca("GuildRank") + " 1";
+            _GuildWindow_FormItem2.label = loca("GuildRank") + " 2";
+            _GuildWindow_FormItem3.label = loca("GuildRank") + " 3";
+            _GuildWindow_FormItem4.label = loca("GuildRank") + " 4";
+            _GuildWindow_Label3.text = loca("GuildRankRights");
+            inviteMembers.text = loca("GuildRankInviteMembers");
+            kickMembersToTest.text = loca("GuildRankKickMembers");
+            writeGuildMails.text = loca("GuildRankWriteGuildmails");
+            useNotes.text = loca("GuildRankUseNotes");
+            editGuildEmblem.text = loca("GuildRankEditGuildEmblem");
+            btnGuildMarketSendSelection.toolTip = loca("GuildMarketConfirmSelection");
+            btnGuildMarketResetSelection.toolTip = loca("GuildMarketResetSelection");
+            btnGuildMarketResetVote.toolTip = loca("GuildMarketResetVote");
+            btnGuildMarketToShop.toolTip = loca("GoToShop");
+            btnGuildMarketToggleHistory.toolTip = loca("GuildMarketToggleHistory");
+            var costsLabel:* = cLocaManager.GetInstance().getLabel("costs");
+            resetVoteCostsLabel.text = costsLabel == undefined ? null : String(costsLabel);
+            syncFoundGuildTooltip();
+        }
+
+        private function syncFoundGuildTooltip(event:Event = null):void
+        {
+            var tip:* = btnFoundGuild.enabled ? "" : cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, "GuildFoundTooltip");
+            btnFoundGuild.toolTip = tip == undefined ? null : String(tip);
+        }
+
+        private function syncPermissions(event:Event = null):void
+        {
+            if (!inviteMembersCheck)
+            {
+                return;
+            }
+            inviteMembersCheck.enabled = editPermissionsAllowed;
+            kickMembersCheck.enabled = editPermissionsAllowed;
+            writeGuildMailsCheck.enabled = editPermissionsAllowed;
+            useNotesCheck.enabled = editPermissionsAllowed;
+            editGuildEmblemCheck.enabled = editPermissionsAllowed;
+        }
+
+        private function syncMarketVisibility(event:Event = null):void
+        {
+            guildMarketVoteButtons.includeInLayout = guildMarketVoteButtons.visible;
+            guildMarketResetVoteBox.includeInLayout = guildMarketResetVoteBox.visible;
+            _GuildWindow_Canvas57.visible = guildMarketResetVoteBox.visible;
+        }
+
+        private function syncDetailView(event:Event = null):void
+        {
+            _GuildWindow_ViewStack3.selectedIndex = myGuildDescriptionLogView.selectedIndex;
+        }
+
+        private function buildGridColumns():void
+        {
+            _GuildWindow_DataGridColumn1 = new DataGridColumn();
+            _GuildWindow_DataGridColumn1.resizable = false;
+            _GuildWindow_DataGridColumn1.draggable = false;
+            _GuildWindow_DataGridColumn1.width = 300;
+            _GuildWindow_DataGridColumn1.dataField = "name";
+            _GuildWindow_DataGridColumn1.itemRenderer = new ClassFactory(MailGridTextItemRenderer);
+            _GuildWindow_DataGridColumn2 = new DataGridColumn();
+            _GuildWindow_DataGridColumn2.resizable = false;
+            _GuildWindow_DataGridColumn2.draggable = false;
+            _GuildWindow_DataGridColumn2.width = 100;
+            _GuildWindow_DataGridColumn2.dataField = "tag";
+            _GuildWindow_DataGridColumn2.itemRenderer = new ClassFactory(MailGridTextItemRenderer);
+            _GuildWindow_DataGridColumn2.setStyle("textAlign", "center");
+            _GuildWindow_DataGridColumn3 = new DataGridColumn();
+            _GuildWindow_DataGridColumn3.resizable = false;
+            _GuildWindow_DataGridColumn3.draggable = false;
+            _GuildWindow_DataGridColumn3.width = 100;
+            _GuildWindow_DataGridColumn3.dataField = "size";
+            _GuildWindow_DataGridColumn3.itemRenderer = new ClassFactory(GuildListItemRenderer);
+            guildList.columns = [_GuildWindow_DataGridColumn1, _GuildWindow_DataGridColumn2, _GuildWindow_DataGridColumn3];
+            _GuildWindow_DataGridColumn4 = new DataGridColumn();
+            _GuildWindow_DataGridColumn4.resizable = false;
+            _GuildWindow_DataGridColumn4.draggable = false;
+            _GuildWindow_DataGridColumn4.width = 120;
+            _GuildWindow_DataGridColumn4.dataField = "username";
+            _GuildWindow_DataGridColumn4.itemRenderer = new ClassFactory(MailGridTextItemRenderer);
+            _GuildWindow_DataGridColumn4.setStyle("paddingLeft", 2);
+            _GuildWindow_DataGridColumn5 = new DataGridColumn();
+            _GuildWindow_DataGridColumn5.resizable = false;
+            _GuildWindow_DataGridColumn5.draggable = false;
+            _GuildWindow_DataGridColumn5.width = 60;
+            _GuildWindow_DataGridColumn5.dataField = "playerLevel";
+            _GuildWindow_DataGridColumn5.labelFunction = formatLevel;
+            _GuildWindow_DataGridColumn5.itemRenderer = new ClassFactory(MailGridTextItemRenderer);
+            _GuildWindow_DataGridColumn5.setStyle("paddingLeft", 0);
+            _GuildWindow_DataGridColumn5.setStyle("textAlign", "center");
+            _GuildWindow_DataGridColumn6 = new DataGridColumn();
+            _GuildWindow_DataGridColumn6.resizable = false;
+            _GuildWindow_DataGridColumn6.draggable = false;
+            _GuildWindow_DataGridColumn6.width = 120;
+            _GuildWindow_DataGridColumn6.dataField = "rankID";
+            _GuildWindow_DataGridColumn6.labelFunction = formatRanks;
+            _GuildWindow_DataGridColumn6.itemRenderer = new ClassFactory(MailGridTextItemRenderer);
+            _GuildWindow_DataGridColumn6.setStyle("paddingLeft", 4);
+            _GuildWindow_DataGridColumn7 = new DataGridColumn();
+            _GuildWindow_DataGridColumn7.resizable = false;
+            _GuildWindow_DataGridColumn7.draggable = false;
+            _GuildWindow_DataGridColumn7.width = 90;
+            _GuildWindow_DataGridColumn7.dataField = "onlineLast24";
+            _GuildWindow_DataGridColumn7.labelFunction = formatOnlineLast24;
+            _GuildWindow_DataGridColumn7.itemRenderer = new ClassFactory(MailGridTextItemRenderer);
+            _GuildWindow_DataGridColumn7.setStyle("paddingLeft", 4);
+            _GuildWindow_DataGridColumn8 = new DataGridColumn();
+            _GuildWindow_DataGridColumn8.resizable = false;
+            _GuildWindow_DataGridColumn8.draggable = false;
+            _GuildWindow_DataGridColumn8.width = 90;
+            _GuildWindow_DataGridColumn8.dataField = "questsStatus";
+            _GuildWindow_DataGridColumn8.labelFunction = formatGuildQuestStatus;
+            _GuildWindow_DataGridColumn8.itemRenderer = new ClassFactory(MailGridTextItemRenderer);
+            _GuildWindow_DataGridColumn8.setStyle("paddingLeft", 4);
+            _GuildWindow_DataGridColumn9 = new DataGridColumn();
+            _GuildWindow_DataGridColumn9.resizable = false;
+            _GuildWindow_DataGridColumn9.draggable = false;
+            _GuildWindow_DataGridColumn9.width = 90;
+            _GuildWindow_DataGridColumn9.dataField = "successorOrder";
+            membersList.columns = [_GuildWindow_DataGridColumn4, _GuildWindow_DataGridColumn5, _GuildWindow_DataGridColumn6, _GuildWindow_DataGridColumn7, _GuildWindow_DataGridColumn8, _GuildWindow_DataGridColumn9];
+        }
+
+        public function formatRanks(param1:Object, param2:DataGridColumn):String
+        {
+            var rankId:int = param1[param2.dataField];
+            return (rankMappings[rankId] as dGuildRankListItemVO).name;
+        }
+
+        public function formatOnlineLast24(param1:Object, param2:DataGridColumn):String
+        {
+            var online:Boolean = param1[param2.dataField];
+            return online ? cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Yes") : cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "No");
+        }
+
+        public function formatLevel(param1:Object, param2:DataGridColumn):String
+        {
+            var level:int = param1[param2.dataField];
+            return level == 0 ? "1" : level.toString();
+        }
+
+        public function formatGuildQuestStatus(param1:Object, param2:DataGridColumn):String
+        {
+            var mode:int = param1[param2.dataField];
+            if (mode == QuestManagerStatic.GUILD_QUEST_MODE_RUNNING_DAILY)
+            {
+                return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildQuestOpen");
+            }
+            if (mode == QuestManagerStatic.GUILD_QUEST_MODE_FINISHED)
+            {
+                return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildQuestCompleted");
+            }
+            return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildQuestNone");
+        }
+
+        public function getAllItems(param1:String):Vector.<DisplayObject>
+        {
+            if (param1 == null || buttonBar.dataProvider == null)
+            {
+                return null;
+            }
+            var result:Vector.<DisplayObject> = new Vector.<DisplayObject>();
+            var provider:ArrayCollection = ArrayCollection(buttonBar.dataProvider);
+            var index:int;
+            while (index < provider.length)
+            {
+                if (provider[index].group == param1)
+                {
+                    result.push(buttonBar.getChildAt(index));
+                }
+                index++;
+            }
+            if (hasOwnProperty(param1))
+            {
+                result.push(this[param1]);
+            }
+            return result;
+        }
+
+        public function getFirstItem(param1:String):DisplayObject
+        {
+            if (param1 == null || buttonBar.dataProvider == null)
+            {
+                return null;
+            }
+            buttonBar.validateNow();
+            var provider:ArrayCollection = ArrayCollection(buttonBar.dataProvider);
+            var index:int;
+            while (index < provider.length)
+            {
+                if (provider[index].group == param1 && buttonBar.numChildren > index)
+                {
+                    return buttonBar.getChildAt(index);
+                }
+                index++;
+            }
+            if (hasOwnProperty(param1))
+            {
+                return this[param1];
+            }
+            return null;
+        }
+
+        public function flashLabel(param1:CustomLabel):void
+        {
+            param1.setStyle("color", "#FF0000");
+            resetGuildMarketLabelColorTimer.addEventListener(TimerEvent.TIMER, handleResetGuildMarketLabelColor);
+            resetGuildMarketLabelColorTimer.start();
+        }
+
+        private function handleResetGuildMarketLabelColor(param1:TimerEvent):void
+        {
+            resetGuildMarketLabelColorTimer.reset();
+            guildMarketUniqueSelectedLabel.setStyle("color", "#FFFFFF");
+            guildMarketDefaultSelectedLabel.setStyle("color", "#FFFFFF");
+            resetGuildMarketLabelColorTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, handleResetGuildMarketLabelColor);
+        }
+
+        public function __memberRank_toolTipCreate(param1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, param1);
+        }
+
+        public function __memberName_toolTipCreate(param1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, param1);
+        }
+
+        public function __rankName2_rollOver(param1:MouseEvent):void
+        {
+            if (rankName2.styleName != "detailsSubContentBoxHighlightSelected")
+            {
+                rankName2.styleName = "detailsSubContentBoxHighlight";
+            }
+        }
+
+        public function __btnGuildMarketToggleHistory_toolTipCreate(param1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, param1);
+        }
+
+        public function __rankName3_rollOver(param1:MouseEvent):void
+        {
+            if (rankName3.styleName != "detailsSubContentBoxHighlightSelected")
+            {
+                rankName3.styleName = "detailsSubContentBoxHighlight";
+            }
+        }
+
+        public function __btnGuildMarketToShop_toolTipCreate(param1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, param1);
+        }
+
+        public function __membersList_toolTipCreate(param1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, param1);
+        }
+
+        public function __guildList_toolTipCreate(param1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, param1);
+        }
+
+        public function __btnGuildMarketResetVote_toolTipCreate(param1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, param1);
+        }
+
+        public function __btnGuildMarketResetSelection_toolTipCreate(param1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, param1);
+        }
+
+        public function __rankName4_rollOver(param1:MouseEvent):void
+        {
+            if (rankName4.styleName != "detailsSubContentBoxHighlightSelected")
+            {
+                rankName4.styleName = "detailsSubContentBoxHighlight";
+            }
+        }
+
+        public function __buttonBar_toolTipCreate(param1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, param1);
+        }
+
+        public function __btnGuildMarketSendSelection_toolTipCreate(param1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, param1);
+        }
+
+        public function __rankName1_rollOver(param1:MouseEvent):void
+        {
+            if (rankName1.styleName != "detailsSubContentBoxHighlightSelected")
+            {
+                rankName1.styleName = "detailsSubContentBoxHighlight";
+            }
+        }
+
+        public function __btnFoundGuild_toolTipCreate(param1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.MULTILINE_string, param1);
+        }
+
+        public function __btnStepDown_toolTipCreate(param1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, param1);
+        }
+    ]]></mx:Script>
+    <gui:subComponents><mx:Array>
+        <mx:Image id="_GuildWindow_Image1" horizontalCenter="0" top="-87" />
+        <mx:Image id="_GuildWindow_Image2" horizontalCenter="0" top="-77" />
+        <mx:ViewStack id="subcontent" creationPolicy="all" left="0" right="1" top="0" bottom="0" />
+        <!-- ViewStack page of subcontent: attached in childrenCreated(). -->
+        <mx:Canvas id="guildListPage" percentWidth="100" percentHeight="100">
+            <mx:Canvas height="400" left="0" right="0" top="0">
+                <mx:Canvas styleName="detailsHeader" percentWidth="100" height="25" />
+                <mx:Canvas styleName="detailsContentBox" left="6" right="5" top="25" bottom="0" />
+                <datagrid:CustomDataGrid id="guildList" sortableColumns="false" rowHeight="25" headerHeight="20" verticalAlign="middle" iconColor="13077059" selectionColor="8482380" rollOverColor="7957587" borderThickness="0" left="12" right="13" top="5" bottom="0" horizontalGridLines="false" verticalGridLineColor="7693901" borderColor="7693901" headerStyleName="mailDataGridHeader" backgroundAlpha="0" />
+            </mx:Canvas>
+            <mx:Canvas styleName="detailsContentBox" height="35" left="6" right="5" top="400">
+                <mx:Canvas percentWidth="100" percentHeight="100" styleName="detailsSubContentBox">
+                    <gui:ReversableHBox id="buttonBox1" horizontalCenter="0" verticalCenter="0">
+                        <gui:StandardButton id="btnPrevPage" label="«" width="40" height="26" fontWeight="bold" />
+                        <gui:StandardButton id="btnNextPage" label="»" width="40" height="26" fontWeight="bold" />
+                    </gui:ReversableHBox>
+                </mx:Canvas>
+            </mx:Canvas>
+            <mx:Canvas styleName="detailsSubHeader" height="18" left="5" right="4" top="440" />
+            <mx:Canvas styleName="detailsContentBox" height="40" left="6" right="5" top="458">
+                <gui:StandardButton id="btnMyGuild" width="150" verticalCenter="0" horizontalCenter="0" />
+                <gui:StandardButton id="btnFoundGuild" width="150" verticalCenter="0" horizontalCenter="0" />
+            </mx:Canvas>
+        </mx:Canvas>
+        <!-- ViewStack page of subcontent: attached in childrenCreated(). -->
+        <mx:Canvas id="guildDetailsPage" percentWidth="100" percentHeight="100">
+            <mx:ViewStack id="guildDetailsStack" creationPolicy="all" left="0" right="0" top="0" bottom="40" />
+            <!-- ViewStack page of guildDetailsStack: attached in childrenCreated(). -->
+            <mx:Canvas id="detailInfoPage" percentWidth="100" percentHeight="100">
+                <gui:TSOImage id="banner" width="133" height="233" left="2" top="2" />
+                <mx:ViewStack id="_GuildWindow_ViewStack3" percentWidth="100" percentHeight="100" />
+                <!-- ViewStack page of _GuildWindow_ViewStack3: attached in childrenCreated(). -->
+                <mx:Canvas id="infoApplyPage" percentWidth="100" percentHeight="100">
+                    <gui:StandardButton id="btnApply" width="120" left="11" top="274" />
+                </mx:Canvas>
+                <!-- ViewStack page of _GuildWindow_ViewStack3: attached in childrenCreated(). -->
+                <mx:Canvas id="infoActionsPage" percentWidth="100" percentHeight="100">
+                    <gui:StandardButton id="btnInvite" width="120" left="11" top="239" />
+                    <gui:StandardButton id="btnMail" width="120" left="11" top="274" />
+                    <gui:StandardButton id="btnLeave" width="120" left="11" top="309" />
+                    <gui:StandardButton id="btnStepDown" width="120" left="11" top="344" />
+                    <gui:StandardButton id="btnIncrease" width="120" left="11" top="379" />
+                </mx:Canvas>
+                <gui:StandardButton id="btnBackToList" width="120" left="11" bottom="0" />
+                <mx:Canvas styleName="detailsSubHeader" height="18" left="140" right="111" top="2">
+                    <gui:CustomLabel id="_GuildWindow_CustomLabel1" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                </mx:Canvas>
+                <mx:Canvas styleName="detailsContentBox" height="95" left="141" right="112" top="20">
+                    <mx:Canvas horizontalScrollPolicy="off" verticalScrollPolicy="auto" left="10" top="5" right="5" bottom="3">
+                        <gui:CustomText id="guildInfo" percentWidth="100" selectable="false" paddingRight="10" color="0xFFFFFF" fontWeight="normal" />
+                    </mx:Canvas>
+                </mx:Canvas>
+                <mx:Canvas styleName="detailsSubHeader" width="100" height="18" right="6" top="2">
+                    <gui:CustomLabel id="_GuildWindow_CustomLabel2" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                </mx:Canvas>
+                <mx:Canvas styleName="detailsContentBox" width="98" height="95" right="7" top="20">
+                    <renderer:AvatarListItemRenderer id="leaderAvatar" horizontalCenter="0" verticalCenter="-5" />
+                    <gui:CustomLabel id="leaderName" horizontalCenter="0" verticalCenter="35" />
+                </mx:Canvas>
+                <mx:Canvas styleName="detailsSubHeader" height="18" left="140" right="6" top="122">
+                    <mx:Label id="_GuildWindow_Label1" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                </mx:Canvas>
+                <gui:TextEditor id="motd" height="52" styleName="detailsContentBox" maxChars="255" left="141" right="7" top="140" />
+                <mx:ViewStack id="myGuildDescriptionLogView" percentWidth="100" percentHeight="100" />
+                <!-- ViewStack page of myGuildDescriptionLogView: attached in childrenCreated(). -->
+                <mx:Canvas id="descPublicPage" percentWidth="100" percentHeight="100">
+                    <mx:Canvas styleName="detailsSubHeader" height="18" left="140" right="6" top="199">
+                        <gui:CustomLabel id="_GuildWindow_CustomLabel4" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                    </mx:Canvas>
+                    <gui:TextEditor id="guildDescriptionForNotMembers" height="230" styleName="detailsContentBox" maxChars="65535" left="141" right="7" top="217" />
+                </mx:Canvas>
+                <!-- ViewStack page of myGuildDescriptionLogView: attached in childrenCreated(). -->
+                <mx:Canvas id="descMembersPage" percentWidth="100" percentHeight="100">
+                    <mx:Canvas styleName="detailsSubHeader" height="18" left="140" right="6" top="199">
+                        <mx:Label id="_GuildWindow_Label2" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                    </mx:Canvas>
+                    <gui:TextEditor id="guildDescription" height="100" styleName="detailsContentBox" maxChars="65535" left="141" right="7" top="217" />
+                    <mx:Canvas styleName="detailsSubHeader" height="18" left="140" right="6" top="324">
+                        <gui:CustomLabel id="_GuildWindow_CustomLabel5" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                    </mx:Canvas>
+                    <mx:Canvas styleName="detailsContentBox" left="141" right="7" top="342" bottom="0">
+                        <mx:Canvas horizontalScrollPolicy="off" verticalScrollPolicy="off" left="10" top="5" right="5" bottom="4">
+                            <gui:CustomList id="guildLog" percentWidth="100" height="130" variableRowHeight="true" selectable="false" backgroundAlpha="0" borderThickness="0" paddingRight="10" color="0xFFFFFF" fontWeight="normal" />
+                        </mx:Canvas>
+                    </mx:Canvas>
+                </mx:Canvas>
+            </mx:Canvas>
+            <!-- ViewStack page of guildDetailsStack: attached in childrenCreated(). -->
+            <mx:Canvas id="detailMembersPage" percentWidth="100" percentHeight="100">
+                <mx:Canvas left="0" right="0" top="0" bottom="0">
+                    <mx:Canvas styleName="detailsHeader" percentWidth="100" height="25" />
+                    <mx:Canvas styleName="detailsContentBox" left="6" right="5" top="25" bottom="193" />
+                    <datagrid:CustomDataGrid id="membersList" rowHeight="25" headerHeight="20" rowCount="5" verticalAlign="middle" iconColor="13077059" selectionColor="8482380" rollOverColor="7957587" borderThickness="0" left="12" right="13" top="5" bottom="193" verticalGridLineColor="7693901" borderColor="7693901" headerStyleName="mailDataGridHeader" backgroundAlpha="0" />
+                </mx:Canvas>
+                <mx:Canvas width="198" height="182" left="5" bottom="0">
+                    <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                        <gui:CustomLabel id="_GuildWindow_CustomLabel6" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                    </mx:Canvas>
+                    <mx:Canvas styleName="detailsContentBox" height="65" left="1" right="1" top="18">
+                        <renderer:AvatarListItemRenderer id="memberAvatar" visible="false" left="7" verticalCenter="0" />
+                        <gui:CustomLabel id="memberName" width="120" left="75" top="4" />
+                        <gui:CustomLabel id="memberLevel" width="120" left="75" top="23" fontWeight="normal" />
+                        <gui:CustomLabel id="memberRank" width="100" left="75" top="42" fontWeight="normal" />
+                        <mx:Button id="btnRankUp" visible="false" width="12" height="12" bottom="8" right="17" />
+                        <mx:Button id="btnRankDown" visible="false" width="12" height="12" bottom="8" right="5" />
+                    </mx:Canvas>
+                    <mx:Canvas styleName="detailsContentBox" height="65" left="1" right="1" top="83">
+                        <gui:CustomTextArea id="adventuresTextField" styleName="noBackground" maxChars="255" percentWidth="100" percentHeight="100" editable="false" selectable="false" paddingRight="10" color="0xFFFFFF" fontWeight="normal" />
+                    </mx:Canvas>
+                    <mx:Canvas height="30" left="1" right="1" bottom="0">
+                        <gui:StandardButton id="btnKick" width="120" horizontalCenter="0" verticalCenter="0" />
+                    </mx:Canvas>
+                </mx:Canvas>
+                <mx:Canvas height="182" left="213" right="5" bottom="0">
+                    <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                        <gui:CustomLabel id="_GuildWindow_CustomLabel10" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                    </mx:Canvas>
+                    <gui:TextEditor id="officerNote" height="56" styleName="detailsContentBox" maxChars="255" left="1" right="1" top="18" />
+                    <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18" top="74">
+                        <gui:CustomLabel id="_GuildWindow_CustomLabel11" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                    </mx:Canvas>
+                    <gui:TextEditor id="note" height="56" styleName="detailsContentBox" maxChars="255" left="1" right="1" top="92" />
+                </mx:Canvas>
+            </mx:Canvas>
+            <!-- ViewStack page of guildDetailsStack: attached in childrenCreated(). -->
+            <mx:Canvas id="administration" percentWidth="100" percentHeight="100">
+                <mx:Canvas width="320" top="0" left="5" bottom="0">
+                    <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                        <gui:CustomLabel id="_GuildWindow_CustomLabel12" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                    </mx:Canvas>
+                    <mx:Canvas styleName="detailsContentBox" height="200" verticalScrollPolicy="off" horizontalScrollPolicy="off" left="1" right="1" top="18">
+                        <mx:Form horizontalCenter="0">
+                            <mx:FormItem id="_GuildWindow_FormItem1" labelStyleName="labelLeft">
+                                <mx:HBox height="30">
+                                    <gui:CustomTextInput id="rankName1" styleName="detailsSubContentBoxNormal" maxChars="32" restrict="^\\" width="200" color="0xFFFFFF" fontWeight="normal" borderThickness="0" focusAlpha="0" paddingTop="3" paddingLeft="3" paddingRight="3" />
+                                </mx:HBox>
+                            </mx:FormItem>
+                            <mx:FormItem id="_GuildWindow_FormItem2" labelStyleName="labelLeft">
+                                <mx:HBox height="30">
+                                    <gui:CustomTextInput id="rankName2" styleName="detailsSubContentBoxNormal" maxChars="32" restrict="^\\" width="200" color="0xFFFFFF" fontWeight="normal" focusAlpha="0" paddingTop="3" borderThickness="0" paddingLeft="3" paddingRight="3" />
+                                </mx:HBox>
+                            </mx:FormItem>
+                            <mx:FormItem id="_GuildWindow_FormItem3" labelStyleName="labelLeft">
+                                <mx:HBox height="30">
+                                    <gui:CustomTextInput id="rankName3" styleName="detailsSubContentBoxNormal" maxChars="32" restrict="^\\" width="200" borderThickness="0" color="0xFFFFFF" fontWeight="normal" focusAlpha="0" paddingTop="3" paddingLeft="3" paddingRight="3" />
+                                </mx:HBox>
+                            </mx:FormItem>
+                            <mx:FormItem id="_GuildWindow_FormItem4" labelStyleName="labelLeft">
+                                <mx:HBox height="30">
+                                    <gui:CustomTextInput id="rankName4" styleName="detailsSubContentBoxNormal" maxChars="32" restrict="^\\" width="200" borderThickness="0" color="0xFFFFFF" fontWeight="normal" focusAlpha="0" paddingTop="3" paddingLeft="3" paddingRight="3" />
+                                </mx:HBox>
+                            </mx:FormItem>
+                        </mx:Form>
+                        <mx:Canvas percentWidth="100" height="40" styleName="detailsSubContentBox" bottom="0">
+                            <gui:ReversableHBox id="buttonBox2" horizontalCenter="0" verticalCenter="0">
+                                <gui:StandardButton id="btnSaveRankChanges" width="120" enabled="false" />
+                                <gui:StandardButton id="btnDiscardRankChanges" width="120" enabled="false" />
+                            </gui:ReversableHBox>
+                        </mx:Canvas>
+                    </mx:Canvas>
+                    <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18" top="220">
+                        <gui:CustomLabel id="_GuildWindow_CustomLabel13" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                    </mx:Canvas>
+                    <mx:Canvas styleName="detailsContentBox" left="1" right="1" top="238" bottom="0">
+                        <mx:Canvas clipContent="true" horizontalScrollPolicy="off" verticalScrollPolicy="off" top="5" bottom="45" horizontalCenter="0">
+                            <gui:TSOImage id="selectedBanner" percentHeight="100" scaleContent="true" horizontalCenter="15" />
+                        </mx:Canvas>
+                        <mx:Button id="btnBannerLeft" width="25" height="23" left="20" top="60" />
+                        <mx:Button id="btnBannerRight" width="25" height="23" right="20" top="60" />
+                        <mx:Canvas percentWidth="100" height="40" styleName="detailsSubContentBox" bottom="0">
+                            <gui:ReversableHBox id="buttonBox3" horizontalCenter="0" verticalCenter="0">
+                                <gui:StandardButton id="btnSaveBannerChanges" width="120" enabled="false" />
+                                <gui:StandardButton id="btnDiscardBannerChanges" width="120" enabled="false" />
+                            </gui:ReversableHBox>
+                        </mx:Canvas>
+                    </mx:Canvas>
+                </mx:Canvas>
+                <mx:Canvas horizontalScrollPolicy="off" left="330" top="0" right="5" bottom="0">
+                    <mx:Canvas styleName="detailsSubHeader" left="1" right="1">
+                        <mx:Label id="_GuildWindow_Label3" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                    </mx:Canvas>
+                    <mx:VBox styleName="detailsContentBox" left="1" right="1" top="18" bottom="0" verticalGap="0">
+                        <mx:Canvas id="rankTabCanvas" percentWidth="100" height="0" verticalScrollPolicy="off" visible="false" includeInLayout="false">
+                            <mx:List id="manageRankTabItemList" variableRowHeight="true" selectable="false" verticalScrollPolicy="off" percentHeight="100" backgroundAlpha="0" borderThickness="0" left="10" right="10" top="0" useRollOver="false" paddingBottom="0" paddingTop="0" paddingLeft="0" />
+                        </mx:Canvas>
+                        <mx:Canvas percentWidth="100" height="200" left="1" right="1">
+                            <mx:VBox id="vRankRights" visible="false" percentWidth="92" verticalGap="1" top="0" left="10">
+                                <mx:HBox styleName="detailsContentBox" percentWidth="100" horizontalGap="1">
+                                    <gui:StandardCheckBox id="inviteMembersCheck" width="25" fontSize="10" />
+                                    <mx:Label id="inviteMembers" width="150" color="0xFFFFFF" fontWeight="normal" textAlign="left" />
+                                </mx:HBox>
+                                <mx:HBox styleName="detailsContentBox" percentWidth="100" horizontalGap="1">
+                                    <gui:StandardCheckBox id="kickMembersCheck" width="25" fontSize="10" />
+                                    <mx:Label id="kickMembersToTest" width="150" color="0xFFFFFF" fontWeight="normal" textAlign="left" />
+                                </mx:HBox>
+                                <mx:HBox styleName="detailsContentBox" percentWidth="100" horizontalGap="1">
+                                    <gui:StandardCheckBox id="writeGuildMailsCheck" width="25" fontSize="10" />
+                                    <mx:Label id="writeGuildMails" width="150" color="0xFFFFFF" fontWeight="normal" textAlign="left" />
+                                </mx:HBox>
+                                <mx:HBox styleName="detailsContentBox" percentWidth="100" horizontalGap="1">
+                                    <gui:StandardCheckBox id="useNotesCheck" width="25" fontSize="10" />
+                                    <mx:Label id="useNotes" width="150" color="0xFFFFFF" fontWeight="normal" textAlign="left" />
+                                </mx:HBox>
+                                <mx:HBox styleName="detailsContentBox" percentWidth="100" horizontalGap="1">
+                                    <gui:StandardCheckBox id="editGuildEmblemCheck" width="25" fontSize="10" />
+                                    <mx:Label id="editGuildEmblem" width="150" color="0xFFFFFF" fontWeight="normal" textAlign="left" />
+                                </mx:HBox>
+                            </mx:VBox>
+                        </mx:Canvas>
+                    </mx:VBox>
+                </mx:Canvas>
+                <mx:Canvas id="saveTabGlassAnimLayer" visible="false" percentWidth="100" percentHeight="100" styleName="detailsContentBox" backgroundAlpha="0.6" top="0" left="0">
+                    <gui:SpriteLibAnimation id="saveTabGlassAnim" animationName="guianim_hourglass" loop="true" visible="false" width="48" height="48" horizontalCenter="0" verticalCenter="0" />
+                </mx:Canvas>
+            </mx:Canvas>
+            <!-- ViewStack page of guildDetailsStack: attached in childrenCreated(). -->
+            <mx:Canvas id="guildmarket" percentWidth="100" percentHeight="100">
+                <mx:Canvas styleName="detailsSubHeader" height="18" left="5" right="5" />
+                <mx:Canvas styleName="detailsContentBox" left="6" right="6" top="18" bottom="50">
+                    <mx:Image id="_GuildWindow_Image3" left="30" top="10" />
+                    <mx:Image id="_GuildWindow_Image4" right="30" top="10" />
+                    <gui:CustomTileList id="GuildMarketUniqueItems" rowHeight="116" columnWidth="92" columnCount="3" rowCount="1" selectable="true" verticalScrollPolicy="off" top="10" horizontalCenter="-4" backgroundAlpha="0" borderThickness="0" useRollOver="false" />
+                    <gui:CustomLabel id="guildMarketUniqueSelectedLabel" top="140" horizontalCenter="0" />
+                    <mx:Canvas styleName="ornamentalBar" height="3" top="160" left="10" right="10" />
+                    <gui:CustomTileList id="GuildMarketDefaultItems" rowHeight="116" columnWidth="92" columnCount="6" rowCount="2" selectable="true" verticalScrollPolicy="off" top="160" horizontalCenter="-4" backgroundAlpha="0" borderThickness="0" useRollOver="false" />
+                    <gui:CustomLabel id="guildMarketDefaultSelectedLabel" top="392" horizontalCenter="0" />
+                </mx:Canvas>
+                <mx:Canvas percentWidth="100" height="44" styleName="detailsSubContentBox" left="5" right="5" bottom="0">
+                    <mx:HBox id="guildMarketVoteButtons" horizontalCenter="0" bottom="6">
+                        <gui:StandardButton id="btnGuildMarketSendSelection" width="70" height="32" />
+                        <gui:StandardButton id="btnGuildMarketResetSelection" width="70" height="32" />
+                    </mx:HBox>
+                    <mx:HBox id="guildMarketResetVoteBox" horizontalCenter="0" bottom="6">
+                        <gui:CustomLabel id="resetVoteCostsLabel" paddingTop="7" horizontalCenter="0" />
+                        <renderer:ResourceItemRenderer id="resetVoteCosts" height="32" enableAmountCheck="false" />
+                        <gui:StandardButton id="btnGuildMarketResetVote" width="70" height="32" />
+                    </mx:HBox>
+                    <mx:Canvas id="_GuildWindow_Canvas57">
+                        <gui:TSOImage id="nextVoteIcon" width="25" height="25" left="5" top="10" />
+                        <gui:CustomLabel id="timeToNextVote" width="175" height="20" left="32" top="14" fontSize="10" />
+                    </mx:Canvas>
+                    <gui:StandardButton id="btnGuildMarketToShop" width="70" height="32" bottom="6" horizontalCenter="0" />
+                    <gui:StandardButton id="btnGuildMarketToggleHistory" width="70" height="32" bottom="6" right="6" />
+                </mx:Canvas>
+            </mx:Canvas>
+            <mx:Canvas styleName="hr" height="3" left="1" right="0" bottom="27" />
+            <gui:CustomToggleButtonBar id="buttonBar" buttonStyleName="tab" selectedButtonTextStyleName="tabSelected" bottom="0" left="1" right="0" />
+        </mx:Canvas>
+    </mx:Array></gui:subComponents>
+</gui:BasicPanel>

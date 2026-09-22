@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:quest="com.bluebyte.tso.quests.view.ui.component.*"
+    width="700" height="520">
+    <mx:Script><![CDATA[
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Loca.cLocaManager;
+        import flash.events.Event;
+        import mx.events.ToolTipEvent;
+
+        [Embed(source="../../../assets/vector/PvPLevelRewardPanel/_embed_mxml__1941464464.swf", symbol="GUI.Components.PvPLevelRewardPanel__embed_mxml__1941464464")]
+        private var _embed_mxml__1941464464:Class;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            contentCanvasBG.setStyle("backgroundImage", _embed_mxml__1941464464);
+            btnClaimRewards.addEventListener(ToolTipEvent.TOOL_TIP_CREATE, onBtnClaimRewards_toolTipCreate);
+            digit1.addEventListener("show", updateDigit2);
+            digit1.addEventListener("hide", updateDigit2);
+            updateDigit2();
+        }
+
+        private function asset(name:String):*
+        { return gAssetManager.GetClass(name); }
+
+        private function loca(key:String):String
+        { var value:* = cLocaManager.GetInstance().getLabel(key); return value == undefined ? null : String(value); }
+
+        private function digit2Left(visible:Boolean):String
+        { var value:* = visible ? 197 : 189; return value == undefined ? null : String(value); }
+
+        private function updateDigit2(event:Event = null):void
+        { digit2.setStyle("left", digit2Left(digit1.visible)); }
+
+        public function onBtnClaimRewards_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_ERROR_string, event, (!(btnClaimRewards.enabled)));
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="contentCanvasBG" width="390" height="220" top="86" left="27" backgroundSize="100%" />
+    <mx:Canvas id="headerCanvas" width="420" height="189" left="0" top="50" backgroundSize="100%" backgroundImage="{asset('AvatarSelectionPanelHeaderCurtain')}" />
+    <mx:Canvas id="_PvPLevelRewardPanel_Canvas4" width="105" height="60" left="147.5" top="25" backgroundSize="100%" backgroundImage="{asset('ProgressionPopupHeader')}" />
+    <mx:Image id="digit1" top="33" left="180" />
+    <mx:Image id="digit2" top="33" />
+    <mx:Canvas id="buttonCanvas" width="377" height="60" left="27" top="265" styleName="questPanelFooterReward" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+        <mx:VBox percentWidth="100" top="20" bottom="0" horizontalAlign="center" horizontalCenter="0">
+            <mx:HBox>
+                <gui:StandardButton id="btnClaimRewards" width="90" height="32" enabled="true" visible="false" icon="{asset('ButtonIconOK')}" />
+            </mx:HBox>
+        </mx:VBox>
+    </mx:Canvas>
+    <gui:TSOImage id="blackKnightImageGlow" width="529" height="520" right="0" top="0" mouseEnabled="false" source="{asset('ProgressionBlackKnightGlowPopup')}" />
+    <gui:TSOImage id="blackKnightImage" width="529" height="520" right="0" top="0" mouseEnabled="false" source="{asset('ProgressionBlackKnight')}" />
+    <mx:Canvas id="contentCanvas" width="370" height="200" top="87" left="29" backgroundAlpha="0">
+        <mx:VBox top="10" bottom="5" left="5" right="5" horizontalAlign="center">
+            <gui:CustomLabel id="congratsLabel" textAlign="center" text="{loca('Congratulations')}" />
+            <gui:CustomLabel id="reachedLabel" percentWidth="80" textAlign="center" text="{loca('PvPLevelUp')}" />
+            <mx:Spacer />
+            <gui:CustomLabel id="rewardLabel" percentWidth="80" textAlign="center" text="" />
+            <mx:VBox percentWidth="100" height="110" horizontalAlign="center">
+                <quest:QuestRewardList id="rewards" height="90" percentWidth="100" horizontalScrollPolicy="off" verticalScrollPolicy="off" />
+            </mx:VBox>
+        </mx:VBox>
+    </mx:Canvas>
+</mx:Canvas>

@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="{getViewWidth()}" clipContent="false" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.GAME.avatarSelection.view.AvatarSelectionView;
+        import flash.events.Event;
+        import mx.events.ToolTipEvent;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(infoBoxCanvas);
+            LegacyMxmlContent.createChildren(avatarNameCanvas);
+            LegacyMxmlContent.createChildren(avatarSelectionCanvas);
+            LegacyMxmlContent.createChildren(startButtonCanvas);
+            LegacyMxmlContent.createChildren(headerCanvas);
+            LegacyMxmlContent.createChildren(nameWarningCanvas);
+            nameWarningCanvas.addEventListener("toolTipCreate", __nameWarningCanvas_toolTipCreate);
+            headerCanvas.addEventListener("resize", updateGeometryLayout);
+            avatarSelectionCanvas.addEventListener("resize", updateGeometryLayout);
+            avatarNameCanvas.addEventListener("resize", updateGeometryLayout);
+            infoBoxCanvas.addEventListener("resize", updateGeometryLayout);
+            updateGeometryLayout();
+        }
+
+        private function updateGeometryLayout(event:Event = null):void
+        {
+            avatarSelectionCanvas.setStyle("top", calcAvatarSelectionTop(headerCanvas.height));
+            avatarNameCanvas.setStyle("top", calcAvatarNameTop(headerCanvas.height, avatarSelectionCanvas.height));
+            infoBoxCanvas.setStyle("top", calcInfoBoxTop(headerCanvas.height, avatarSelectionCanvas.height, avatarNameCanvas.height));
+            startButtonCanvas.setStyle("top", calcStartButtonTop(headerCanvas.height, avatarSelectionCanvas.height, avatarNameCanvas.height, infoBoxCanvas.height));
+            nameWarningCanvas.setStyle("top", calcNameWarningTop(headerCanvas.height, avatarSelectionCanvas.height));
+        }
+
+        private function getViewWidth():Number
+        {
+            return AvatarSelectionView.VIEW_COMPONENT_WIDTH;
+        }
+
+        private function calcInfoBoxTop(headerHeight:Number, selectionHeight:Number, nameHeight:Number):String
+        {
+            var value:* = (((headerHeight + selectionHeight) + nameHeight) - AvatarSelectionView.OFFSET_HEADER) - AvatarSelectionView.OFFSET_AVATAR_NAME;
+            return value == undefined ? null : String(value);
+        }
+
+        private function calcAvatarNameTop(headerHeight:Number, selectionHeight:Number):String
+        {
+            var value:* = (headerHeight + selectionHeight) - AvatarSelectionView.OFFSET_HEADER;
+            return value == undefined ? null : String(value);
+        }
+
+        private function calcAvatarSelectionTop(headerHeight:Number):String
+        {
+            var value:* = headerHeight - AvatarSelectionView.OFFSET_HEADER;
+            return value == undefined ? null : String(value);
+        }
+
+        private function calcStartButtonTop(headerHeight:Number, selectionHeight:Number, nameHeight:Number, infoHeight:Number):String
+        {
+            var value:* = (((((headerHeight + selectionHeight) + nameHeight) + infoHeight) - AvatarSelectionView.OFFSET_HEADER) - AvatarSelectionView.OFFSET_AVATAR_NAME) - AvatarSelectionView.OFFSET_FOOTER;
+            return value == undefined ? null : String(value);
+        }
+
+        private function calcNameWarningTop(headerHeight:Number, selectionHeight:Number):String
+        {
+            var value:* = ((headerHeight + selectionHeight) - AvatarSelectionView.OFFSET_HEADER) - AvatarSelectionView.OFFSET_ERROR_PANEL;
+            return value == undefined ? null : String(value);
+        }
+
+        public function __nameWarningCanvas_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="infoBoxCanvas" width="{getViewWidth()}" height="90"
+        backgroundColor="5589823">
+        <mx:Text id="genericInfoLabel" width="315" height="60" top="20" horizontalCenter="0" textAlign="center" color="0xFFFFFF" />
+    </mx:Canvas>
+
+    <mx:Canvas id="avatarNameCanvas" width="{getViewWidth()}" height="46"
+        backgroundSize="100%" backgroundImage="{gAssetManager.GetClass('AvatarSelectionPanelNameBackground')}">
+        <mx:Canvas id="_AvatarSelectionViewComponent_Canvas4" width="225" height="38" top="0" horizontalCenter="0"
+            backgroundImage="{gAssetManager.GetClass('AvatarSelectionPanelNameInputBackground')}" />
+        <mx:TextInput id="avatarNameInput" width="225" height="20" maxChars="16" top="10" horizontalCenter="0"
+            textAlign="center" focusAlpha="0" borderStyle="none" borderThickness="0" backgroundAlpha="0" />
+    </mx:Canvas>
+
+    <mx:Canvas id="avatarSelectionCanvas" width="{getViewWidth()}" height="145" clipContent="false"
+        backgroundImage="{gAssetManager.GetClass('AvatarSelectionPanelBackground')}">
+        <mx:Label id="currentSelection" top="5" horizontalCenter="0" textAlign="center" />
+        <mx:Canvas id="_AvatarSelectionViewComponent_Canvas6" width="{getViewWidth()}" height="120" top="25" clipContent="false"
+            horizontalScrollPolicy="off" verticalScrollPolicy="off">
+            <mx:Canvas id="leftArrowCanvas" width="50" height="50" left="16" verticalCenter="0">
+                <mx:Button id="leftArrow" width="50" height="50"
+                    upSkin="{gAssetManager.GetClass('AvatarSelectionPanelArrowBackgroundNormal')}"
+                    overSkin="{gAssetManager.GetClass('AvatarSelectionPanelArrowBackgroundHighlight')}"
+                    downSkin="{gAssetManager.GetClass('AvatarSelectionPanelArrowBackgroundNormal')}"
+                    disabledSkin="{gAssetManager.GetClass('AvatarSelectionPanelArrowBackgroundDisabled')}" />
+                <mx:Image id="_AvatarSelectionViewComponent_Image1" left="10" verticalCenter="0"
+                    source="{gAssetManager.GetClass('AvatarSelectionPanelLeftArrow')}" />
+            </mx:Canvas>
+            <mx:Canvas id="_AvatarSelectionViewComponent_Canvas8" width="60" height="60" left="77" verticalCenter="0"
+                scaleX="0.5" scaleY="0.5" clipContent="false"
+                backgroundImage="{gAssetManager.GetClass('AvatarSelectionPanelSmallAvatarBackground')}">
+                <gui:TSOImage id="mostLeftAvatar" horizontalCenter="0" verticalCenter="0" />
+                <gui:TSOImage id="mostLeftAvatarOverlay" left="-2" top="-2"
+                    source="{gAssetManager.GetClass('AvatarSelectionPanelSmallAvatarOverlay')}" />
+            </mx:Canvas>
+            <mx:Canvas id="_AvatarSelectionViewComponent_Canvas9" width="60" height="60" left="120" verticalCenter="0"
+                clipContent="false"
+                backgroundImage="{gAssetManager.GetClass('AvatarSelectionPanelSmallAvatarBackground')}">
+                <gui:TSOImage id="leftAvatar" horizontalCenter="0" verticalCenter="0" />
+                <gui:TSOImage id="leftAvatarOverlay" left="-2" top="-2"
+                    source="{gAssetManager.GetClass('AvatarSelectionPanelSmallAvatarOverlay')}" />
+            </mx:Canvas>
+            <mx:Canvas id="_AvatarSelectionViewComponent_Canvas10" width="60" height="60" left="330" verticalCenter="0"
+                clipContent="false"
+                backgroundImage="{gAssetManager.GetClass('AvatarSelectionPanelSmallAvatarBackground')}">
+                <gui:TSOImage id="rightAvatar" horizontalCenter="0" verticalCenter="0" />
+                <gui:TSOImage id="rightAvatarOverlay" left="-2" top="-2"
+                    source="{gAssetManager.GetClass('AvatarSelectionPanelSmallAvatarOverlay')}" />
+            </mx:Canvas>
+            <mx:Canvas id="_AvatarSelectionViewComponent_Canvas11" width="60" height="60" left="405" verticalCenter="0"
+                scaleX="0.5" scaleY="0.5" clipContent="false"
+                backgroundImage="{gAssetManager.GetClass('AvatarSelectionPanelSmallAvatarBackground')}">
+                <gui:TSOImage id="mostRightAvatar" horizontalCenter="0" verticalCenter="0" />
+                <gui:TSOImage id="mostRightAvatarOverlay" left="-2" top="-2"
+                    source="{gAssetManager.GetClass('AvatarSelectionPanelSmallAvatarOverlay')}" />
+            </mx:Canvas>
+            <mx:Canvas id="rightArrowCanvas" width="50" height="50" right="16" verticalCenter="0">
+                <mx:Button id="rightArrow" width="50" height="50" label="&gt;"
+                    upSkin="{gAssetManager.GetClass('AvatarSelectionPanelArrowBackgroundNormal')}"
+                    overSkin="{gAssetManager.GetClass('AvatarSelectionPanelArrowBackgroundHighlight')}"
+                    downSkin="{gAssetManager.GetClass('AvatarSelectionPanelArrowBackgroundNormal')}"
+                    disabledSkin="{gAssetManager.GetClass('AvatarSelectionPanelArrowBackgroundDisabled')}" />
+                <mx:Image id="_AvatarSelectionViewComponent_Image2" horizontalCenter="0" verticalCenter="0"
+                    source="{gAssetManager.GetClass('AvatarSelectionPanelRightArrow')}" />
+            </mx:Canvas>
+            <mx:Canvas id="_AvatarSelectionViewComponent_Canvas13" width="132" height="134" horizontalCenter="0" verticalCenter="0"
+                clipContent="false"
+                backgroundImage="{gAssetManager.GetClass('AvatarSelectionPanelBigAvatarBackground')}">
+                <gui:TSOImage id="currentAvatar" horizontalCenter="0" verticalCenter="0" />
+            </mx:Canvas>
+        </mx:Canvas>
+    </mx:Canvas>
+
+    <mx:Canvas id="startButtonCanvas" height="60" left="-2" right="-2"
+        styleName="questPanelFooter">
+        <mx:Button id="startButton" width="95" height="35" top="17" horizontalCenter="0" color="0"
+            icon="{gAssetManager.GetClass('ButtonIconOK')}"
+            upSkin="{gAssetManager.GetClass('AvatarSelectionPanelArrowBackgroundNormal')}"
+            overSkin="{gAssetManager.GetClass('AvatarSelectionPanelArrowBackgroundHighlight')}"
+            downSkin="{gAssetManager.GetClass('AvatarSelectionPanelArrowBackgroundHighlight')}"
+            disabledSkin="{gAssetManager.GetClass('AvatarSelectionPanelArrowBackgroundDisabled')}" />
+    </mx:Canvas>
+
+    <mx:Canvas id="headerCanvas" height="189" left="-20" right="-21" top="0"
+        backgroundSize="100%" backgroundImage="{gAssetManager.GetClass('AvatarSelectionPanelHeaderCurtain')}">
+        <mx:Label id="headerLabel" top="15" horizontalCenter="0" textAlign="center" />
+    </mx:Canvas>
+
+    <mx:Canvas id="nameWarningCanvas" height="52" left="375"
+        horizontalScrollPolicy="off" clipContent="false"
+        backgroundSize="100%" backgroundImage="{gAssetManager.GetClass('AvatarSelectionPanelErrorBackground')}">
+        <mx:Label id="nameWarningLabel" left="30" right="20" top="15" color="0xFF0000" />
+        <mx:Image id="_AvatarSelectionViewComponent_Image3" right="2" top="12"
+            source="{gAssetManager.GetClass('IconToolTipWarning')}" />
+    </mx:Canvas>
+</mx:Canvas>

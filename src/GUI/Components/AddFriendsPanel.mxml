@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="320" height="235">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.collections.ArrayCollection;
+        import GUI.Assets.gAssetManager;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(headerCanvas);
+            LegacyMxmlContent.createChildren(buttonBox);
+            LegacyMxmlContent.createChildren(listCanvas);
+            LegacyMxmlContent.createChildren(previewCanvas);
+
+
+            usersList.percentHeight = 100;
+            updateSelection();
+            usersList.addEventListener("valueCommit", updateSelection);
+            usersList.addEventListener("change", updateSelection);
+        }
+
+        private function updateSelection(event:Event = null):void
+        {
+            var hasSelection:Boolean = (!(usersList.selectedItem == null));
+            btnOK.enabled = hasSelection;
+            avatarPreview.visible = hasSelection;
+            namePreview.visible = hasSelection;
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <mx:Canvas id="headerCanvas" styleName="detailsHeader" left="2" top="0" bottom="149">
+                <gui:CustomText id="enterNameLabel" selectable="false" left="15" right="15" top="8" bottom="25" />
+                <gui:CustomTextInput id="searchInput" left="18" right="18" bottom="7" styleName="standardInput" height="20" />
+            </mx:Canvas>
+
+            <gui:ReversableHBox id="buttonBox" right="12" bottom="8">
+                <gui:StandardButton id="btnOK" width="70" height="32" icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+                <gui:StandardButton id="btnCancel" width="70" height="32" icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+            </gui:ReversableHBox>
+            <mx:Canvas id="listCanvas" width="127" height="135" styleName="detailsContentBox" left="8" bottom="9">
+                <gui:CustomList id="usersList" selectionColor="12623724" rollOverColor="9401419" fontWeight="normal" backgroundAlpha="0" borderThickness="0" labelField="username" percentWidth="100" />
+            </mx:Canvas>
+            <mx:Canvas id="previewCanvas" height="100" styleName="detailsContentBox" left="141" right="7" bottom="44">
+                <renderer:AvatarListItemRenderer id="avatarPreview" horizontalCenter="0" verticalCenter="-10" />
+                <gui:CustomLabel id="namePreview" fontWeight="bold" color="0xFFFFFF" left="5" right="5" textAlign="center" bottom="10" />
+            </mx:Canvas>
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

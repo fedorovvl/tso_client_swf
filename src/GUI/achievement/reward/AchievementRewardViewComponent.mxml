@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml">
+    <mx:Script><![CDATA[
+        import mx.events.FlexEvent;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            resourceAmount.addEventListener(FlexEvent.UPDATE_COMPLETE, syncTip, false, 0, true);
+        }
+
+        private function syncTip(event:FlexEvent = null):void
+        {
+            resourceAmount.toolTip = resourceAmount.text;
+        }
+    ]]></mx:Script>
+    <mx:HBox id="contentRow" verticalAlign="middle" horizontalGap="0">
+        <mx:Image id="resourceImage" />
+        <mx:Label id="resourceAmount" maxWidth="270" truncateToFit="true"  color="0xFFFFFF" fontWeight="bold" />
+    </mx:HBox>
+</mx:Canvas>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Image xmlns:mx="http://www.adobe.com/2006/mxml"
+    width="26" height="25">
+    <mx:Script><![CDATA[
+        import mx.events.PropertyChangeEvent;
+
+        private var _outerDocument:BuildingsListTip;
+
+        public function get outerDocument():BuildingsListTip
+        {
+            return (_outerDocument);
+        }
+
+        public function set outerDocument(value:BuildingsListTip):void
+        {
+            var oldValue:Object = _outerDocument;
+            if (oldValue !== value)
+            {
+                _outerDocument = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "outerDocument", oldValue, value));
+            };
+        }
+
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+            this.source = value;
+        }
+    ]]></mx:Script>
+</mx:Image>

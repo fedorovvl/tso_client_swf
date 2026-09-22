@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml">
+    <mx:Script><![CDATA[
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+        import mx.controls.Button;
+        import mx.events.ToolTipEvent;
+
+        public static const ALL:int = 0;
+        public static const FRIENDS:int = 1;
+        public static const GUILD:int = 2;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            buttonBar.addEventListener("creationComplete", configureToolTips);
+            buttonBar.addEventListener("updateComplete", configureToolTips);
+            updateLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", updateLabels, false, 0, true);
+        }
+
+        private function updateLabels(event:Event = null):void
+        {
+            var selected:int = buttonBar.selectedIndex;
+            var loca:cLocaManager = cLocaManager.GetInstance();
+            buttonBar.dataProvider = [
+                {selection:ALL, label:loca.GetText(LOCA_GROUP.LABELS, "All")},
+                {selection:FRIENDS, label:loca.GetText(LOCA_GROUP.LABELS, "Friends")},
+                {selection:GUILD, label:loca.GetText(LOCA_GROUP.LABELS, "Guild")},
+                {selection:3, label:loca.GetText(LOCA_GROUP.LABELS, "GuildOnlineLast24")},
+                {selection:null, label:"", enabled:false}
+            ];
+            buttonBar.selectedIndex = selected >= 0 && selected < 4 ? selected : ALL;
+        }
+
+        private function configureToolTips(event:Event):void
+        {
+            for each (var button:Button in buttonBar.getChildren())
+            {
+                button.addEventListener("toolTipCreate", createToolTip);
+                if (button.label == "") button.enabled = false;
+            }
+        }
+
+        private function createToolTip(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="_FriendsListFilterSelector_Canvas2" width="71" height="88" top="3" backgroundImage="{gAssetManager.GetClass('FriendFilterBackground')}">
+        <mx:ToggleButtonBar id="buttonBar" width="65" height="80" direction="vertical"  left="2" top="2" color="0x322000" themeColor="0x322000" buttonStyleName="filterFriendsList" buttonHeight="20" buttonWidth="66" />
+    </mx:Canvas>
+</mx:Canvas>

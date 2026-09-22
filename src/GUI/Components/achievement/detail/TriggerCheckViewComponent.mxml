@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+    horizontalScrollPolicy="off" verticalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import GUI.Assets.gAssetManager;
+        import GUI.achievement.view.detail.AchievementDetailView;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundSize", "100%");
+            width = AchievementDetailView.TRIGGER_CHECK_BOX_VIEW_COMPONENT_WIDTH;
+            height = AchievementDetailView.TRIGGER_CHECK_BOX_VIEW_COMPONENT_HEIGHT;
+            setStyle("backgroundImage", gAssetManager.GetClass("AchievementTriggerCheckboxBackground"));
+            checkboxCanvas.height = AchievementDetailView.TRIGGER_CHECK_BOX_VIEW_COMPONENT_HEIGHT;
+            checkbox.source = gAssetManager.GetBitmap("AchievementTriggerCheckboxCheckedIcon");
+            triggerName.setStyle("left", String(AchievementDetailView.TRIGGER_CHECK_BOX_NAME_LABEL_LEFT_OFFSET));
+            triggerName.width = ((AchievementDetailView.TRIGGER_CHECK_BOX_VIEW_COMPONENT_WIDTH - AchievementDetailView.TRIGGER_CHECK_BOX_NAME_LABEL_LEFT_OFFSET) - AchievementDetailView.TRIGGER_CHECK_BOX_NAME_LABEL_RIGHT_OFFSET);
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="checkboxCanvas" width="30">
+        <mx:Image id="checkbox"  horizontalCenter="0" verticalCenter="0" />
+    </mx:Canvas>
+    <mx:Label id="triggerName"  verticalCenter="0" />
+</mx:Canvas>

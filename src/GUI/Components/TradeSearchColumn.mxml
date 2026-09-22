@@ -1,0 +1,479 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="191" height="294">
+    <mx:Script><![CDATA[
+        import __AS3__.vec.Vector;
+        import BuffSystem.cBuff;
+        import BuffSystem.cBuffDefinition;
+        import Communication.VO.dBuffVO;
+        import Communication.VO.dResourceVO;
+        import Enums.BUFF_TYPE;
+        import Enums.LOCA_GROUP;
+        import Enums.RESOURCE_GROUP;
+        import flash.events.Event;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ItemRenderer.SearchFilterRenderer;
+        import GUI.Loca.cLocaManager;
+        import Interface.cGameInterface;
+        import mx.core.ClassFactory;
+        import mx.events.FlexEvent;
+        import ServerState.cResources;
+        import ServerState.cTradeObject;
+        import ServerState.dResource;
+
+        public static const BASIC_ITEMS:int = 0;
+        public static const INTERMEDIATE_ITEMS:int = 1;
+        public static const ADVANCED_ITEMS:int = 2;
+        public static const EXPERT_ITEMS:int = 3;
+        public static const ELITE_ITEMS:int = 4;
+        public static const EVENT_ITEMS:int = 5;
+        public static const ADVENTURES:int = 6;
+        public static const BUFFS:int = 7;
+        public static const SPECIAL_BUILDINGS:int = 8;
+        public static const MISCELLANEOUS:int = 9;
+        public static const DEALS_I_CANT_AFFORD:int = 10;
+        public static const FILTER_CATEGORIES:Array = ["BasicItems", "IntermediateItems", "AdvancedItems", "ExpertItems", "EliteItems", "EventItems", "Adventures", "Buffs", "Specialbuildings", "Miscellaneous", "ShowdealsIcantafford"];
+
+        private var showCantAfford:Boolean;
+        private var mGI:cGameInterface;
+        private var filterData:Array;
+        private var filterSelectState:Array = [];
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            filterList.itemRenderer = new ClassFactory(SearchFilterRenderer);
+            searchBtn.setStyle("icon", gAssetManager.GetClass("SearchBtnIcon"));
+            selectAllCheckBox.addEventListener("change", __selectAllCheckBox_change);
+            addEventListener("creationComplete", onCreationComplete);
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var filter:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Filter");
+            _TradeSearchColumn_CustomLabel1.text = ((filter == undefined) ? null : String(filter));
+            var selectAllTip:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, "SelectAllTip");
+            selectAllCheckBox.toolTip = ((selectAllTip == undefined) ? null : String(selectAllTip));
+            var search:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Search");
+            _TradeSearchColumn_CustomLabel2.text = ((search == undefined) ? null : String(search));
+            searchBtn.toolTip = ((search == undefined) ? null : String(search));
+        }
+
+        public function getPreFilteredVector():Vector.<Object>
+        {
+            var _local_1:Vector.<Object>;
+            var _local_2:Object;
+            var _local_3:int;
+            var _local_4:int;
+            if (!this.showCantAfford)
+            {
+                _local_3 = 0;
+                while (_local_3 < (FILTER_CATEGORIES.length - 1))
+                {
+                    this.filterData[_local_3].tradeObjects = new Vector.<Object>();
+                    _local_3++;
+                };
+            }
+            else
+            {
+                _local_1 = new Vector.<Object>();
+            };
+            for each (_local_2 in data)
+            {
+                _local_4 = this.getFilterNo(_local_2);
+                if ((_local_2 is cTradeObject))
+                {
+                    _local_2.isAffordable = this.checkAffordable((_local_2 as cTradeObject));
+                };
+                if ((((!(_local_4 == -1)) && (this.filterData[_local_4].selected)) && (((!(this.showCantAfford)) || (_local_2.isAffordable)) || (this.filterData[DEALS_I_CANT_AFFORD].selected))))
+                {
+                    if (this.showCantAfford)
+                    {
+                        _local_1.push(_local_2);
+                    }
+                    else
+                    {
+                        this.filterData[_local_4].tradeObjects.push(_local_2);
+                    };
+                };
+            };
+            if (this.filterData[MISCELLANEOUS].tradeObjects != null)
+            {
+                this.filterData[MISCELLANEOUS].tradeObjects.sort(this.sortMiscellaneousTradeItems);
+            };
+            if (!this.showCantAfford)
+            {
+                _local_1 = this.filterData[BASIC_ITEMS].tradeObjects;
+                _local_3 = INTERMEDIATE_ITEMS;
+                while (_local_3 < DEALS_I_CANT_AFFORD)
+                {
+                    _local_1 = _local_1.concat(this.filterData[_local_3].tradeObjects);
+                    _local_3++;
+                };
+            };
+            return (_local_1);
+        }
+
+        private function displayData():void
+        {
+            var _local_2:Object;
+            var _local_3:int;
+            if (data == null)
+            {
+                return;
+            };
+            var _local_1:int;
+            while (_local_1 < ((this.showCantAfford) ? FILTER_CATEGORIES.length : (FILTER_CATEGORIES.length - 1)))
+            {
+                if (((!(this.filterData == null)) && (_local_1 < this.filterData.length)))
+                {
+                    this.filterSelectState[_local_1] = this.filterData[_local_1].selected;
+                }
+                else
+                {
+                    if (_local_1 == (FILTER_CATEGORIES.length - 1))
+                    {
+                        this.filterSelectState[_local_1] = false;
+                    }
+                    else
+                    {
+                        this.filterSelectState[_local_1] = true;
+                    };
+                };
+                _local_1++;
+            };
+            this.filterData = [];
+            this.filterData[BASIC_ITEMS] = {
+                "name_string":cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, FILTER_CATEGORIES[BASIC_ITEMS]),
+                "amount":0,
+                "selected":this.filterSelectState[0]
+            };
+            this.filterData[INTERMEDIATE_ITEMS] = {
+                "name_string":cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, FILTER_CATEGORIES[INTERMEDIATE_ITEMS]),
+                "amount":0,
+                "selected":this.filterSelectState[1]
+            };
+            this.filterData[ADVANCED_ITEMS] = {
+                "name_string":cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, FILTER_CATEGORIES[ADVANCED_ITEMS]),
+                "amount":0,
+                "selected":this.filterSelectState[2]
+            };
+            this.filterData[EXPERT_ITEMS] = {
+                "name_string":cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, FILTER_CATEGORIES[EXPERT_ITEMS]),
+                "amount":0,
+                "selected":this.filterSelectState[3]
+            };
+            this.filterData[ELITE_ITEMS] = {
+                "name_string":cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, FILTER_CATEGORIES[ELITE_ITEMS]),
+                "amount":0,
+                "selected":this.filterSelectState[4]
+            };
+            this.filterData[EVENT_ITEMS] = {
+                "name_string":cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, FILTER_CATEGORIES[EVENT_ITEMS]),
+                "amount":0,
+                "selected":this.filterSelectState[6]
+            };
+            this.filterData[ADVENTURES] = {
+                "name_string":cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, FILTER_CATEGORIES[ADVENTURES]),
+                "amount":0,
+                "selected":this.filterSelectState[6]
+            };
+            this.filterData[BUFFS] = {
+                "name_string":cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, FILTER_CATEGORIES[BUFFS]),
+                "amount":0,
+                "selected":this.filterSelectState[7]
+            };
+            this.filterData[SPECIAL_BUILDINGS] = {
+                "name_string":cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, FILTER_CATEGORIES[SPECIAL_BUILDINGS]),
+                "amount":0,
+                "selected":this.filterSelectState[8]
+            };
+            this.filterData[MISCELLANEOUS] = {
+                "name_string":cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, FILTER_CATEGORIES[MISCELLANEOUS]),
+                "amount":0,
+                "selected":this.filterSelectState[9]
+            };
+            if (this.showCantAfford)
+            {
+                this.filterData[DEALS_I_CANT_AFFORD] = {
+                    "name_string":cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, FILTER_CATEGORIES[DEALS_I_CANT_AFFORD]),
+                    "amount":"",
+                    "selected":this.filterSelectState[10]
+                };
+            };
+            for each (_local_2 in data)
+            {
+                _local_3 = this.getFilterNo(_local_2);
+                if (_local_3 != -1)
+                {
+                    this.filterData[_local_3].amount++;
+                };
+            };
+            this.filterList.dataProvider = [];
+            this.filterList.dataProvider = this.filterData;
+            dispatchEvent(new Event(Event.CHANGE));
+        }
+
+        public function setData(_arg_1:*, _arg_2:Boolean):void
+        {
+            super.data = _arg_1;
+            this.mGI = (global.ui as cGameInterface);
+            this.showCantAfford = _arg_2;
+            if (this.filterList != null)
+            {
+                this.displayData();
+            };
+        }
+
+        private function getFilterNo(_arg_1:Object):int
+        {
+            var _local_3:String;
+            var _local_4:dResource;
+            var _local_5:dResourceVO;
+            var _local_6:String;
+            var _local_7:cBuff;
+            var _local_8:dBuffVO;
+            var _local_9:cBuffDefinition;
+            var _local_2:int = -1;
+            if (((_arg_1 is dResource) || ((_arg_1 is cTradeObject) && (_arg_1.offer is dResourceVO))))
+            {
+                if ((_arg_1 is dResource))
+                {
+                    _local_4 = (_arg_1 as dResource);
+                    _local_3 = _local_4.group_string;
+                }
+                else
+                {
+                    _local_5 = (_arg_1.offer as dResourceVO);
+                    _local_3 = this.getResourceType(_local_5.name_string);
+                };
+                if (_local_3 == RESOURCE_GROUP.CL1)
+                {
+                    _local_2 = BASIC_ITEMS;
+                }
+                else
+                {
+                    if (_local_3 == RESOURCE_GROUP.CL2)
+                    {
+                        _local_2 = INTERMEDIATE_ITEMS;
+                    }
+                    else
+                    {
+                        if (_local_3 == RESOURCE_GROUP.CL3)
+                        {
+                            _local_2 = ADVANCED_ITEMS;
+                        }
+                        else
+                        {
+                            if (_local_3 == RESOURCE_GROUP.CL4)
+                            {
+                                _local_2 = EXPERT_ITEMS;
+                            }
+                            else
+                            {
+                                if (_local_3 == RESOURCE_GROUP.CL5)
+                                {
+                                    _local_2 = ELITE_ITEMS;
+                                }
+                                else
+                                {
+                                    if (_local_3 == RESOURCE_GROUP.EVENT)
+                                    {
+                                        _local_2 = EVENT_ITEMS;
+                                    }
+                                    else
+                                    {
+                                        _local_2 = MISCELLANEOUS;
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+            }
+            else
+            {
+                _local_7 = null;
+                _local_8 = null;
+                if ((_arg_1 is cBuff))
+                {
+                    _local_7 = (_arg_1 as cBuff);
+                    _local_6 = _local_7.GetType();
+                    _local_9 = cBuffDefinition.GetById(_local_7.GetId());
+                    if (_local_9.GetBuffType() == BUFF_TYPE.ZONE_TIMED)
+                    {
+                        return (BUFFS);
+                    };
+                }
+                else
+                {
+                    if ((_arg_1 is dBuffVO))
+                    {
+                        _local_8 = (_arg_1 as dBuffVO);
+                    }
+                    else
+                    {
+                        _local_8 = (_arg_1.offer as dBuffVO);
+                    };
+                    _local_9 = cBuffDefinition.GetByName(_local_8.buffName_string);
+                    if (_local_9.GetBuffType() == BUFF_TYPE.ZONE_TIMED)
+                    {
+                        return (BUFFS);
+                    };
+                    _local_6 = _local_8.buffName_string;
+                };
+                if (_local_6.indexOf(defines.ADVENTURE_BUFF) == 0)
+                {
+                    _local_2 = ADVENTURES;
+                }
+                else
+                {
+                    if ((((((((((_local_6.indexOf(defines.PRODUCTIVITY_BUFF) == 0) || (_local_6.indexOf(defines.SPEEDUP_POPULATION_GROWTH_BUFF) == 0)) || (_local_6.indexOf(defines.HALLOWEEN_EVENT_BUFF) == 0)) || (_local_6.indexOf(defines.RECRUITING_BUFF) == 0)) || (_local_6.indexOf(defines.CHANGE_COLOR_SCHEME_BUFF) == 0)) || (_local_6.indexOf(defines.EVENT_BUFF) == 0)) || (_local_6.indexOf(defines.PROVISIONER_BUFF) == 0)) || (_local_6.indexOf(defines.BATTLE_BUFF_HURT) == 0)) || (_local_6.indexOf(defines.EVENT_MONSTER_NAME_string) == 0)))
+                    {
+                        _local_2 = BUFFS;
+                    }
+                    else
+                    {
+                        if (((_local_6.indexOf(defines.ADD_RESOURCE_BUFF) == 0) || (_local_6.indexOf(defines.FILL_DEPOSIT_BUFF) == 0)))
+                        {
+                            if (((!(_local_7 == null)) || (_local_8.amount > 0)))
+                            {
+                                _local_2 = BUFFS;
+                            };
+                        }
+                        else
+                        {
+                            if (((_local_6 == defines.BUILD_BUILDING_BUFF) || (_local_6 == defines.BUILD_DEFENSE_MODE_BUILDING_BUFF)))
+                            {
+                                _local_2 = SPECIAL_BUILDINGS;
+                            }
+                            else
+                            {
+                                _local_2 = MISCELLANEOUS;
+                            };
+                        };
+                    };
+                };
+            };
+            return (_local_2);
+        }
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            this.displayData();
+        }
+
+        private function sortMiscellaneousTradeItems(_arg_1:Object, _arg_2:Object):int
+        {
+            var _local_3:String;
+            var _local_4:String;
+            var _local_5:int;
+            if (((!(_arg_1 == null)) && (!(_arg_2 == null))))
+            {
+                if (((_arg_1 is dBuffVO) && (_arg_2 is dBuffVO)))
+                {
+                    _local_3 = (_arg_1 as dBuffVO).buffName_string;
+                    _local_4 = (_arg_2 as dBuffVO).buffName_string;
+                    _local_5 = _local_3.localeCompare(_local_4);
+                    if (_local_5 > 0)
+                    {
+                        return (1);
+                    };
+                    if (_local_5 < 0)
+                    {
+                        return (-1);
+                    };
+                }
+                else
+                {
+                    if (((_arg_1 is dResource) && (_arg_2 is dResource)))
+                    {
+                        _local_3 = (_arg_1 as dResource).name_string;
+                        _local_4 = (_arg_2 as dResource).name_string;
+                        _local_5 = _local_3.localeCompare(_local_4);
+                        if (_local_5 > 0)
+                        {
+                            return (1);
+                        };
+                        if (_local_5 < 0)
+                        {
+                            return (-1);
+                        };
+                    }
+                    else
+                    {
+                        if (((_arg_1 is dResource) && (_arg_2 is dBuffVO)))
+                        {
+                            return (-1);
+                        };
+                        if (((_arg_1 is dBuffVO) && (_arg_2 is dResource)))
+                        {
+                            return (1);
+                        };
+                    };
+                };
+            };
+            return (0);
+        }
+
+        private function getResourceType(_arg_1:String):String
+        {
+            var _local_2:cResources = this.mGI.mCurrentPlayerZone.GetResources(this.mGI.mCurrentPlayer);
+            var _local_3:dResource = _local_2.GetPlayerResource(_arg_1);
+            if (_local_3 != null)
+            {
+                return (_local_3.group_string);
+            };
+            return ("");
+        }
+
+        private function checkAffordable(_arg_1:cTradeObject):Boolean
+        {
+            var _local_2:dResourceVO;
+            var _local_3:dBuffVO;
+            if ((_arg_1.costs is dResourceVO))
+            {
+                _local_2 = (_arg_1.costs as dResourceVO);
+                return (this.mGI.mCurrentPlayerZone.GetResources(this.mGI.mHomePlayer).HasPlayerResource(_local_2.name_string, _local_2.amount));
+            };
+            if ((_arg_1.costs is dBuffVO))
+            {
+                _local_3 = (_arg_1.costs as dBuffVO);
+                return (this.mGI.mHomePlayer.hasBuffByBuffVO(_local_3));
+            };
+            return (false);
+        }
+
+        public function __selectAllCheckBox_change(_arg_1:Event):void
+        {
+            this.onSelectAllChanged();
+        }
+
+        public function onSelectAllChanged():void
+        {
+            var _local_1:Object;
+            for each (_local_1 in this.filterData)
+            {
+                _local_1.selected = this.selectAllCheckBox.selected;
+            };
+            this.displayData();
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas percentWidth="100" percentHeight="100">
+        <mx:Canvas styleName="detailsSubHeader" width="191" top="0" bottom="69">
+            <gui:CustomLabel id="_TradeSearchColumn_CustomLabel1" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+            <gui:StandardCheckBox id="selectAllCheckBox" width="146" selected="true" left="1" fontSize="10" />
+            <gui:CustomTileList id="filterList" horizontalCenter="0" right="1" left="1" top="30" bottom="2" backgroundAlpha="0" borderThickness="0" paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0" useRollOver="false" />
+        </mx:Canvas>
+        <mx:Canvas styleName="detailsSubHeader" width="191" height="69" bottom="0">
+            <gui:CustomLabel id="_TradeSearchColumn_CustomLabel2" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+            <mx:HBox horizontalCenter="0" bottom="17" verticalAlign="middle">
+                <gui:CustomTextInput id="searchInput" styleName="standardInput" width="122" height="20" />
+                <gui:StandardButton id="searchBtn" width="37" />
+            </mx:HBox>
+        </mx:Canvas>
+    </mx:Canvas>
+</mx:Canvas>

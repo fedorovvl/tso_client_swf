@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="300" height="150" styleName="customAlert" cacheAsBitmap="true"
+    verticalScrollPolicy="off" horizontalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+        import mx.effects.easing.Cubic;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            pulsate.target = loadingLabel;
+            pulseUp.easingFunction = Cubic.easeOut;
+            pulseDown.easingFunction = Cubic.easeIn;
+            updateTexts();
+            cLocaManager.GetInstance().addEventListener("languageChanged", updateTexts, false, 0, true);
+        }
+
+        private function updateTexts(event:Event = null):void
+        {
+            _LoadingMailPanel_Label1.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, "LoadingMails");
+            loadingLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "LoadingMails");
+        }
+    ]]></mx:Script>
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+    <mx:Sequence id="pulsate" repeatCount="0">
+        <mx:children><mx:Array>
+        <mx:Fade id="pulseUp" alphaFrom="0.5" alphaTo="1" duration="500" />
+        <mx:Fade id="pulseDown" alphaFrom="1" alphaTo="0.5" duration="800" />
+        </mx:Array></mx:children>
+    </mx:Sequence>
+    <mx:Label id="_LoadingMailPanel_Label1"  horizontalCenter="0" top="5" color="0xFFFFFF" fontWeight="bold" />
+    <mx:TextArea id="loadingLabel" width="280" height="50" wordWrap="true"
+        verticalScrollPolicy="off" horizontalScrollPolicy="off"  horizontalCenter="2" verticalCenter="-10" color="0xFFFFFF" fontWeight="bold" backgroundAlpha="0" borderStyle="none" borderThickness="0" textAlign="center" />
+    <mx:HBox id="buttons" horizontalCenter="2" bottom="15">
+        <gui:StandardButton id="btnCancel" width="140" height="32" visible="true" icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+    </mx:HBox>
+</mx:Canvas>

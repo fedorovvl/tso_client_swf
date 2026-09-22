@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    mouseEnabled="false" mouseChildren="false"
+    horizontalScrollPolicy="off" verticalScrollPolicy="off"
+    minWidth="200" styleName="toolTip">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.core.ClassFactory;
+        import GO.cBuilding;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Components.ItemRenderer.TradeResourceItemRenderer;
+
+        private var _building:cBuilding;
+        private var _text:String;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this._building = (_arg_1 as cBuilding);
+        }
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this._text = _arg_1;
+            applyText();
+        }
+
+        private function applyText():void
+        {
+            if (!this.headline || !this.costsList)
+            {
+                return;
+            };
+            if (!cLocaManager.GetInstance().IsInitialized())
+            {
+                return;
+            };
+            this.headline.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, this._text);
+            if (this._building != null)
+            {
+                if (this._building.GetBuildingMode() == cBuilding.BUILDING_MODE_QUEUED)
+                {
+                    this.costsList.dataProvider = global.buildingGroup.GetCostListFromName_vector(this._building.GetBuildingName_string());
+                }
+                else
+                {
+                    this.costsList.dataProvider = this._building.GetRefundResources();
+                };
+            }
+            else
+            {
+                this.costsList.dataProvider = [];
+            };
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            if (!cLocaManager.GetInstance().IsInitialized())
+            {
+                return;
+            };
+            if (this._text != null)
+            {
+                applyText();
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("paddingLeft", 5);
+            this.setStyle("paddingRight", 5);
+            this.setStyle("paddingTop", 5);
+            this.setStyle("paddingBottom", 10);
+            var _local_1:ClassFactory = new ClassFactory();
+            _local_1.generator = TradeResourceItemRenderer;
+            this.costsList.itemRenderer = _local_1;
+            if (this._text != null)
+            {
+                applyText();
+            };
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+    ]]></mx:Script>
+    <gui:CustomText id="headline" maxWidth="440" fontWeight="bold" color="0xFFFFFF" />
+    <renderer:RendererPoolBox id="costsList" direction="horizontal" height="25" />
+</mx:VBox>

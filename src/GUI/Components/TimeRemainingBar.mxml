@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*">
+    <mx:Script><![CDATA[
+        import flash.utils.Timer;
+        import flash.events.TimerEvent;
+        import com.bluebyte.tso.util.TimeUtil;
+        import GUI.Loca.cLocaManager;
+
+        private var startDate:Number = 0;
+        private var stopDate:Number = 1;
+        private var timer:Timer = new Timer(5000);
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            for each (var edge:String in ["left", "right", "top", "bottom"])
+                barFrame.setStyle(edge, 3);
+            timer.addEventListener(TimerEvent.TIMER, updateTime);
+            updateTime();
+        }
+
+        public function SetDates(start:Number, stop:Number):void
+        {
+            startDate = start;
+            stopDate = Math.max(start + 1, stop);
+            updateTime();
+        }
+
+        private function updateTime(event:TimerEvent = null):void
+        {
+            if (!timeRemainingLabel || !barCanvas) return;
+            var duration:Number = stopDate - startDate;
+            if (duration <= 1) return;
+            var remaining:Number = Math.max(0, stopDate - TimeUtil.getServerTime());
+            timeRemainingLabel.text = cLocaManager.GetInstance().FormatDuration(remaining, cLocaManager.DURATION_FORMAT_SHORT);
+            barCanvas.percentWidth = 100 * remaining / duration;
+            timer.start();
+        }
+    ]]></mx:Script>
+    <mx:Canvas styleName="timeRemainingBackground" percentWidth="100" percentHeight="100" />
+    <mx:Canvas id="barFrame">
+        <mx:Canvas id="barCanvas" styleName="timeRemainingBar"  top="0" bottom="0" left="0" />
+        <gui:CustomLabel id="timeRemainingLabel"  left="0" right="0" textAlign="center" top="11" color="0xFFFFFF" fontWeight="bold" />
+    </mx:Canvas>
+</mx:Canvas>

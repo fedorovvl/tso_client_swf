@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="769" height="570">
+    <mx:Script><![CDATA[
+        import GUI.Assets.gAssetManager;
+        import mx.events.EffectEvent;
+
+        [Embed(source="../../../assets/embedded/premiumaccount/premiumaccount_circle_premium_accounts.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_premiumaccount_circle_premium_accounts_png_1174936725:Class;
+
+        [Embed(source="../../../assets/gAssetManager/PremiumAccountHeader.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_premiumaccount_header_premium_accounts_png_139927253:Class;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            dragon.source = _embed_mxml_____data_src_gfx_embedded_premiumaccount_header_premium_accounts_png_139927253;
+            chest.source = _embed_mxml_____data_src_gfx_embedded_premiumaccount_circle_premium_accounts_png_1174936725;
+            fadeOut.addEventListener("effectEnd", onFadeOut_effectEnd);
+        }
+
+        private function labelText():String
+        { var value:* = label; return value == undefined ? null : String(value); }
+
+        public function onFadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+    ]]></mx:Script>
+
+    <mx:states>
+        <mx:State id="collapsedState" name="collapsed">
+            <mx:SetProperty name="height" value="570" />
+        </mx:State>
+    </mx:states>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <mx:Canvas id="content" left="48" right="18" top="104" bottom="0"
+        clipContent="false" horizontalScrollPolicy="off" verticalScrollPolicy="off" styleName="basicPanel">
+        <mx:Canvas bottom="-1" left="4" right="0" height="83" styleName="premiumAccountPanelFooter">
+            <gui:ReversableHBox id="buttonsBox" width="680" top="42" horizontalAlign="center" verticalAlign="middle">
+                <gui:StandardButton id="btnAcceptPremium" width="90" height="32" icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+                <mx:Spacer width="30" />
+                <gui:StandardButton id="btnDeclinePremium" width="90" height="32" icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+            </gui:ReversableHBox>
+        </mx:Canvas>
+        <mx:Canvas id="completedHeader" left="-6" right="-10" top="-2" height="82" visible="true" styleName="questPanelHeader" />
+        <mx:Canvas left="14" right="10" top="33" width="676" height="200" styleName="detailsHeader">
+            <gui:CustomTextArea id="premiumDesc" left="202" right="17" top="14" bottom="0"
+                fontSize="14" color="0xFFFFFF" fontWeight="bold"
+                styleName="noBackground" selectable="false" editable="false" />
+        </mx:Canvas>
+        <mx:Canvas left="20" right="14" top="241" width="661" height="21" styleName="detailsSubHeader">
+            <mx:Text id="premiumPackage" percentWidth="100" selectable="false"
+                top="1" textAlign="center" fontSize="14" color="0xFFFFFF" fontWeight="bold" />
+        </mx:Canvas>
+        <mx:Canvas left="21" right="15" top="262" width="296" height="145" backgroundColor="6970434">
+            <gui:CustomTextArea id="premiumBuffDesc" left="42" right="22" top="16" bottom="5"
+                fontSize="14" color="0xFFFFFF" fontWeight="bold"
+                styleName="noBackground" selectable="false" editable="false" />
+        </mx:Canvas>
+    </mx:Canvas>
+    <mx:Label id="_PremiumAccountActivationWindow_Label1" left="72" right="46" top="110"
+        fontSize="14" fontWeight="bold" textAlign="center" color="0"
+        text="{labelText()}" />
+    <mx:Image id="dragon" top="0" horizontalCenter="0" />
+    <mx:Image id="chest" top="10" left="-19" />
+    <mx:Image id="duration" top="192" left="99" />
+</mx:Canvas>

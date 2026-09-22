@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" minWidth="160">
+    <mx:Script><![CDATA[
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("borderStyle", "solid");
+            this.setStyle("borderThickness", 0);
+            this.setStyle("backgroundColor", 4601379);
+            this.setStyle("paddingLeft", 1);
+            this.setStyle("paddingRight", 1);
+            this.setStyle("paddingTop", 1);
+            this.setStyle("paddingBottom", 1);
+            this.setStyle("verticalGap", 1);
+        }
+    ]]></mx:Script>
+</mx:VBox>

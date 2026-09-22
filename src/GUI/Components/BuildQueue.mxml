@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    height="360" verticalScrollPolicy="off" horizontalScrollPolicy="off" cacheAsBitmap="true">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.events.ScrollEvent;
+        import mx.core.ClassFactory;
+        import GUI.Components.ItemRenderer.BuildQueueItemRenderer;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            list.itemRenderer = new ClassFactory(BuildQueueItemRenderer);
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            updateWidth();
+            addEventListener("scroll", onScroll);
+            list.addEventListener("maxVerticalScrollPositionChanged", updateWidth);
+        }
+
+        private function updateWidth(event:Event = null):void
+        {
+            width = ((list.maxVerticalScrollPosition > 0) ? 127 : 110);
+        }
+
+        public function onScroll(event:ScrollEvent):void
+        {
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <mx:Canvas id="backgroundBox" styleName="buildQueue"  left="0" right="0" top="0" bottom="30" />
+    <gui:CustomList id="list" horizontalScrollPolicy="off" verticalScrollPolicy="auto"
+        selectable="false" height="279"  paddingLeft="0" paddingTop="0" paddingRight="0" paddingBottom="0" backgroundAlpha="0" left="10" top="14" bottom="50" right="8" borderThickness="0" />
+    <gui:BuildQueueExtension id="buildExtension" height="50"  left="3" bottom="0" right="0" backgroundAlpha="0" borderThickness="0" />
+</mx:Canvas>

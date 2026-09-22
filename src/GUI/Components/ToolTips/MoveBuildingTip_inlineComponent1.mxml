@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<renderer:ResourceItemRenderer xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    enableAmountCheck="false" color="0xFFFFFF">
+    <mx:Script><![CDATA[
+        private var _outerDocument:MoveBuildingTip;
+
+        public function get outerDocument():MoveBuildingTip
+        {
+            return (_outerDocument);
+        }
+
+        public function set outerDocument(value:MoveBuildingTip):void
+        {
+            _outerDocument = value;
+        }
+    ]]></mx:Script>
+</renderer:ResourceItemRenderer>

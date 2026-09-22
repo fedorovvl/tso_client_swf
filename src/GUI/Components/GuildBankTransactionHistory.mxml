@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:datagrid="GUI.Components.DataGrid.*"
+    width="600" height="400">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.controls.dataGridClasses.DataGridColumn;
+        import mx.events.ToolTipEvent;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import Enums.GUILD_BANK_GROUP;
+        import Enums.GUILD_BANK_TRANSACTION_TYPE;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Components.DataGrid.CustomDataGridHeaderBackgroundSkin;
+        import GUI.Components.DataGrid.CustomDataGridHeaderSeparator;
+        import defines;
+
+        public var _GuildBankTransactionHistory_DataGridColumn1:DataGridColumn;
+        public var _GuildBankTransactionHistory_DataGridColumn2:DataGridColumn;
+        public var _GuildBankTransactionHistory_DataGridColumn3:DataGridColumn;
+
+        public function formatDate(item:Object, column:DataGridColumn):String
+        {
+            return (cLocaManager.GetInstance().FormatDate(item.time).toString());
+        }
+
+        public function formatTransaction(item:Object, column:DataGridColumn):String
+        {
+            var buffParts:Array;
+            var buffName:String;
+            var buffParam:String;
+            var formatted:String = "";
+            switch (item.groupType)
+            {
+                case GUILD_BANK_GROUP.RESOURCE:
+                    formatted = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, item.description);
+                    break;
+                case GUILD_BANK_GROUP.BUFF:
+                    buffParts = item.description.split(",");
+                    buffName = buffParts[0];
+                    buffParam = buffParts[1];
+                    if (buffName == defines.ADVENTURE_BUFF)
+                    {
+                        formatted = cLocaManager.GetInstance().GetText(LOCA_GROUP.ADVENTURE_NAME, buffParam);
+                    }
+                    else
+                    {
+                        if (((buffName == defines.BUILD_BUILDING_BUFF) || (buffName == defines.BUILD_DEFENSE_MODE_BUILDING_BUFF)))
+                        {
+                            formatted = cLocaManager.GetInstance().GetText(LOCA_GROUP.BUILDINGS, buffParam);
+                        }
+                        else
+                        {
+                            if (buffName.indexOf(defines.CHANGE_COLOR_SCHEME_BUFF) == 0)
+                            {
+                                formatted = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, ((defines.CHANGE_COLOR_SCHEME_BUFF + "_") + buffParam));
+                            }
+                            else
+                            {
+                                if ((((buffName.indexOf(defines.ADD_RESOURCE_BUFF) == 0) || (buffName.indexOf(defines.FILL_DEPOSIT_BUFF) == 0)) || (buffName == defines.HIRED_MILITARY_BUFF)))
+                                {
+                                    var buffKey:String = buffName;
+                                    if (((buffKey == defines.FILL_DEPOSIT_BUFF) && (buffParam == "")))
+                                    {
+                                        buffKey = (buffKey + "Any");
+                                    };
+                                    formatted = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, buffKey, ["", buffParam]);
+                                }
+                                else
+                                {
+                                    formatted = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, buffName);
+                                };
+                            };
+                        };
+                    };
+                    break;
+            };
+            return (cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, GUILD_BANK_TRANSACTION_TYPE.toString(item.transactionType), [((item.amount > 0) ? item.amount : 1), formatted, item.tabName, item.targetTabName]));
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(gridCanvas);
+            LegacyMxmlContent.createChildren(ornamentCanvas);
+            _GuildBankTransactionHistory_Image1.source = gAssetManager.GetClass("PanelOrnamentalTop");
+            _GuildBankTransactionHistory_Image2.source = gAssetManager.GetClass("GuildBankIcon");
+            _GuildBankTransactionHistory_DataGridColumn1 = new DataGridColumn();
+            _GuildBankTransactionHistory_DataGridColumn1.width = 110;
+            _GuildBankTransactionHistory_DataGridColumn1.dataField = "player";
+            _GuildBankTransactionHistory_DataGridColumn1.draggable = false;
+            _GuildBankTransactionHistory_DataGridColumn1.resizable = false;
+            _GuildBankTransactionHistory_DataGridColumn2 = new DataGridColumn();
+            _GuildBankTransactionHistory_DataGridColumn2.width = 270;
+            _GuildBankTransactionHistory_DataGridColumn2.dataField = "transaction";
+            _GuildBankTransactionHistory_DataGridColumn2.draggable = false;
+            _GuildBankTransactionHistory_DataGridColumn2.resizable = false;
+            _GuildBankTransactionHistory_DataGridColumn2.wordWrap = true;
+            _GuildBankTransactionHistory_DataGridColumn2.labelFunction = formatTransaction;
+            _GuildBankTransactionHistory_DataGridColumn3 = new DataGridColumn();
+            _GuildBankTransactionHistory_DataGridColumn3.width = 70;
+            _GuildBankTransactionHistory_DataGridColumn3.dataField = "time";
+            _GuildBankTransactionHistory_DataGridColumn3.draggable = false;
+            _GuildBankTransactionHistory_DataGridColumn3.resizable = false;
+            _GuildBankTransactionHistory_DataGridColumn3.labelFunction = formatDate;
+            transactionList.columns = [_GuildBankTransactionHistory_DataGridColumn1, _GuildBankTransactionHistory_DataGridColumn2, _GuildBankTransactionHistory_DataGridColumn3];
+            transactionList.headerHeight = 20;
+            transactionList.rowHeight = 25;
+            transactionList.variableRowHeight = true;
+            transactionList.setStyle("headerBackgroundSkin", CustomDataGridHeaderBackgroundSkin);
+            transactionList.setStyle("alternatingItemColors", []);
+            transactionList.setStyle("headerColors", [3155998]);
+            transactionList.setStyle("headerSeparatorSkin", CustomDataGridHeaderSeparator);
+            refreshHeaders();
+            transactionList.addEventListener("toolTipCreate", onTransactionList_toolTipCreate);
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshHeaders, false, 0, true);
+        }
+
+        private function refreshHeaders(event:Event = null):void
+        {
+            var header:*;
+            header = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Name");
+            _GuildBankTransactionHistory_DataGridColumn1.headerText = ((header == undefined) ? null : String(header));
+            header = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Transaction");
+            _GuildBankTransactionHistory_DataGridColumn2.headerText = ((header == undefined) ? null : String(header));
+            header = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Date");
+            _GuildBankTransactionHistory_DataGridColumn3.headerText = ((header == undefined) ? null : String(header));
+        }
+
+        public function onTransactionList_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <mx:Image id="_GuildBankTransactionHistory_Image1" horizontalCenter="0" top="-87" />
+            <mx:Image id="_GuildBankTransactionHistory_Image2" horizontalCenter="0" top="-75" />
+            <mx:Canvas id="gridCanvas" percentWidth="100" height="300" right="11" left="11">
+                <mx:Canvas id="headerCanvas" percentWidth="100" height="25" styleName="detailsHeader" left="0" right="0" />
+                <mx:Canvas id="contentCanvas" styleName="detailsContentBox" left="6" right="5" top="25" bottom="0">
+                    <datagrid:CustomDataGrid id="transactionList" left="12" right="13" top="5" bottom="0" backgroundAlpha="0" borderColor="7693901" borderThickness="0" headerStyleName="mailDataGridHeader" iconColor="13077059" rollOverColor="7957587" verticalAlign="middle" verticalGridLineColor="7693901" />
+                </mx:Canvas>
+            </mx:Canvas>
+            <mx:Canvas id="ornamentCanvas">
+                <gui:StandardButton id="btnCancel" width="120" height="26" icon="{gAssetManager.GetClass('LoopBackward')}" />
+            </mx:Canvas>
+            <mx:Canvas id="dividerCanvas" height="3" styleName="hr" horizontalCenter="0" bottom="55" left="0" right="0" />
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

@@ -1,0 +1,946 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:datagrid="GUI.Components.DataGrid.*" xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="735" height="550" visible="false" clipContent="false">
+    <mx:Script><![CDATA[
+        import com.bluebyte.tso.ui.util.ListPager;
+        import Enums.LOCA_GROUP;
+        import Enums.MAIL_TYPE;
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.DataGrid.CustomDataGridHeaderBackgroundSkin;
+        import GUI.Components.DataGrid.CustomDataGridHeaderSeparator;
+        import GUI.Components.ItemRenderer.MailGridDeleteItemRenderer;
+        import GUI.Components.ItemRenderer.MailGridMultipleReceiverRenderer;
+        import GUI.Components.ItemRenderer.MailGridSelectItemRenderer;
+        import GUI.Components.ItemRenderer.MailGridTextItemRenderer;
+        import GUI.Components.ItemRenderer.MailGridTypeIconItemRenderer;
+        import GUI.Components.ItemRenderer.MailTypeFilterHeaderRenderer;
+        import GUI.Components.ItemRenderer.ToFieldItemRenderer;
+        import GUI.Components.ItemRenderer.UnitAmountRenderer;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Loca.cLocaManager;
+        import Interface.cGeneralInterface;
+        import mx.collections.ArrayList;
+        import mx.containers.Canvas;
+        import mx.controls.dataGridClasses.DataGridColumn;
+        import mx.core.ClassFactory;
+        import mx.effects.easing.Cubic;
+        import mx.events.CollectionEvent;
+        import mx.events.FlexEvent;
+        import mx.events.PropertyChangeEvent;
+        import mx.events.ResizeEvent;
+        import mx.events.StateChangeEvent;
+        import mx.events.ToolTipEvent;
+        import mx.states.AddChild;
+        import mx.states.RemoveChild;
+        import mx.states.SetProperty;
+        import mx.states.SetStyle;
+        import mx.states.State;
+
+        [Embed(source="../../../assets/vector/MailWindow/_embed_mxml__1844001190.swf", symbol="GUI.Components.MailWindow__embed_mxml__1844001190")]
+        private var _embed_mxml__1844001190:Class;
+
+        [Embed(source="../../../assets/vector/MailWindow/_embed_mxml__1770481355.swf", symbol="GUI.Components.MailWindow__embed_mxml__1770481355")]
+        private var _embed_mxml__1770481355:Class;
+
+        [Embed(source="../../../assets/vector/MailWindow/_embed_mxml__1820888836.swf", symbol="GUI.Components.MailWindow__embed_mxml__1820888836")]
+        private var _embed_mxml__1820888836:Class;
+
+        [Bindable]
+        public var mailPager:ListPager = new ListPager(new ArrayList());
+
+        public var stateEdit:State;
+        public var stateSentbox:State;
+        public var stateBlockList:State;
+        public var stateApply:State;
+
+        public var _MailWindow_DataGridColumn2:DataGridColumn;
+        public var _MailWindow_DataGridColumn4:DataGridColumn;
+        public var _MailWindow_DataGridColumn5:DataGridColumn;
+        public var _MailWindow_DataGridColumn6:DataGridColumn;
+        public var senderNameColumn:DataGridColumn;
+        public var deleteColumn:DataGridColumn;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            setStyle("horizontalCenter", 0);
+            setStyle("verticalCenter", 0);
+            LegacyMxmlContent.createChildren(subcontent);
+            LegacyMxmlContent.createChildren(bottomButtonsContainer);
+            var blockCanvas:Canvas = new Canvas();
+            blockCanvas.styleName = "detailsHeader";
+            blockCanvas.width = 200;
+            blockCanvas.height = 300;
+            blockCanvas.setStyle("left", "2");
+            blockCanvas.setStyle("right", "2");
+            if (!blockCanvas.document)
+            {
+                blockCanvas.document = this;
+            };
+            blockListPanel.addChild(blockCanvas);
+            if (editBox.parent == subcontent)
+            {
+                subcontent.removeChild(editBox);
+                subcontent.removeChild(reciepientList);
+                subcontent.removeChild(applyBox);
+                subcontent.removeChild(reciepientApplyList);
+                subcontent.removeChild(blockListPanel);
+            }
+            mailContent.addChild(contentEmpty);
+            mailContent.addChild(contentMail);
+            mailContent.addChild(contentBattleReport);
+            mailContent.addChild(contentPvPReport);
+            mailContent.addChild(contentFriendRequest);
+            mailContent.addChild(contentAdventureInvite);
+            mailContent.addChild(contentFriendInvitation);
+            mailContent.addChild(contentLootAccept);
+            mailContent.addChild(contentAdvLootAccept);
+            mailContent.addChild(contentTrade);
+            mailContent.addChild(contentTradeComplete);
+            mailContent.addChild(contentBuffed);
+            mailContent.addChild(contentGems);
+            mailContent.addChild(contentGuildRequest);
+            mailContent.addChild(contentGuildSuccessionRequest);
+            ornamental.source = gAssetManager.GetClass("PanelOrnamentalTop");
+            mailTypeIcon.source = gAssetManager.GetClass("ButtonIconTrade");
+            _MailWindow_Image3.source = gAssetManager.GetClass("ButtonIconTrade");
+            _MailWindow_Image4.source = gAssetManager.GetClass("IconMailOutbox");
+            deleteIcon.source = gAssetManager.GetClass("IconMailTypeMail");
+            buffedArrow.source = gAssetManager.GetBitmap("ProductionArrow");
+            btnInbox.addEventListener("creationComplete", __btnInbox_creationComplete, false, 0, true);
+            btnInbox.addEventListener("rollOver", __btnInbox_rollOver, false, 0, true);
+            btnInbox.addEventListener("toolTipCreate", __btnInbox_toolTipCreate, false, 0, true);
+            btnOutbox.addEventListener("creationComplete", __btnOutbox_creationComplete, false, 0, true);
+            btnOutbox.addEventListener("rollOver", __btnOutbox_rollOver, false, 0, true);
+            btnOutbox.addEventListener("toolTipCreate", __btnOutbox_toolTipCreate, false, 0, true);
+            mailsList.addEventListener("toolTipCreate", __mailsList_toolTipCreate, false, 0, true);
+            deleteIcon.addEventListener("toolTipCreate", __deleteIcon_toolTipCreate, false, 0, true);
+            btnTradeAccept.addEventListener("toolTipCreate", __btnTradeAccept_toolTipCreate, false, 0, true);
+            btnTradeDecline.addEventListener("toolTipCreate", __btnTradeDecline_toolTipCreate, false, 0, true);
+            btnAcceptLoot.addEventListener("toolTipCreate", __btnAcceptLoot_toolTipCreate, false, 0, true);
+            btnClaimLoot.addEventListener("toolTipCreate", __btnClaimLoot_toolTipCreate, false, 0, true);
+            btnAcceptAdvLoot.addEventListener("toolTipCreate", __btnAcceptAdvLoot_toolTipCreate, false, 0, true);
+            btnClaimAdvLoot.addEventListener("toolTipCreate", __btnClaimAdvLoot_toolTipCreate, false, 0, true);
+            btnAdventureInviteAccept.addEventListener("toolTipCreate", __btnAdventureInviteAccept_toolTipCreate, false, 0, true);
+            btnGuildRequestAccept.addEventListener("toolTipCreate", __btnGuildRequestAccept_toolTipCreate, false, 0, true);
+            btnGuildSuccessionRequestAccept.addEventListener("toolTipCreate", __btnGuildSuccessionRequestAccept_toolTipCreate, false, 0, true);
+            buffedBuilding.addEventListener("toolTipCreate", __buffedBuilding_toolTipCreate, false, 0, true);
+            recipientContainer.setStyle("backgroundImage", _embed_mxml__1820888836);
+            subjectLabelContainer.setStyle("backgroundImage", _embed_mxml__1820888836);
+            buttonBarContainer.setStyle("backgroundImage", _embed_mxml__1770481355);
+            bottomButtonsContainer.setStyle("backgroundImage", _embed_mxml__1844001190);
+            buildGridColumns();
+            toTileList.itemRenderer = new ClassFactory(ToFieldItemRenderer);
+            armyUsedList.itemRenderer = new ClassFactory(UnitAmountRenderer);
+            armyLossesList.itemRenderer = new ClassFactory(UnitAmountRenderer);
+            mailsList.dataProvider = mailPager.view;
+            mailsList.setStyle("alternatingItemColors", []);
+            mailsList.setStyle("headerBackgroundSkin", CustomDataGridHeaderBackgroundSkin);
+            mailsList.setStyle("headerColors", [3155998]);
+            mailsList.setStyle("headerSeparatorSkin", CustomDataGridHeaderSeparator);
+            _MailWindow_PagerControl1.pager = mailPager;
+            mailPager.addEventListener(CollectionEvent.COLLECTION_CHANGE, refreshPagerVisibility, false, 0, true);
+            pulsate.target = deleteIcon;
+            _MailWindow_Fade1.easingFunction = Cubic.easeOut;
+            _MailWindow_Fade2.easingFunction = Cubic.easeIn;
+            buildStates();
+            _MailWindow_Spacer1.includeInLayout = skillListGenerals.visible;
+            _MailWindow_Spacer2.includeInLayout = skillListGenerals.visible;
+            _MailWindow_Spacer7.includeInLayout = skillList.visible;
+            syncClaimButtons();
+            btnAcceptLoot.addEventListener("enabledChanged", syncClaimButtons, false, 0, true);
+            btnAcceptAdvLoot.addEventListener("enabledChanged", syncClaimButtons, false, 0, true);
+            syncLayout();
+            recipientContainer.addEventListener(ResizeEvent.RESIZE, syncLayout, false, 0, true);
+            mailListContainer.addEventListener(ResizeEvent.RESIZE, syncLayout, false, 0, true);
+            subjectLabelContainer.addEventListener(ResizeEvent.RESIZE, syncLayout, false, 0, true);
+            subjectInputLabel.addEventListener(ResizeEvent.RESIZE, syncLayout, false, 0, true);
+            buttonBarContainer.addEventListener(ResizeEvent.RESIZE, syncLayout, false, 0, true);
+            busyOverlay.addEventListener(FlexEvent.SHOW, syncBusyIndicator, false, 0, true);
+            busyOverlay.addEventListener(FlexEvent.HIDE, syncBusyIndicator, false, 0, true);
+            syncBusyIndicator();
+            refreshPagerVisibility();
+            updateStateVisibility();
+            refreshLabels();
+            addEventListener(StateChangeEvent.CURRENT_STATE_CHANGE, updateStateVisibility, false, 0, true);
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+            global.staticEventDispatcher.addEventListener("propertyChange", onGlobalChanged, false, 0, true);
+        }
+
+        private function loca(key:String):String
+        {
+            var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key);
+            return value == undefined ? null : String(value);
+        }
+
+        private function onGlobalChanged(event:PropertyChangeEvent):void
+        {
+            if (event.property == "mailboxWindowSize")
+            {
+                syncLayout();
+            }
+        }
+
+        private function syncLayout(event:Event = null):void
+        {
+            mailListContainer.height = 25 + 26 * global.mailboxWindowSize;
+            mailContentArea.setStyle("top", recipientContainer.y + recipientContainer.height + 2);
+            subjectLabelContainer.setStyle("top", mailListContainer.y + mailListContainer.height + 5);
+            mailDetailContainer.setStyle("top", subjectLabelContainer.y + subjectLabelContainer.height + 5);
+            subjectLabel.width = subjectLabelContainer.width - 10;
+            _MailWindow_CustomLabel1.width = subjectInputLabel.width;
+            buttonBarBox.height = buttonBarContainer.height;
+        }
+
+        private function syncClaimButtons(event:Event = null):void
+        {
+            btnClaimLoot.enabled = btnAcceptLoot.enabled;
+            var tip:* = btnAcceptLoot.toolTip;
+            btnClaimLoot.toolTip = ((tip == undefined) ? null : String(tip));
+            btnClaimAdvLoot.enabled = btnAcceptAdvLoot.enabled;
+        }
+
+        private function syncBusyIndicator(event:Event = null):void
+        {
+            _MailWindow_SpriteLibAnimation1.visible = busyOverlay.visible;
+        }
+
+        private function refreshPagerVisibility(event:Event = null):void
+        {
+            _MailWindow_PagerControl1.visible = mailPager.numPages > 1;
+        }
+
+        private function updateStateVisibility(event:Event = null):void
+        {
+            var inSentbox:Boolean = (currentState == "stateSentbox");
+            _MailWindow_HBox11.visible = !inSentbox;
+            _MailWindow_HBox12.visible = !inSentbox;
+            _MailWindow_HBox13.visible = !inSentbox;
+            _MailWindow_HBox26.visible = (currentState != "stateentbox");
+            _MailWindow_HBox27.visible = !inSentbox;
+            guildIncreaseButtons.visible = !inSentbox;
+            guildSuccessionRequestButtons.visible = !inSentbox;
+            refreshStateTexts();
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            _MailWindow_CustomLabel1.text = loca("To");
+            _MailWindow_CustomLabel3.text = loca("To");
+            _MailWindow_CustomLabel5.text = loca("Subject");
+            subjectInputLabel.text = loca("Subject");
+            _MailWindow_CustomLabel7.text = loca("Inbox");
+            _MailWindow_CustomLabel8.text = loca("Outbox");
+            _MailWindow_CustomLabel12.text = loca("Mission");
+            _MailWindow_CustomLabel13.text = loca("Offer");
+            _MailWindow_CustomLabel14.text = loca("Offer");
+            _MailWindow_CustomLabel15.text = loca("Costs");
+            _MailWindow_CustomLabel16.text = loca("Costs");
+            armyUsedLabel.text = loca("ArmyUsed");
+            armyLossesLabel.text = loca("ArmyLosses");
+            btnReplay.label = loca("ReplayBattle");
+            btnPvPReport.label = loca("ViewPvPReport");
+            btnFriendInvitationSendRequest.label = loca("AddFriend");
+            btnGuildIncreaseSize.label = loca("GuildIncreaseSizeButton");
+            btnInbox.toolTip = loca("Inbox");
+            btnOutbox.toolTip = loca("Outbox");
+            btnNewMail.toolTip = loca("NewMail");
+            btnContextMenu.toolTip = loca("MailContextMenu");
+            btnBlockList.toolTip = loca("BlockList");
+            btnCollectOrDelete.toolTip = loca("CollectOrDelete");
+            btnTradeDecline.toolTip = loca("Decline");
+            btnGuildSuccessionRequestAccept.toolTip = loca("GuildHouseRequired");
+            deleteIcon.toolTip = loca("MailsAreUpToDate");
+            refreshHeaders();
+            refreshStateTexts();
+        }
+
+        private function refreshHeaders():void
+        {
+            _MailWindow_DataGridColumn2.headerText = loca("Type");
+            _MailWindow_DataGridColumn4.headerText = loca("Subject");
+            _MailWindow_DataGridColumn5.headerText = loca("Date");
+            _MailWindow_DataGridColumn6.headerText = loca("Expiration");
+            senderNameColumn.headerText = loca("From");
+        }
+
+        private function refreshStateTexts():void
+        {
+            if (currentState == "edit")
+            {
+                headline.text = loca("NewMail");
+            }
+            else if (currentState == "stateSentbox")
+            {
+                headline.text = loca("Outbox");
+                senderNameColumn.headerText = loca("To");
+            }
+            else
+            {
+                headline.text = null;
+                senderNameColumn.headerText = loca("From");
+            }
+        }
+
+        private function buildGridColumns():void
+        {
+            var idColumn:DataGridColumn = new DataGridColumn();
+            idColumn.width = 40;
+            idColumn.dataField = "id";
+            idColumn.draggable = false;
+            idColumn.headerText = "";
+            idColumn.headerRenderer = new ClassFactory(MailTypeFilterHeaderRenderer);
+            idColumn.itemRenderer = new ClassFactory(MailGridSelectItemRenderer);
+            idColumn.resizable = false;
+            idColumn.sortable = false;
+            idColumn.setStyle("backgroundColor", 5786426);
+            idColumn.setStyle("textAlign", "center");
+            _MailWindow_DataGridColumn2 = new DataGridColumn();
+            _MailWindow_DataGridColumn2.width = 40;
+            _MailWindow_DataGridColumn2.dataField = "type";
+            _MailWindow_DataGridColumn2.draggable = false;
+            _MailWindow_DataGridColumn2.itemRenderer = new ClassFactory(MailGridTypeIconItemRenderer);
+            _MailWindow_DataGridColumn2.resizable = false;
+            _MailWindow_DataGridColumn2.setStyle("backgroundColor", 5786426);
+            _MailWindow_DataGridColumn2.setStyle("textAlign", "center");
+            senderNameColumn = new DataGridColumn();
+            senderNameColumn.width = 80;
+            senderNameColumn.dataField = "senderName";
+            senderNameColumn.draggable = false;
+            senderNameColumn.itemRenderer = new ClassFactory(MailGridMultipleReceiverRenderer);
+            senderNameColumn.resizable = false;
+            senderNameColumn.setStyle("backgroundColor", 5786426);
+            senderNameColumn.setStyle("textAlign", "left");
+            _MailWindow_DataGridColumn4 = new DataGridColumn();
+            _MailWindow_DataGridColumn4.width = 170;
+            _MailWindow_DataGridColumn4.dataField = "subject";
+            _MailWindow_DataGridColumn4.draggable = false;
+            _MailWindow_DataGridColumn4.itemRenderer = new ClassFactory(MailGridTextItemRenderer);
+            _MailWindow_DataGridColumn4.labelFunction = formatSubject;
+            _MailWindow_DataGridColumn4.resizable = false;
+            _MailWindow_DataGridColumn4.setStyle("backgroundColor", 5786426);
+            _MailWindow_DataGridColumn4.setStyle("textAlign", "left");
+            _MailWindow_DataGridColumn5 = new DataGridColumn();
+            _MailWindow_DataGridColumn5.width = 70;
+            _MailWindow_DataGridColumn5.dataField = "timestamp";
+            _MailWindow_DataGridColumn5.draggable = false;
+            _MailWindow_DataGridColumn5.itemRenderer = new ClassFactory(MailGridTextItemRenderer);
+            _MailWindow_DataGridColumn5.labelFunction = formatReceivedDate;
+            _MailWindow_DataGridColumn5.resizable = false;
+            _MailWindow_DataGridColumn5.setStyle("backgroundColor", 5786426);
+            _MailWindow_DataGridColumn5.setStyle("textAlign", "center");
+            _MailWindow_DataGridColumn6 = new DataGridColumn();
+            _MailWindow_DataGridColumn6.width = 60;
+            _MailWindow_DataGridColumn6.dataField = "expirationTime";
+            _MailWindow_DataGridColumn6.draggable = false;
+            _MailWindow_DataGridColumn6.itemRenderer = new ClassFactory(MailGridTextItemRenderer);
+            _MailWindow_DataGridColumn6.labelFunction = formatExpirationDate;
+            _MailWindow_DataGridColumn6.resizable = false;
+            _MailWindow_DataGridColumn6.setStyle("backgroundColor", 5786426);
+            _MailWindow_DataGridColumn6.setStyle("textAlign", "right");
+            deleteColumn = new DataGridColumn();
+            deleteColumn.width = 25;
+            deleteColumn.draggable = false;
+            deleteColumn.itemRenderer = new ClassFactory(MailGridDeleteItemRenderer);
+            deleteColumn.resizable = false;
+            deleteColumn.sortable = false;
+            deleteColumn.setStyle("backgroundColor", 5786426);
+            deleteColumn.setStyle("textAlign", "right");
+            mailsList.columns = [idColumn, _MailWindow_DataGridColumn2, senderNameColumn, _MailWindow_DataGridColumn4, _MailWindow_DataGridColumn5, _MailWindow_DataGridColumn6, deleteColumn];
+        }
+
+        private function buildStates():void
+        {
+            var edit:State = new State();
+            edit.name = "edit";
+            var editIcon:SetProperty = new SetProperty();
+            editIcon.target = mailTypeIcon;
+            editIcon.name = "source";
+            editIcon.value = gAssetManager.GetClass("IconMailWrite");
+            var editIconTop:SetStyle = new SetStyle();
+            editIconTop.target = mailTypeIcon;
+            editIconTop.name = "top";
+            editIconTop.value = -88;
+            var editHeadline:SetProperty = new SetProperty();
+            editHeadline.target = headline;
+            editHeadline.name = "text";
+            editHeadline.value = loca("NewMail");
+            var dropNewMail:RemoveChild = new RemoveChild();
+            dropNewMail.target = btnNewMail;
+            var dropSubcontent:RemoveChild = new RemoveChild();
+            dropSubcontent.target = subcontent;
+            var addEdit:AddChild = new AddChild();
+            addEdit.relativeTo = content;
+            addEdit.position = "lastChild";
+            addEdit.target = editBox;
+            var addRecipients:AddChild = new AddChild();
+            addRecipients.relativeTo = content;
+            addRecipients.position = "lastChild";
+            addRecipients.target = reciepientList;
+            var showButtons:SetProperty = new SetProperty();
+            showButtons.target = bottomButtonsContainer;
+            showButtons.name = "visible";
+            showButtons.value = true;
+            edit.overrides = [editIcon, editIconTop, editHeadline, dropNewMail, dropSubcontent, addEdit, addRecipients, showButtons];
+            stateEdit = edit;
+            var sentbox:State = new State();
+            sentbox.name = "stateSentbox";
+            var hideDelete:SetProperty = new SetProperty();
+            hideDelete.target = deleteColumn;
+            hideDelete.name = "visible";
+            hideDelete.value = false;
+            var hideButtons:SetProperty = new SetProperty();
+            hideButtons.target = bottomButtonsContainer;
+            hideButtons.name = "visible";
+            hideButtons.value = false;
+            var outboxIcon:SetProperty = new SetProperty();
+            outboxIcon.target = mailTypeIcon;
+            outboxIcon.name = "source";
+            outboxIcon.value = gAssetManager.GetClass("IconMailOutbox");
+            var outboxIconTop:SetStyle = new SetStyle();
+            outboxIconTop.target = mailTypeIcon;
+            outboxIconTop.name = "top";
+            outboxIconTop.value = -88;
+            var outboxHeadline:SetProperty = new SetProperty();
+            outboxHeadline.target = headline;
+            outboxHeadline.name = "text";
+            outboxHeadline.value = loca("Outbox");
+            var senderField:SetProperty = new SetProperty();
+            senderField.target = senderNameColumn;
+            senderField.name = "dataField";
+            senderField.value = "senderName";
+            var senderHeader:SetProperty = new SetProperty();
+            senderHeader.target = senderNameColumn;
+            senderHeader.name = "headerText";
+            senderHeader.value = loca("To");
+            sentbox.overrides = [hideDelete, hideButtons, outboxIcon, outboxIconTop, outboxHeadline, senderField, senderHeader];
+            stateSentbox = sentbox;
+            var base:State = new State();
+            base.name = "";
+            var hideButtonsBase:SetProperty = new SetProperty();
+            hideButtonsBase.target = bottomButtonsContainer;
+            hideButtonsBase.name = "visible";
+            hideButtonsBase.value = false;
+            base.overrides = [hideButtonsBase];
+            var blockList:State = new State();
+            blockList.name = "blockList";
+            var addBlockList:AddChild = new AddChild();
+            addBlockList.relativeTo = content;
+            addBlockList.position = "lastChild";
+            addBlockList.target = blockListPanel;
+            blockList.overrides = [addBlockList];
+            stateBlockList = blockList;
+            var apply:State = new State();
+            apply.name = "apply";
+            var dropSubcontentApply:RemoveChild = new RemoveChild();
+            dropSubcontentApply.target = subcontent;
+            var addApply:AddChild = new AddChild();
+            addApply.relativeTo = content;
+            addApply.position = "lastChild";
+            addApply.target = applyBox;
+            var addApplyRecipients:AddChild = new AddChild();
+            addApplyRecipients.relativeTo = content;
+            addApplyRecipients.position = "lastChild";
+            addApplyRecipients.target = reciepientApplyList;
+            apply.overrides = [dropSubcontentApply, addApply, addApplyRecipients];
+            stateApply = apply;
+            states = [edit, sentbox, base, blockList, apply];
+        }
+
+        public function __btnTradeAccept_toolTipCreate(param1:ToolTipEvent) : void
+        {
+           cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_ERROR_string,param1,!this.btnTradeAccept.enabled);
+        }
+
+        public function __btnInbox_toolTipCreate(param1:ToolTipEvent) : void
+        {
+           cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string,param1);
+        }
+
+        public function __btnTradeDecline_toolTipCreate(param1:ToolTipEvent) : void
+        {
+           cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string,param1);
+        }
+
+        public function __btnInbox_rollOver(param1:MouseEvent) : void
+        {
+           this.btnInbox.setStyle("backgroundImage",gAssetManager.GetClass("BackgroundHighlight"));
+        }
+
+        public function __btnOutbox_toolTipCreate(param1:ToolTipEvent) : void
+        {
+           cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string,param1);
+        }
+
+        public function __buffedBuilding_toolTipCreate(param1:ToolTipEvent) : void
+        {
+           cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string,param1);
+        }
+
+        public function __btnAcceptAdvLoot_toolTipCreate(param1:ToolTipEvent) : void
+        {
+           cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_ERROR_string,param1,!this.btnAcceptLoot.enabled);
+        }
+
+        public function __btnOutbox_creationComplete(param1:FlexEvent) : void
+        {
+           this.btnOutbox.setStyle("backgroundImage",gAssetManager.GetClass("BackgroundNormal"));
+        }
+
+        public function __btnAdventureInviteAccept_toolTipCreate(param1:ToolTipEvent) : void
+        {
+           cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_ERROR_string,param1,!this.btnAdventureInviteAccept.enabled);
+        }
+
+        public function __mailsList_toolTipCreate(param1:ToolTipEvent) : void
+        {
+           cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string,param1);
+        }
+
+        public function __btnGuildSuccessionRequestAccept_toolTipCreate(param1:ToolTipEvent) : void
+        {
+           cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_ERROR_string,param1,!this.btnGuildSuccessionRequestAccept.enabled);
+        }
+
+        public function __btnClaimAdvLoot_toolTipCreate(param1:ToolTipEvent) : void
+        {
+           cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_ERROR_string,param1,!this.btnAcceptLoot.enabled);
+        }
+
+        public function __btnClaimLoot_toolTipCreate(param1:ToolTipEvent) : void
+        {
+           cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_ERROR_string,param1,!this.btnAcceptLoot.enabled);
+        }
+
+        public function __deleteIcon_toolTipCreate(param1:ToolTipEvent) : void
+        {
+           cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string,param1);
+        }
+
+        public function __btnOutbox_rollOver(param1:MouseEvent) : void
+        {
+           this.btnOutbox.setStyle("backgroundImage",gAssetManager.GetClass("BackgroundHighlight"));
+        }
+
+        public function __btnAcceptLoot_toolTipCreate(param1:ToolTipEvent) : void
+        {
+           cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_ERROR_string,param1,!this.btnAcceptLoot.enabled);
+        }
+
+        public function __btnInbox_creationComplete(param1:FlexEvent) : void
+        {
+           this.btnInbox.setStyle("backgroundImage",gAssetManager.GetClass("BackgroundHighlight"));
+        }
+
+        public function __btnGuildRequestAccept_toolTipCreate(param1:ToolTipEvent) : void
+        {
+           cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_ERROR_string,param1,!this.btnGuildRequestAccept.enabled);
+        }
+
+        public function formatSubject(param1:Object, param2:DataGridColumn) : String
+        {
+           var _loc3_:String = this.currentState == this.stateSentbox.name ? global.ui.mCurrentPlayer.GetPlayerName_string() : cGeneralInterface.getComputedPlayerName(param1.senderName);
+           switch(param1.type)
+           {
+              case MAIL_TYPE.TRADE:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"TradeOffer");
+              case MAIL_TYPE.TRADE_ACCEPTED:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"TradeAcceptedSubject");
+              case MAIL_TYPE.TRADE_DECLINED:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"TradeDeclinedSubject");
+              case MAIL_TYPE.FRIEND_REQUEST:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"FriendMailSubject",[_loc3_]);
+              case MAIL_TYPE.FRIEND_INVITATION_CONFIRMED:
+                 if(param1.subject != "")
+                 {
+                    return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"FriendInvitationConfirmedSubject",[param1.subject]);
+                 }
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"FriendInvitationNamelessConfirmedSubject");
+                 break;
+              case MAIL_TYPE.GIFT:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"GiftMailSubject",[_loc3_]);
+              case MAIL_TYPE.BUFF:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"GiftMailSubject",[param1.senderName]);
+              case MAIL_TYPE.BUFFED_BUILDING:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"BuffedBuildingMailSubject",[_loc3_]);
+              case MAIL_TYPE.BUFFED_DEPOSIT:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"BuffedDepositMailSubject",[_loc3_]);
+              case MAIL_TYPE.BATTLE_REPORT:
+              case MAIL_TYPE.BATTLE_REPORT_INTERCEPTED:
+                 if(param1.subject != "")
+                 {
+                    return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,MAIL_TYPE.toString(param1.type) + "AdventureMailSubject",[param1.subject]);
+                 }
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,MAIL_TYPE.toString(param1.type) + "MailSubject");
+                 break;
+              case MAIL_TYPE.ADVENTURE_FAILED_CANCELLED:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"AdventureLootMailSubject",[param1.subject]);
+              case MAIL_TYPE.ADVENTURE_LOST_LOOT:
+              case MAIL_TYPE.ADVENTURE_WON_LOOT:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"AdventureLootMailSubject",[param1.senderName]);
+              case MAIL_TYPE.EXPEDITION_WON_LOOT:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"ExpeditionLootMailSubjectWon",[param1.senderName]);
+              case MAIL_TYPE.EXPEDITION_LOST_LOOT:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"ExpeditionLootMailSubjectLost",[param1.senderName]);
+              case MAIL_TYPE.ADVENTURE_LOCKED_COMPENSATION:
+              case MAIL_TYPE.EXPEDITION_LOCKED_COMPENSATION:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,MAIL_TYPE.toString(param1.type) + "MailSubject",[param1.senderName]);
+              case MAIL_TYPE.ADVENTURE_LEAVE_NOTIFICATION:
+              case MAIL_TYPE.ADVENTURE_CANCEL_INVITATION:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,MAIL_TYPE.toString(param1.type) + "MailSubject");
+              case MAIL_TYPE.TREASURE_LOOT:
+              case MAIL_TYPE.TREASURE_LOOT_TRAVELLINGERUDITE:
+              case MAIL_TYPE.TREASURE_LOOT_BEANACOLOADA:
+              case MAIL_TYPE.TREASURE_LOOT_SKILLED:
+              case MAIL_TYPE.BANDITS_LOOT:
+              case MAIL_TYPE.FIND_ADVENTURE_LOOT_POSITIVE:
+              case MAIL_TYPE.FIND_ADVENTURE_LOOT_POSITIVE_SKILLED:
+              case MAIL_TYPE.FIND_ADVENTURE_LOOT_NEGATIVE:
+              case MAIL_TYPE.FIND_ADVENTURE_LOOT_MAP_FRAGMENT:
+              case MAIL_TYPE.FIND_ADVENTURE_LOOT_MAP_FRAGMENT_SKILLED:
+              case MAIL_TYPE.FIND_EXPEDITION_LOOT_POSITIVE:
+              case MAIL_TYPE.FIND_EXPEDITION_LOOT_NEGATIVE:
+              case MAIL_TYPE.QUEST_LOOT:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,MAIL_TYPE.toString(param1.type) + "MailSubject");
+              case MAIL_TYPE.LOCA_MAIL:
+              case MAIL_TYPE.LOCA_LOOT_MAIL:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,param1.subject + "MailSubject");
+              case MAIL_TYPE.HARD_CURRENCY_PURCHASED:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"HardCurrencyAppliedSubject");
+              case MAIL_TYPE.HARD_CURRENCY_REMOVED:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"HardCurrencyRemovedSubject");
+              case MAIL_TYPE.INVITED_FRIEND_PURCHASED:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"InvitedFriendPurchasedSubject");
+              case MAIL_TYPE.GUILD_INVITE:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"GuildInviteMailSubject",[param1.subject]);
+              case MAIL_TYPE.GUILD_APPLY:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"GuildApplyMailSubject",[param1.senderName]);
+              case MAIL_TYPE.GUILD_INVITE_DECLINE:
+              case MAIL_TYPE.GUILD_INVITE_FULL:
+              case MAIL_TYPE.GUILD_APPLY_DECLINED:
+              case MAIL_TYPE.GUILD_APPLY_ACCEPTED:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,MAIL_TYPE.toString(param1.type) + "MailSubject",[_loc3_]);
+              case MAIL_TYPE.GUILD_KICK:
+              case MAIL_TYPE.INVITE_TO_ADVENTURE:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,MAIL_TYPE.toString(param1.type) + "MailSubject",[param1.subject]);
+              case MAIL_TYPE.GUILD_SUCCESSION_REQUEST:
+              case MAIL_TYPE.GUILD_SUCCESSION_DUE_TO_INACTIVE:
+              case MAIL_TYPE.GUILD_LEADER_CHANGED:
+              case MAIL_TYPE.GUILD_NEW_LEADER:
+              case MAIL_TYPE.GUILD_OLD_LEADER:
+              case MAIL_TYPE.GUILD_SUCCESSION_DECLINED:
+              case MAIL_TYPE.GUILD_SUCCESSION_EXPIRED:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,MAIL_TYPE.toString(param1.type) + "MailSubject");
+              case MAIL_TYPE.NPC_MAIL:
+              case MAIL_TYPE.NPC_MAIL_LOOT:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.GAME_MESSAGE_LABELS,param1.subject);
+              case MAIL_TYPE.COLLECTIBLE_REWARDS:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"CollectibleRewardsMailSubject");
+              case MAIL_TYPE.EVENT_LOOT_REWARDS_CURRENT_USER:
+              case MAIL_TYPE.EVENT_LOOT_REWARDS_FRIEND_USER:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"EventLootRewardsSubject");
+              case MAIL_TYPE.EVENT_MONSTER_HIT_BY_FRIEND:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,"EventMonsterHitByFriendMailSubject",[_loc3_]);
+              case MAIL_TYPE.PVP_COMBAT_REPORT_ATTACKER_WON:
+              case MAIL_TYPE.PVP_COMBAT_REPORT_ATTACKER_LOST:
+              case MAIL_TYPE.PVP_COMBAT_REPORT_DEFENDER_WON:
+              case MAIL_TYPE.PVP_COMBAT_REPORT_DEFENDER_LOST:
+                 return cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS,MAIL_TYPE.toString(param1.type) + "MailSubject");
+              default:
+                 return param1.subject;
+           }
+        }
+
+        public function formatReceivedDate(param1:Object, param2:DataGridColumn) : String
+        {
+           return cLocaManager.GetInstance().FormatDate(param1.timestamp);
+        }
+
+        public function formatExpirationDate(param1:Object, param2:DataGridColumn) : String
+        {
+           var _loc3_:int = global.mailLifetimes_vector[param1.type];
+           if(_loc3_ == 0)
+           {
+              return "-";
+           }
+           return cLocaManager.GetInstance().FormatDuration(param1.expirationTime,cLocaManager.DURATION_FORMAT_NORMAL);
+        }    
+    ]]></mx:Script>
+    <mx:Sequence id="pulsate" repeatCount="0">
+        <mx:Fade id="_MailWindow_Fade1" alphaFrom="0.5" alphaTo="1" duration="250" />
+        <mx:Fade id="_MailWindow_Fade2" alphaFrom="1" alphaTo="0.5" duration="400" />
+    </mx:Sequence>
+    <gui:subComponents><mx:Array>
+            <mx:Image id="ornamental" top="-88" horizontalCenter="0" />
+            <mx:Image id="mailTypeIcon" top="-60" horizontalCenter="0" />
+            <mx:VBox id="subcontent" left="3" right="3" top="3" bottom="8">
+                <mx:HBox id="mailListContainer" percentWidth="100" left="6" right="4" horizontalGap="3" verticalAlign="top">
+                    <mx:VBox verticalGap="0">
+                        <mx:Canvas id="btnInbox" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="76" height="85" backgroundAlpha="1" backgroundSize="100%">
+                            <mx:Image id="_MailWindow_Image3" horizontalCenter="0" top="20" />
+                            <gui:CustomLabel id="_MailWindow_CustomLabel7" fontWeight="normal" horizontalCenter="0" top="60" />
+                        </mx:Canvas>
+                        <mx:Canvas id="btnOutbox" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="76" height="85" backgroundAlpha="1" backgroundSize="100%">
+                            <mx:Image id="_MailWindow_Image4" horizontalCenter="0" top="5" />
+                            <gui:CustomLabel id="_MailWindow_CustomLabel8" fontWeight="normal" horizontalCenter="0" top="60" />
+                        </mx:Canvas>
+                    </mx:VBox>
+                    <mx:Canvas percentWidth="100" percentHeight="100">
+                        <mx:Canvas percentWidth="100" height="30" styleName="detailsHeaderSolid" />
+                        <datagrid:CustomDataGrid id="mailsList" headerHeight="27" keepScrollOnUpdate="true" rowHeight="25" left="7" right="8" top="5" bottom="0" backgroundAlpha="0" borderColor="3287841" borderThickness="0" headerStyleName="mailDataGridHeader" horizontalGridLines="false" iconColor="13077059" rollOverColor="7957587" selectionColor="8482380" verticalAlign="middle" verticalGridLineColor="4537389" />
+                        <mx:Canvas id="busyOverlay" styleName="detailsContentBox" visible="false" left="0" right="0" top="0" bottom="0">
+                            <gui:SpriteLibAnimation id="_MailWindow_SpriteLibAnimation1" animationName="guianim_hourglass" loop="true" width="48" height="48" horizontalCenter="0" verticalCenter="0" />
+                        </mx:Canvas>
+                    </mx:Canvas>
+                </mx:HBox>
+                <mx:Canvas id="buttonBarContainer" percentWidth="100" height="50" left="0" right="0" bottom="0" backgroundSize="100%">
+                    <mx:HBox id="buttonBarBox" verticalAlign="middle" left="30">
+                        <gui:StandardButton id="btnNewMail" icon="{gAssetManager.GetClass('IconMailTypeMail')}" />
+                        <gui:StandardButton id="btnContextMenu" icon="{gAssetManager.GetClass('IconMailContextMenuButton')}" />
+                        <gui:StandardButton id="btnBlockList" icon="{gAssetManager.GetClass('IconBlockedContextMenuButton')}" />
+                        <gui:StandardButton id="btnCollectOrDelete" icon="{gAssetManager.GetClass('StarMenuTabIconMisc')}" />
+                    </mx:HBox>
+                    <mx:HBox id="pageBox" percentHeight="100" minWidth="340" horizontalGap="0" verticalAlign="middle" right="30">
+                        <gui:PagerControl id="_MailWindow_PagerControl1" percentWidth="100" />
+                        <mx:Image id="deleteIcon" />
+                    </mx:HBox>
+                </mx:Canvas>
+                <mx:Canvas id="subjectLabelContainer" verticalScrollPolicy="off" horizontalScrollPolicy="off" percentWidth="100" percentHeight="6" left="1" right="6" backgroundSize="100%">
+                    <gui:CustomLabel id="subjectLabel" truncateToFit="true" color="0" verticalCenter="0" horizontalCenter="0" />
+                </mx:Canvas>
+                <mx:Canvas id="mailDetailContainer" percentWidth="100" percentHeight="41" left="7" right="8">
+                    <mx:Canvas percentWidth="100" percentHeight="100" styleName="detailsSubHeader">
+                        <mx:Canvas percentWidth="100" percentHeight="100" styleName="mailContentBorder" left="5" right="5" top="5" bottom="5">
+                            <mx:ViewStack id="mailContent" creationPolicy="all" left="5" right="5" top="5" bottom="1" />
+                            <!-- ViewStack pages: created here, attached to mailContent in childrenCreated(). -->
+                            <mx:Canvas id="contentEmpty" percentWidth="100" percentHeight="100" />
+                            <mx:Canvas id="contentMail" percentWidth="100" percentHeight="100" styleName="detailsContentBox">
+                                <gui:CustomTextArea id="bodyText" editable="false" left="24" right="8" top="0" bottom="0" backgroundAlpha="0" borderThickness="0" fontWeight="normal" paddingBottom="0" paddingRight="16" paddingTop="5" />
+                            </mx:Canvas>
+                            <mx:Canvas id="contentBattleReport" percentWidth="100" percentHeight="100" styleName="detailsContentBox">
+                                <mx:Canvas percentHeight="100" percentWidth="98" horizontalScrollPolicy="off" verticalScrollPolicy="auto" left="0" right="8">
+                                    <mx:VBox left="24" right="24" top="5" bottom="5" horizontalAlign="center" verticalGap="1">
+                                        <gui:CustomTextArea id="battleReportText" percentWidth="100" editable="false" selectable="false" backgroundAlpha="0" borderThickness="0" fontWeight="normal" />
+                                        <mx:HBox id="armyUsed" percentWidth="100" horizontalAlign="left">
+                                            <gui:CustomLabel id="armyUsedLabel" paddingTop="5" />
+                                            <gui:CustomTileList id="armyUsedList" selectable="false" rowHeight="30" columnWidth="60" columnCount="8" backgroundAlpha="0" borderThickness="0" />
+                                        </mx:HBox>
+                                        <mx:HBox id="armyLosses" percentWidth="100" horizontalAlign="left">
+                                            <gui:CustomLabel id="armyLossesLabel" paddingTop="5" />
+                                            <gui:CustomTileList id="armyLossesList" selectable="false" rowHeight="30" columnWidth="60" columnCount="8" backgroundAlpha="0" borderThickness="0" />
+                                        </mx:HBox>
+                                        <mx:HBox bottom="5" horizontalCenter="0">
+                                            <gui:StandardButton id="btnReplay" height="30" minWidth="70" />
+                                        </mx:HBox>
+                                        <mx:Spacer id="_MailWindow_Spacer1" height="13" />
+                                        <mx:VBox id="skillListGenerals" percentWidth="100" paddingTop="15" paddingBottom="15" paddingLeft="15" paddingRight="15" backgroundColor="2762777" />
+                                        <mx:Spacer id="_MailWindow_Spacer2" height="13" />
+                                    </mx:VBox>
+                                </mx:Canvas>
+                            </mx:Canvas>
+                            <mx:Canvas id="contentPvPReport" percentWidth="100" percentHeight="100" styleName="detailsContentBox">
+                                <gui:CustomTextArea id="pvPReportText" editable="false" selectable="false" left="24" right="24" top="5" bottom="50" backgroundAlpha="0" borderThickness="0" fontWeight="normal" />
+                                <mx:HBox bottom="5" horizontalCenter="0">
+                                    <gui:StandardButton id="btnPvPReport" height="32" minWidth="70" />
+                                </mx:HBox>
+                            </mx:Canvas>
+                            <mx:Canvas id="contentFriendRequest" percentWidth="100" percentHeight="100" styleName="detailsContentBox">
+                                <gui:CustomText id="friendRequestInfoText" selectable="false" left="24" right="24" top="5" fontWeight="normal" />
+                                <renderer:AvatarListItemRenderer id="friendRequestAvatar" horizontalCenter="0" verticalCenter="-10" />
+                                <mx:HBox id="_MailWindow_HBox11" bottom="5" horizontalCenter="0">
+                                    <gui:StandardButton id="btnFriendAccept" width="70" height="32" icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+                                    <gui:StandardButton id="btnFriendDecline" width="70" height="32" icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+                                </mx:HBox>
+                            </mx:Canvas>
+                            <mx:Canvas id="contentAdventureInvite" percentWidth="100" percentHeight="100" styleName="detailsContentBox">
+                                <mx:Canvas percentHeight="100" horizontalScrollPolicy="off" verticalScrollPolicy="auto" left="0" right="8">
+                                    <mx:VBox left="24" right="24" top="5" bottom="5" horizontalAlign="center" verticalGap="2">
+                                        <gui:CustomText id="adventureInviteInfoText" percentWidth="100" selectable="false" fontWeight="normal" />
+                                        <mx:Spacer height="4" />
+                                        <mx:Canvas percentWidth="100">
+                                            <mx:Canvas id="missionHeader" styleName="detailsSubHeader" height="18" left="15" right="13">
+                                                <gui:CustomLabel id="_MailWindow_CustomLabel12" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                                            </mx:Canvas>
+                                            <mx:Canvas id="missionPanel" styleName="detailsContentBox" height="125" left="16" right="14" top="18">
+                                                <mx:Canvas id="difficultyCanvas" width="124" horizontalScrollPolicy="off" verticalScrollPolicy="auto" left="0" backgroundColor="5720887">
+                                                    <gui:AdventureDifficultyIndicator id="difficultIndicator" width="124" height="125" verticalCenter="0" horizontalCenter="0" />
+                                                </mx:Canvas>
+                                                <mx:Canvas id="objectives" horizontalScrollPolicy="off" verticalScrollPolicy="auto" left="130" top="7" right="5" bottom="7">
+                                                    <gui:CustomText id="todo" percentWidth="100" selectable="false" paddingRight="10" color="0xFFFFFF" fontWeight="normal" />
+                                                </mx:Canvas>
+                                            </mx:Canvas>
+                                        </mx:Canvas>
+                                        <mx:Spacer height="4" />
+                                        <mx:HBox id="_MailWindow_HBox12">
+                                            <gui:StandardButton id="btnAdventureInviteAccept" width="70" height="32" icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+                                            <gui:StandardButton id="btnAdventureInviteDecline" width="70" height="32" icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+                                        </mx:HBox>
+                                        <mx:Spacer height="2" />
+                                    </mx:VBox>
+                                </mx:Canvas>
+                            </mx:Canvas>
+                            <mx:Canvas id="contentFriendInvitation" percentWidth="100" percentHeight="100" styleName="detailsContentBox">
+                                <gui:CustomText id="friendInvitationInfoText" height="50" selectable="false" left="24" right="24" top="5" fontWeight="normal" />
+                                <renderer:AvatarListItemRenderer id="friendInvitationAvatar" horizontalCenter="0" verticalCenter="0" />
+                                <mx:HBox id="_MailWindow_HBox13" bottom="5" horizontalCenter="0">
+                                    <gui:StandardButton id="btnFriendInvitationSendRequest" height="32" />
+                                </mx:HBox>
+                            </mx:Canvas>
+                            <mx:Canvas id="contentLootAccept" percentWidth="100" percentHeight="100" styleName="detailsContentBox">
+                                <mx:Canvas percentHeight="100" percentWidth="98" horizontalScrollPolicy="off" verticalScrollPolicy="auto" left="0" right="8">
+                                    <mx:VBox left="24" right="24" top="5" bottom="5" horizontalAlign="center">
+                                        <gui:CustomText id="lootAcceptInfoText" percentWidth="100" selectable="false" fontWeight="normal" />
+                                        <mx:HBox id="itemsHolder" verticalAlign="middle">
+                                            <mx:HBox id="itemsList" height="90" maxWidth="440" />
+                                            <mx:VBox>
+                                                <gui:StandardButton id="btnAcceptLoot" width="90" height="32" enabled="false" icon="{gAssetManager.GetClass('ButtonIconAcceptLoot')}" />
+                                                <gui:StandardButton id="btnClaimLoot" width="90" height="32" icon="{gAssetManager.GetClass('ButtonIconClaimLoot')}" />
+                                                <mx:Spacer height="13" />
+                                            </mx:VBox>
+                                        </mx:HBox>
+                                        <mx:VBox id="skillList" percentWidth="100" paddingTop="15" paddingBottom="15" paddingLeft="15" paddingRight="15" backgroundColor="2762777" />
+                                        <mx:Spacer id="_MailWindow_Spacer7" height="13" />
+                                    </mx:VBox>
+                                </mx:Canvas>
+                            </mx:Canvas>
+                            <mx:Canvas id="contentAdvLootAccept" percentWidth="100" percentHeight="100" styleName="detailsContentBox">
+                                <mx:Canvas percentHeight="100" horizontalScrollPolicy="off" verticalScrollPolicy="auto" left="0" right="8">
+                                    <mx:VBox id="contentAdvLootVBox" maxWidth="420" left="24" horizontalAlign="center" right="0" top="0">
+                                        <mx:HBox percentWidth="100" left="0">
+                                            <gui:CustomText id="advLootAcceptInfoText" percentWidth="100" maxWidth="510" selectable="false" fontWeight="normal" />
+                                        </mx:HBox>
+                                        <mx:HBox id="advItemsHolder" percentWidth="100" paddingTop="-3" paddingBottom="0" verticalAlign="middle" left="0">
+                                            <mx:HBox id="advItemsList" height="90" maxWidth="510" paddingTop="0" paddingBottom="0" left="0" />
+                                        </mx:HBox>
+                                        <gui:CustomText id="premiumLootText" percentWidth="100" selectable="false" fontWeight="normal" />
+                                        <mx:HBox id="premiumItemsHolder" percentWidth="100" paddingBottom="0" verticalAlign="middle" left="0">
+                                            <mx:HBox id="premiumItemsList" height="90" maxWidth="510" left="0" />
+                                        </mx:HBox>
+                                        <mx:HBox verticalAlign="middle" paddingTop="0" paddingBottom="5">
+                                            <gui:StandardButton id="btnAcceptAdvLoot" width="90" height="32" enabled="false" icon="{gAssetManager.GetClass('ButtonIconAcceptLoot')}" />
+                                            <gui:StandardButton id="btnClaimAdvLoot" width="90" height="32" icon="{gAssetManager.GetClass('ButtonIconClaimLoot')}" />
+                                        </mx:HBox>
+                                    </mx:VBox>
+                                </mx:Canvas>
+                            </mx:Canvas>
+                            <mx:Canvas id="contentTrade" percentWidth="100" percentHeight="100" styleName="detailsContentBox">
+                                <gui:CustomText id="tradeInfoText" selectable="false" left="24" right="24" top="5" fontWeight="normal" />
+                                <mx:HBox id="tradeOfferRes" visible="false" horizontalCenter="-80" verticalAlign="middle" verticalCenter="-5">
+                                    <gui:CustomLabel id="_MailWindow_CustomLabel13" />
+                                    <renderer:TradeResourceItemRenderer id="tradeOfferResItemRenderer" />
+                                </mx:HBox>
+                                <mx:HBox id="tradeOfferBuff" visible="false" horizontalCenter="-80" verticalAlign="middle" verticalCenter="-5">
+                                    <gui:CustomLabel id="_MailWindow_CustomLabel14" />
+                                    <renderer:StarMenuItemRenderer id="tradeOfferBuffItemRenderer" />
+                                </mx:HBox>
+                                <mx:HBox id="tradeCostsRes" visible="false" horizontalCenter="80" verticalAlign="middle" verticalCenter="-5">
+                                    <gui:CustomLabel id="_MailWindow_CustomLabel15" />
+                                    <renderer:TradeResourceItemRenderer id="tradeCostsResItemRenderer" />
+                                </mx:HBox>
+                                <mx:HBox id="tradeCostsBuff" visible="false" horizontalCenter="80" verticalAlign="middle" verticalCenter="-5">
+                                    <gui:CustomLabel id="_MailWindow_CustomLabel16" />
+                                    <renderer:StarMenuItemRenderer id="tradeCostsBuffItemRenderer" />
+                                </mx:HBox>
+                                <mx:HBox id="_MailWindow_HBox26" bottom="5" horizontalCenter="0">
+                                    <gui:StandardButton id="btnTradeAccept" width="70" height="32" enabled="false" icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+                                    <gui:StandardButton id="btnTradeDecline" width="70" height="32" icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+                                </mx:HBox>
+                            </mx:Canvas>
+                            <mx:Canvas id="contentTradeComplete" percentWidth="100" percentHeight="100" styleName="detailsContentBox">
+                                <mx:Canvas left="24" right="24" top="5">
+                                    <gui:CustomText id="tradeCompleteInfoText" percentWidth="100" selectable="false" left="0" top="0" fontWeight="normal" />
+                                </mx:Canvas>
+                                <renderer:TradeResourceItemRenderer id="completedRes" visible="false" horizontalCenter="0" verticalCenter="0" />
+                                <renderer:StarMenuItemRenderer id="completedBuff" visible="false" horizontalCenter="0" verticalCenter="0" />
+                                <mx:HBox id="_MailWindow_HBox27" bottom="5" horizontalCenter="0">
+                                    <gui:StandardButton id="btnTradeComplete" height="32" minWidth="70" icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+                                </mx:HBox>
+                            </mx:Canvas>
+                            <mx:Canvas id="contentBuffed" percentWidth="100" percentHeight="100" styleName="detailsContentBox">
+                                <gui:CustomText id="buffedInfoText" selectable="false" left="24" right="24" top="5" fontWeight="normal" />
+                                <renderer:StarMenuItemRenderer id="buffedBuff" horizontalCenter="-50" verticalCenter="25" />
+                                <mx:Image id="buffedArrow" horizontalCenter="0" verticalCenter="25" />
+                                <mx:Image id="buffedBuilding" horizontalCenter="50" verticalCenter="25" />
+                            </mx:Canvas>
+                            <mx:Canvas id="contentGems" percentWidth="100" percentHeight="100" styleName="detailsContentBox">
+                                <gui:CustomText id="gemsInfoText" selectable="false" left="24" right="24" top="5" fontWeight="normal" />
+                                <renderer:TradeResourceItemRenderer id="gemsResource" bottom="40" horizontalCenter="0" />
+                            </mx:Canvas>
+                            <mx:Canvas id="contentGuildRequest" percentWidth="100" percentHeight="100" styleName="detailsContentBox">
+                                <mx:Canvas left="24" right="24" top="5">
+                                    <gui:CustomText id="guildRequestInfoText" percentWidth="100" selectable="false" left="0" top="0" fontWeight="normal" />
+                                </mx:Canvas>
+                                <mx:HBox id="guildRequestButtons" bottom="5" horizontalCenter="0">
+                                    <gui:StandardButton id="btnGuildRequestAccept" width="70" height="32" icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+                                    <gui:StandardButton id="btnGuildRequestDecline" width="70" height="32" icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+                                </mx:HBox>
+                                <mx:HBox id="guildIncreaseButtons" bottom="5" horizontalCenter="0">
+                                    <gui:StandardButton id="btnGuildIncreaseSize" width="150" height="32" />
+                                </mx:HBox>
+                            </mx:Canvas>
+                            <mx:Canvas id="contentGuildSuccessionRequest" percentWidth="100" percentHeight="100" styleName="detailsContentBox">
+                                <mx:Canvas left="24" right="24" top="5">
+                                    <gui:CustomText id="guildSuccessionRequestInfoText" percentWidth="100" selectable="false" left="0" top="0" fontWeight="normal" />
+                                </mx:Canvas>
+                                <mx:HBox id="guildSuccessionRequestButtons" bottom="5" horizontalCenter="0">
+                                    <gui:StandardButton id="btnGuildSuccessionRequestAccept" width="70" height="32" icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+                                    <gui:StandardButton id="btnGuildSuccessionRequestDecline" width="70" height="32" icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+                                </mx:HBox>
+                            </mx:Canvas>
+                        </mx:Canvas>
+                    </mx:Canvas>
+                </mx:Canvas>
+                <!-- State-only containers: created here, detached in childrenCreated(),
+                     re-parented to content by the edit/apply/blockList states. -->
+                <mx:VBox id="editBox" percentWidth="100" left="0" top="0" bottom="0" verticalGap="0">
+                    <mx:Canvas percentWidth="100" percentHeight="90">
+                        <mx:Canvas id="recipientContainer" percentWidth="100" percentHeight="18" verticalScrollPolicy="off" left="0" right="0" backgroundSize="100%">
+                            <mx:VBox percentHeight="100" top="8">
+                                <mx:HBox percentWidth="100" verticalAlign="middle">
+                                    <gui:CustomLabel id="_MailWindow_CustomLabel1" color="0" textAlign="right" />
+                                    <gui:CustomTileList id="toTileList" width="640" height="25" verticalScrollPolicy="off" color="0xFFFFFF" borderThickness="1" borderColor="3419683" borderStyle="solid" backgroundColor="5787196" useRollOver="false" paddingBottom="0" />
+                                </mx:HBox>
+                                <mx:HBox percentWidth="100" verticalAlign="middle">
+                                    <gui:CustomLabel id="subjectInputLabel" color="0" textAlign="right" />
+                                    <gui:CustomTextInput id="subjectInput" width="640" height="25" styleName="standardInput" />
+                                </mx:HBox>
+                            </mx:VBox>
+                        </mx:Canvas>
+                        <mx:Canvas id="mailContentArea" percentWidth="100" percentHeight="80" styleName="detailsSubHeader" left="5" right="5">
+                            <mx:Canvas percentWidth="100" percentHeight="100" styleName="mailContentBorder" left="5" right="5" top="5" bottom="5" />
+                            <gui:CustomTextArea id="editText" left="10" right="10" top="8" bottom="8" backgroundAlpha="0" borderThickness="0" focusAlpha="0" fontWeight="normal" />
+                        </mx:Canvas>
+                    </mx:Canvas>
+                </mx:VBox>
+                <gui:CustomList id="reciepientList" visible="false" height="112" labelField="username" styleName="standardInput" left="75" right="30" top="34" borderThickness="1" fontWeight="normal" rollOverColor="7957587" selectionColor="8482380" />
+                <mx:VBox id="applyBox" left="3" right="3" top="5" bottom="5">
+                    <mx:Canvas percentWidth="100" percentHeight="100">
+                        <mx:Canvas percentWidth="100" height="60" styleName="detailsHeader">
+                            <gui:CustomLabel id="_MailWindow_CustomLabel3" width="70" left="15" top="11" textAlign="right" />
+                            <gui:CustomLabel id="applyTo" height="20" left="95" right="15" top="10" />
+                            <gui:CustomLabel id="_MailWindow_CustomLabel5" width="70" left="15" top="36" textAlign="right" />
+                            <gui:CustomLabel id="subjectApply" height="20" left="95" right="15" top="35" />
+                        </mx:Canvas>
+                        <mx:Canvas styleName="detailsContentBox" left="6" right="5" top="60" bottom="0">
+                            <gui:CustomTextArea id="messageText" maxChars="2000" left="5" right="5" top="4" bottom="3" backgroundAlpha="0" borderThickness="0" focusAlpha="0" fontWeight="normal" />
+                        </mx:Canvas>
+                    </mx:Canvas>
+                    <mx:HBox percentWidth="100" horizontalAlign="right">
+                        <gui:StandardButton id="btnApply" width="70" height="32" enabled="false" icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+                        <gui:StandardButton id="btnCancelApply" width="70" height="32" icon="{gAssetManager.GetClass('ButtonIconAbort')}" />
+                    </mx:HBox>
+                </mx:VBox>
+                <gui:CustomList id="reciepientApplyList" visible="false" height="112" labelField="username" styleName="standardInput" left="110" right="30" top="34" borderThickness="1" fontWeight="normal" rollOverColor="7957587" selectionColor="8482380" />
+                <gui:BasicPanel id="blockListPanel" label="Block List" />
+            </mx:VBox>
+            <mx:Canvas id="bottomButtonsContainer" percentWidth="100" percentHeight="12" visible="false" backgroundSize="97%" left="0" right="0" bottom="0">
+                <mx:HBox horizontalCenter="0" top="20" horizontalGap="50">
+                    <gui:StandardButton id="btnSend" width="150" height="30" enabled="false" icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+                    <gui:StandardButton id="btnCancelWrite" width="150" height="30" icon="{gAssetManager.GetClass('LoopBackward')}" />
+                </mx:HBox>
+            </mx:Canvas>
+    </mx:Array></gui:subComponents>
+</gui:BasicPanel>

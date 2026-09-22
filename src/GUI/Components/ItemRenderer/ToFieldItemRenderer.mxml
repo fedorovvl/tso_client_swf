@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" width="100" height="25">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.containers.HBox;
+        import mx.states.State;
+        import mx.controls.TextInput;
+        import mx.controls.Button;
+        import mx.controls.Label;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import mx.controls.Spacer;
+        import mx.events.FlexEvent;
+        import Communication.VO.dPlayerListItemVO;
+        import Communication.VO.Guild.dGuildVO;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import flash.events.FocusEvent;
+        import flash.events.KeyboardEvent;
+        import GUI.Events.MailRecipientEvent;
+        import flash.ui.Keyboard;
+        import mx.states.AddChild;
+        import mx.core.DeferredInstanceFromFunction;
+        import flash.events.MouseEvent;
+        import flash.events.Event;
+        import mx.utils.StringUtil;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        [Bindable]
+        public var nameButtonContainer:HBox;
+
+        [Bindable]
+        public var buttonStateContainer:HBox;
+
+        [Bindable]
+        public var toInput:TextInput;
+
+        [Bindable]
+        public var deleteRecipientBtn:Button;
+
+        [Bindable]
+        public var recipientName:Label;
+
+        private function createSpacer1():Spacer
+        {
+            var localValue1:Spacer = new Spacer();
+            localValue1.width = 7;
+            localValue1.height = 18;
+            if (!localValue1.document)
+            {
+                localValue1.document = this;
+            };
+            return (localValue1);
+        }
+
+        protected function buttonState_updateCompleteHandler(argument1:FlexEvent):void
+        {
+            this.removeEventListener(FlexEvent.UPDATE_COMPLETE, this.buttonState_updateCompleteHandler);
+            if ((data is dPlayerListItemVO))
+            {
+                this.deleteRecipientBtn.visible = true;
+                this.recipientName.text = (data as dPlayerListItemVO).username;
+            }
+            else
+            {
+                if ((data is dGuildVO))
+                {
+                    this.deleteRecipientBtn.visible = false;
+                    this.recipientName.text = ((("[" + cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Guild")) + "] ") + (data as dGuildVO).name);
+                };
+            };
+        }
+
+        protected function inputState_enterStateHandler(argument1:FlexEvent):void
+        {
+            this.addEventListener(FlexEvent.UPDATE_COMPLETE, this.inputState_updateCompleteHandler);
+        }
+
+        protected function toInput_focusInHandler(argument1:FocusEvent):void
+        {
+            argument1.stopPropagation();
+            this.toInput.setStyle("color", 0xFFFFFF);
+        }
+
+        private function createHBox2():HBox
+        {
+            var localValue1:HBox = new HBox();
+            this.nameButtonContainer = localValue1;
+            localValue1.styleName = "chatPrivateList";
+            localValue1.setStyle("verticalAlign", "middle");
+            localValue1.setStyle("horizontalGap", 1);
+            localValue1.id = "nameButtonContainer";
+            if (!localValue1.document)
+            {
+                localValue1.document = this;
+            };
+            localValue1.addChild(this.createLabel1());
+            localValue1.addChild(this.createButton1());
+            return (localValue1);
+        }
+
+        protected function toInput_keyDownHandler(argument1:KeyboardEvent):void
+        {
+            var localValue2:MailRecipientEvent;
+            if ((((argument1.keyCode == Keyboard.ENTER) || (argument1.keyCode == Keyboard.UP)) || (argument1.keyCode == Keyboard.DOWN)))
+            {
+                argument1.stopPropagation();
+                localValue2 = new MailRecipientEvent(MailRecipientEvent.SPECIAL_KEY_PRESS, true);
+                localValue2.keyCode = argument1.keyCode;
+                dispatchEvent(localValue2);
+            };
+        }
+
+        private function createLabel1():Label
+        {
+            var localValue1:Label = new Label();
+            this.recipientName = localValue1;
+            localValue1.percentHeight = 100;
+            localValue1.width = 77;
+            localValue1.id = "recipientName";
+            if (!localValue1.document)
+            {
+                localValue1.document = this;
+            };
+            return (localValue1);
+        }
+
+        protected function buttonState_enterStateHandler(argument1:FlexEvent):void
+        {
+            this.addEventListener(FlexEvent.UPDATE_COMPLETE, this.buttonState_updateCompleteHandler);
+        }
+
+        private function createButton1():Button
+        {
+            var localValue1:Button = new Button();
+            this.deleteRecipientBtn = localValue1;
+            localValue1.styleName = "closeSmall";
+            localValue1.width = 13;
+            localValue1.height = 12;
+            localValue1.addEventListener("click", this.HandleRemoveClick);
+            localValue1.id = "deleteRecipientBtn";
+            if (!localValue1.document)
+            {
+                localValue1.document = this;
+            };
+            return (localValue1);
+        }
+
+        protected function toInput_changeHandler(argument1:Event):void
+        {
+            argument1.stopPropagation();
+            var localValue2:String = StringUtil.trim(this.toInput.text);
+            var localValue3:MailRecipientEvent = new MailRecipientEvent(MailRecipientEvent.RECIPIENT_ENTERED, true);
+            localValue3.recipientName = localValue2;
+            localValue3.charLength = localValue2.length;
+            dispatchEvent(localValue3);
+        }
+
+        private function createHBox1():HBox
+        {
+            var localValue1:HBox = new HBox();
+            this.buttonStateContainer = localValue1;
+            localValue1.setStyle("verticalAlign", "middle");
+            localValue1.setStyle("horizontalGap", 0);
+            localValue1.setStyle("borderStyle", "none");
+            localValue1.id = "buttonStateContainer";
+            if (!localValue1.document)
+            {
+                localValue1.document = this;
+            };
+            localValue1.addChild(this.createHBox2());
+            localValue1.addChild(this.createSpacer1());
+            return (localValue1);
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            if ((argument1 is dPlayerListItemVO))
+            {
+                this.currentState = this.buttonState.name;
+                if (this.recipientName)
+                {
+                    this.recipientName.text = (data as dPlayerListItemVO).username;
+                };
+            }
+            else
+            {
+                if ((argument1 is dGuildVO))
+                {
+                    this.currentState = this.buttonState.name;
+                }
+                else
+                {
+                    this.currentState = this.inputState.name;
+                };
+            };
+            refreshRendererPresentation();
+        }
+
+        protected function toInput_focusOutHandler(argument1:FocusEvent):void
+        {
+            argument1.stopPropagation();
+            var localValue2:MailRecipientEvent = new MailRecipientEvent(MailRecipientEvent.FOCUS_OUT, true);
+            var localValue3:String = StringUtil.trim(this.toInput.text);
+            localValue2.recipientName = localValue3;
+            this.toInput.dispatchEvent(localValue2);
+        }
+
+        private function createTextInput1():TextInput
+        {
+            var localValue1:TextInput = new TextInput();
+            this.toInput = localValue1;
+            localValue1.width = 78;
+            localValue1.height = 18;
+            localValue1.setStyle("color", 0xFFFFFF);
+            localValue1.setStyle("backgroundAlpha", 0);
+            localValue1.setStyle("focusAlpha", 0);
+            localValue1.setStyle("borderThickness", 0);
+            localValue1.setStyle("borderStyle", "none");
+            localValue1.setStyle("textAlign", "left");
+            localValue1.addEventListener("change", this.toInput_changeHandler);
+            localValue1.addEventListener("focusIn", this.toInput_focusInHandler);
+            localValue1.addEventListener("focusOut", this.toInput_focusOutHandler);
+            localValue1.addEventListener("keyDown", this.toInput_keyDownHandler);
+            localValue1.id = "toInput";
+            if (!localValue1.document)
+            {
+                localValue1.document = this;
+            };
+            return (localValue1);
+        }
+
+        protected function inputState_updateCompleteHandler(argument1:FlexEvent):void
+        {
+            this.removeEventListener(FlexEvent.UPDATE_COMPLETE, this.inputState_updateCompleteHandler);
+            this.toInput.text = "";
+            this.toInput.setFocus();
+            globalFlash.gui.mMailWindow.toInputField = this.toInput;
+        }
+
+        private function HandleRemoveClick(argument1:Event):void
+        {
+            var localValue2:MailRecipientEvent = new MailRecipientEvent(MailRecipientEvent.DELETE_RECIPIENT, true);
+            localValue2.recipientVO = (data as dPlayerListItemVO);
+            dispatchEvent(localValue2);
+            argument1.stopImmediatePropagation();
+            argument1.preventDefault();
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("verticalCenter", 0);
+            viewAddChild1.targetFactory = new DeferredInstanceFromFunction(this.createHBox1);
+            buttonState.addEventListener("enterState", buttonState_enterStateHandler);
+            viewAddChild2.targetFactory = new DeferredInstanceFromFunction(this.createTextInput1);
+            inputState.addEventListener("enterState", inputState_enterStateHandler);
+            this.width = 100;
+            this.height = 25;
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:states>
+        <mx:State id="buttonState" name="buttonState">
+            <mx:overrides>
+                <mx:AddChild id="viewAddChild1" />
+            </mx:overrides>
+        </mx:State>
+        <mx:State id="inputState" name="inputState">
+            <mx:overrides>
+                <mx:AddChild id="viewAddChild2" />
+            </mx:overrides>
+        </mx:State>
+    </mx:states>
+</mx:Canvas>

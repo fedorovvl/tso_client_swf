@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="790" height="490">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.events.PropertyChangeEvent;
+        import mx.events.ToolTipEvent;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Components.ToolTips.cToolTipUtil;
+
+        private var _466987841ladderEnabled:Boolean = false;
+        private var _1387930238ladderLoadable:Boolean = false;
+
+        [Bindable(event="propertyChange")]
+        public function get ladderEnabled():Boolean
+        {
+            return _466987841ladderEnabled;
+        }
+
+        public function set ladderEnabled(value:Boolean):void
+        {
+            var old:Object = _466987841ladderEnabled;
+            if (old !== value)
+            {
+                _466987841ladderEnabled = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "ladderEnabled", old, value));
+                refreshLadderButton();
+            }
+        }
+
+        [Bindable(event="propertyChange")]
+        public function get ladderLoadable():Boolean
+        {
+            return _1387930238ladderLoadable;
+        }
+
+        public function set ladderLoadable(value:Boolean):void
+        {
+            var old:Object = _1387930238ladderLoadable;
+            if (old !== value)
+            {
+                _1387930238ladderLoadable = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "ladderLoadable", old, value));
+                refreshLadderButton();
+            }
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(outerBox);
+            LegacyMxmlContent.createChildren(eventLadderPanel);
+            header.source = gAssetManager.GetClass("EventWindowHeader");
+            ornamental.source = gAssetManager.GetClass("EventWindowOrnamental");
+            btnCloseWindow.setStyle("icon", gAssetManager.GetClass("Close"));
+            eventLadderPanelClose.setStyle("icon", gAssetManager.GetClass("Close"));
+            btnCloseWindow.addEventListener("toolTipCreate", __btnCloseWindow_toolTipCreate);
+            eventLadderPanelClose.addEventListener("toolTipCreate", __eventLadderPanelClose_toolTipCreate);
+            eventLadderPanel.addEventListener("show", syncLadderAnimation, false, 0, true);
+            eventLadderPanel.addEventListener("hide", syncLadderAnimation, false, 0, true);
+            syncLadderAnimation();
+            refreshLadderButton();
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function loca(key:String):String
+        {
+            var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key);
+            return value == undefined ? null : String(value);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            label = loca("EventWindow");
+            _EventPanel_CustomLabel1.text = loca("Events");
+            btnCloseWindow.toolTip = loca("Close");
+            btnEventLadder.label = loca("EventLadder");
+            eventLadderPanelClose.toolTip = loca("Close");
+        }
+
+        private function refreshLadderButton():void
+        {
+            if (btnEventLadder)
+            {
+                btnEventLadder.visible = ladderEnabled && ladderLoadable;
+            }
+        }
+
+        private function syncLadderAnimation(event:Event = null):void
+        {
+            if (_EventPanel_SpriteLibAnimation1 && eventLadderPanel)
+            {
+                _EventPanel_SpriteLibAnimation1.visible = eventLadderPanel.visible;
+            }
+        }
+
+        public function __btnCloseWindow_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __eventLadderPanelClose_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+    <gui:subComponents><mx:Array>
+        <mx:Image id="header" width="378" height="78" horizontalCenter="0" top="-87" />
+        <mx:Canvas id="outerBox" styleName="detailsHeader" horizontalScrollPolicy="off" verticalScrollPolicy="off" left="3" right="3" top="1" bottom="10">
+            <mx:Canvas horizontalScrollPolicy="off" verticalScrollPolicy="off" left="11" right="13" top="8" bottom="3">
+                <mx:Canvas width="3" styleName="vr" right="0" bottom="0" top="0" />
+                <mx:Canvas width="3" styleName="vr" left="0" bottom="0" top="0" />
+                <mx:Canvas height="3" styleName="hr" left="2" right="2" bottom="48" />
+                <mx:Canvas styleName="economyTitleBg" height="31" left="4" right="4" top="0">
+                    <gui:CustomLabel id="_EventPanel_CustomLabel1" horizontalCenter="0" verticalCenter="0" color="0" fontSize="14" />
+                </mx:Canvas>
+                <gui:TSOImage id="eventImage" width="628" height="136" left="68" top="44" />
+                <mx:Canvas height="10" styleName="questOrnamental" left="62" top="38" right="45" />
+                <mx:Canvas height="174" horizontalScrollPolicy="off" verticalScrollPolicy="off" styleName="detailsSubHeader" left="59" right="55" top="195" />
+                <mx:Canvas height="169" horizontalScrollPolicy="off" left="64" right="40" top="200">
+                    <gui:CustomText id="eventDescription" selectable="false" left="0" right="10" color="0xFFFFFF" fontWeight="normal" />
+                </mx:Canvas>
+                <mx:Image id="ornamental" width="151" height="397" left="-9" top="46" />
+            </mx:Canvas>
+        </mx:Canvas>
+        <gui:StandardButton id="btnCloseWindow" width="120" height="26" horizontalCenter="0" bottom="23" />
+        <gui:StandardButton id="btnEventLadder" width="100" height="26" bottom="23" right="27" />
+        <mx:Canvas id="eventLadderPanel" visible="false" verticalCenter="-7" horizontalCenter="0">
+            <mx:Canvas backgroundColor="0" backgroundAlpha="0.8" borderThickness="0" borderStyle="solid" top="10" left="0" right="0" bottom="0" cornerRadius="15" />
+            <mx:VBox paddingTop="0" paddingBottom="5" paddingLeft="0" paddingRight="0" verticalGap="3" horizontalAlign="center">
+                <mx:Canvas horizontalScrollPolicy="off" y="-5" minWidth="180" minHeight="180" maxWidth="600" maxHeight="600">
+                    <gui:SpriteLibAnimation id="_EventPanel_SpriteLibAnimation1" animationName="guianim_hourglass" loop="true" width="48" height="48" horizontalCenter="0" verticalCenter="0" />
+                    <mx:Image id="ladderImage" x="0" y="0" />
+                </mx:Canvas>
+                <gui:StandardButton id="eventLadderPanelClose" width="120" height="26" />
+            </mx:VBox>
+        </mx:Canvas>
+    </mx:Array></gui:subComponents>
+</gui:BasicPanel>

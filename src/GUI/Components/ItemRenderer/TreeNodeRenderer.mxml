@@ -1,0 +1,344 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="75" height="57">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Image;
+        import flash.display.Bitmap;
+        import GUI.Components.CustomLabel;
+        import GUI.Loca.cLocaManager;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import flash.events.MouseEvent;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import GUI.Assets.gAssetManager;
+        import mx.events.ItemClickEvent;
+        import mx.events.FlexEvent;
+        import ServerState.cEconomyOverviewData;
+        import flash.events.Event;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        private var _utilizationAmount:int;
+
+        [Bindable]
+        private var iconImage:Bitmap;
+
+        public var originalStatus:String;
+
+        [Bindable]
+        private var statusArrow:Bitmap;
+
+        private var _productionAmount:int;
+
+        private var _finished:Boolean = false;
+
+        private var _netAmount:int;
+
+        public var numOfChildrens:int = 1;
+
+        private var _selected:Boolean = false;
+
+        private var lm:cLocaManager = cLocaManager.GetInstance();
+
+        public function onTreeNodeRenderer_Canvas1_rollOut(argument1:MouseEvent):void
+        {
+            this.RollOut();
+        }
+
+        private function RollOver():void
+        {
+            if (!this._selected)
+            {
+                this.mainBg.styleName = "backgroundHighlight";
+            };
+        }
+
+        public function onTreeNodeRenderer_Canvas1_rollOver(argument1:MouseEvent):void
+        {
+            this.RollOver();
+        }
+
+        private function configureToolTip(argument1:ToolTipEvent):void
+        {
+            if (data.resource.name_string.indexOf("Deposit") == -1)
+            {
+                cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+            }
+            else
+            {
+                if (data.resource.name_string.indexOf("Wood") != -1)
+                {
+                    cToolTipUtil.createToolTip(cToolTipUtil.DEPOSIT_string, argument1, "DepositWoodTip");
+                }
+                else
+                {
+                    if (data.resource.name_string.indexOf("Corn") != -1)
+                    {
+                        cToolTipUtil.createToolTip(cToolTipUtil.DEPOSIT_string, argument1, "DepositCornTip");
+                    }
+                    else
+                    {
+                        cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+                    };
+                };
+            };
+        }
+
+        private function clickHandler(argument1:MouseEvent):void
+        {
+            var localValue2:ItemClickEvent = new ItemClickEvent(ItemClickEvent.ITEM_CLICK, true);
+            localValue2.item = data.resource;
+            dispatchEvent(localValue2);
+        }
+
+        public function get selected():Boolean
+        {
+            return (this._selected);
+        }
+
+        public function set selected(argument1:Boolean):void
+        {
+            this._selected = argument1;
+            if (argument1)
+            {
+                this.mainBg.styleName = "economyConsumptionBgPrsd";
+            }
+            else
+            {
+                this.mainBg.styleName = "economyConsumptionBgStd";
+            };
+        }
+
+        private function FormatAmount(argument1:Number):String
+        {
+            var localValue3:String;
+            var localValue2:Boolean;
+            if (String(argument1).indexOf("-") != -1)
+            {
+                argument1 = Math.abs(argument1);
+                localValue2 = true;
+            };
+            if (argument1 > 999)
+            {
+                localValue3 = (Math.floor((argument1 / 1000)).toString() + "k");
+            }
+            else
+            {
+                localValue3 = argument1.toString();
+            };
+            if (localValue2)
+            {
+                localValue3 = ("-" + localValue3);
+            };
+            return (localValue3);
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            if (((this.resourceIcon) && (this.statusBg)))
+            {
+                this.DisplayData();
+            };
+            refreshRendererPresentation();
+        }
+
+        public function onTreeNodeRenderer_Canvas1_creationComplete(argument1:FlexEvent):void
+        {
+            this.DisplayData();
+        }
+
+        public function set finished(argument1:Boolean):void
+        {
+            this._finished = argument1;
+        }
+
+        private function RollOut():void
+        {
+            if (!this._selected)
+            {
+                this.mainBg.styleName = "backgroundNormal";
+            };
+        }
+
+        public function get finished():Boolean
+        {
+            return (this._finished);
+        }
+
+        private function DisplayData(argument1:Event=null):void
+        {
+            var localValue6:Boolean;
+            var localValue7:TreeNodeRenderer;
+            this.resourceIcon.data = data.resource;
+            var localValue2:cEconomyOverviewData = new cEconomyOverviewData();
+            var localValue3:int = localValue2.GetResourceProductionValue(null, data.resource.name_string);
+            var localValue4:int = localValue2.GetResourceConsumptionValue(null, data.resource.name_string);
+            this._netAmount = (localValue3 - localValue4);
+            var localValue5:* = (("/" + (global.economyCalculationTime / 3600)) + " h");
+            if (data.resource.name_string.indexOf("Deposit") == -1)
+            {
+                this.depositQuestionMark.visible = false;
+            }
+            else
+            {
+                if (((!(data.resource.name_string.indexOf("Wood") == -1)) || (!(data.resource.name_string.indexOf("Corn") == -1))))
+                {
+                    this.depositQuestionMark.visible = true;
+                }
+                else
+                {
+                    this.depositQuestionMark.visible = false;
+                };
+            };
+            if (localValue3 > localValue4)
+            {
+                this.statusBg.styleName = "economyStatusGreen";
+                this.originalStatus = "economyStatusGreen";
+                if (((data.parentInstance) && (!(data.parentInstance.numOfChildrens == 1))))
+                {
+                    data.parentInstance.statusBg.styleName = data.parentInstance.originalStatus;
+                };
+                this.statusArrow = gAssetManager.GetBitmap("EconomyHighArrow");
+                this.productionStatusText.text = ("+" + this.FormatAmount(this._netAmount));
+            }
+            else
+            {
+                if (localValue3 < localValue4)
+                {
+                    this.statusBg.styleName = "economyStatusRed";
+                    this.originalStatus = "economyStatusRed";
+                    localValue6 = false;
+                    localValue7 = data.parentInstance;
+                    if (data.resource.name_string.indexOf("Deposit") != -1)
+                    {
+                        if (data.resource.name_string.indexOf("Wood") != -1)
+                        {
+                            localValue6 = true;
+                        };
+                    }
+                    else
+                    {
+                        localValue6 = true;
+                    };
+                    if (localValue6)
+                    {
+                        while (localValue7 != null)
+                        {
+                            if (((!(localValue7.originalStatus == "economyStatusGrey")) && (!(localValue7.originalStatus == "economyStatusRed"))))
+                            {
+                                localValue7.statusBg.styleName = "economyStatusYellow";
+                                localValue7.originalStatus = "economyStatusYellow";
+                            };
+                            localValue7 = localValue7.data.parentInstance;
+                        };
+                    };
+                    this.statusArrow = gAssetManager.GetBitmap("EconomyLowArrow");
+                    this.productionStatusText.text = this.FormatAmount(this._netAmount);
+                }
+                else
+                {
+                    if (localValue3 == localValue4)
+                    {
+                        this.statusBg.styleName = "economyStatusGrey";
+                        this.originalStatus = "economyStatusGrey";
+                        this.statusArrow = gAssetManager.GetBitmap("EconomyNeutralArrow");
+                        this.productionStatusText.text = this.FormatAmount(this._netAmount);
+                    };
+                };
+            };
+            this.statusBg.toolTip = (String((((this._netAmount < 0) || (this._netAmount == 0)) ? this._netAmount : ("+" + this._netAmount))) + localValue5);
+            this.depositQuestionMark.toolTip = (String((((this._netAmount < 0) || (this._netAmount == 0)) ? this._netAmount : ("+" + this._netAmount))) + localValue5);
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundAlpha", 1);
+            statusBg.addEventListener("toolTipCreate", configureToolTip);
+            depositQuestionMark.addEventListener("toolTipCreate", configureToolTip);
+            depositQuestionMark.source = gAssetManager.GetBitmap("DepositQuestionIcon");
+            this.width = 75;
+            this.height = 57;
+            this.clipContent = false;
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.addEventListener("click", this.clickHandler);
+            this.addEventListener("rollOut", this.onTreeNodeRenderer_Canvas1_rollOut);
+            this.addEventListener("rollOver", this.onTreeNodeRenderer_Canvas1_rollOver);
+            this.addEventListener("creationComplete", this.onTreeNodeRenderer_Canvas1_creationComplete);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+                statusArrowIndicator.source = statusArrow;
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="statusBg" height="30" right="0" left="1" bottom="0">
+        <ui:CustomLabel id="productionStatusText" y="5" width="48" height="16"  right="6" color="0xFFFFFF" textAlign="right" />
+        <mx:Image id="statusArrowIndicator" width="26" height="25"  left="3" verticalCenter="-1" />
+    </mx:Canvas>
+    <mx:Canvas id="mainBg" height="32" horizontalScrollPolicy="off" styleName="backgroundNormal" verticalScrollPolicy="off" left="0" right="0" top="0">
+        <mx:Canvas id="viewCanvas1" styleName="economyConsumptionBgPrsd" width="32" height="29" alpha="0.5" verticalScrollPolicy="off" horizontalScrollPolicy="off" />
+        <local:EconomyResourceItemRenderer id="resourceIcon" x="3.3" y="2" />
+        <mx:Image id="depositQuestionMark" width="26" height="25"  right="8" top="2" />
+    </mx:Canvas>
+</mx:Canvas>

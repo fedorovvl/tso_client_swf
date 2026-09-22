@@ -1,0 +1,196 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" height="26">
+    <mx:Script><![CDATA[
+        import mx.containers.HBox;
+        import ServerState.dResource;
+        import mx.controls.Image;
+        import GUI.Components.CustomLabel;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        [Bindable]
+        private var currentResource:dResource;
+
+        public function onResourceIcon_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        private function toolTipCreateHandler(argument1:ToolTipEvent):void
+        {
+            if (this.currentResource.amount >= this.currentResource.maxLimit)
+            {
+                cToolTipUtil.createToolTip(cToolTipUtil.MULTILINE_string, argument1);
+            }
+            else
+            {
+                cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+            };
+        }
+
+        private function FormatAmount(argument1:Number):String
+        {
+            if (this.currentResource.name_string.indexOf("Deposit") == -1)
+            {
+                if (argument1 >= this.currentResource.maxLimit)
+                {
+                    return ("MAX");
+                };
+                if (argument1 > 999)
+                {
+                    return (Math.floor((argument1 / 1000)).toString() + "k");
+                };
+                return (Math.floor(argument1).toString());
+            };
+            return ("");
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            if (data)
+            {
+                this.currentResource = (data as dResource);
+            };
+            if (this.currentResource.amount >= this.currentResource.maxLimit)
+            {
+                this.amountLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Max1");
+            }
+            else
+            {
+                this.amountLabel.text = this.FormatAmount(this.currentResource.amount);
+            };
+            refreshRendererPresentation();
+        }
+
+        private function FormatTooltip(argument1:Number):String
+        {
+            if (this.currentResource.name_string.indexOf("Deposit") == -1)
+            {
+                if (argument1 >= this.currentResource.maxLimit)
+                {
+                    return (cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, "EconomyMaxIndicator"));
+                };
+                return (Math.floor(argument1) + (((isNaN(this.currentResource.maxLimit)) || (this.currentResource.maxLimit == 0)) ? "" : ("/" + Math.floor(this.currentResource.maxLimit))));
+            };
+            return ("");
+        }
+
+        private function readPresentationValue2():String
+        {
+            var localValue1:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, currentResource.name_string);
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private function readPresentationValue3():String
+        {
+            var localValue1:* = FormatAmount(currentResource.amount);
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private function readPresentationValue4():String
+        {
+            var localValue1:* = FormatTooltip(currentResource.amount);
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("horizontalGap", 5);
+            this.setStyle("verticalAlign", "middle");
+            resourceIcon.addEventListener("toolTipCreate", onResourceIcon_toolTipCreate);
+            amountLabel.addEventListener("toolTipCreate", toolTipCreateHandler);
+            this.height = 26;
+            this.horizontalScrollPolicy = "off";
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"],
+                [currentResource, "propertyChange"]]);
+                if (currentResource != null)
+                {
+                    resourceIcon.source = gAssetManager.GetResourceIcon(currentResource.name_string);
+                }
+                if (currentResource != null)
+                {
+                    resourceIcon.toolTip = readPresentationValue2();
+                }
+                if (currentResource != null)
+                {
+                    amountLabel.text = readPresentationValue3();
+                }
+                if (currentResource != null)
+                {
+                    amountLabel.toolTip = readPresentationValue4();
+                }
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Image id="resourceIcon" width="26" height="25" />
+    <ui:CustomLabel id="amountLabel" width="35"  color="0xFFFFFF" fontWeight="bold" textAlign="center" />
+</mx:HBox>

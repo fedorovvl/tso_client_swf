@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import GUI.Components.CustomLabel;
+        import GUI.Components.CustomText;
+        import Communication.VO.Skill.SkillVO;
+        import mx.containers.HBox;
+        import mx.controls.Image;
+        import mx.containers.VBox;
+        import mx.core.mx_internal;
+        import mx.events.FlexEvent;
+        import mx.events.PropertyChangeEvent;
+        import Skill.SkillDefinition;
+        import Modifier.ModifierVO;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import __AS3__.vec.Vector;
+        import Modifier.Modifiers.Common.ChangeLootChance;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private var skillVO:SkillVO;
+
+        public function onSkillTipRenderer_Canvas1_creationComplete(argument1:FlexEvent):void
+        {
+            this.creationComplete();
+        }
+
+        public function setSkillVO(argument1:SkillVO):void
+        {
+            this.skillVO = argument1;
+            if (this.skillIcon)
+            {
+                this.creationComplete();
+            };
+        }
+
+        private function creationComplete():void
+        {
+            var localValue1:SkillDefinition;
+            var localValue5:ModifierVO;
+            var localValue6:Number;
+            if (this.skillVO == null)
+            {
+                return;
+            };
+            localValue1 = global.skills_vector[this.skillVO.id];
+            if (localValue1 == null)
+            {
+                return;
+            };
+            this.skillIcon.source = gAssetManager.GetBitmap(localValue1.icon_string);
+            var localValue2:String = localValue1.name_string;
+            this.skillName.text = (cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, localValue2) + ":");
+            var localValue3:Array = [];
+            var localValue4:Vector.<ModifierVO> = localValue1.level_vector[(this.skillVO.level - 1)];
+            if (localValue4.length > 0)
+            {
+                for each (localValue5 in localValue4)
+                {
+                    if (localValue5.chance != 1)
+                    {
+                        localValue6 = (localValue5.chance * 100);
+                    }
+                    else
+                    {
+                        if (localValue5.modifier_string.toLowerCase() == ChangeLootChance.xml_string)
+                        {
+                            localValue6 = localValue5.value;
+                        }
+                        else
+                        {
+                            if (((localValue5.item_string.toLowerCase() == "starcoinsforxp") || (localValue5.item_string.toLowerCase() == "hiredmilitaryforxp")))
+                            {
+                                localValue6 = localValue5.multiplier;
+                            }
+                            else
+                            {
+                                if (((localValue5.item_string.toLowerCase() == "recoverlosttroops") || (localValue5.item_string.toLowerCase() == "gainskill_splash")))
+                                {
+                                    localValue6 = (localValue5.multiplier * 100);
+                                }
+                                else
+                                {
+                                    localValue6 = ((localValue5.multiplier - 1) * 100);
+                                };
+                            };
+                        };
+                    };
+                    localValue3.push(Math.round(Math.abs(localValue6)).toString());
+                    localValue3.push(localValue5.value);
+                    localValue3.push(int(((localValue5.multiplier - 1) * 100)));
+                    localValue3.push(localValue5.adder);
+                };
+            };
+            this.skillDescription.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, localValue2, localValue3);
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            this.setSkillVO(SkillVO(argument1));
+            refreshRendererPresentation();
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.percentWidth = 100;
+            this.addEventListener("creationComplete", this.onSkillTipRenderer_Canvas1_creationComplete);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:HBox id="viewHBox1" percentWidth="100" left="10" verticalAlign="middle" horizontalGap="10">
+        <mx:Image id="skillIcon" />
+        <mx:VBox id="viewVBox1" percentWidth="100" verticalGap="0">
+            <ui:CustomLabel id="skillName" percentWidth="100"  fontWeight="bold" color="13876873" />
+            <ui:CustomText id="skillDescription" percentWidth="100"  fontWeight="normal" color="13876873" />
+        </mx:VBox>
+    </mx:HBox>
+</mx:Canvas>

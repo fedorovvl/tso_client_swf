@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tip:BasicDescriptionTip xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:tip="GUI.Components.ToolTips.*">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+
+        override protected function commitProperties():void
+        {
+            super.commitProperties();
+            if (!cLocaManager.GetInstance().IsInitialized())
+            {
+                return;
+            };
+            headline.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, text);
+            description.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, text);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            if (!cLocaManager.GetInstance().IsInitialized())
+            {
+                return;
+            };
+            invalidateProperties();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+    ]]></mx:Script>
+</tip:BasicDescriptionTip>

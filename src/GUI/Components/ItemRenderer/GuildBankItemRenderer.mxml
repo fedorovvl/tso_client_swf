@@ -1,0 +1,543 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.containers.VBox;
+        import mx.containers.HBox;
+        import mx.controls.Label;
+        import mx.effects.Sequence;
+        import mx.controls.TextInput;
+        import Communication.VO.Guild.dGuildRankTabPermissionVO;
+        import GUI.Components.ExtendedHSlider;
+        import mx.controls.Image;
+        import GUI.Components.StandardCheckBox;
+        import mx.effects.Fade;
+        import mx.effects.Resize;
+        import mx.controls.Spacer;
+        import mx.core.mx_internal;
+        import mx.styles.CSSStyleDeclaration;
+        import flash.events.MouseEvent;
+        import mx.events.SliderEvent;
+        import flash.events.KeyboardEvent;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+        import mx.events.ItemClickEvent;
+        import GUI.GAME.cGuildWindow;
+        import mx.events.FlexEvent;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        [Bindable]
+        public var expand:Sequence;
+
+        [Bindable]
+        public var collapse:Sequence;
+
+        [Bindable]
+        public var vo:dGuildRankTabPermissionVO;
+
+        protected var mRenderPanel:GuildBankItemRenderer;
+
+        [Bindable]
+        private var index:int;
+
+        [Bindable]
+        private var collapsed:Boolean = true;
+
+        [Bindable]
+        public var editable:Boolean = true;
+
+        [Bindable]
+        private var offset:int;
+
+        public var _GuildBankItemRenderer_Fade1:Fade;
+
+        public var _GuildBankItemRenderer_Fade2:Fade;
+
+        public var _GuildBankItemRenderer_Resize2:Resize;
+
+        public var _GuildBankItemRenderer_Resize1:Resize;
+
+        [Bindable]
+        private var minWithdrawLimits:int = global.guildBankMinWithdrawLimits;
+
+        [Bindable]
+        private var minBuffWithdrawLimits:int = global.guildBankMinBuffsWithdrawLimits;
+
+        public function init():void
+        {
+            this.checkTab.addEventListener(MouseEvent.CLICK, this.RanksEditKeyUpHandler);
+            this.checkResources.addEventListener(MouseEvent.CLICK, this.RanksEditKeyUpHandler);
+            this.checkItems.addEventListener(MouseEvent.CLICK, this.RanksEditKeyUpHandler);
+            this.sliderResources.addEventListener(SliderEvent.CHANGE, this.RanksEditKeyUpHandler);
+            this.sliderItems.addEventListener(SliderEvent.CHANGE, this.RanksEditKeyUpHandler);
+            this.selectedResources.addEventListener(KeyboardEvent.KEY_UP, this.ChangeResourceInputAmount);
+            this.selectedItems.addEventListener(KeyboardEvent.KEY_UP, this.ChangeItemInputAmount);
+        }
+
+        public function onTabNameRow_rollOut(argument1:MouseEvent):void
+        {
+            this.tabNameRow.styleName = "detailsContentBox";
+        }
+
+        private function FormatAmount(argument1:Number):String
+        {
+            if (argument1 > 999999)
+            {
+                return (Math.floor((argument1 / 1000000)).toString() + "MM");
+            };
+            if (argument1 > 999)
+            {
+                return (Math.floor((argument1 / 1000)).toString() + "k");
+            };
+            return (argument1.toString());
+        }
+
+        public function onCheckItems_change(argument1:Event):void
+        {
+            data.itemsPermission = ((argument1.currentTarget.selected) ? 1 : 0);
+        }
+
+        public function onCheckResources_change(argument1:Event):void
+        {
+            data.resourcesPermission = ((argument1.currentTarget.selected) ? 1 : 0);
+        }
+
+        private function expandCollapseEventHandler():void
+        {
+            var localValue1:ItemClickEvent = new ItemClickEvent(cGuildWindow.CLICK_EXPAND_ITEM, true);
+            this.dispatchEvent(localValue1);
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            var localValue2:String;
+            if (global.ui.mCurrentPlayerGuildBank == null)
+            {
+                return;
+            };
+            if (argument1 == super.data)
+            {
+                return;
+            };
+            super.data = argument1;
+            this.vo = (data as dGuildRankTabPermissionVO);
+            if (this.vo != null)
+            {
+                localValue2 = "";
+                if (global.ui.mCurrentPlayerGuildBank.GetGuildBankTab(this.vo.tabID) != null)
+                {
+                    localValue2 = global.ui.mCurrentPlayerGuildBank.GetGuildBankTab(this.vo.tabID).defaultName;
+                };
+                this.tabName.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildRankBankAccess", [("" + ((this.vo.tabName != null) ? this.vo.tabName : localValue2))]);
+                this.sliderItems.minimum = this.minBuffWithdrawLimits;
+                this.sliderResources.minimum = this.minWithdrawLimits;
+                this.sliderItems.maximum = ((data.maxBuffs > data.itemsLimit) ? data.maxBuffs : data.itemsLimit);
+                this.sliderResources.maximum = ((data.maxResources > data.resourcesLimit) ? data.maxResources : data.resourcesLimit);
+                this.sliderItems.value = data.itemsLimit;
+                this.sliderResources.value = data.resourcesLimit;
+            };
+            if (((!(global.ui.mCurrentPlayerGuildBank.GetGuildBankTab(this.vo.tabID) == null)) && (global.ui.mCurrentPlayerGuildBank.GetGuildBankTab(this.vo.tabID).isPaymentTab)))
+            {
+                this.itemsGroup.visible = false;
+                this.itemsGroup.includeInLayout = false;
+            }
+            else
+            {
+                this.itemsGroup.visible = true;
+                this.itemsGroup.includeInLayout = true;
+            };
+            if (!this.collapsed)
+            {
+                this.collapsed = true;
+            };
+            this.expandCollapseEventHandler();
+            this.height = ((this.tabNameRow.x + this.tabNameRow.height) + 1);
+            refreshRendererPresentation();
+        }
+
+        private function expandCollapse():void
+        {
+            this.collapsed = (!(this.collapsed));
+            (data as dGuildRankTabPermissionVO).collapsed = this.collapsed;
+            if (this.collapsed)
+            {
+                this.collapse.play();
+            }
+            else
+            {
+                this.expand.play();
+            };
+            this.expandCollapseEventHandler();
+        }
+
+        private function RanksEditKeyUpHandler(argument1:Event):void
+        {
+            var localValue2:Event = new Event(ItemClickEvent.ITEM_CLICK);
+            parent.dispatchEvent(localValue2);
+        }
+
+        private function createFade2():Fade
+        {
+            var localValue1:Fade = new Fade();
+            this._GuildBankItemRenderer_Fade2 = localValue1;
+            localValue1.alphaFrom = 1;
+            localValue1.alphaTo = 0;
+            localValue1.duration = 300;
+            return (localValue1);
+        }
+
+        private function createResize2():Resize
+        {
+            var localValue1:Resize = new Resize();
+            this._GuildBankItemRenderer_Resize2 = localValue1;
+            localValue1.duration = 310;
+            return (localValue1);
+        }
+
+        public function onGuildBankItemRenderer_Canvas1_initialize(argument1:FlexEvent):void
+        {
+            this.init();
+        }
+
+        private function UpdateAmount(argument1:SliderEvent):void
+        {
+            if (isNaN(argument1.value))
+            {
+                return;
+            };
+            if (argument1.target.id == "sliderResources")
+            {
+                data.resourcesLimit = argument1.value;
+            };
+            if (argument1.target.id == "sliderItems")
+            {
+                data.itemsLimit = argument1.value;
+            };
+        }
+
+        private function createSequence2():Sequence
+        {
+            var localValue1:Sequence = new Sequence();
+            this.collapse = localValue1;
+            localValue1.children = [this.createFade2(), this.createResize2()];
+            return (localValue1);
+        }
+
+        public function onTabNameRow_rollOver(argument1:MouseEvent):void
+        {
+            this.tabNameRow.styleName = "economyProductionBgPrsd";
+        }
+
+        private function RankTabChanged():Boolean
+        {
+            var localValue1:dGuildRankTabPermissionVO = (super.data as dGuildRankTabPermissionVO);
+            if (localValue1 == null)
+            {
+                return (false);
+            };
+            return (((((!(localValue1.TabPermission() == this.checkTab.selected)) || (!(localValue1.ResourcesPermission() == this.checkResources.selected))) || (!(localValue1.ItemsPermission() == this.checkItems.selected))) || (!(localValue1.resourcesLimit == this.sliderResources.value))) || (!(localValue1.itemsLimit == this.sliderItems.value)));
+        }
+
+        private function createFade1():Fade
+        {
+            var localValue1:Fade = new Fade();
+            this._GuildBankItemRenderer_Fade1 = localValue1;
+            localValue1.alphaFrom = 0;
+            localValue1.alphaTo = 1;
+            localValue1.duration = 310;
+            return (localValue1);
+        }
+
+        private function createResize1():Resize
+        {
+            var localValue1:Resize = new Resize();
+            this._GuildBankItemRenderer_Resize1 = localValue1;
+            localValue1.duration = 300;
+            return (localValue1);
+        }
+
+        private function ChangeItemInputAmount(argument1:Event):void
+        {
+            if (int(this.selectedItems.text) == 0)
+            {
+                this.selectedItems.text = "1";
+                this.selectedItems.setSelection(0, 1);
+            };
+            if (int(this.selectedItems.text) > this.sliderItems.maximum)
+            {
+                this.selectedItems.text = String(this.sliderItems.maximum);
+            };
+            data.itemsLimit = int(this.selectedItems.text);
+            dispatchEvent(new MouseEvent(MouseEvent.CLICK));
+        }
+
+        public function onCheckTab_change(argument1:Event):void
+        {
+            data.permission = ((argument1.currentTarget.selected) ? 1 : 0);
+        }
+
+        private function ChangeResourceInputAmount(argument1:Event):void
+        {
+            if (int(this.selectedResources.text) == 0)
+            {
+                this.selectedResources.text = "1";
+                this.selectedResources.setSelection(0, 1);
+            };
+            if (int(this.selectedResources.text) > this.sliderResources.maximum)
+            {
+                this.selectedResources.text = String(this.sliderResources.maximum);
+            };
+            data.resourcesLimit = int(this.selectedResources.text);
+            dispatchEvent(new MouseEvent(MouseEvent.CLICK));
+        }
+
+        private function createSequence1():Sequence
+        {
+            var localValue1:Sequence = new Sequence();
+            this.expand = localValue1;
+            localValue1.children = [this.createResize1(), this.createFade1()];
+            return (localValue1);
+        }
+
+        public function onTabNameRow_click(argument1:MouseEvent):void
+        {
+            this.expandCollapse();
+        }
+
+        private function readPresentationValue13():String
+        {
+            var localValue1:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildRankBankPayResources");
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private function readPresentationValue15():String
+        {
+            var localValue1:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildRankBankWithdrawResources");
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private function readPresentationValue19():String
+        {
+            var localValue1:* = data.resourcesLimit;
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private function readPresentationValue20():String
+        {
+            var localValue1:* = ("/ " + FormatAmount(sliderResources.maximum));
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private function readPresentationValue23():String
+        {
+            var localValue1:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildRankBankPayItems");
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private function readPresentationValue25():String
+        {
+            var localValue1:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "GuildRankBankWithdrawItems");
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private function readPresentationValue28():String
+        {
+            var localValue1:* = data.itemsLimit;
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private function readPresentationValue30():String
+        {
+            var localValue1:* = ("/ " + FormatAmount(sliderItems.maximum));
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("left", 0);
+            this.setStyle("top", 0);
+            tabNameRow.addEventListener("rollOver", onTabNameRow_rollOver);
+            tabNameRow.addEventListener("rollOut", onTabNameRow_rollOut);
+            tabNameRow.addEventListener("click", onTabNameRow_click);
+            checkTab.addEventListener("change", onCheckTab_change);
+            checkResources.addEventListener("change", onCheckResources_change);
+            sliderResources.addEventListener("change", UpdateAmount);
+            checkItems.addEventListener("change", onCheckItems_change);
+            sliderItems.addEventListener("change", UpdateAmount);
+            this.percentWidth = 100;
+            this.verticalScrollPolicy = "off";
+            this.createSequence2();
+            this.createSequence1();
+            this.addEventListener("initialize", this.onGuildBankItemRenderer_Canvas1_initialize);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"],
+                [checkItems, "valueCommit"],
+                [checkItems, "click"],
+                [sliderResources, "change"],
+                [checkResources, "valueCommit"],
+                [checkResources, "click"],
+                [detailCanvas, "heightChanged"],
+                [tabNameRow, "heightChanged"],
+                [tabNameRow, "yChanged"],
+                [sliderItems, "change"],
+                [checkTab, "valueCommit"],
+                [checkTab, "click"]]);
+                _GuildBankItemRenderer_Resize1.heightTo = ((detailCanvas.height + tabNameRow.y) + tabNameRow.height) + 2;
+                _GuildBankItemRenderer_Resize1.target = this;
+                _GuildBankItemRenderer_Fade1.target = detailCanvas;
+                _GuildBankItemRenderer_Fade2.target = detailCanvas;
+                _GuildBankItemRenderer_Resize2.heightTo = (tabNameRow.y + tabNameRow.height) + 1;
+                _GuildBankItemRenderer_Resize2.target = this;
+                if (vo != null)
+                {
+                    checkTab.selected = vo.TabPermission();
+                }
+                checkTab.enabled = editable;
+                configuredImage1.source = gAssetManager.GetBitmap(((collapsed) ? "ArrowSmallSUp" : "ArrowSmallNUp"));
+                configuredVBox2.alpha = (checkTab.selected) ? 1 : 0.5;
+                if (vo != null)
+                {
+                    checkResources.selected = vo.ResourcesPermission();
+                }
+                checkResources.enabled = (editable) && (checkTab.selected);
+                labelResources.text = readPresentationValue13();
+                configuredVBox4.alpha = (checkResources.selected) ? 1 : 0.5;
+                labelWithdrawResources.text = readPresentationValue15();
+                if (data != null)
+                {
+                    sliderResources.value = data.resourcesLimit;
+                }
+                sliderResources.enabled = ((editable) && (checkTab.selected)) && (checkResources.selected);
+                selectedResources.enabled = ((editable) && (checkTab.selected)) && (checkResources.selected);
+                if (data != null)
+                {
+                    selectedResources.text = readPresentationValue19();
+                }
+                resourcesMax.text = readPresentationValue20();
+                if (vo != null)
+                {
+                    checkItems.selected = vo.ItemsPermission();
+                }
+                checkItems.enabled = (editable) && (checkTab.selected);
+                labelItems.text = readPresentationValue23();
+                configuredVBox6.alpha = (checkItems.selected) ? 1 : 0.5;
+                labelWithdrawItems.text = readPresentationValue25();
+                if (data != null)
+                {
+                    sliderItems.value = data.itemsLimit;
+                }
+                sliderItems.enabled = ((editable) && (checkTab.selected)) && (checkItems.selected);
+                if (data != null)
+                {
+                    selectedItems.text = readPresentationValue28();
+                }
+                selectedItems.enabled = ((editable) && (checkTab.selected)) && (checkItems.selected);
+                itemsMax.text = readPresentationValue30();
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:VBox id="viewVBox1" percentWidth="100" verticalGap="1" left="0" top="0">
+        <mx:HBox id="tabNameRow" percentWidth="100" styleName="detailsContentBox" height="25" left="0" top="0">
+            <ui:StandardCheckBox id="checkTab" width="25" fontSize="10" />
+            <mx:HBox id="viewHBox1" width="150">
+                <mx:Label id="tabName" maxWidth="150" textAlign="left" fontWeight="normal" top="10" color="0xFFFFFF" />
+            </mx:HBox>
+            <mx:Spacer id="viewSpacer1" percentWidth="100" />
+            <mx:Image id="configuredImage1" />
+        </mx:HBox>
+        <mx:Canvas id="detailCanvas" percentWidth="100" alpha="0" horizontalScrollPolicy="off">
+            <mx:VBox id="configuredVBox2" percentWidth="100" verticalGap="1" left="10">
+                <mx:VBox id="viewVBox2" percentWidth="100" verticalGap="1">
+                    <mx:HBox id="viewHBox2" percentWidth="100" styleName="detailsContentBox" horizontalGap="1">
+                        <ui:StandardCheckBox id="checkResources" width="25" fontSize="10" />
+                        <mx:Label id="labelResources" left="10" textAlign="left" fontWeight="normal" top="10" color="0xFFFFFF" />
+                    </mx:HBox>
+                    <mx:VBox id="configuredVBox4" percentWidth="100" styleName="detailsContentBox" verticalGap="1">
+                        <mx:Label id="labelWithdrawResources" percentWidth="100" left="10" textAlign="left" fontWeight="normal" top="10" color="0xFFFFFF" />
+                        <mx:HBox id="viewHBox3" percentWidth="90" horizontalGap="1">
+                            <ui:ExtendedHSlider id="sliderResources" width="120" left="4" right="5" bottom="6" />
+                            <mx:TextInput id="selectedResources" height="17" width="35" styleName="standardInput" restrict="0-9" color="0xFFFFFF" fontSize="10" textAlign="right" />
+                            <mx:Label id="resourcesMax" width="80" color="0xFFFFFF" fontWeight="normal" textAlign="left" />
+                        </mx:HBox>
+                    </mx:VBox>
+                </mx:VBox>
+                <mx:VBox id="itemsGroup" percentWidth="100" verticalGap="1">
+                    <mx:HBox id="viewHBox4" percentWidth="100" styleName="detailsContentBox" horizontalGap="1">
+                        <ui:StandardCheckBox id="checkItems" width="25" fontSize="10" />
+                        <mx:Label id="labelItems" left="10" textAlign="left" fontWeight="normal" top="10" color="0xFFFFFF" />
+                    </mx:HBox>
+                    <mx:VBox id="configuredVBox6" percentWidth="100" styleName="detailsContentBox" verticalGap="1">
+                        <mx:Label id="labelWithdrawItems" left="10" textAlign="left" fontWeight="normal" top="10" color="0xFFFFFF" />
+                        <mx:HBox id="viewHBox5" percentWidth="90" horizontalGap="1">
+                            <ui:ExtendedHSlider id="sliderItems" width="120" left="4" right="5" bottom="6" />
+                            <mx:TextInput id="selectedItems" height="17" width="35" styleName="standardInput" restrict="0-9" color="0xFFFFFF" fontSize="10" textAlign="right" />
+                            <mx:Label id="itemsMax" width="80" color="0xFFFFFF" fontWeight="normal" textAlign="left" />
+                        </mx:HBox>
+                    </mx:VBox>
+                </mx:VBox>
+            </mx:VBox>
+        </mx:Canvas>
+    </mx:VBox>
+</mx:Canvas>

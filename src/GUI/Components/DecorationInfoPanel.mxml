@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="250" height="318">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Assets.gAssetManager;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(contentBox);
+            updateBottom();
+            globalFlash.staticEventDispatcher.addEventListener("propertyChange", updateBottom, false, 0, true);
+            setupMoveButton(btnMoveUp, "ArrowUp");
+            setupMoveButton(btnMoveDown, "ArrowDown");
+            setupMoveButton(btnMoveLeft, "ArrowLeft");
+            setupMoveButton(btnMoveRight, "ArrowRight");
+            btnOK.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            btnCancel.setStyle("icon", gAssetManager.GetClass("ButtonIconAbort"));
+            btnKnockDown.enabled = false;
+            btnKnockDown.playSound = false;
+            btnKnockDown.setStyle("icon", gAssetManager.GetClass("ButtonIconBomb"));
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function setupMoveButton(button:mx.controls.Button, prefix:String):void
+        {
+            button.setStyle("upSkin", gAssetManager.GetClass(prefix));
+            button.setStyle("overSkin", gAssetManager.GetClass(prefix + "Highlight"));
+            button.setStyle("downSkin", gAssetManager.GetClass(prefix + "Highlight"));
+            button.setStyle("disabledSkin", gAssetManager.GetClass(prefix + "Disabled"));
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var adjustPosition:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "AdjustPosition");
+            _DecorationInfoPanel_CustomLabel1.text = ((adjustPosition == undefined) ? null : String(adjustPosition));
+            var knockDown:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "KnockDown");
+            _DecorationInfoPanel_CustomLabel2.text = ((knockDown == undefined) ? null : String(knockDown));
+        }
+
+        private function updateBottom(event:Event = null):void
+        {
+            setStyle("bottom", globalFlash.mainHudBottomPos);
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <gui:BuildingWindowHeader id="buildingHeader" />
+            <mx:Canvas id="contentBox" width="155" left="8" right="7" top="62" bottom="5">
+                <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                    <gui:CustomLabel id="_DecorationInfoPanel_CustomLabel1" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                </mx:Canvas>
+                <mx:Canvas styleName="detailsContentBox" height="120" left="1" right="1" top="18">
+                    <mx:Button id="btnMoveUp" width="25" height="23" horizontalCenter="0" verticalCenter="-40" />
+                    <mx:Button id="btnMoveDown" width="25" height="23" horizontalCenter="0" verticalCenter="0" />
+                    <mx:Button id="btnMoveLeft" width="25" height="23" horizontalCenter="-20" verticalCenter="-20" />
+                    <mx:Button id="btnMoveRight" width="25" height="23" horizontalCenter="20" verticalCenter="-20" />
+                    <gui:ReversableHBox id="buttonBox" percentWidth="100" horizontalAlign="center" bottom="5">
+                        <gui:StandardButton id="btnOK" width="70" height="32" />
+                        <gui:StandardButton id="btnCancel" width="70" height="32" />
+                    </gui:ReversableHBox>
+                </mx:Canvas>
+                <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18" top="140">
+                    <gui:CustomLabel id="_DecorationInfoPanel_CustomLabel2" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
+                </mx:Canvas>
+                <mx:Canvas styleName="detailsContentBox" left="1" right="1" top="158" bottom="0">
+                    <gui:StandardButton id="btnKnockDown" width="68" height="39" horizontalCenter="0" verticalCenter="0" />
+                </mx:Canvas>
+            </mx:Canvas>
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

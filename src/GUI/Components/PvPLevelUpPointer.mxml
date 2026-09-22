@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*" height="51">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import GUI.GAME.cPvPProgressionPanel;
+        import GUI.Effects.gHintManager;
+        import flash.events.IEventDispatcher;
+        import mx.events.PropertyChangeEvent;
+        private var observedUi:IEventDispatcher;
+        [Embed(source="../../../assets/vector/PvPLevelUpPointer/UpSkinNormal.swf", symbol="GUI.Components.PvPLevelUpPointer_UpSkinNormal")]
+        private var UpSkinNormal:Class;
+        [Embed(source="../../../assets/vector/PvPLevelUpPointer/OverSkinNormal.swf", symbol="GUI.Components.PvPLevelUpPointer_OverSkinNormal")]
+        private var OverSkinNormal:Class;
+        [Embed(source="../../../assets/vector/PvPLevelUpPointer/UpSkinCompleted.swf", symbol="GUI.Components.PvPLevelUpPointer_UpSkinCompleted")]
+        private var UpSkinCompleted:Class;
+        [Embed(source="../../../assets/vector/PvPLevelUpPointer/OverSkinCompleted.swf", symbol="GUI.Components.PvPLevelUpPointer_OverSkinCompleted")]
+        private var OverSkinCompleted:Class;
+        private var pointerType:String = "normal";
+        private var hovering:Boolean = false;
+
+        public function get type():String { return pointerType; }
+        public function set type(value:String):void
+        {
+            pointerType = value;
+            updateBackground();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("disabledOverlayAlpha", 0);
+            this.setStyle("backgroundSize", "100%");
+            addEventListener("labelChanged", updateLabel);
+            addEventListener("click", canvas1_clickHandler);
+            addEventListener("rollOver", onRollOver);
+            addEventListener("rollOut", onRollOut);
+            global.staticEventDispatcher.addEventListener("propertyChange", globalChanged, false, 0, true);
+            observeConnection();
+            updateLabel();
+            updateBackground();
+        }
+
+        private function updateLabel(event:Event = null):void
+        {
+            _PvPLevelUpPointer_CustomLabel1.text = label;
+        }
+
+        private function updateBackground():void
+        {
+            if (pointerType == "normal")
+                setStyle("backgroundImage", hovering ? OverSkinNormal : UpSkinNormal);
+            else if (pointerType == "completed")
+                setStyle("backgroundImage", hovering ? OverSkinCompleted : UpSkinCompleted);
+        }
+
+        protected function onRollOver(event:MouseEvent):void
+        {
+            hovering = true;
+            updateBackground();
+        }
+
+        protected function onRollOut(event:MouseEvent):void
+        {
+            hovering = false;
+            updateBackground();
+        }
+
+        protected function canvas1_clickHandler(event:MouseEvent):void
+        {
+            globalFlash.gui.mPvPProgressionPanel.SetState(cPvPProgressionPanel.STATE_RANKS);
+            globalFlash.gui.mPvPProgressionPanel.Show();
+            gHintManager.HidePvPLevelUpNotification();
+        }
+        private function globalChanged(event:PropertyChangeEvent):void
+        {
+            if (event.property == "ui_bindable") observeConnection();
+        }
+        private function observeConnection():void
+        {
+            if (observedUi) observedUi.removeEventListener("propertyChange", connectionChanged);
+            observedUi = global.ui_bindable as IEventDispatcher;
+            if (observedUi) observedUi.addEventListener("propertyChange", connectionChanged, false, 0, true);
+            updateEnabled();
+        }
+        private function connectionChanged(event:PropertyChangeEvent):void
+        {
+            if (event.property == "mPacketLost") updateEnabled();
+        }
+        private function updateEnabled():void
+        {
+            enabled = global.ui_bindable != null && !global.ui_bindable.mPacketLost;
+        }
+    ]]></mx:Script>
+    <gui:CustomLabel id="_PvPLevelUpPointer_CustomLabel1"  left="30" right="15" verticalCenter="-3" color="0xFFFFFF" />
+</mx:Canvas>

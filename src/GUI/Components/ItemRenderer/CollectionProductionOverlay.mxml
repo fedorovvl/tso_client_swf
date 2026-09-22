@@ -1,0 +1,234 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="347" height="55">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Image;
+        import GUI.Components.ProgressBar;
+        import mx.binding.utils.ChangeWatcher;
+        import GUI.Components.StandardButton;
+        import Communication.VO.collectibles.CollectionVO;
+        import mx.controls.Label;
+        import TimedProduction.cTimedProduction;
+        import flash.display.DisplayObject;
+        import mx.controls.Button;
+        import mx.core.mx_internal;
+        import mx.events.ToolTipEvent;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import Collections.CollectionsConsts;
+        import GUI.Assets.gAssetManager;
+        import Collections.CollectionsTimedProductionOrder;
+        import GUI.coloringFilter;
+        import Collections.CollectionUtils;
+        import flash.geom.Point;
+        import flash.events.Event;
+        import Collections.CollectionEvent;
+        import flash.events.MouseEvent;
+        import flash.utils.getTimer;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import BuffSystem.cBuff;
+        import BuffSystem.cBuffDefinition;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        private var lastUpdate:int = 0;
+
+        private var watcher:ChangeWatcher;
+
+        private var collectionVO:CollectionVO;
+
+        [Bindable]
+        private var _order:cTimedProduction;
+
+        private var frame:DisplayObject;
+
+        private var dataInvalidated:Boolean = false;
+
+        public function setOrder(argument1:cTimedProduction):void
+        {
+            this._order = argument1;
+            this.collectionVO = (this._order.GetProductionOrder() as CollectionsTimedProductionOrder).getCollectionVO();
+            if (((this.watcher == null) && (!(this._order.mProductionProgress == 1))))
+            {
+                this.watcher = ChangeWatcher.watch(this._order, "mProductionProgress", this.onProgressChange);
+            };
+            this.resourceDisplay.filters = [coloringFilter(14865549)];
+            this.progressBar.visible = (!(this._order.mProductionProgress == 1));
+            this.progressTime.visible = this.progressBar.visible;
+            this.resourceIcon.source = gAssetManager.GetResourceIcon(this.collectionVO.getOutputBuffName());
+            this.resourceIcon.visible = true;
+            this.btnInstantFinish.visible = this.progressBar.visible;
+            this.btnInstantFinish.enabled = (!(argument1.GetWaitingForServer()));
+            this.btnPickUp.visible = (!(this.progressBar.visible));
+            this.btnPickUp.enabled = (!(argument1.GetWaitingForServer()));
+            this.frame = CollectionUtils.createRewardItem(this.collectionVO, this, new Point(this.resourceIcon.x, this.resourceIcon.y));
+            this.resourceIcon.toolTip = this.collectionVO.getOutputBuffName();
+            this.doUpdate();
+        }
+
+        private function instantFinishClick(argument1:MouseEvent):void
+        {
+            var localValue2:Event = new Event(CollectionEvent.INSTANT_FINISH_COLLECTION, true, true);
+            dispatchEvent(localValue2);
+            if (localValue2.isDefaultPrevented())
+            {
+                return;
+            };
+            this.btnInstantFinish.enabled = false;
+            this.unwatch();
+        }
+
+        protected function canvas1_enterFrameHandler(argument1:Event):void
+        {
+            var localValue2:int = (getTimer() - this.lastUpdate);
+            if (((this.dataInvalidated) && (localValue2 > 1000)))
+            {
+                this.doUpdate();
+                this.lastUpdate = getTimer();
+            };
+        }
+
+        private function doUpdate():void
+        {
+            if (((!(this._order == null)) && (this._order.mProductionProgress == 1)))
+            {
+                this.unwatch();
+                this.progressBar.visible = false;
+                this.progressTime.visible = false;
+                this.btnPickUp.visible = true;
+                this.btnInstantFinish.visible = false;
+            }
+            else
+            {
+                this.progressBar.value = this._order.mProductionProgress;
+                this.progressTime.text = cLocaManager.GetInstance().FormatDuration((((1 - this._order.mProductionProgress) * this._order.GetProductionTime()) / (this._order.GetProductionOrder().GetTimeBonus() * global.ui.mGlobalTimeScale)));
+            };
+            this.dataInvalidated = false;
+        }
+
+        public function getFrame():DisplayObject
+        {
+            return (this.frame);
+        }
+
+        public function unwatch():void
+        {
+            if (this.watcher != null)
+            {
+                this.watcher.unwatch();
+                this.watcher = null;
+            };
+        }
+
+        private function pickupClick(argument1:MouseEvent):void
+        {
+            this.btnPickUp.enabled = false;
+            dispatchEvent(new Event(CollectionEvent.PICK_UP_COLLECTION, true, false));
+        }
+
+        public function onBtnInstantFinish_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.INSTANT_BUILD_string, argument1, [this._order.GetInstantBuildCosts(), this._order.GetInstantBuildCostsUnmodified()]);
+        }
+
+        private function createResourceTooltip(argument1:ToolTipEvent):void
+        {
+            var localValue2:cBuffDefinition = cBuff.getBuffDefinitionByName(this.collectionVO.getOutputBuffName());
+            cToolTipUtil.createToolTip(cToolTipUtil.BUFF_string, argument1, localValue2);
+        }
+
+        private function onProgressChange(argument1:Event=null):void
+        {
+            this.dataInvalidated = true;
+        }
+
+        private function readPresentationValue1():String
+        {
+            var localValue1:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, CollectionsConsts.COLLECTIONS_PICKUP);
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            resourceIcon.addEventListener("toolTipCreate", createResourceTooltip);
+            btnPickUp.addEventListener("click", pickupClick);
+            btnInstantFinish.addEventListener("toolTipCreate", onBtnInstantFinish_toolTipCreate);
+            btnInstantFinish.addEventListener("click", instantFinishClick);
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.styleName = "skillOverlay";
+            this.width = 347;
+            this.height = 55;
+            this.addEventListener("enterFrame", this.canvas1_enterFrameHandler);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+                btnPickUp.label = readPresentationValue1();
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="viewCanvas1" percentWidth="100" percentHeight="100" top="0" left="0" right="0">
+        <mx:Canvas id="resourceCanvas" width="60" percentHeight="100" top="0" left="0">
+            <mx:Canvas id="resourceDisplay" styleName="skillColorBG" percentWidth="100" percentHeight="100"  top="0" left="0" />
+            <mx:Image id="resourceIcon"  horizontalCenter="0" verticalCenter="0" />
+        </mx:Canvas>
+        <mx:Canvas id="viewCanvas2" styleName="collectibleOverlay" width="287" percentHeight="100" left="60" top="0">
+            <ui:ProgressBar id="progressBar" width="250"  top="15" horizontalCenter="0" />
+            <mx:Label id="progressTime"  top="22" horizontalCenter="0" />
+            <ui:StandardButton id="btnPickUp" width="100" height="32"  horizontalCenter="0" verticalCenter="0" />
+        </mx:Canvas>
+    </mx:Canvas>
+    <mx:Button id="btnInstantFinish" enabled="true" toolTip="InstantFinishProduction" width="25" height="23"  right="15" bottom="2" upSkin="{gAssetManager.GetClass('HalfTime')}" downSkin="{gAssetManager.GetClass('HalfTimeHighlight')}" overSkin="{gAssetManager.GetClass('HalfTimeHighlight')}" disabledSkin="{gAssetManager.GetClass('HalfTimeDisabled')}" />
+</mx:Canvas>

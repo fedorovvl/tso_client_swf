@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:datagrid="GUI.Components.DataGrid.*" xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="750" height="492">
+    <mx:Script><![CDATA[
+        import Enums.KILL_SWITCH;
+        import Enums.LOCA_GROUP;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.DataGrid.CustomDataGridHeaderBackgroundSkin;
+        import GUI.Components.DataGrid.CustomDataGridHeaderSeparator;
+        import GUI.Components.DataGrid.CustomGridHeaderRenderer;
+        import GUI.Components.ItemRenderer.MailGridDeleteItemRenderer;
+        import GUI.Components.ItemRenderer.SellingTradeTimerItemRenderer;
+        import GUI.Components.ItemRenderer.TradeGridPlayerItemRenderer;
+        import GUI.Components.ItemRenderer.TradeGridResourceItemCostsRenderer;
+        import GUI.Components.ItemRenderer.TradeGridResourceItemRenderer;
+        import GUI.Components.ItemRenderer.TradeGridSlotType;
+        import GUI.Components.ItemRenderer.TradeOfferHeader;
+        import GUI.Components.ItemRenderer.TradeStatusTextItemRenderer;
+        import GUI.Components.ItemRenderer.TradeTimerItemRenderer;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Loca.cLocaManager;
+        import mx.controls.dataGridClasses.DataGridColumn;
+        import mx.core.ClassFactory;
+        import mx.events.DataGridEvent;
+        import mx.events.PropertyChangeEvent;
+        import mx.events.ToolTipEvent;
+
+        public var offer:DataGridColumn;
+        public var costs:DataGridColumn;
+        public var senderName:DataGridColumn;
+        public var remainingTime:DataGridColumn;
+        public var _TradeWindow_DataGridColumn5:DataGridColumn;
+        public var _TradeWindow_DataGridColumn6:DataGridColumn;
+        public var _TradeWindow_DataGridColumn7:DataGridColumn;
+        public var _TradeWindow_DataGridColumn8:DataGridColumn;
+        public var _TradeWindow_DataGridColumn9:DataGridColumn;
+        public var _TradeWindow_DataGridColumn11:DataGridColumn;
+        public var _TradeWindow_DataGridColumn12:DataGridColumn;
+        public var _TradeWindow_DataGridColumn13:DataGridColumn;
+        public var _TradeWindow_DataGridColumn14:DataGridColumn;
+        public var _TradeWindow_DataGridColumn15:DataGridColumn;
+        public var _TradeWindow_DataGridColumn16:DataGridColumn;
+
+        private var uiSource:IEventDispatcher;
+        private var killswitchSource:IEventDispatcher;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(buyPage);
+            LegacyMxmlContent.createChildren(sellPage);
+            LegacyMxmlContent.createChildren(historyPage);
+            LegacyMxmlContent.createChildren(placeOfferPage);
+            LegacyMxmlContent.createChildren(pricePage);
+            btnStack.addChild(placeOfferPage);
+            btnStack.addChild(pricePage);
+            detailsStack.addChild(buyPage);
+            detailsStack.addChild(sellPage);
+            detailsStack.addChild(historyPage);
+            // The pages now live inside their stacks; keep them out of subComponents so
+            // BasicPanel.addSubComponents() does not re-parent them to content.
+            subComponents = [detailsStack, hr, buttonBar];
+            buildGridColumns();
+            offersList.addEventListener("headerRelease", __offersList_headerRelease);
+            offersList.addEventListener("toolTipCreate", __offersList_toolTipCreate);
+            userPlaceOffersList.addEventListener("toolTipCreate", __userPlaceOffersList_toolTipCreate);
+            tradeHistoryList.addEventListener("toolTipCreate", __tradeHistoryList_toolTipCreate);
+            refreshOffers.addEventListener("toolTipCreate", __refreshOffers_toolTipCreate);
+            btnAcceptOffer.addEventListener("toolTipCreate", __btnAcceptOffer_toolTipCreate);
+            btnOffersPrevPage.addEventListener("toolTipCreate", __btnOffersPrevPage_toolTipCreate);
+            btnOffersNextPage.addEventListener("toolTipCreate", __btnOffersNextPage_toolTipCreate);
+            btnPlaceOffer.addEventListener("toolTipCreate", __btnPlaceOffer_toolTipCreate);
+            btnBuySlot.addEventListener("toolTipCreate", __btnBuySlot_toolTipCreate);
+            btnBuySlotWithGem.addEventListener("toolTipCreate", __btnBuySlotWithGem_toolTipCreate);
+            offersList.setStyle("alternatingItemColors", []);
+            offersList.setStyle("headerBackgroundSkin", CustomDataGridHeaderBackgroundSkin);
+            offersList.setStyle("headerColors", [3155998]);
+            offersList.setStyle("headerSeparatorSkin", CustomDataGridHeaderSeparator);
+            userPlaceOffersList.setStyle("alternatingItemColors", []);
+            userPlaceOffersList.setStyle("headerBackgroundSkin", CustomDataGridHeaderBackgroundSkin);
+            userPlaceOffersList.setStyle("headerColors", [3155998]);
+            userPlaceOffersList.setStyle("headerSeparatorSkin", CustomDataGridHeaderSeparator);
+            tradeHistoryList.setStyle("alternatingItemColors", []);
+            tradeHistoryList.setStyle("headerBackgroundSkin", CustomDataGridHeaderBackgroundSkin);
+            tradeHistoryList.setStyle("headerColors", [3155998]);
+            tradeHistoryList.setStyle("headerSeparatorSkin", CustomDataGridHeaderSeparator);
+            refreshLabels();
+            connectUi();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+            global.staticEventDispatcher.addEventListener("propertyChange", onGlobalChanged, false, 0, true);
+        }
+
+        private function buildGridColumns():void
+        {
+            offer = new DataGridColumn();
+            offer.dataField = "offer";
+            offer.draggable = false;
+            offer.resizable = false;
+            offer.headerRenderer = new ClassFactory(TradeOfferHeader);
+            offer.itemRenderer = new ClassFactory(TradeGridResourceItemRenderer);
+            offer.setStyle("paddingLeft", 15);
+            costs = new DataGridColumn();
+            costs.dataField = "costs";
+            costs.draggable = false;
+            costs.resizable = false;
+            costs.headerRenderer = new ClassFactory(TradeOfferHeader);
+            costs.itemRenderer = new ClassFactory(TradeGridResourceItemCostsRenderer);
+            costs.setStyle("paddingLeft", 15);
+            senderName = new DataGridColumn();
+            senderName.dataField = "senderName";
+            senderName.draggable = false;
+            senderName.resizable = false;
+            senderName.headerRenderer = new ClassFactory(TradeOfferHeader);
+            senderName.itemRenderer = new ClassFactory(TradeGridPlayerItemRenderer);
+            senderName.setStyle("paddingLeft", 15);
+            remainingTime = new DataGridColumn();
+            remainingTime.dataField = "remainingTime";
+            remainingTime.draggable = false;
+            remainingTime.resizable = false;
+            remainingTime.headerRenderer = new ClassFactory(TradeOfferHeader);
+            remainingTime.itemRenderer = new ClassFactory(TradeTimerItemRenderer);
+            remainingTime.setStyle("paddingLeft", 15);
+            offersList.columns = [offer, costs, senderName, remainingTime];
+            _TradeWindow_DataGridColumn5 = new DataGridColumn();
+            _TradeWindow_DataGridColumn5.width = 40;
+            _TradeWindow_DataGridColumn5.dataField = "slotType";
+            _TradeWindow_DataGridColumn5.draggable = false;
+            _TradeWindow_DataGridColumn5.resizable = false;
+            _TradeWindow_DataGridColumn5.sortable = false;
+            _TradeWindow_DataGridColumn5.headerRenderer = new ClassFactory(CustomGridHeaderRenderer);
+            _TradeWindow_DataGridColumn5.itemRenderer = new ClassFactory(TradeGridSlotType);
+            _TradeWindow_DataGridColumn5.setStyle("textAlign", "center");
+            _TradeWindow_DataGridColumn6 = new DataGridColumn();
+            _TradeWindow_DataGridColumn6.width = 70;
+            _TradeWindow_DataGridColumn6.dataField = "offer";
+            _TradeWindow_DataGridColumn6.draggable = false;
+            _TradeWindow_DataGridColumn6.resizable = false;
+            _TradeWindow_DataGridColumn6.sortable = false;
+            _TradeWindow_DataGridColumn6.headerRenderer = new ClassFactory(CustomGridHeaderRenderer);
+            _TradeWindow_DataGridColumn6.itemRenderer = new ClassFactory(TradeGridResourceItemRenderer);
+            _TradeWindow_DataGridColumn6.setStyle("textAlign", "center");
+            _TradeWindow_DataGridColumn7 = new DataGridColumn();
+            _TradeWindow_DataGridColumn7.width = 40;
+            _TradeWindow_DataGridColumn7.dataField = "remainingLots";
+            _TradeWindow_DataGridColumn7.draggable = false;
+            _TradeWindow_DataGridColumn7.resizable = false;
+            _TradeWindow_DataGridColumn7.sortable = false;
+            _TradeWindow_DataGridColumn7.headerRenderer = new ClassFactory(CustomGridHeaderRenderer);
+            _TradeWindow_DataGridColumn7.itemRenderer = new ClassFactory(TradeStatusTextItemRenderer);
+            _TradeWindow_DataGridColumn7.setStyle("textAlign", "center");
+            _TradeWindow_DataGridColumn8 = new DataGridColumn();
+            _TradeWindow_DataGridColumn8.width = 70;
+            _TradeWindow_DataGridColumn8.dataField = "costs";
+            _TradeWindow_DataGridColumn8.draggable = false;
+            _TradeWindow_DataGridColumn8.resizable = false;
+            _TradeWindow_DataGridColumn8.sortable = false;
+            _TradeWindow_DataGridColumn8.headerRenderer = new ClassFactory(CustomGridHeaderRenderer);
+            _TradeWindow_DataGridColumn8.itemRenderer = new ClassFactory(TradeGridResourceItemRenderer);
+            _TradeWindow_DataGridColumn8.setStyle("textAlign", "center");
+            _TradeWindow_DataGridColumn9 = new DataGridColumn();
+            _TradeWindow_DataGridColumn9.width = 155;
+            _TradeWindow_DataGridColumn9.dataField = "remainingTime";
+            _TradeWindow_DataGridColumn9.draggable = false;
+            _TradeWindow_DataGridColumn9.resizable = false;
+            _TradeWindow_DataGridColumn9.sortable = false;
+            _TradeWindow_DataGridColumn9.headerRenderer = new ClassFactory(CustomGridHeaderRenderer);
+            _TradeWindow_DataGridColumn9.itemRenderer = new ClassFactory(SellingTradeTimerItemRenderer);
+            _TradeWindow_DataGridColumn9.setStyle("paddingLeft", 10);
+            var sellDeleteColumn:DataGridColumn = new DataGridColumn();
+            sellDeleteColumn.width = 18;
+            sellDeleteColumn.dataField = "delete";
+            sellDeleteColumn.draggable = false;
+            sellDeleteColumn.headerText = "";
+            sellDeleteColumn.resizable = false;
+            sellDeleteColumn.sortable = false;
+            sellDeleteColumn.headerRenderer = new ClassFactory(CustomGridHeaderRenderer);
+            sellDeleteColumn.itemRenderer = new ClassFactory(MailGridDeleteItemRenderer);
+            sellDeleteColumn.setStyle("textAlign", "center");
+            userPlaceOffersList.columns = [_TradeWindow_DataGridColumn5, _TradeWindow_DataGridColumn6, _TradeWindow_DataGridColumn7, _TradeWindow_DataGridColumn8, _TradeWindow_DataGridColumn9, sellDeleteColumn];
+            _TradeWindow_DataGridColumn11 = new DataGridColumn();
+            _TradeWindow_DataGridColumn11.width = 60;
+            _TradeWindow_DataGridColumn11.dataField = "remainingTime";
+            _TradeWindow_DataGridColumn11.draggable = false;
+            _TradeWindow_DataGridColumn11.resizable = false;
+            _TradeWindow_DataGridColumn11.sortable = false;
+            _TradeWindow_DataGridColumn11.headerRenderer = new ClassFactory(CustomGridHeaderRenderer);
+            _TradeWindow_DataGridColumn11.itemRenderer = new ClassFactory(TradeStatusTextItemRenderer);
+            _TradeWindow_DataGridColumn11.setStyle("textAlign", "center");
+            _TradeWindow_DataGridColumn12 = new DataGridColumn();
+            _TradeWindow_DataGridColumn12.width = 75;
+            _TradeWindow_DataGridColumn12.dataField = "createdTime";
+            _TradeWindow_DataGridColumn12.draggable = false;
+            _TradeWindow_DataGridColumn12.resizable = false;
+            _TradeWindow_DataGridColumn12.sortable = false;
+            _TradeWindow_DataGridColumn12.headerRenderer = new ClassFactory(CustomGridHeaderRenderer);
+            _TradeWindow_DataGridColumn12.itemRenderer = new ClassFactory(TradeGridPlayerItemRenderer);
+            _TradeWindow_DataGridColumn12.setStyle("textAlign", "center");
+            _TradeWindow_DataGridColumn13 = new DataGridColumn();
+            _TradeWindow_DataGridColumn13.width = 52;
+            _TradeWindow_DataGridColumn13.dataField = "offer";
+            _TradeWindow_DataGridColumn13.draggable = false;
+            _TradeWindow_DataGridColumn13.resizable = false;
+            _TradeWindow_DataGridColumn13.sortable = false;
+            _TradeWindow_DataGridColumn13.headerRenderer = new ClassFactory(CustomGridHeaderRenderer);
+            _TradeWindow_DataGridColumn13.itemRenderer = new ClassFactory(TradeGridResourceItemRenderer);
+            _TradeWindow_DataGridColumn13.setStyle("textAlign", "center");
+            _TradeWindow_DataGridColumn14 = new DataGridColumn();
+            _TradeWindow_DataGridColumn14.width = 39;
+            _TradeWindow_DataGridColumn14.dataField = "remainingLots";
+            _TradeWindow_DataGridColumn14.draggable = false;
+            _TradeWindow_DataGridColumn14.resizable = false;
+            _TradeWindow_DataGridColumn14.sortable = false;
+            _TradeWindow_DataGridColumn14.headerRenderer = new ClassFactory(CustomGridHeaderRenderer);
+            _TradeWindow_DataGridColumn14.itemRenderer = new ClassFactory(TradeStatusTextItemRenderer);
+            _TradeWindow_DataGridColumn14.setStyle("textAlign", "center");
+            _TradeWindow_DataGridColumn15 = new DataGridColumn();
+            _TradeWindow_DataGridColumn15.width = 58;
+            _TradeWindow_DataGridColumn15.dataField = "costs";
+            _TradeWindow_DataGridColumn15.draggable = false;
+            _TradeWindow_DataGridColumn15.resizable = false;
+            _TradeWindow_DataGridColumn15.sortable = false;
+            _TradeWindow_DataGridColumn15.headerRenderer = new ClassFactory(CustomGridHeaderRenderer);
+            _TradeWindow_DataGridColumn15.itemRenderer = new ClassFactory(TradeGridResourceItemRenderer);
+            _TradeWindow_DataGridColumn15.setStyle("textAlign", "center");
+            _TradeWindow_DataGridColumn16 = new DataGridColumn();
+            _TradeWindow_DataGridColumn16.width = 100;
+            _TradeWindow_DataGridColumn16.dataField = "senderName";
+            _TradeWindow_DataGridColumn16.draggable = false;
+            _TradeWindow_DataGridColumn16.resizable = false;
+            _TradeWindow_DataGridColumn16.sortable = false;
+            _TradeWindow_DataGridColumn16.headerRenderer = new ClassFactory(CustomGridHeaderRenderer);
+            _TradeWindow_DataGridColumn16.itemRenderer = new ClassFactory(TradeGridPlayerItemRenderer);
+            _TradeWindow_DataGridColumn16.setStyle("paddingLeft", 15);
+            var historyDeleteColumn:DataGridColumn = new DataGridColumn();
+            historyDeleteColumn.width = 18;
+            historyDeleteColumn.dataField = "delete";
+            historyDeleteColumn.draggable = false;
+            historyDeleteColumn.headerText = "";
+            historyDeleteColumn.resizable = false;
+            historyDeleteColumn.sortable = false;
+            historyDeleteColumn.headerRenderer = new ClassFactory(CustomGridHeaderRenderer);
+            historyDeleteColumn.itemRenderer = new ClassFactory(MailGridDeleteItemRenderer);
+            historyDeleteColumn.setStyle("textAlign", "center");
+            tradeHistoryList.columns = [_TradeWindow_DataGridColumn11, _TradeWindow_DataGridColumn12, _TradeWindow_DataGridColumn13, _TradeWindow_DataGridColumn14, _TradeWindow_DataGridColumn15, _TradeWindow_DataGridColumn16, historyDeleteColumn];
+        }
+
+        private function loca(key:String):String
+        {
+            var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key);
+            return value == undefined ? null : String(value);
+        }
+
+        private function locaMsg(key:String):String
+        {
+            var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.MESSAGES, key);
+            return value == undefined ? null : String(value);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            offer.headerText = loca("Offer");
+            costs.headerText = loca("Costs");
+            senderName.headerText = loca("User");
+            remainingTime.headerText = loca("Time");
+            SearchNoResultFound.text = locaMsg("NoSearchResultsFound");
+            refreshOffers.setStyle("icon", gAssetManager.GetClass("RefreshTradeIcon"));
+            refreshOffers.toolTip = loca("RerfreshOffers");
+            btnAcceptOffer.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            btnOffersPrevPage.setStyle("icon", gAssetManager.GetClass("ArrowLeft"));
+            btnOffersPrevPage.toolTip = loca("Previous");
+            btnOffersNextPage.setStyle("icon", gAssetManager.GetClass("ArrowRight"));
+            btnOffersNextPage.toolTip = loca("Next");
+            _TradeWindow_DataGridColumn5.headerText = loca("Slot");
+            _TradeWindow_DataGridColumn6.headerText = loca("Offered");
+            _TradeWindow_DataGridColumn7.headerText = loca("Lot");
+            _TradeWindow_DataGridColumn8.headerText = loca("Requested");
+            _TradeWindow_DataGridColumn9.headerText = loca("Time");
+            btnPlaceOffer.label = loca("PlaceOffer");
+            _TradeWindow_CustomLabel1.text = loca("NextSlot");
+            _TradeWindow_CustomLabel2.text = loca("NextSlot");
+            btnBuySlotWithGem.setStyle("icon", gAssetManager.GetClass("IconMailTypeHardCurrency"));
+            btnBuySlotWithGem.label = loca("PlaceOffer");
+            btnBuySlot.setStyle("icon", gAssetManager.GetClass("ButtonIconCoin"));
+            btnBuySlot.label = loca("PlaceOffer");
+            _TradeWindow_DataGridColumn11.headerText = loca("Status");
+            _TradeWindow_DataGridColumn12.headerText = loca("DateAndTime");
+            _TradeWindow_DataGridColumn13.headerText = loca("Offered");
+            _TradeWindow_DataGridColumn14.headerText = loca("Lot");
+            _TradeWindow_DataGridColumn15.headerText = loca("Requested");
+            _TradeWindow_DataGridColumn16.headerText = loca("BoughtFromSoldTo");
+            refreshPlaceOfferEnabled();
+        }
+
+        private function onGlobalChanged(event:PropertyChangeEvent):void
+        {
+            if (event.property == "ui_bindable")
+            {
+                connectUi();
+            }
+        }
+
+        private function connectUi():void
+        {
+            var next:IEventDispatcher = global.ui_bindable as IEventDispatcher;
+            if (uiSource !== next)
+            {
+                if (uiSource)
+                {
+                    uiSource.removeEventListener("propertyChange", onUiChanged);
+                }
+                uiSource = next;
+                if (uiSource)
+                {
+                    uiSource.addEventListener("propertyChange", onUiChanged, false, 0, true);
+                }
+            }
+            connectKillswitch();
+            refreshPlaceOfferEnabled();
+        }
+
+        private function onUiChanged(event:PropertyChangeEvent):void
+        {
+            if (event.property == "killswitch")
+            {
+                connectKillswitch();
+                refreshPlaceOfferEnabled();
+            }
+        }
+
+        private function connectKillswitch():void
+        {
+            var next:IEventDispatcher = global.ui_bindable ? global.ui_bindable.killswitch as IEventDispatcher : null;
+            if (killswitchSource !== next)
+            {
+                if (killswitchSource)
+                {
+                    killswitchSource.removeEventListener("updated", refreshPlaceOfferEnabled);
+                }
+                killswitchSource = next;
+                if (killswitchSource)
+                {
+                    killswitchSource.addEventListener("updated", refreshPlaceOfferEnabled, false, 0, true);
+                }
+            }
+        }
+
+        private function refreshPlaceOfferEnabled(event:Event = null):void
+        {
+            btnPlaceOffer.enabled = global.ui_bindable && global.ui_bindable.killswitch ? global.ui_bindable.killswitch.isAccessible(KILL_SWITCH.TRADE_CREATE) : false;
+        }
+
+        public function __offersList_headerRelease(event:DataGridEvent):void
+        {
+            globalFlash.gui.mTradeWindow.setSortForAvailableOffers(event);
+        }
+
+        public function __offersList_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __userPlaceOffersList_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __tradeHistoryList_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __refreshOffers_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnAcceptOffer_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnOffersPrevPage_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnOffersNextPage_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnPlaceOffer_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnBuySlot_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function __btnBuySlotWithGem_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+    <gui:subComponents><mx:Array>
+        <mx:ViewStack id="detailsStack" creationPolicy="all" left="5" right="5" top="0" bottom="32" />
+            <!-- ViewStack pages: created here, attached to detailsStack in childrenCreated(). -->
+            <mx:Canvas id="buyPage" percentWidth="100" percentHeight="100">
+                <mx:Canvas width="529" height="25" styleName="detailsHeader" left="3" top="0" />
+                <mx:Canvas width="519" styleName="detailsContentBox" left="8" top="25" bottom="33" />
+                <datagrid:TradeBuyingTabDataGrid id="offersList" width="519" headerHeight="20" variableRowHeight="true" top="3" left="8" bottom="34" backgroundAlpha="0" borderColor="7693901" borderThickness="0" headerStyleName="mailDataGridHeader" horizontalGridLineColor="7693901" horizontalGridLines="true" iconColor="13077059" rollOverColor="7957587" selectionColor="8482380" verticalAlign="middle" verticalGridLineColor="7693901" />
+                <gui:TradeSearchColumn id="offerSearch" right="7" top="3" bottom="33" />
+                <gui:CustomText id="SearchNoResultFound" width="505" height="60" visible="false" textAlign="center" verticalCenter="0" left="17" />
+                <gui:ReversableHBox id="buyButtonBox" styleName="detailsSubHeader" height="32" bottom="0" left="8" right="7" verticalAlign="middle" horizontalAlign="left" paddingTop="3" paddingLeft="5">
+                    <gui:StandardButton id="refreshOffers" width="32" height="27" />
+                    <gui:StandardButton id="btnAcceptOffer" width="150" height="26" enabled="false" />
+                    <gui:StandardButton id="btnOffersPrevPage" width="32" height="27" />
+                    <gui:CustomText id="txtOffersPage" width="110" height="19" textAlign="center" />
+                    <gui:StandardButton id="btnOffersNextPage" width="32" height="27" />
+                </gui:ReversableHBox>
+                <mx:Canvas id="buyTabGlassAnimLayer" visible="false" percentWidth="100" percentHeight="100" styleName="detailsContentBox">
+                    <gui:SpriteLibAnimation id="buyTabGlassAnim" animationName="guianim_hourglass" loop="true" width="48" height="48" horizontalCenter="0" verticalCenter="0" />
+                </mx:Canvas>
+            </mx:Canvas>
+            <mx:Canvas id="sellPage" percentWidth="100" percentHeight="100">
+                <mx:Canvas height="25" styleName="detailsHeader" left="3" right="3" top="0" />
+                <mx:Canvas styleName="detailsContentBox" left="8" right="7" top="25" bottom="62" />
+                <datagrid:CustomDataGrid id="userPlaceOffersList" headerHeight="20" variableRowHeight="true" top="3" left="8" right="7" bottom="62" backgroundAlpha="0" borderColor="7693901" borderThickness="0" headerStyleName="mailDataGridHeader" horizontalGridLineColor="7693901" horizontalGridLines="true" iconColor="13077059" rollOverColor="7957587" selectionColor="8482380" verticalAlign="middle" verticalGridLineColor="7693901" />
+                <mx:Canvas styleName="detailsSubHeader" height="60" bottom="0" left="8" right="7">
+                    <mx:ViewStack id="btnStack" percentWidth="100" percentHeight="100" creationPolicy="all" />
+                        <!-- ViewStack pages: created here, attached to btnStack in childrenCreated(). -->
+                        <mx:Canvas id="placeOfferPage" percentWidth="100" percentHeight="100">
+                            <gui:StandardButton id="btnPlaceOffer" width="150" height="26" horizontalCenter="0" bottom="3" />
+                        </mx:Canvas>
+                        <mx:VBox id="pricePage" bottom="3" horizontalAlign="center" paddingTop="5" verticalGap="-1">
+                            <gui:ReversableHBox id="gemPrice" verticalAlign="middle">
+                                <gui:CustomLabel id="_TradeWindow_CustomLabel1" />
+                                <renderer:ResourceItemRenderer id="gemPriceRenderer" />
+                                <gui:CustomLabel id="_TradeWindow_CustomLabel2" />
+                                <renderer:ResourceItemRenderer id="coinPriceRenderer" />
+                            </gui:ReversableHBox>
+                            <gui:ReversableHBox id="coinPrice" verticalAlign="middle">
+                                <gui:StandardButton id="btnBuySlotWithGem" width="150" height="26" />
+                                <gui:StandardButton id="btnBuySlot" width="150" height="26" />
+                            </gui:ReversableHBox>
+                        </mx:VBox>
+                </mx:Canvas>
+                <mx:Canvas id="sellTabGlassAnimLayer" visible="false" percentWidth="100" percentHeight="100" styleName="detailsContentBox" backgroundAlpha="0.6">
+                    <gui:SpriteLibAnimation id="sellTabGlassAnim" animationName="guianim_hourglass" loop="true" visible="false" width="48" height="48" horizontalCenter="0" verticalCenter="0" />
+                </mx:Canvas>
+            </mx:Canvas>
+            <mx:Canvas id="historyPage" percentWidth="100" percentHeight="100">
+                <mx:Canvas height="25" styleName="detailsHeader" left="3" right="3" top="0" />
+                <mx:Canvas styleName="detailsContentBox" left="8" right="7" top="25" bottom="0" />
+                <datagrid:CustomDataGrid id="tradeHistoryList" headerHeight="20" variableRowHeight="true" top="3" left="8" right="7" bottom="0" backgroundAlpha="0" borderColor="7693901" borderThickness="0" headerStyleName="mailDataGridHeader" horizontalGridLineColor="7693901" horizontalGridLines="true" iconColor="13077059" rollOverColor="7957587" selectionColor="8482380" verticalAlign="middle" verticalGridLineColor="7693901" />
+            </mx:Canvas>
+        <mx:Canvas id="hr" styleName="hr" height="3" left="2" right="2" bottom="27" />
+        <gui:CustomToggleButtonBar id="buttonBar" buttonStyleName="tab" selectedButtonTextStyleName="tabSelected" bottom="0" left="2" right="2" />
+    </mx:Array></gui:subComponents>
+</gui:BasicPanel>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import GUI.Components.TSOImage;
+        import mx.core.mx_internal;
+        import BuffSystem.BuffAppliance;
+        import Communication.VO.dBuffApplianceVO;
+        import GUI.Assets.gAssetManager;
+        import BuffSystem.cBuff;
+        import mx.events.PropertyChangeEvent;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            var localValue2:BuffAppliance;
+            var localValue3:dBuffApplianceVO;
+            super.data = argument1;
+            if ((data is BuffAppliance))
+            {
+                localValue2 = (data as BuffAppliance);
+                this.buffIcon.source = gAssetManager.GetResourceIcon((localValue2.GetBuffDefinition().GetName_string() + ((localValue2.GetResourceName_string().length > 0) ? ("_" + localValue2.GetResourceName_string()) : "")));
+            }
+            else
+            {
+                if ((data is dBuffApplianceVO))
+                {
+                    localValue3 = (data as dBuffApplianceVO);
+                    this.buffIcon.source = gAssetManager.GetBuffIcon((cBuff.getBuffDefinitionById(localValue3.buffID).GetName_string() + ((localValue3.resourceName_string.length > 0) ? ("_" + localValue3.resourceName_string) : "")));
+                };
+            };
+            refreshRendererPresentation();
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <ui:TSOImage id="buffIcon" percentWidth="100" percentHeight="100" />
+</mx:Canvas>

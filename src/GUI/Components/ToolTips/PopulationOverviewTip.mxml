@@ -1,0 +1,482 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="mx.core.IToolTip"
+    mouseEnabled="false" mouseChildren="false"
+    styleName="populationToolTip" width="500" height="545">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.core.ClassFactory;
+        import mx.states.State;
+        import mx.states.SetProperty;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import Enums.SPECIALIST_TYPE;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ItemRenderer.MilitaryUnitItemRenderer;
+        import Interface.cGeneralInterface;
+        import ServerState.dResource;
+        import ServerState.cResources;
+        import ServerState.cResourceCreation;
+        import Enums.RESOURCE_TYPE;
+        import GO.cBuilding;
+        import MilitarySystem.cMilitaryUnitDescription;
+        import MilitarySystem.cMilitaryUnitData;
+        import MilitarySystem.cSquad;
+        import Specialists.cSpecialist;
+        import AdventureSystem.cAdventureDefinition;
+        import com.bluebyte.tso.adventure.logic.AdventureManager;
+        import Collections.CollectionsManager;
+        import BuffSystem.BuffAppliance;
+        import BuffSystem.cBuffDefinition;
+        import Communication.VO.dPersistedBuffApplianceVO;
+
+        private static const NEW_COMBAT_TIER_RESTRICTION:int = 3;
+
+        private var _text:String;
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            var _local_5:cResourceCreation;
+            var _local_7:cMilitaryUnitDescription;
+            var _local_8:int;
+            var _local_9:cSquad;
+            var _local_10:int;
+            var _local_11:cSpecialist;
+            var _local_12:cMilitaryUnitData;
+            var _local_13:String;
+            var _local_14:cAdventureDefinition;
+            var _local_15:Boolean;
+            var _local_16:int;
+            var _local_17:BuffAppliance;
+            var _local_18:dPersistedBuffApplianceVO;
+            var _local_19:cBuffDefinition;
+            var _local_20:int;
+            var _local_21:int;
+            var _local_22:Number;
+            var _local_23:dResource;
+            this._text = _arg_1;
+            var _local_2:cGeneralInterface = global.ui;
+            if (global.ui.IsAdventureZone())
+            {
+                _local_13 = AdventureManager.getInstance().getAdventure(_local_2.mCurrentViewedZoneID).adventureName;
+                _local_14 = cAdventureDefinition.FindAdventureDefinition(_local_13);
+                _local_15 = ((_local_14.IsExpedition()) || (_local_14.IsColony()));
+                if (_local_15)
+                {
+                    currentState = "expedition";
+                }
+                else
+                {
+                    currentState = "adventure";
+                };
+            }
+            else
+            {
+                currentState = "homeZone";
+            };
+            refreshTitle();
+            // Tooltip can be created while the zone is still loading (mouse parked
+            // over the target): resources may not exist yet. Bail out quietly and
+            // let a later hover rebuild the tip with data instead of throwing #1009.
+            if (global.ui.mCurrentPlayerZone == null)
+            {
+                return;
+            };
+            var _local_3:cResources = global.ui.mCurrentPlayerZone.GetResources(global.ui.mCurrentPlayer);
+            if ((_local_3 == null) || (_local_3.GetPlayerResource("Population") == null))
+            {
+                return;
+            };
+            this.limitLabel.text = (((_local_3.GetFree() + _local_3.GetAssignedPopulation()) + "/") + _local_3.GetPlayerResource("Population").maxLimit);
+            this.freeLabel.text = _local_3.GetFree().toString();
+            this.workersLabel.text = _local_3.GetWorkers().toString();
+            this.militaryLabel.text = _local_3.GetMilitary().toString();
+            var _local_4:cBuilding = global.ui.mCurrentPlayerZone.mStreetDataMap.GetMayorHouse();
+            if (_local_4 != null)
+            {
+                _local_16 = 0;
+                for each (_local_17 in _local_4.mBuffs_vector)
+                {
+                    if (CollectionsManager.getInstance().getBuffIsCollectibleLootBuff(_local_17.GetBuffDefinition().GetName_string()))
+                    {
+                        _local_16 = 1;
+                    }
+                    else
+                    {
+                        _local_16 = int((_local_16 + (_local_17.GetBuffDefinition().getRecruitingTime() / 100)));
+                    };
+                };
+                for each (_local_18 in global.ui.mZoneBuffManager.getBuffAppliancesForBuilding(defines.MAYORHOUSE_NAME_string))
+                {
+                    _local_19 = cBuffDefinition.GetById(_local_18.buffID);
+                    if (_local_19 != null)
+                    {
+                        _local_16 = int((_local_16 + (_local_19.getRecruitingTime() / 100)));
+                    };
+                };
+                _local_16 = Math.max(_local_16, 1);
+            };
+            for each (_local_5 in global.ui.mComputeResourceCreation.mResourceCreation_vector)
+            {
+                if (_local_5.GetResourceCreationDefinition() == null)
+                {
+                    _local_20 = 0;
+                    trace(_local_20);
+                }
+                else
+                {
+                    if (_local_5.GetResourceCreationDefinition().defaultSetting == null)
+                    {
+                        _local_21 = 0;
+                        trace(_local_21);
+                    }
+                    else
+                    {
+                        if (((_local_5.GetResourceCreationDefinition().typeEnumResourceType == RESOURCE_TYPE.CREATED_ALWAYS) && (_local_5.GetResourceCreationDefinition().defaultSetting.resourceName_string == defines.POPULATION_RESOURCE_NAME_string))) break;
+                    };
+                };
+            };
+            if (_local_3.IsMaxLimitOfPopulationReached())
+            {
+                this.durationLabel.text = "-";
+            }
+            else
+            {
+                _local_22 = ((((_local_5.GetResourceCreationDefinition().amountRemoved * 1000) - _local_5.pathPos) / global.ui.mGlobalTimeScale) / _local_16);
+                this.durationLabel.text = cLocaManager.GetInstance().FormatDuration(_local_22);
+            };
+            var _local_6:Array = [];
+            for each (_local_7 in cMilitaryUnitDescription.GetAllUnitDescriptions(true))
+            {
+                _local_23 = new dResource();
+                _local_23.group_string = "deactivated";
+                _local_23.name_string = _local_7.GetType();
+                _local_23.amount = 0;
+                _local_6.push(_local_23);
+            };
+            _local_8 = 0;
+            for each (_local_9 in global.ui.mCurrentPlayerZone.GetArmy(global.ui.mCurrentPlayer.GetPlayerId()).GetSquads_vector())
+            {
+                for each (_local_23 in _local_6)
+                {
+                    if (_local_23.name_string == _local_9.GetType())
+                    {
+                        _local_23.amount = _local_9.GetAmount();
+                        _local_8 = (_local_8 + _local_23.amount);
+                        break;
+                    };
+                };
+            };
+            this.freeMilitary.dataProvider = _local_6;
+            this.freeMilitaryLabel.text = _local_8.toString();
+            _local_6 = [];
+            for each (_local_11 in global.ui.mCurrentPlayerZone.GetSpecialists_vector())
+            {
+                if (((_local_11.GetSpecialistDescription().isUsedFor10MilitaryAmountCalculation()) && (_local_11.getPlayerID() == global.ui.mCurrentPlayer.getPlayerID())))
+                {
+                    for each (_local_9 in _local_11.GetArmy().GetSquads_vector())
+                    {
+                        for each (_local_23 in _local_6)
+                        {
+                            if (_local_23.name_string == _local_9.GetType())
+                            {
+                                _local_23.amount = (_local_23.amount + _local_9.GetAmount());
+                                _local_10 = (_local_10 + _local_9.GetAmount());
+                                break;
+                            };
+                        };
+                    };
+                };
+            };
+            this.assignedMilitary.dataProvider = _local_6;
+            this.assignedMilitaryLabel.text = _local_10.toString();
+            _local_6 = [];
+            for each (_local_12 in cMilitaryUnitData.GetAllUnitData(true, true))
+            {
+                if (_local_12.GetTier() == NEW_COMBAT_TIER_RESTRICTION)
+                {
+                    _local_23 = new dResource();
+                    _local_23.group_string = "activated";
+                    _local_23.name_string = _local_12.GetType();
+                    _local_23.amount = 0;
+                    _local_6.push(_local_23);
+                };
+            };
+            _local_8 = 0;
+            for each (_local_9 in global.ui.mCurrentPlayerZone.GetArmy(global.ui.mCurrentPlayer.GetPlayerId()).GetSquads_vector())
+            {
+                for each (_local_23 in _local_6)
+                {
+                    if (_local_23.name_string == _local_9.GetType())
+                    {
+                        _local_23.amount = _local_9.GetAmount();
+                        _local_8 = (_local_8 + _local_23.amount);
+                        break;
+                    };
+                };
+            };
+            this.freeMilitaryNewCombat.dataProvider = _local_6;
+            this.freeMilitaryNewCombatLabel.text = _local_8.toString();
+            _local_6 = [];
+            for each (_local_12 in cMilitaryUnitData.GetAllUnitData(true, true))
+            {
+                if (_local_12.GetTier() == NEW_COMBAT_TIER_RESTRICTION)
+                {
+                    _local_23 = new dResource();
+                    _local_23.group_string = "activated";
+                    _local_23.name_string = _local_12.GetType();
+                    _local_23.amount = 0;
+                    _local_6.push(_local_23);
+                };
+            };
+            _local_10 = 0;
+            for each (_local_11 in global.ui.mCurrentPlayerZone.GetSpecialists_vector())
+            {
+                if (_local_11.GetBaseType() == SPECIALIST_TYPE.ADMIRAL)
+                {
+                    for each (_local_9 in _local_11.GetArmy().GetSquads_vector())
+                    {
+                        for each (_local_23 in _local_6)
+                        {
+                            if (_local_23.name_string == _local_9.GetType())
+                            {
+                                _local_23.amount = (_local_23.amount + _local_9.GetAmount());
+                                _local_10 = (_local_10 + _local_9.GetAmount());
+                                break;
+                            };
+                        };
+                    };
+                };
+            };
+            this.assignedMilitaryNewCombat.dataProvider = _local_6;
+            this.assignedMilitaryNewCombatLabel.text = _local_10.toString();
+        }
+
+        private function refreshTitle():void
+        {
+            var key:String = "MySettlers";
+            if (currentState == "adventure")
+            {
+                key = "AdventureTroops";
+            }
+            else if (currentState == "expedition")
+            {
+                key = "ExpeditionTroops";
+            };
+            var t:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key);
+            tipTitle.text = ((t == undefined) ? null : String(t));
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var t:*;
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "PopulationLimit");
+            _PopulationOverviewTip_CustomLabel2.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "FreePopulation");
+            _PopulationOverviewTip_CustomLabel4.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "AssignedPopulation");
+            _PopulationOverviewTip_CustomLabel6.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Military");
+            _PopulationOverviewTip_CustomLabel8.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "NextSettler");
+            _PopulationOverviewTip_CustomLabel10.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Combat1Units");
+            adventureTroopsLabel.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "AssignedMilitary");
+            _PopulationOverviewTip_CustomLabel13.text = ((t == undefined) ? null : String(t));
+            _PopulationOverviewTip_CustomLabel18.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "FreeMilitary");
+            _PopulationOverviewTip_CustomLabel15.text = ((t == undefined) ? null : String(t));
+            _PopulationOverviewTip_CustomLabel20.text = ((t == undefined) ? null : String(t));
+            t = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Combat3Units");
+            expeditionTroopsLabel.text = ((t == undefined) ? null : String(t));
+            refreshTitle();
+        }
+
+        private function makeSet(target:Object, name:String, value:Object):SetProperty
+        {
+            var sp:SetProperty = new SetProperty();
+            sp.target = target;
+            sp.name = name;
+            sp.value = value;
+            return (sp);
+        }
+
+        private function buildStates():void
+        {
+            var homeZone:State = new State();
+            homeZone.name = "homeZone";
+            homeZone.overrides = [makeSet(population, "visible", true),
+                makeSet(population, "includeInLayout", true),
+                makeSet(adventureTroopsLabel, "visible", true),
+                makeSet(adventureTroopsLabel, "includeInLayout", true),
+                makeSet(adventureTroopsContainer, "visible", true),
+                makeSet(adventureTroopsContainer, "includeInLayout", true),
+                makeSet(expeditionTroopsLabel, "visible", true),
+                makeSet(expeditionTroopsLabel, "includeInLayout", true),
+                makeSet(expeditionTroopsContainer, "visible", true),
+                makeSet(expeditionTroopsContainer, "includeInLayout", true),
+                makeSet(this, "height", 545)];
+            var adventure:State = new State();
+            adventure.name = "adventure";
+            adventure.overrides = [makeSet(population, "visible", false),
+                makeSet(population, "includeInLayout", false),
+                makeSet(adventureTroopsLabel, "visible", true),
+                makeSet(adventureTroopsLabel, "includeInLayout", true),
+                makeSet(adventureTroopsContainer, "visible", true),
+                makeSet(adventureTroopsContainer, "includeInLayout", true),
+                makeSet(expeditionTroopsLabel, "visible", false),
+                makeSet(expeditionTroopsLabel, "includeInLayout", false),
+                makeSet(expeditionTroopsContainer, "visible", false),
+                makeSet(expeditionTroopsContainer, "includeInLayout", false),
+                makeSet(this, "height", 300)];
+            var expedition:State = new State();
+            expedition.name = "expedition";
+            expedition.overrides = [makeSet(population, "visible", false),
+                makeSet(population, "includeInLayout", false),
+                makeSet(adventureTroopsLabel, "visible", false),
+                makeSet(adventureTroopsLabel, "includeInLayout", false),
+                makeSet(adventureTroopsContainer, "visible", false),
+                makeSet(adventureTroopsContainer, "includeInLayout", false),
+                makeSet(expeditionTroopsLabel, "visible", true),
+                makeSet(expeditionTroopsLabel, "includeInLayout", true),
+                makeSet(expeditionTroopsContainer, "visible", true),
+                makeSet(expeditionTroopsContainer, "includeInLayout", true),
+                makeSet(this, "height", 200)];
+            states = [homeZone, adventure, expedition];
+        }
+
+        private function onStateChange(event:Event):void
+        {
+            refreshTitle();
+        }
+
+        private function styleTileList(list:Object):void
+        {
+            list.setStyle("left", 6);
+            list.setStyle("right", 3);
+            list.setStyle("top", 20);
+            list.setStyle("bottom", 3);
+            list.setStyle("paddingTop", 0);
+            list.setStyle("paddingBottom", 0);
+            list.setStyle("paddingLeft", 0);
+            list.setStyle("paddingRight", 0);
+            list.setStyle("useRollOver", false);
+            list.setStyle("borderThickness", 0);
+            list.setStyle("backgroundAlpha", 0);
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            styleTileList(assignedMilitary);
+            styleTileList(freeMilitary);
+            styleTileList(assignedMilitaryNewCombat);
+            styleTileList(freeMilitaryNewCombat);
+            assignedMilitary.itemRenderer = new ClassFactory(MilitaryUnitItemRenderer);
+            freeMilitary.itemRenderer = new ClassFactory(MilitaryUnitItemRenderer);
+            assignedMilitaryNewCombat.itemRenderer = new ClassFactory(MilitaryUnitItemRenderer);
+            freeMilitaryNewCombat.itemRenderer = new ClassFactory(MilitaryUnitItemRenderer);
+            _PopulationOverviewTip_Image1.source = gAssetManager.GetResourceIcon("Population");
+            _PopulationOverviewTip_Image2.source = gAssetManager.GetResourceIcon("Pause");
+            _PopulationOverviewTip_Image3.source = gAssetManager.GetResourceIcon("Tool");
+            _PopulationOverviewTip_Image4.source = gAssetManager.GetResourceIcon("Military");
+            _PopulationOverviewTip_Image5.source = gAssetManager.GetResourceIcon("Clock");
+            buildStates();
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+            addEventListener("currentStateChange", onStateChange);
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="titleBox" styleName="economyTitleBg" height="20" top="6" left="7" right="7">
+        <gui:CustomLabel id="tipTitle" top="1" horizontalCenter="0" color="0" fontWeight="bold" />
+    </mx:Canvas>
+    <mx:VBox id="container" left="0" right="0" top="33" bottom="0" horizontalAlign="center" verticalGap="0">
+        <mx:Canvas id="population" styleName="detailsContentBox" width="480" clipContent="false">
+            <mx:Canvas id="popOrn" styleName="questOrnamental" height="10" left="-5" right="-5" top="-3" />
+            <mx:HBox id="popRow" left="4" right="4" top="10" bottom="3" horizontalGap="0">
+                <mx:VBox id="popCol1" percentWidth="33">
+                    <mx:HBox id="popLimitRow" horizontalGap="3" verticalAlign="middle">
+                        <mx:Image id="_PopulationOverviewTip_Image1" />
+                        <mx:VBox id="popLimitCol" verticalGap="0" horizontalAlign="center">
+                            <gui:CustomLabel id="_PopulationOverviewTip_CustomLabel2" color="0xFFFFFF" />
+                            <gui:CustomLabel id="limitLabel" color="0xFFFFFF" fontWeight="bold" />
+                        </mx:VBox>
+                    </mx:HBox>
+                    <mx:HBox id="popFreeRow" horizontalGap="3" verticalAlign="middle">
+                        <mx:Image id="_PopulationOverviewTip_Image2" />
+                        <mx:VBox id="popFreeCol" verticalGap="0" horizontalAlign="center">
+                            <gui:CustomLabel id="_PopulationOverviewTip_CustomLabel4" color="0xFFFFFF" />
+                            <gui:CustomLabel id="freeLabel" color="0xFFFFFF" fontWeight="bold" />
+                        </mx:VBox>
+                    </mx:HBox>
+                </mx:VBox>
+                <mx:VBox id="popCol2" percentWidth="34" horizontalAlign="center">
+                    <mx:HBox id="popWorkersRow" horizontalGap="3" verticalAlign="middle">
+                        <mx:Image id="_PopulationOverviewTip_Image3" />
+                        <mx:VBox id="popWorkersCol" verticalGap="0" horizontalAlign="center">
+                            <gui:CustomLabel id="_PopulationOverviewTip_CustomLabel6" color="0xFFFFFF" />
+                            <gui:CustomLabel id="workersLabel" color="0xFFFFFF" fontWeight="bold" />
+                        </mx:VBox>
+                    </mx:HBox>
+                    <mx:HBox id="popMilitaryRow" horizontalGap="3" verticalAlign="middle">
+                        <mx:Image id="_PopulationOverviewTip_Image4" />
+                        <mx:VBox id="popMilitaryCol" verticalGap="0" horizontalAlign="center">
+                            <gui:CustomLabel id="_PopulationOverviewTip_CustomLabel8" color="0xFFFFFF" />
+                            <gui:CustomLabel id="militaryLabel" color="0xFFFFFF" fontWeight="bold" />
+                        </mx:VBox>
+                    </mx:HBox>
+                </mx:VBox>
+                <mx:VBox id="popCol3" percentWidth="33" horizontalAlign="right">
+                    <mx:HBox id="popDurationRow" horizontalGap="3" verticalAlign="middle">
+                        <mx:Image id="_PopulationOverviewTip_Image5" />
+                        <mx:VBox id="popDurationCol" verticalGap="0" horizontalAlign="center">
+                            <gui:CustomLabel id="_PopulationOverviewTip_CustomLabel10" color="0xFFFFFF" />
+                            <gui:CustomLabel id="durationLabel" color="0xFFFFFF" fontWeight="bold" />
+                        </mx:VBox>
+                    </mx:HBox>
+                </mx:VBox>
+            </mx:HBox>
+        </mx:Canvas>
+        <gui:CustomLabel id="adventureTroopsLabel" left="7" color="0xFFFFFF" fontWeight="bold" />
+        <mx:HBox id="adventureTroopsContainer" left="7" right="7" horizontalGap="2">
+            <mx:Canvas id="assignedBox" styleName="detailsSubHeader" width="240" height="245"
+                verticalScrollPolicy="off">
+                <mx:HBox id="assignedHeadRow" top="1" horizontalGap="0" horizontalCenter="0">
+                    <gui:CustomLabel id="_PopulationOverviewTip_CustomLabel13" color="0xFFFFFF" />
+                    <gui:CustomLabel id="assignedMilitaryLabel" color="0xFFFFFF" fontWeight="bold" />
+                </mx:HBox>
+                <gui:CustomTileList id="assignedMilitary" />
+            </mx:Canvas>
+            <mx:Canvas id="freeBox" styleName="detailsSubHeader" width="240" height="245">
+                <mx:HBox id="freeHeadRow" top="1" horizontalGap="0" horizontalCenter="0">
+                    <gui:CustomLabel id="_PopulationOverviewTip_CustomLabel15" color="0xFFFFFF" />
+                    <gui:CustomLabel id="freeMilitaryLabel" color="0xFFFFFF" fontWeight="bold" />
+                </mx:HBox>
+                <gui:CustomTileList id="freeMilitary" />
+            </mx:Canvas>
+        </mx:HBox>
+        <gui:CustomLabel id="expeditionTroopsLabel" left="7" top="389" color="0xFFFFFF" fontWeight="bold" />
+        <mx:HBox id="expeditionTroopsContainer" left="7" right="7" top="404" horizontalGap="2">
+            <mx:Canvas id="assignedNCBox" styleName="detailsSubHeader" width="240" height="134">
+                <mx:HBox id="assignedNCHeadRow" top="1" horizontalGap="0" horizontalCenter="0">
+                    <gui:CustomLabel id="_PopulationOverviewTip_CustomLabel18" color="0xFFFFFF" />
+                    <gui:CustomLabel id="assignedMilitaryNewCombatLabel" color="0xFFFFFF" fontWeight="bold" />
+                </mx:HBox>
+                <gui:CustomTileList id="assignedMilitaryNewCombat" />
+            </mx:Canvas>
+            <mx:Canvas id="freeNCBox" styleName="detailsSubHeader" width="240" height="134">
+                <mx:HBox id="freeNCHeadRow" top="1" horizontalGap="0" horizontalCenter="0">
+                    <gui:CustomLabel id="_PopulationOverviewTip_CustomLabel20" color="0xFFFFFF" />
+                    <gui:CustomLabel id="freeMilitaryNewCombatLabel" color="0xFFFFFF" fontWeight="bold" />
+                </mx:HBox>
+                <gui:CustomTileList id="freeMilitaryNewCombat" />
+            </mx:Canvas>
+        </mx:HBox>
+    </mx:VBox>
+</mx:Canvas>

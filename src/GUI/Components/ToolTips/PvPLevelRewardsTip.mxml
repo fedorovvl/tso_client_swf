@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:qr="com.bluebyte.tso.quests.view.ui.component.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    horizontalScrollPolicy="off" verticalScrollPolicy="off"
+    styleName="toolTip" width="315" height="150" minWidth="110">
+    <mx:Script><![CDATA[
+        import mx.collections.ArrayCollection;
+        import GUI.Components.CustomText;
+        import com.bluebyte.tso.quests.view.ui.component.QuestRewardList;
+        import GUI.Components.data.dPvPRankItemRendererData;
+        import GUI.Components.data.dPvPLevelUnlockData;
+        import GUI.Loca.cLocaManager;
+        import Utils.PVPUtil;
+        import GUI.Components.Frame;
+
+        private var _text:String;
+        private var _title:String;
+        private var _description:String;
+        private var _rewardDP:ArrayCollection = new ArrayCollection();
+
+        public function get descriptionText():String
+        {
+            return (this._description);
+        }
+
+        public function set descriptionText(_arg_1:String):void
+        {
+            this._description = _arg_1;
+            invalidateProperties();
+        }
+
+        public function get title():String
+        {
+            return (this._title);
+        }
+
+        public function set title(_arg_1:String):void
+        {
+            this._title = _arg_1;
+            invalidateProperties();
+        }
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this._text = _arg_1;
+            invalidateProperties();
+        }
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            var _local_2:dPvPRankItemRendererData;
+            var _local_3:ArrayCollection;
+            var _local_4:int;
+            var _local_5:ArrayCollection;
+            var _local_6:int;
+            var _local_7:dPvPLevelUnlockData;
+            if (!(_arg_1 is dPvPRankItemRendererData))
+            {
+                throw (new Error("Invalid data passed to PvPLevelRewardsTip tooltip!"));
+            };
+            this.data = _arg_1;
+            _local_2 = (data as dPvPRankItemRendererData);
+            this.title = cLocaManager.GetInstance().getLabel("PvPLevel", [_local_2.rank]);
+            _local_3 = PVPUtil.GetPvPRewardsForLevelInQuestListFormat(_local_2.rank);
+            if (_local_2.rank > global.ui.mCurrentPlayer.GetClaimedPvPLevel())
+            {
+                _local_4 = _local_3.length;
+                _local_5 = new ArrayCollection();
+                _local_6 = 0;
+                while (_local_6 < _local_4)
+                {
+                    _local_7 = new dPvPLevelUnlockData(null, Frame.CONTENT_TYPE_HIDDEN);
+                    _local_5.addItem(_local_7);
+                    _local_6++;
+                };
+                this._rewardDP = _local_5;
+            }
+            else
+            {
+                this._rewardDP = _local_3;
+            };
+            invalidateProperties();
+        }
+
+        override protected function commitProperties():void
+        {
+            super.commitProperties();
+            this.headline.text = this.title;
+            var _local_1:dPvPRankItemRendererData = (data as dPvPRankItemRendererData);
+            if (global.ui.mCurrentPlayer.GetClaimedPvPLevel() >= _local_1.rank)
+            {
+                this.levelIndicatorLabel.text = cLocaManager.GetInstance().getLabel("RewardsCollected");
+                this.levelIndicatorLabel.setStyle("color", "#00FF00");
+            }
+            else
+            {
+                if (((global.ui.mCurrentPlayer.GetPlayerPvPLevel() >= _local_1.rank) && (global.ui.mCurrentPlayer.GetClaimedPvPLevel() < _local_1.rank)))
+                {
+                    this.levelIndicatorLabel.text = cLocaManager.GetInstance().getLabel("RewardsAvilable");
+                    this.levelIndicatorLabel.setStyle("color", "#FFFFFF");
+                }
+                else
+                {
+                    this.levelIndicatorLabel.text = cLocaManager.GetInstance().getLabel("ReachPvPLevelToUnlock", [_local_1.rank]);
+                    this.levelIndicatorLabel.setStyle("color", "#FFFFFF");
+                };
+            };
+            this.rewardList.dataProvider = this._rewardDP;
+            this.width = ((((this._rewardDP.length * 60) + 10) > 230) ? ((this._rewardDP.length * 60) + 10) : 230);
+            this.levelIndicatorLabel.width = (this.width - 10);
+        }
+
+        private function replaceRewardsWithHiddenItems():void
+        {
+            var _local_1:int = this._rewardDP.length;
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("paddingTop", 5);
+            this.setStyle("paddingLeft", 5);
+            this.setStyle("paddingRight", 5);
+            this.setStyle("paddingBottom", 5);
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="topRow" percentWidth="100">
+        <gui:CustomText id="headline" left="0" textAlign="left" color="0xFFFFFF" fontWeight="bold" wordWrap="false" />
+        <gui:CustomText id="typeLabel" right="0" textAlign="right" color="0xFFFFFF" fontWeight="bold" wordWrap="false" />
+    </mx:Canvas>
+    <gui:CustomText id="levelIndicatorLabel" left="0" right="0" textAlign="left" wordWrap="true" />
+    <qr:QuestRewardList id="rewardList" left="0" right="0" height="80" horizontalScrollPolicy="off" />
+</mx:VBox>

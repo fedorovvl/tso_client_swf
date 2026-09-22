@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="428" height="345" clipContent="false" cacheAsBitmap="true">
+    <mx:Script><![CDATA[
+        import mx.effects.Fade;
+        import mx.events.EffectEvent;
+        import GUI.Assets.gAssetManager;
+
+        public var fadeIn:Fade;
+        public var fadeOut:Fade;
+
+        public function __fadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            fadeIn = new Fade();
+            fadeIn.alphaFrom = 0;
+            fadeIn.alphaTo = 1;
+            fadeIn.duration = 150;
+            fadeOut = new Fade();
+            fadeOut.alphaFrom = 1;
+            fadeOut.alphaTo = 0;
+            fadeOut.duration = 150;
+            fadeOut.addEventListener("effectEnd", __fadeOut_effectEnd);
+            LegacyMxmlContent.createChildren(content);
+            LegacyMxmlContent.createChildren(box);
+            LegacyMxmlContent.createChildren(innerBox);
+            LegacyMxmlContent.createChildren(subBox);
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            ornament.source = gAssetManager.GetBitmap("DailyLoginHeaderOrnamental");
+            innerBox.setStyle("backgroundImage", ornamentalEmbed);
+        }
+
+        [Embed(source="../../../assets/vector/embedded/mysterybox/mysterybox_ornamental_490.swf", symbol="GUI.Components.MysteryBoxPanel__embed_mxml_____data_src_gfx_embedded_mysterybox_ornamental_png_610377562")]
+        private var ornamentalEmbed:Class;
+    ]]></mx:Script>
+    <mx:Canvas id="background" styleName="basicPanel" top="5" left="5" right="9" bottom="0" />
+    <mx:Canvas id="completedHeader" styleName="questPanelHeader" height="82" left="0" right="0" top="0" />
+    <mx:Image id="ornament" top="-37" horizontalCenter="0" />
+    <mx:Canvas id="footer" styleName="questPanelFooter" height="60" left="10" right="10" bottom="0" />
+    <mx:Canvas id="content" clipContent="false" top="35" bottom="1" left="17" right="19">
+        <mx:Canvas id="box" styleName="detailsContentBox" height="105" left="8" right="8" top="92">
+            <mx:Canvas id="innerBox" height="80" left="12" right="12" verticalCenter="2" backgroundSize="100%">
+                <mx:HBox id="itemsList" horizontalCenter="0" verticalCenter="0" />
+            </mx:Canvas>
+            <gui:SpriteLibAnimation id="busyAnim" animationName="guianim_hourglass"
+                loop="true" visible="false" width="48" height="48" horizontalCenter="4" verticalCenter="4" />
+        </mx:Canvas>
+        <mx:Canvas id="ornTop" styleName="questOrnamental" percentWidth="100" height="10" top="88" />
+        <mx:Canvas id="subBox" styleName="detailsSubHeader" height="50" left="8" right="8" top="202">
+            <gui:CustomText id="rewardText" selectable="false" left="10" right="10" top="10" bottom="3" textAlign="center" color="0xFFFFFF" />
+        </mx:Canvas>
+        <mx:Canvas id="orn" styleName="questOrnamental" percentWidth="100" height="10" top="200" />
+        <mx:Image id="ornImage" horizontalCenter="0" top="194"
+            source="@Embed(source='../../../assets/embedded/quest/quest_quest_ornamental3.png')" />
+        <mx:Image id="boxImage" horizontalCenter="0" top="-32"
+            source="@Embed(source='../../../assets/embedded/mysterybox/mysterybox_mystery_box.png')" />
+        <gui:StandardButton id="btnOK" playSound="false" width="70" height="26" horizontalCenter="0" bottom="10" icon="{gAssetManager.GetClass('ButtonIconOK')}" />
+    </mx:Canvas>
+</mx:Canvas>

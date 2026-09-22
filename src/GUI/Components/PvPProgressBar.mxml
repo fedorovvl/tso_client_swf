@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    horizontalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.effects.Fade;
+        import mx.effects.Pause;
+        import mx.effects.Resize;
+        import mx.effects.Sequence;
+        import mx.events.EffectEvent;
+        import mx.events.FlexEvent;
+        import mx.events.PropertyChangeEvent;
+
+        private var current:int;
+        private var min:int;
+        private var claimed:int;
+        private var max:int;
+
+        public var fader:Sequence;
+        public var barResizer:Resize;
+
+        public function SetData(arg1:int, arg2:Number, arg3:int, arg4:int):void
+        {
+            min = arg1;
+            max = arg2;
+            claimed = arg3;
+            current = arg4;
+            reDraw();
+        }
+
+        public function Next():void
+        {
+            barResizer.widthFrom = barStandard.width;
+            claimed++;
+            barResizer.widthTo = calcBarWidth(claimed);
+            barResizer.end();
+            barResizer.play();
+            reDraw();
+        }
+
+        private function reDraw():void
+        {
+            minLabel.text = min.toString();
+            maxLabel.text = max.toString();
+            barStandard.width = calcBarWidth(claimed);
+            barHighlight.width = calcBarWidth(current);
+        }
+
+        protected function resizeEffectEndHandler(event:EffectEvent):void
+        {
+            if (current == claimed)
+            {
+                barStandard.setStyle("styleName", "pvpProgressBarStandard");
+            }
+            else
+            {
+                barStandard.setStyle("styleName", "pvpProgressBarStandardOverlay");
+            };
+        }
+
+        private function calcBarWidth(value:int):Number
+        {
+            return (int((((((value * 1) / (max * 1)) * 100) / 100) * barBG.width)));
+        }
+
+        protected function creationCompleteHandler(event:FlexEvent):void
+        {
+            fader.play([barHighlight]);
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            var fadeUp:Fade = new Fade();
+            fadeUp.alphaFrom = 0.4;
+            fadeUp.alphaTo = 1;
+            fadeUp.duration = 500;
+            var pause:Pause = new Pause();
+            pause.duration = 100;
+            var fadeDown:Fade = new Fade();
+            fadeDown.alphaFrom = 1;
+            fadeDown.alphaTo = 0.6;
+            fadeDown.duration = 500;
+            fader = new Sequence();
+            fader.repeatCount = 0;
+            fader.children = [fadeUp, pause, fadeDown];
+            barResizer = new Resize();
+            barResizer.duration = 2000;
+            barResizer.addEventListener("effectEnd", onBarResizer_effectEnd);
+            barResizer.target = barStandard;
+            updateHighlightLimit();
+            addEventListener("creationComplete", onCreationComplete);
+            barBG.addEventListener("widthChanged", updateHighlightLimit);
+        }
+
+        private function updateHighlightLimit(event:Event = null):void
+        {
+            barHighlight.maxWidth = (barBG.width - 4);
+        }
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            creationCompleteHandler(event);
+        }
+
+        public function onBarResizer_effectEnd(event:EffectEvent):void
+        {
+            resizeEffectEndHandler(event);
+        }
+    ]]></mx:Script>
+
+    <gui:CustomLabel id="minLabel" width="20"  left="0" top="0" textAlign="center" />
+    <mx:Canvas id="barBG" styleName="pvpProgressBarBackground" height="21"
+        horizontalScrollPolicy="off" left="20" top="0" right="20">
+        <mx:Canvas id="barHighlight" y="2" x="2" width="1" height="17"
+            styleName="pvpProgressBarHighlight"  left="2" />
+        <mx:Canvas id="barStandard" width="1" height="17"
+            styleName="pvpProgressBarStandardOverlay"  top="2" left="2" />
+        <mx:Box id="sparkleBox" height="21" width="3"  backgroundAlpha="0" />
+    </mx:Canvas>
+    <gui:CustomLabel id="maxLabel" width="20"  top="0" right="0" textAlign="center" />
+</mx:Canvas>

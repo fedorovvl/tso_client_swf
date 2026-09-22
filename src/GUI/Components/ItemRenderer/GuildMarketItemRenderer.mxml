@@ -1,0 +1,294 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" xmlns:core="mx.core.*" width="92" height="116">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import ShopSystem.cShopItem;
+        import mx.controls.Image;
+        import GUI.Components.Frame;
+        import GUI.Components.CustomLabel;
+        import mx.containers.VBox;
+        import flash.utils.Timer;
+        import mx.core.mx_internal;
+        import mx.core.ClassFactory;
+        import mx.events.ToolTipEvent;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import flash.events.MouseEvent;
+        import flash.filters.GlowFilter;
+        import flash.events.TimerEvent;
+        import AdventureSystem.cAdventureDefinition;
+        import GUI.greyFilter;
+        import Enums.SPECIALIST_TYPE;
+        import Specialists.cSpecialist;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        private var item:cShopItem;
+
+        private var percentageShown:int;
+
+        [Bindable]
+        private var renderData:GuildMarketItemRendererData;
+
+        private var percentageTimer:Timer = new Timer(50, 105);
+
+        private var toolTipFunction:Function = ShowItemTooltip;
+
+        [Embed(source="../../../../assets/embedded/guild/guild_checkmark_guild_market.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_guild_checkmark_guild_market_png_456612373:Class;
+
+        [Embed(source="../../../../assets/embedded/guild/guild_icon_available.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_guild_icon_available_png_1130948427:Class;
+
+        private function ShowAdventureTooltip(argument1:ToolTipEvent):void
+        {
+            var localValue2:String = this.item.GetShopItemContent_vector()[0].GetResourceName_string();
+            if (localValue2.charAt(0) == "$")
+            {
+                cToolTipUtil.createToolTip(cToolTipUtil.SHOP_ITEM_string, argument1, data);
+            }
+            else
+            {
+                cToolTipUtil.createToolTip(cToolTipUtil.ADVENTURE_string, argument1, localValue2);
+            };
+        }
+
+        private function mouseOutHandler(argument1:MouseEvent):void
+        {
+            if (this.renderData.isActive)
+            {
+                this.frame.filters = [];
+            };
+        }
+
+        private function ShowItemTooltip(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SHOP_ITEM_string, argument1, this.item);
+        }
+
+        private function updatePercentageCounter(argument1:TimerEvent):void
+        {
+            if (this.percentageShown < this.renderData.percentage)
+            {
+                this.percentageShown++;
+                this.votePercentage.text = (Math.min(this.percentageShown, this.renderData.percentage) + "%");
+            }
+            else
+            {
+                if (((this.renderData.isSelected) && (this.frame.filters.length == 0)))
+                {
+                    this.frame.filters = [new GlowFilter(16777130)];
+                }
+                else
+                {
+                    if (this.renderData.isSelected)
+                    {
+                        this.frame.filters = [new GlowFilter(16777130)];
+                    };
+                    this.percentageTimer.reset();
+                    this.percentageTimer.removeEventListener(TimerEvent.TIMER, this.updatePercentageCounter);
+                };
+            };
+        }
+
+        private function createToolTip(argument1:ToolTipEvent):void
+        {
+            if (this.toolTipFunction != null)
+            {
+                this.toolTipFunction(argument1);
+            };
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            var localValue2:cAdventureDefinition;
+            var localValue3:String;
+            super.data = argument1;
+            this.renderData = (argument1 as GuildMarketItemRendererData);
+            this.item = cShopItem.GetShopItem(this.renderData.shopItemId);
+            if (this.item != null)
+            {
+                id = this.item.GetName_string();
+                localValue2 = cAdventureDefinition.FindAdventureDefinition(this.item.GetShopItemContent_vector()[0].GetResourceName_string());
+                if (localValue2)
+                {
+                    this.frame.adventureType = localValue2.GetType_string();
+                    this.frame.adventureDifficulty = localValue2.GetDifficulty();
+                }
+                else
+                {
+                    this.frame.adventureType = "";
+                    this.frame.adventureDifficulty = 0;
+                };
+                this.frame.content = this.item.GetName_string();
+                this.frame.type = this.item.GetFrameType_string();
+                this.itemCost.dataProvider = this.item.GetCosts_vector();
+                this.availableItems.visible = (!(this.item.GetPerVoteRound() == 0));
+                this.availableItemsLabel.text = (this.item.GetPerVoteRound() + "x");
+                this.votePercentage.text = (this.renderData.percentage + "%");
+                this.votePercentage.visible = (this.votePercentage.includeInLayout = (this.renderData.percentage > -1));
+                this.labelBox.height = ((this.votePercentage.visible) ? 36 : 32);
+                this.frame.filters = [];
+                if (((!(this.renderData.isActive)) && (!(this.renderData.isSelected))))
+                {
+                    this.frame.filters = [greyFilter()];
+                };
+                localValue3 = this.item.GetShopItemContent_vector()[0].GetName_string();
+                if (((SPECIALIST_TYPE.isNameValid(localValue3)) && (SPECIALIST_TYPE.IsGeneral(SPECIALIST_TYPE.parse(localValue3)))))
+                {
+                    this.toolTipFunction = this.ShowGeneralTooltip;
+                }
+                else
+                {
+                    if (localValue3 == "Adventure")
+                    {
+                        this.toolTipFunction = this.ShowAdventureTooltip;
+                    }
+                    else
+                    {
+                        this.toolTipFunction = this.ShowItemTooltip;
+                    };
+                };
+                toolTip = this.item.GetName_string();
+                this.frame.toolTip = this.item.GetName_string();
+                this.percentageTimer.reset();
+                this.percentageTimer.removeEventListener(TimerEvent.TIMER, this.updatePercentageCounter);
+                if (this.renderData.showPercentageCounting)
+                {
+                    this.frame.filters = [greyFilter()];
+                    this.percentageShown = 0;
+                    this.votePercentage.text = (this.percentageShown + "%");
+                    this.percentageTimer.addEventListener(TimerEvent.TIMER, this.updatePercentageCounter);
+                    this.percentageTimer.start();
+                    this.renderData.showPercentageCounting = false;
+                };
+            };
+            refreshRendererPresentation();
+        }
+
+        public function onAvailableItems_toolTipCreate(argument1:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+        }
+
+        private function mouseOverHandler(argument1:MouseEvent):void
+        {
+            if (this.renderData.isActive)
+            {
+                this.frame.filters = [new GlowFilter(16777130)];
+            };
+        }
+
+        private function ShowGeneralTooltip(argument1:ToolTipEvent):void
+        {
+            var localValue2:int = SPECIALIST_TYPE.parse((data as cShopItem).GetShopItemContent_vector()[0].GetName_string());
+            var localValue3:cSpecialist = new cSpecialist(false).InitSpecialistFromType(localValue2, null, global.ui.mHomePlayer.getPlayerID(), global.ui.mHomePlayer.getPlayerID(), global.ui);
+            cToolTipUtil.createToolTip(cToolTipUtil.MILITARY_UNIT_GENERAL_string, argument1, localValue3);
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            background.addEventListener("toolTipCreate", createToolTip);
+            frame.addEventListener("toolTipCreate", createToolTip);
+            availableItems.addEventListener("toolTipCreate", onAvailableItems_toolTipCreate);
+            viewImage1.source = _embed_mxml_____data_src_gfx_embedded_guild_icon_available_png_1130948427;
+            selectedIcon.source = _embed_mxml_____data_src_gfx_embedded_guild_checkmark_guild_market_png_456612373;
+            viewClassFactory1.generator = ResourceItemRenderer;
+            itemCost.itemRenderer = viewClassFactory1;
+            this.styleName = "detailsContentBox";
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.width = 92;
+            this.height = 116;
+            this.addEventListener("mouseOver", this.mouseOverHandler);
+            this.addEventListener("mouseOut", this.mouseOutHandler);
+            this.addEventListener("toolTipCreate", this.createToolTip);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"],
+                [renderData, "propertyChange"],
+                [votePercentage, "hide"],
+                [votePercentage, "show"]]);
+                if (renderData != null)
+                {
+                    selectedIcon.visible = (renderData.isSelected) && (renderData.isActive);
+                }
+                labelBox.height = (votePercentage.visible) ? 36 : 32;
+                votePercentage.includeInLayout = votePercentage.visible;
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="background" width="80" height="112" styleName="detailsSubContentBox"  left="10" top="4" />
+    <ui:Frame id="frame" type="specialist" contentType="shopitem"  horizontalCenter="5" top="6" />
+    <mx:Canvas id="availableItems" visible="false" top="4" right="0">
+        <mx:Image id="viewImage1" />
+        <ui:CustomLabel id="availableItemsLabel" rotation="7"  fontWeight="bold" fontSize="14" color="0xFFFFFF" horizontalCenter="0" verticalCenter="-2" />
+    </mx:Canvas>
+    <mx:Image id="selectedIcon"  top="45" right="18" />
+    <mx:VBox id="labelBox" verticalScrollPolicy="off" horizontalScrollPolicy="off" bottom="1" horizontalCenter="5">
+        <local:RendererPoolBox id="itemCost" direction="vertical" horizontalScrollPolicy="off" horizontalAlign="center" verticalGap="0">
+            <local:itemRenderer>
+                <core:ClassFactory id="viewClassFactory1" />
+            </local:itemRenderer>
+        </local:RendererPoolBox>
+        <ui:CustomLabel id="votePercentage" percentWidth="100" visible="false"  fontSize="10" paddingTop="-10" paddingLeft="10" />
+    </mx:VBox>
+</mx:Canvas>

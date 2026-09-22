@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<renderer:ResourceItemRenderer xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    enableAmountCheck="false">
+    <mx:Script><![CDATA[
+        import mx.events.PropertyChangeEvent;
+
+        private var _outerDocument:SendArmyTip;
+
+        public function get outerDocument():SendArmyTip
+        {
+            return (_outerDocument);
+        }
+
+        public function set outerDocument(value:SendArmyTip):void
+        {
+            var oldValue:Object = _outerDocument;
+            if (oldValue !== value)
+            {
+                _outerDocument = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "outerDocument", oldValue, value));
+            };
+        }
+    ]]></mx:Script>
+</renderer:ResourceItemRenderer>

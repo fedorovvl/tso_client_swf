@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<renderers:RendererPoolBox xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:renderers="GUI.Components.ItemRenderer.*" direction="vertical" width="250">
+    <mx:Script><![CDATA[
+        import mx.core.ClassFactory;
+        import GUI.Components.ItemRenderer.MailTypeFilterItemRenderer;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundColor", 3287326);
+            this.setStyle("paddingBottom", 5);
+            this.setStyle("paddingTop", 5);
+            this.setStyle("verticalGap", 0);
+            itemRenderer = new ClassFactory(MailTypeFilterItemRenderer);
+        }
+    ]]></mx:Script>
+</renderers:RendererPoolBox>

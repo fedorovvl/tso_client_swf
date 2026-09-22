@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="mx.core.IToolTip"
+    mouseChildren="false" mouseEnabled="false" styleName="toolTip">
+    <mx:Script><![CDATA[
+        import mx.events.ResizeEvent;
+
+        private var _text:String;
+        private var _title:String;
+        private var _description:String;
+
+        public function get descriptionText():String
+        {
+            return (this._description);
+        }
+
+        public function set descriptionText(_arg_1:String):void
+        {
+            this._description = _arg_1;
+            invalidateProperties();
+        }
+
+        public function get title():String
+        {
+            return (this._title);
+        }
+
+        public function set title(_arg_1:String):void
+        {
+            this._title = _arg_1;
+            invalidateProperties();
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            this._text = _arg_1;
+            invalidateProperties();
+        }
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        override protected function commitProperties():void
+        {
+            super.commitProperties();
+            this.headline.text = this.title;
+            this.description.text = this.descriptionText;
+            this.description.width = this.headline.width;
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("paddingBottom", 5);
+            this.setStyle("paddingLeft", 5);
+            this.setStyle("paddingRight", 5);
+            this.setStyle("paddingTop", 5);
+            this.setStyle("verticalGap", 4);
+            headline.addEventListener(ResizeEvent.RESIZE, syncWidth, false, 0, true);
+        }
+
+        private function syncWidth(event:ResizeEvent = null):void
+        {
+            description.width = headline.width;
+        }
+    ]]></mx:Script>
+    <gui:CustomText id="headline" minWidth="180"  color="0xFFFFFF" fontWeight="bold" />
+    <gui:CustomText id="description"  color="0xFFFFFF" />
+</mx:VBox>

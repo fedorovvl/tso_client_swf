@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tooltips:BasicDescriptionTip xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:tooltips="GUI.Components.ToolTips.*"
+    implements="GUI.Components.ToolTips.IDataToolTip">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+
+        override public function set text(_arg_1:String):void
+        {
+            super.text = _arg_1;
+            descriptionText = _arg_1;
+        }
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            title = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, (_arg_1 as String));
+        }
+
+        override protected function commitProperties():void
+        {
+            super.commitProperties();
+            if (text.indexOf("-") != -1)
+            {
+                description.setStyle("color", 0xFF0000);
+            }
+            else
+            {
+                if (text.indexOf("+") != -1)
+                {
+                    description.setStyle("color", 0x6600);
+                }
+                else
+                {
+                    description.setStyle("color", 0xFFFFFF);
+                };
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            if (cLocaManager.GetInstance().IsInitialized())
+            {
+                invalidateProperties();
+            };
+            cLocaManager.GetInstance().addEventListener("languageChanged", onLanguageChanged, false, 0, true);
+        }
+
+        private function onLanguageChanged(event:Event):void
+        {
+            if (cLocaManager.GetInstance().IsInitialized())
+            {
+                invalidateProperties();
+            };
+        }
+    ]]></mx:Script>
+</tooltips:BasicDescriptionTip>

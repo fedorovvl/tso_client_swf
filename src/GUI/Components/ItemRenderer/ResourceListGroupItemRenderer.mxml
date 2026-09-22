@@ -1,0 +1,282 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" height="29" width="150">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.containers.VBox;
+        import mx.effects.Fade;
+        import mx.effects.Resize;
+        import mx.effects.Sequence;
+        import GUI.Components.StandardButton;
+        import GUI.Components.CustomText;
+        import flash.utils.Dictionary;
+        import mx.core.mx_internal;
+        import GUI.Assets.gAssetManager;
+        import flash.events.MouseEvent;
+        import mx.events.FlexEvent;
+        import flash.events.Event;
+        import mx.events.EffectEvent;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.IEventDispatcher;
+
+        [Bindable]
+        public var emptyText:String;
+
+        [Bindable]
+        private var collapsed:Boolean = true;
+
+        public var _ResourceListGroupItemRenderer_Fade1:Fade;
+
+        public var _ResourceListGroupItemRenderer_Fade2:Fade;
+
+        public var _ResourceListGroupItemRenderer_Resize1:Resize;
+
+        public var _ResourceListGroupItemRenderer_Resize2:Resize;
+
+        [Bindable]
+        public var collapse:Sequence;
+
+        [Bindable]
+        public var expand:Sequence;
+
+        [Bindable]
+        public var expandToHeight:int;
+
+        [Bindable]
+        public var title:String;
+
+        private var _itemRendererMap:Dictionary = new Dictionary();
+
+        private function createFade1():Fade
+        {
+            var localValue1:Fade = new Fade();
+            this._ResourceListGroupItemRenderer_Fade1 = localValue1;
+            localValue1.alphaFrom = 0;
+            localValue1.alphaTo = 1;
+            localValue1.duration = 300;
+            return (localValue1);
+        }
+
+        private function createResize1():Resize
+        {
+            var localValue1:Resize = new Resize();
+            this._ResourceListGroupItemRenderer_Resize1 = localValue1;
+            localValue1.duration = 300;
+            return (localValue1);
+        }
+
+        private function createSequence1():Sequence
+        {
+            var localValue1:Sequence = new Sequence();
+            this.expand = localValue1;
+            localValue1.children = [this.createResize1(), this.createFade1()];
+            return (localValue1);
+        }
+
+        public function onBtnTitle_click(argument1:MouseEvent):void
+        {
+            this.expandCollapse();
+        }
+
+        private function createFade2():Fade
+        {
+            var localValue1:Fade = new Fade();
+            this._ResourceListGroupItemRenderer_Fade2 = localValue1;
+            localValue1.alphaFrom = 1;
+            localValue1.alphaTo = 0;
+            localValue1.duration = 300;
+            return (localValue1);
+        }
+
+        private function display(argument1:Event=null):void
+        {
+            var localValue2:Object;
+            var localValue3:Object;
+            var localValue4:ResourceListItemRenderer;
+            var localValue5:String;
+            removeEventListener(FlexEvent.CREATION_COMPLETE, this.display);
+            if (!data)
+            {
+                return;
+            };
+            localValue2 = {};
+            for each (localValue3 in (data as Array))
+            {
+                localValue5 = localValue3.resourceName_string;
+                if (this._itemRendererMap[localValue5])
+                {
+                    localValue4 = this._itemRendererMap[localValue5];
+                }
+                else
+                {
+                    localValue4 = new ResourceListItemRenderer();
+                    this._itemRendererMap[localValue5] = localValue4;
+                    this.list.addChild(localValue4);
+                };
+                localValue4.data = localValue3;
+                localValue2[localValue5] = localValue3;
+            };
+            for (localValue5 in this._itemRendererMap)
+            {
+                if (!localValue2[localValue5])
+                {
+                    this.list.removeChild(this._itemRendererMap[localValue5]);
+                    delete this._itemRendererMap[localValue5];
+                };
+            };
+            this.list.visible = (this.list.numChildren > 0);
+            this.empty.visible = (this.list.numChildren == 0);
+            this.expandToHeight = (32 + ((this.list.numChildren > 0) ? (this.list.numChildren * 32) : this.empty.height));
+        }
+
+        private function createResize2():Resize
+        {
+            var localValue1:Resize = new Resize();
+            this._ResourceListGroupItemRenderer_Resize2 = localValue1;
+            localValue1.duration = 300;
+            return (localValue1);
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            if (this.list)
+            {
+                this.display();
+            }
+            else
+            {
+                addEventListener(FlexEvent.CREATION_COMPLETE, this.display);
+            };
+            refreshRendererPresentation();
+        }
+
+        private function createSequence2():Sequence
+        {
+            var localValue1:Sequence = new Sequence();
+            this.collapse = localValue1;
+            localValue1.children = [this.createFade2(), this.createResize2()];
+            return (localValue1);
+        }
+
+        private function expandCollapse():void
+        {
+            this.collapsed = (!(this.collapsed));
+            if (this.collapsed)
+            {
+                this.list.mouseChildren = false;
+                this.expand.end();
+                this.collapse.play();
+            }
+            else
+            {
+                this.list.mouseChildren = true;
+                this.collapse.end();
+                this.expand.play();
+            };
+            if (!this.collapsed)
+            {
+                dispatchEvent(new EffectEvent(EffectEvent.EFFECT_START, true));
+            };
+        }
+
+        private function readPresentationValue7():String
+        {
+            var localValue1:* = title;
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private function readPresentationValue9():String
+        {
+            var localValue1:* = emptyText;
+            return ((localValue1 == undefined) ? null : String(localValue1));
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            btnTitle.addEventListener("click", onBtnTitle_click);
+            this.horizontalScrollPolicy = "off";
+            this.verticalScrollPolicy = "off";
+            this.height = 29;
+            this.width = 150;
+            this.clipContent = false;
+            this.createSequence2();
+            this.createSequence1();
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"],
+                [btnTitle, "heightChanged"],
+                [btnTitle, "xChanged"]]);
+                _ResourceListGroupItemRenderer_Resize1.heightTo = expandToHeight;
+                _ResourceListGroupItemRenderer_Resize1.target = this;
+                _ResourceListGroupItemRenderer_Fade1.targets = [list, empty];
+                _ResourceListGroupItemRenderer_Fade2.targets = [list, empty];
+                _ResourceListGroupItemRenderer_Resize2.heightTo = btnTitle.x + btnTitle.height;
+                _ResourceListGroupItemRenderer_Resize2.target = this;
+                btnTitle.label = readPresentationValue7();
+                btnTitle.setStyle("icon", gAssetManager.GetClass(((collapsed) ? "ArrowSmallSUp" : "ArrowSmallNUp")));
+                empty.text = readPresentationValue9();
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <ui:StandardButton id="btnTitle" labelPlacement="left" width="159"  paddingLeft="5" paddingRight="5" left="0" />
+    <ui:CustomText id="empty" selectable="false" alpha="0"  left="5" right="5" top="32" fontWeight="normal" textAlign="center" color="0xFFFFFF" />
+    <mx:VBox id="list" alpha="0"  left="5" right="5" top="32" bottom="0" verticalGap="1" />
+</mx:Canvas>

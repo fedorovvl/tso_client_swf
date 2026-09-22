@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="275" height="100">
+    <mx:Script><![CDATA[
+        import mx.core.UIComponent;
+        import mx.core.UIComponentDescriptor;
+        import mx.core.mx_internal;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            var descriptor:UIComponentDescriptor = details.mx_internal::_documentDescriptor;
+            for each (var childDescriptor:UIComponentDescriptor in descriptor.properties.childDescriptors)
+            {
+                var child:UIComponent = details.createComponentFromDescriptor(childDescriptor, true) as UIComponent;
+                if (!child.initialized)
+                    child.initialize();
+            }
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <mx:Canvas id="details" styleName="detailsHeader" height="60" verticalScrollPolicy="off" left="2" right="2">
+                <mx:Image id="image"  left="10" verticalCenter="1" />
+                <gui:CustomText id="description" selectable="false"  left="70" right="15" top="6" bottom="2" color="0xFFFFFF" fontWeight="normal" />
+            </mx:Canvas>
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

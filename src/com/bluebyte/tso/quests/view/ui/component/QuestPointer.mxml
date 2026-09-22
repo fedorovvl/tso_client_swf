@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*" height="51">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+        import flash.events.MouseEvent;
+        import mx.events.FlexEvent;
+        import mx.events.PropertyChangeEvent;
+
+        [Embed(source="../../../../../../../../assets/vector/QuestPointer/UpSkinNormal.swf", symbol="com.bluebyte.tso.quests.view.ui.component.QuestPointer_UpSkinNormal")]
+        private var UpSkinNormal:Class;
+
+        [Embed(source="../../../../../../../../assets/vector/QuestPointer/OverSkinNormal.swf", symbol="com.bluebyte.tso.quests.view.ui.component.QuestPointer_OverSkinNormal")]
+        private var OverSkinNormal:Class;
+
+        [Embed(source="../../../../../../../../assets/vector/QuestPointer/UpSkinCompleted.swf", symbol="com.bluebyte.tso.quests.view.ui.component.QuestPointer_UpSkinCompleted")]
+        private var UpSkinCompleted:Class;
+
+        [Embed(source="../../../../../../../../assets/vector/QuestPointer/OverSkinCompleted.swf", symbol="com.bluebyte.tso.quests.view.ui.component.QuestPointer_OverSkinCompleted")]
+        private var OverSkinCompleted:Class;
+
+        [Embed(source="../../../../../../../../assets/vector/QuestPointer/UpSkinFailed.swf", symbol="com.bluebyte.tso.quests.view.ui.component.QuestPointer_UpSkinFailed")]
+        private var UpSkinFailed:Class;
+
+        [Embed(source="../../../../../../../../assets/vector/QuestPointer/OverSkinFailed.swf", symbol="com.bluebyte.tso.quests.view.ui.component.QuestPointer_OverSkinFailed")]
+        private var OverSkinFailed:Class;
+
+        private var _type:String = "normal";
+        private var _1332194002background:Class;
+        private var observedUi:IEventDispatcher;
+
+        public function get type():String
+        {
+            return this._type;
+        }
+
+        public function set type(value:String):void
+        {
+            this._type = value;
+        }
+
+        [Bindable(event="propertyChange")]
+        private function get background():Class
+        {
+            return this._1332194002background;
+        }
+
+        private function set background(value:Class):void
+        {
+            var oldValue:Object = this._1332194002background;
+            if (oldValue !== value)
+            {
+                this._1332194002background = value;
+                this.setStyle("backgroundImage", value);
+                this.dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "background", oldValue, value));
+            }
+        }
+
+        private function getLabelText(value:Object):String
+        {
+            return ((value == undefined) ? null : String(value));
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundSize", "100%");
+            this.setStyle("disabledOverlayAlpha", 0);
+            this.addEventListener("labelChanged", onLabelChanged);
+            this.addEventListener("click", onClick);
+            this.addEventListener("rollOver", onRollOverHandler);
+            this.addEventListener("rollOut", onRollOutHandler);
+            this.addEventListener("creationComplete", onCreationComplete);
+            global.staticEventDispatcher.addEventListener("propertyChange", onGlobalChanged, false, 0, true);
+            observeConnection();
+            updateLabel();
+            onRollOut(null);
+        }
+
+        private function updateLabel(event:Event = null):void
+        {
+            _QuestPointer_CustomLabel1.text = getLabelText(label);
+        }
+
+        private function onLabelChanged(event:Event):void
+        {
+            updateLabel(event);
+        }
+
+        private function onClick(event:MouseEvent):void
+        {
+            globalFlash.gui.mQuestBook.Show();
+        }
+
+        private function onRollOverHandler(event:MouseEvent):void
+        {
+            onRollOver(event);
+        }
+
+        private function onRollOutHandler(event:MouseEvent):void
+        {
+            onRollOut(event);
+        }
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            onRollOut(null);
+        }
+
+        protected function onRollOver(event:MouseEvent):void
+        {
+            switch (this._type)
+            {
+                case "normal":
+                    this.background = this.OverSkinNormal;
+                    return;
+                case "completed":
+                    this.background = this.OverSkinCompleted;
+                    return;
+                case "failed":
+                    this.background = this.OverSkinFailed;
+                    return;
+            }
+        }
+
+        protected function onRollOut(event:MouseEvent):void
+        {
+            switch (this._type)
+            {
+                case "normal":
+                    this.background = this.UpSkinNormal;
+                    return;
+                case "completed":
+                    this.background = this.UpSkinCompleted;
+                    return;
+                case "failed":
+                    this.background = this.UpSkinFailed;
+                    return;
+            }
+        }
+
+        private function onGlobalChanged(event:PropertyChangeEvent):void
+        {
+            if (event.property == "ui_bindable")
+            {
+                observeConnection();
+            }
+        }
+
+        private function observeConnection():void
+        {
+            if (observedUi)
+            {
+                observedUi.removeEventListener("propertyChange", onConnectionChanged);
+            }
+            observedUi = global.ui_bindable as IEventDispatcher;
+            if (observedUi)
+            {
+                observedUi.addEventListener("propertyChange", onConnectionChanged, false, 0, true);
+            }
+            updateEnabled();
+        }
+
+        private function onConnectionChanged(event:PropertyChangeEvent):void
+        {
+            if (event.property == "mPacketLost")
+            {
+                updateEnabled();
+            }
+        }
+
+        private function updateEnabled():void
+        {
+            enabled = global.ui_bindable != null && !global.ui_bindable.mPacketLost;
+        }
+    ]]></mx:Script>
+
+    <gui:CustomLabel id="_QuestPointer_CustomLabel1" left="30" right="15" verticalCenter="-3" color="0xFFFFFF" text="{getLabelText(label)}" />
+</mx:Canvas>

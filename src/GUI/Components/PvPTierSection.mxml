@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:renderer="GUI.Components.ItemRenderer.*"
+    width="400" height="300" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.events.FlexEvent;
+        import mx.events.PropertyChangeEvent;
+        import GUI.Loca.cLocaManager;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.data.dPvPTierSectionData;
+        import Enums.GUI_END;
+        import global;
+
+        override public function set data(value:Object):void
+        {
+            var tierData:dPvPTierSectionData;
+            var barData:Object;
+            super.data = value;
+            if (((!(value)) is dPvPTierSectionData))
+            {
+                throw (new Error("incorrect data passed to PvPTierSection itemrenderer"));
+            };
+            tierData = (data as dPvPTierSectionData);
+            barData = new Object();
+            barData.end = tierData.roundedEnd;
+            barData.enabled = (tierData.currentLevel >= ((tierData.section * 10) - 10));
+            barData.min = tierData.startLevel;
+            barData.value = tierData.currentLevel;
+            barData.max = tierData.endLevel;
+            progressBar.data = barData;
+            if (tierData.label != "")
+            {
+                sectionLabel.text = cLocaManager.GetInstance().getLabel(tierData.label);
+            }
+            else
+            {
+                sectionLabel.text = "";
+            };
+            if (barData.end == GUI_END.RIGHT)
+            {
+                globeImage.visible = false;
+            }
+            else
+            {
+                if (tierData.currentLevel > ((tierData.section * 10) - 10))
+                {
+                    globeImage.source = gAssetManager.GetClass("PvPTierUnlocked");
+                }
+                else
+                {
+                    globeImage.source = gAssetManager.GetClass("PvPTierLocked");
+                };
+            };
+            numerics.source = gAssetManager.GetClass(("PvPNumerics" + tierData.section));
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            globeCanvas.setStyle("horizontalAlign", "center");
+            refreshTip();
+            addEventListener("creationComplete", onCreationComplete);
+            global.staticEventDispatcher.addEventListener("propertyChange", onGlobalChanged, false, 0, true);
+            connectPlayer();
+        }
+
+        private var playerSource:flash.events.IEventDispatcher;
+
+        private function onGlobalChanged(event:mx.events.PropertyChangeEvent):void
+        {
+            if (event.property == "ui_bindable")
+            {
+                connectPlayer();
+                refreshTip();
+            };
+        }
+
+        private function connectPlayer():void
+        {
+            var player:Object = global.ui_bindable ? global.ui_bindable.mCurrentPlayer : null;
+            var dispatcher:flash.events.IEventDispatcher = player as flash.events.IEventDispatcher;
+            if (playerSource === dispatcher)
+            {
+                return;
+            };
+            if (playerSource != null)
+            {
+                playerSource.removeEventListener("propertyChange", onPlayerChanged);
+            };
+            playerSource = dispatcher;
+            if (playerSource != null)
+            {
+                playerSource.addEventListener("propertyChange", onPlayerChanged, false, 0, true);
+            };
+        }
+
+        private function onPlayerChanged(event:mx.events.PropertyChangeEvent):void
+        {
+            if (event.property == "mCurrentPlayer")
+            {
+                connectPlayer();
+            };
+            refreshTip();
+        }
+
+        private function refreshTip():void
+        {
+            var tip:* = cLocaManager.GetInstance().getLabel("pvpstrengthpoints", [global.ui_bindable.mCurrentPlayer.GetPvpModifier()]);
+            _PvPTierSection_VBox1.toolTip = ((tip == undefined) ? null : String(tip));
+        }
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            creationCompleteHandler(event);
+        }
+
+        protected function creationCompleteHandler(event:FlexEvent):void
+        {
+        }
+    ]]></mx:Script>
+
+    <renderer:TierBarItemRenderer id="progressBar" height="12"  left="0" right="0" top="32" />
+    <gui:CustomText id="sectionLabel" selectable="false" percentWidth="100" wordWrap="true"  left="0" bottom="0" textAlign="center" color="0xFFFFFF" />
+    <mx:VBox id="_PvPTierSection_VBox1">
+        <mx:Canvas id="globeCanvas" width="51" height="63"
+            left="0" right="0" top="0" bottom="0">
+            <gui:TSOImage id="globeImage" width="51" height="63"  top="0" left="0" />
+            <gui:TSOImage id="numerics" width="24" height="21"  bottom="0" right="0" />
+        </mx:Canvas>
+    </mx:VBox>
+</mx:Canvas>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gui:BasicPanel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    width="275" height="248">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.core.ClassFactory;
+        import GUI.Components.ItemRenderer.WarehouseDetailsItemRenderer;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(header);
+            LegacyMxmlContent.createChildren(subContent);
+            unitsList.itemRenderer = new ClassFactory(WarehouseDetailsItemRenderer);
+            updateBottom();
+            globalFlash.staticEventDispatcher.addEventListener("propertyChange", updateBottom, false, 0, true);
+        }
+
+        private function updateBottom(event:Event = null):void
+        {
+            setStyle("bottom", globalFlash.mainHudBottomPos);
+        }
+    ]]></mx:Script>
+    <gui:subComponents>
+        <mx:Array>
+            <mx:Canvas id="header" styleName="detailsHeader" height="60" verticalScrollPolicy="off" left="2" right="2">
+                <mx:Image id="image"  left="10" verticalCenter="1" />
+                <gui:CustomText id="description" selectable="false"  left="70" right="15" top="6" bottom="2" color="0xFFFFFF" fontWeight="normal" />
+            </mx:Canvas>
+            <mx:Canvas id="subContent" top="62" left="8" bottom="5" right="7">
+                <mx:Canvas id="listBackground" styleName="listBackgroundShadow" percentWidth="100" percentHeight="100" />
+                <mx:TileList id="unitsList" selectable="false"  useRollOver="false" backgroundAlpha="0" borderThickness="0" left="5" right="2" top="5" bottom="5" />
+            </mx:Canvas>
+        </mx:Array>
+    </gui:subComponents>
+</gui:BasicPanel>

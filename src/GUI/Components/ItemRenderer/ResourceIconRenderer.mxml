@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" width="37" height="37">
+    <mx:Script><![CDATA[
+        import mx.containers.Canvas;
+        import mx.controls.Image;
+        import mx.core.mx_internal;
+        import mx.events.PropertyChangeEvent;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import mx.events.ToolTipEvent;
+        import mx.events.FlexEvent;
+        import GUI.Assets.gAssetManager;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import flash.events.*;
+        import flash.display.*;
+        import flash.geom.*;
+        import mx.styles.*;
+        import flash.text.*;
+        import flash.media.*;
+        import mx.binding.*;
+        import flash.filters.*;
+        import flash.utils.*;
+        import flash.net.*;
+        import flash.system.*;
+        import flash.accessibility.*;
+        import flash.xml.*;
+        import flash.ui.*;
+        import flash.external.*;
+        import flash.desktop.*;
+        import flash.data.*;
+        import flash.debugger.*;
+        import flash.errors.*;
+        import flash.filesystem.*;
+        import flash.html.*;
+        import flash.html.script.*;
+        import flash.printing.*;
+        import flash.profiler.*;
+        import GUI.Components.RendererPresentationUpdates;
+        import flash.events.Event;
+        import flash.events.IEventDispatcher;
+
+        public static const BUFFED_POSITIVE:int = 1;
+
+        public static const BUFFED_NONE:int = 0;
+
+        public static const BUFFED_NEGATIVE:int = -1;
+
+        private var _buffed:int;
+
+        private var _resourceName:String;
+
+        private var _missing:Boolean;
+
+        private var _active:Boolean = true;
+
+        private var _tooltipName:String = "";
+
+        private function toolTipCreateHandler(argument1:ToolTipEvent):void
+        {
+            if (toolTip.indexOf("\n") != -1)
+            {
+                cToolTipUtil.createToolTip(cToolTipUtil.MULTILINE_string, argument1);
+            }
+            else
+            {
+                cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, argument1);
+            };
+        }
+
+        public function set missing(argument1:Boolean):void
+        {
+            if (this._missing == argument1)
+            {
+                return;
+            };
+            this._missing = argument1;
+            this.updateIcon();
+        }
+
+        public function clear():void
+        {
+            this.image.source = null;
+            this.background.source = null;
+            this.foreground.source = null;
+            this._resourceName = null;
+            this._missing = false;
+            this._buffed = 0;
+            this._active = false;
+            this._tooltipName = "";
+        }
+
+        public function set active(argument1:Boolean):void
+        {
+            if (this._active == argument1)
+            {
+                return;
+            };
+            this._active = argument1;
+            this.updateIcon();
+        }
+
+        override public function set data(argument1:Object):void
+        {
+            if (!rendererReady)
+            {
+                pendingRendererData = argument1;
+                hasPendingRendererData = true;
+                return;
+            }
+            super.data = argument1;
+            if (data.hasOwnProperty("resourceName"))
+            {
+                this.resourceName = data.resourceName;
+            };
+            if (data.hasOwnProperty("missing"))
+            {
+                this.missing = data.missing;
+            };
+            if (data.hasOwnProperty("buffed"))
+            {
+                this.buffed = data.buffed;
+            };
+            if (data.hasOwnProperty("active"))
+            {
+                this.active = data.active;
+            };
+            if (data.hasOwnProperty("tooltipName"))
+            {
+                this.tooltipName = data.tooltipName;
+            };
+            refreshRendererPresentation();
+        }
+
+        public function set tooltipName(argument1:String):void
+        {
+            if (this._tooltipName == argument1)
+            {
+                return;
+            };
+            this._tooltipName = argument1;
+            this.updateIcon();
+        }
+
+        public function onResourceIconRenderer_Canvas1_creationComplete(argument1:FlexEvent):void
+        {
+            this.updateIcon();
+        }
+
+        public function set buffed(argument1:int):void
+        {
+            if (this._buffed == argument1)
+            {
+                return;
+            };
+            this._buffed = argument1;
+            this.updateIcon();
+        }
+
+        private function updateIcon():void
+        {
+            if (((this.image) && (this._resourceName)))
+            {
+                this.image.source = gAssetManager.GetResourceIcon(this._resourceName, this._active);
+                if (this._missing)
+                {
+                    this.background.source = gAssetManager.GetBitmap("InputMissingBackground");
+                    this.foreground.source = gAssetManager.GetBitmap("InputMissingForeground");
+                    if (this._tooltipName != "")
+                    {
+                        toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, ("Missing" + this._tooltipName));
+                    }
+                    else
+                    {
+                        toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "InputResourceMissing", [this._resourceName]);
+                    };
+                }
+                else
+                {
+                    if (this._buffed == BUFFED_POSITIVE)
+                    {
+                        this.background.source = gAssetManager.GetBitmap("OutputBuffedBackground");
+                        this.foreground.source = gAssetManager.GetBitmap("OutputBuffedForeground");
+                        if (this._tooltipName != "")
+                        {
+                            toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, ("Buffed" + this._tooltipName));
+                        }
+                        else
+                        {
+                            toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "OutputResourceBuffed", [this._resourceName]);
+                        };
+                    }
+                    else
+                    {
+                        if (this._buffed == BUFFED_NEGATIVE)
+                        {
+                            this.background.source = gAssetManager.GetBitmap("InputMissingBackground");
+                            this.foreground.source = gAssetManager.GetBitmap("OutputBuffedForeground");
+                            if (this._tooltipName != "")
+                            {
+                                toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, ("BuffedNegative" + this._tooltipName));
+                            }
+                            else
+                            {
+                                toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "OutputResourceBuffedNegative", [this._resourceName]);
+                            };
+                        }
+                        else
+                        {
+                            this.background.source = null;
+                            this.foreground.source = null;
+                            if (this._tooltipName != "")
+                            {
+                                toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, this._tooltipName);
+                            }
+                            else
+                            {
+                                toolTip = cLocaManager.GetInstance().GetText(LOCA_GROUP.RESOURCES, this._resourceName);
+                            };
+                        };
+                    };
+                };
+            };
+        }
+
+        public function set resourceName(argument1:String):void
+        {
+            if (this._resourceName == argument1)
+            {
+                return;
+            };
+            this._resourceName = argument1;
+            this.updateIcon();
+        }
+
+        private var rendererReady:Boolean = false;
+        private var pendingRendererData:Object;
+        private var hasPendingRendererData:Boolean = false;
+        private var rendererPresentationUpdating:Boolean = false;
+        private var rendererUpdates:RendererPresentationUpdates;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+
+            this.width = 37;
+            this.height = 37;
+            this.addEventListener("creationComplete", this.onResourceIconRenderer_Canvas1_creationComplete);
+            this.addEventListener("toolTipCreate", this.toolTipCreateHandler);
+            rendererReady = true;
+            rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);
+            if (hasPendingRendererData)
+            {
+                var initialData:Object = pendingRendererData;
+                hasPendingRendererData = false;
+                pendingRendererData = null;
+                data = initialData;
+            }
+            refreshRendererPresentation();
+        }
+
+        private function refreshRendererPresentation():void
+        {
+            if (!rendererReady || rendererPresentationUpdating) return;
+            rendererPresentationUpdating = true;
+            try
+            {
+                rendererUpdates.observe([[data, "propertyChange"]]);
+
+            }
+            finally
+            {
+                rendererPresentationUpdating = false;
+            }
+        }
+    ]]></mx:Script>
+
+    <mx:Image id="background" />
+    <mx:Image id="image" x="5" y="6" />
+    <mx:Image id="foreground" />
+</mx:Canvas>

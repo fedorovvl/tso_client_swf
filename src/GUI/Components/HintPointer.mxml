@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    xmlns:quest="com.bluebyte.tso.quests.view.ui.component.*"
+    width="800">
+    <mx:Script><![CDATA[
+        import Enums.LOCA_GROUP;
+        import GUI.Loca.cLocaManager;
+        import flash.events.Event;
+        import mx.states.SetProperty;
+        import mx.states.State;
+
+        [Embed(source="../../../assets/embedded/hint/hint_pointer_n.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_hint_pointer_n_png_415527211:Class;
+
+        [Embed(source="../../../assets/embedded/hint/hint_pointer_ne.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_hint_pointer_ne_png_1497270997:Class;
+
+        [Embed(source="../../../assets/embedded/hint/hint_pointer_e.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_hint_pointer_e_png_415503179:Class;
+
+        [Embed(source="../../../assets/embedded/hint/hint_pointer_se.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_hint_pointer_se_png_1858173803:Class;
+
+        [Embed(source="../../../assets/embedded/hint/hint_pointer_s.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_hint_pointer_s_png_457539883:Class;
+
+        [Embed(source="../../../assets/embedded/hint/hint_pointer_sw.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_hint_pointer_sw_png_1858172235:Class;
+
+        [Embed(source="../../../assets/embedded/hint/hint_pointer_w.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_hint_pointer_w_png_482623787:Class;
+
+        [Embed(source="../../../assets/embedded/hint/hint_pointer_nw.png")]
+        private var _embed_mxml_____data_src_gfx_embedded_hint_pointer_nw_png_1362658485:Class;
+
+        public var stateN:State;
+        public var stateNE:State;
+        public var stateE:State;
+        public var stateSE:State;
+        public var stateS:State;
+        public var stateSW:State;
+        public var stateW:State;
+        public var stateNW:State;
+        public var stateNewQuest:State;
+        public var stateCompletedQuest:State;
+        public var stateCalendarOpenable:State;
+        public var stateFailedQuest:State;
+        public var statePvPLevelReached:State;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            LegacyMxmlContent.createChildren(actualPointer);
+            pointerN.source = _embed_mxml_____data_src_gfx_embedded_hint_pointer_n_png_415527211;
+            pointerNE.source = _embed_mxml_____data_src_gfx_embedded_hint_pointer_ne_png_1497270997;
+            pointerE.source = _embed_mxml_____data_src_gfx_embedded_hint_pointer_e_png_415503179;
+            pointerSE.source = _embed_mxml_____data_src_gfx_embedded_hint_pointer_se_png_1858173803;
+            pointerS.source = _embed_mxml_____data_src_gfx_embedded_hint_pointer_s_png_457539883;
+            pointerSW.source = _embed_mxml_____data_src_gfx_embedded_hint_pointer_sw_png_1858172235;
+            pointerW.source = _embed_mxml_____data_src_gfx_embedded_hint_pointer_w_png_482623787;
+            pointerNW.source = _embed_mxml_____data_src_gfx_embedded_hint_pointer_nw_png_1362658485;
+            buildStates();
+            refreshLabels();
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        private function makePointerState(name:String, target:Object):State
+        {
+            var state:State = new State();
+            state.name = name;
+            var show:SetProperty = new SetProperty();
+            show.target = target;
+            show.name = "visible";
+            show.value = true;
+            var layout:SetProperty = new SetProperty();
+            layout.target = target;
+            layout.name = "includeInLayout";
+            layout.value = true;
+            state.overrides = [show, layout];
+            return state;
+        }
+
+        private function buildStates():void
+        {
+            stateN = makePointerState("N", pointerN);
+            stateNE = makePointerState("NE", pointerNE);
+            stateE = makePointerState("E", pointerE);
+            stateSE = makePointerState("SE", pointerSE);
+            stateS = makePointerState("S", pointerS);
+            stateSW = makePointerState("SW", pointerSW);
+            stateW = makePointerState("W", pointerW);
+            stateNW = makePointerState("NW", pointerNW);
+            stateNewQuest = makePointerState("NewQuest", pointerNewQuest);
+            stateCompletedQuest = makePointerState("CompletedQuest", pointerCompletedQuest);
+            stateCalendarOpenable = makePointerState("CalendarOpenable", pointerCalendarOpenable);
+            stateFailedQuest = makePointerState("FailedQuest", pointerFailedQuest);
+            statePvPLevelReached = makePointerState("PvPLevelReached", pointerPvPLevelReached);
+            states = [stateN, stateNE, stateE, stateSE, stateS, stateSW, stateW, stateNW, stateNewQuest, stateCompletedQuest, stateCalendarOpenable, stateFailedQuest, statePvPLevelReached];
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            var questNew:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "QuestNew");
+            pointerNewQuest.label = ((questNew == undefined) ? null : String(questNew));
+            var questCompleted:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "QuestCompleted");
+            pointerCompletedQuest.label = ((questCompleted == undefined) ? null : String(questCompleted));
+            var pvpLevel:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "NewPvPLevelReached");
+            pointerPvPLevelReached.label = ((pvpLevel == undefined) ? null : String(pvpLevel));
+            var calendarOpen:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "CalendarDoorOpen");
+            pointerCalendarOpenable.label = ((calendarOpen == undefined) ? null : String(calendarOpen));
+            var questFailed:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "QuestFailed");
+            pointerFailedQuest.label = ((questFailed == undefined) ? null : String(questFailed));
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="actualPointer">
+        <mx:Image id="pointerN" visible="false" includeInLayout="false" />
+        <mx:Image id="pointerNE" visible="false" includeInLayout="false" />
+        <mx:Image id="pointerE" visible="false" includeInLayout="false" />
+        <mx:Image id="pointerSE" visible="false" includeInLayout="false" />
+        <mx:Image id="pointerS" visible="false" includeInLayout="false" />
+        <mx:Image id="pointerSW" visible="false" includeInLayout="false" />
+        <mx:Image id="pointerW" visible="false" includeInLayout="false" />
+        <mx:Image id="pointerNW" visible="false" includeInLayout="false" />
+        <quest:QuestPointer id="pointerNewQuest" visible="false" includeInLayout="false" type="normal" />
+        <quest:QuestPointer id="pointerCompletedQuest" visible="false" includeInLayout="false" type="completed" />
+        <gui:PvPLevelUpPointer id="pointerPvPLevelReached" visible="false" includeInLayout="false" type="completed" />
+        <gui:CalendarPointer id="pointerCalendarOpenable" visible="false" includeInLayout="false" type="completed" />
+        <quest:QuestPointer id="pointerFailedQuest" visible="false" includeInLayout="false" type="failed" />
+    </mx:Canvas>
+</mx:Canvas>

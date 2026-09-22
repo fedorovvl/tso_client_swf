@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="GUI.Components.ToolTips.IDataToolTip"
+    mouseEnabled="false" mouseChildren="false"
+    styleName="toolTip" minWidth="155">
+    <mx:Script><![CDATA[
+        import GO.cBuilding;
+        import ServerState.dResource;
+        import GUI.Components.ItemRenderer.ResourceItemRenderer;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+
+        private var _building:cBuilding;
+        private var _text:String;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            this._building = (_arg_1 as cBuilding);
+        }
+
+        public function get text():String
+        {
+            return (this._text);
+        }
+
+        public function set text(_arg_1:String):void
+        {
+            var _local_3:dResource;
+            var _local_4:dResource;
+            var _local_5:int;
+            var _local_6:ResourceItemRenderer;
+            var _local_7:dResource;
+            var _local_8:Array;
+            var _local_9:int;
+            this._text = _arg_1;
+            this.nameLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.BUILDINGS, this._text);
+            var _local_2:Number = 0;
+            switch (this._building.GetBuildingMode())
+            {
+                case cBuilding.BUILDING_MODE_SETTLER_WALKS_TO_BUILDING_GROUND_PLACE:
+                case cBuilding.BUILDING_MODE_CONSTRUCTION:
+                case cBuilding.BUILDING_MODE_SET_BUILDING_GROUND_PLACE:
+                    this.costsList.visible = false;
+                    this.costsList.includeInLayout = false;
+                    _local_2 = this._building.GetRemainingConstructionDuration();
+                    this.durationLabel.visible = true;
+                    this.durationLabel.text = ((cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "TimeRemaining") + "\n") + cLocaManager.GetInstance().FormatDuration(_local_2));
+                    return;
+                default:
+                    this.costsList.visible = true;
+                    this.costsList.includeInLayout = true;
+                    this.costsList.removeAllChildren();
+                    this.durationLabel.visible = false;
+                    this.durationLabel.includeInLayout = false;
+                    this.durationLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "MissingResources");
+                    for each (_local_3 in global.buildingGroup.GetCostListFromName_vector(this._text))
+                    {
+                        _local_4 = global.ui.mCurrentPlayerZone.GetResources(global.ui.mCurrentPlayer).GetPlayerResource(_local_3.name_string);
+                        _local_5 = (_local_4.amount - _local_3.amount);
+                        _local_6 = new ResourceItemRenderer();
+                        if (_local_5 >= 0)
+                        {
+                            _local_6.data = _local_3;
+                            this.costsList.addChild(_local_6);
+                        }
+                        else
+                        {
+                            _local_6.color = 0xFF0000;
+                            _local_6.enableAmountCheck = false;
+                            _local_7 = new dResource();
+                            _local_7.name_string = _local_3.name_string;
+                            _local_7.amount = -(_local_5);
+                            _local_6.data = _local_7;
+                            this.costsList.addChild(_local_6);
+                            this.durationLabel.visible = true;
+                            this.durationLabel.includeInLayout = true;
+                        };
+                    };
+                    if (this.durationLabel.visible)
+                    {
+                        _local_8 = this.costsList.getChildren();
+                        _local_9 = 0;
+                        while (_local_9 < _local_8.length)
+                        {
+                            if (_local_8[_local_9].color == "")
+                            {
+                                this.costsList.removeChild(_local_8[_local_9]);
+                            };
+                            _local_9++;
+                        };
+                    };
+            };
+        }
+    ]]></mx:Script>
+    <gui:CustomLabel id="nameLabel" top="5" left="5" right="5" fontWeight="bold" color="0xFFFFFF" />
+    <mx:VBox id="contentBox" top="20" left="5" right="5" bottom="5" verticalGap="2">
+        <gui:CustomText id="durationLabel" percentWidth="100" fontWeight="normal" color="0xFFFFFF" />
+        <mx:HBox id="costsList" height="25" />
+    </mx:VBox>
+</mx:Canvas>

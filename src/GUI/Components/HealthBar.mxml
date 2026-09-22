@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="34" height="12">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+
+        [Embed(source="../../../assets/vector/HealthBar/_embed_mxml__1351627513.swf", symbol="GUI.Components.HealthBar__embed_mxml__1351627513")]
+        private var frameSkin:Class;
+        [Embed(source="../../../assets/vector/HealthBar/_embed_mxml__437613576.swf", symbol="GUI.Components.HealthBar__embed_mxml__437613576")]
+        private var fillSkin:Class;
+        private var currentValue:Number = 0;
+
+        public function get value():Number { return currentValue; }
+        public function set value(value:Number):void
+        {
+            currentValue = Math.max(0, Math.min(1, value));
+            updateMask();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundSize", "100%");
+            setStyle("backgroundImage", frameSkin);
+            greenBar.setStyle("backgroundImage", fillSkin);
+            greenBar.mask = barMask;
+            greenBar.addEventListener("resize", updateMask);
+            updateMask();
+        }
+
+        private function updateMask(event:Event = null):void
+        {
+            if (greenBar && barMask) barMask.width = greenBar.width * currentValue;
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="greenBar"  backgroundSize="100%" top="2" bottom="2" left="8" right="10" />
+    <mx:Canvas id="barMask" x="8" width="0"  backgroundColor="0xFFFFFF" top="2" bottom="2" />
+</mx:Canvas>

@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+    width="40" height="12">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import flash.events.TimerEvent;
+        import flash.utils.Timer;
+        import mx.events.FlexEvent;
+        import mx.events.ResizeEvent;
+        import mx.events.SliderEvent;
+
+        private static const BUTTON_LEFT:int = 0;
+        private static const BUTTON_RIGHT:int = 1;
+        private static const START_RATE:int = 200;
+        private static const ACCEL_RATE:int = 6;
+
+        private var _intervalWidth:Number = 1;
+        private var _handleMin:int = 0;
+        private var _handleMax:int = 1;
+        private var _ticksSinceStart:int = 0;
+        private var _handleRange:int = 1;
+        private var _buttonSide:int;
+        private var _minimum:Number = 0;
+        private var _maximum:Number = 10;
+        private var _value:Number = 0;
+        private var _autoTickTimer:Timer = new Timer(START_RATE, 0);
+
+        [Embed(source="../../../assets/vector/ExtendedHSlider/_embed_mxml__397845276.swf", symbol="GUI.Components.ExtendedHSlider__embed_mxml__397845276")]
+        private var handleSymbol:Class;
+
+        [Embed(source="../../../assets/vector/embedded/slider/slider_slider_BG_739.swf", symbol="GUI.Components.ExtendedHSlider__embed_mxml_____data_src_gfx_embedded_slider_slider_BG_png_1425354146")]
+        private var barBackgroundSymbol:Class;
+
+        [Embed(source="../../../assets/embedded/slider/slider_slider_arrow_e_highlight.png")]
+        private var arrowEHighlight:Class;
+
+        [Embed(source="../../../assets/embedded/slider/slider_slider_arrow_e_inactive.png")]
+        private var arrowEInactive:Class;
+
+        [Embed(source="../../../assets/embedded/slider/slider_slider_arrow_e_standard.png")]
+        private var arrowEStandard:Class;
+
+        [Embed(source="../../../assets/embedded/slider/slider_slider_arrow_w_highlight.png")]
+        private var arrowWHighlight:Class;
+
+        [Embed(source="../../../assets/embedded/slider/slider_slider_arrow_w_inactive.png")]
+        private var arrowWInactive:Class;
+
+        [Embed(source="../../../assets/embedded/slider/slider_slider_arrow_w_standard.png")]
+        private var arrowWStandard:Class;
+
+        protected function rightButtonMouseDownHandler():void
+        {
+            _buttonSide = BUTTON_RIGHT;
+            _ticksSinceStart = 0;
+            _autoTickTimer.start();
+        }
+
+        protected function leftButtonMouseUpHandler():void
+        {
+            _autoTickTimer.stop();
+        }
+
+        protected function rightButtonMouseUpHandler():void
+        {
+            _autoTickTimer.stop();
+        }
+
+        protected function leftButtonMouseDownHandler():void
+        {
+            _buttonSide = BUTTON_LEFT;
+            _ticksSinceStart = 0;
+            _autoTickTimer.start();
+        }
+
+        private function updateIntervalWidthAndHandle():void
+        {
+            updateIntervalWidth();
+            updateHandle();
+            _autoTickTimer.addEventListener(TimerEvent.TIMER, timerTickHandler);
+        }
+
+        private function updateIntervalWidth():void
+        {
+            if (handle)
+            {
+                _handleMin = (sliderBar.x + 1);
+                _handleMax = (((sliderBar.x + sliderBar.width) - handle.width) - 1);
+                _handleRange = (_handleMax - _handleMin);
+            };
+            _intervalWidth = (_handleRange / (_maximum - _minimum));
+            if (isNaN(_intervalWidth))
+            {
+                _intervalWidth = 0;
+            };
+        }
+
+        private function updateHandle():void
+        {
+            var offset:Number;
+            if (handle)
+            {
+                offset = (_value - _minimum);
+                handle.x = (_handleMin + (offset * _intervalWidth));
+                if (handle.x > width)
+                {
+                    updateIntervalWidth();
+                };
+            };
+        }
+
+        public function set minimum(value:Number):void
+        {
+            _minimum = (_value = value);
+            dispatchEvent(new SliderEvent(SliderEvent.CHANGE));
+            updateIntervalWidthAndHandle();
+        }
+
+        [Bindable("change")]
+        public function get minimum():Number
+        {
+            return (_minimum);
+        }
+
+        public function set maximum(value:Number):void
+        {
+            _maximum = value;
+            _value = _minimum;
+            dispatchEvent(new SliderEvent(SliderEvent.CHANGE));
+            updateIntervalWidthAndHandle();
+        }
+
+        [Bindable("change")]
+        [Bindable("valueCommit")]
+        public function get maximum():Number
+        {
+            return (_maximum);
+        }
+
+        private function leftClickHandler():void
+        {
+            _autoTickTimer.stop();
+            if (_value > _minimum)
+            {
+                value = (value - 1);
+            };
+        }
+
+        private function rightClickHandler():void
+        {
+            if (_value < _maximum)
+            {
+                value = (value + 1);
+            };
+        }
+
+        override protected function commitProperties():void
+        {
+            super.commitProperties();
+            updateIntervalWidthAndHandle();
+        }
+
+        private function startSliderDrag(event:MouseEvent):void
+        {
+            global.getApplication().addEventListener(MouseEvent.MOUSE_UP, stopSliderDrag);
+            global.getApplication().addEventListener(MouseEvent.MOUSE_MOVE, moveSliderOnDrag);
+        }
+
+        private function stopSliderDrag(event:MouseEvent):void
+        {
+            global.getApplication().removeEventListener(MouseEvent.MOUSE_MOVE, moveSliderOnDrag);
+            global.getApplication().removeEventListener(MouseEvent.MOUSE_UP, stopSliderDrag);
+        }
+
+        private function moveSliderOnDrag(event:MouseEvent):void
+        {
+            var clicked:int;
+            if (contentMouseX < _handleMin)
+            {
+                value = _minimum;
+            }
+            else
+            {
+                if (contentMouseX > (_handleMax + (handle.width - handle.contentMouseX)))
+                {
+                    value = _maximum;
+                }
+                else
+                {
+                    clicked = Math.round(((((contentMouseX - _handleMin) - (handle.width / 2)) / _intervalWidth) + _minimum));
+                    value = ((clicked < _minimum) ? _minimum : clicked);
+                };
+            };
+        }
+
+        private function timerTickHandler(event:TimerEvent):void
+        {
+            if (_buttonSide == BUTTON_LEFT)
+            {
+                leftClickHandler();
+            }
+            else
+            {
+                rightClickHandler();
+            };
+            if (_ticksSinceStart < (START_RATE / ACCEL_RATE))
+            {
+                _autoTickTimer.delay = (START_RATE - (_ticksSinceStart * ACCEL_RATE));
+                _ticksSinceStart++;
+            }
+            else
+            {
+                _autoTickTimer.delay = 3;
+            };
+        }
+
+        public function set value(newValue:Number):void
+        {
+            newValue = Math.min(newValue, maximum);
+            newValue = Math.max(newValue, minimum);
+            if (newValue != _value)
+            {
+                _value = newValue;
+                updateIntervalWidthAndHandle();
+                dispatchEvent(new SliderEvent(SliderEvent.CHANGE, false, false, -1, newValue));
+            };
+        }
+
+        [Bindable("change")]
+        [Bindable("valueCommit")]
+        public function get value():Number
+        {
+            return (_value);
+        }
+
+        private function moveSliderOnClick():void
+        {
+            updateIntervalWidthAndHandle();
+            var clicked:Number = Math.round(((((contentMouseX - _handleMin) - (handle.width / 2)) / _intervalWidth) + _minimum));
+            if (clicked < _minimum)
+            {
+                value = _minimum;
+            }
+            else
+            {
+                if (clicked > _maximum)
+                {
+                    value = _maximum;
+                }
+                else
+                {
+                    value = clicked;
+                };
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("disabledOverlayAlpha", 0);
+            sliderBar.setStyle("backgroundImage", barBackgroundSymbol);
+            leftArrow.setStyle("upSkin", arrowWStandard);
+            leftArrow.setStyle("downSkin", arrowWHighlight);
+            leftArrow.setStyle("overSkin", arrowWHighlight);
+            leftArrow.setStyle("disabledSkin", arrowWInactive);
+            rightArrow.setStyle("upSkin", arrowEStandard);
+            rightArrow.setStyle("downSkin", arrowEHighlight);
+            rightArrow.setStyle("overSkin", arrowEHighlight);
+            rightArrow.setStyle("disabledSkin", arrowEInactive);
+            handle.source = handleSymbol;
+            updateEnabled();
+            addEventListener("creationComplete", onCreationComplete);
+            addEventListener("resize", onResize);
+            addEventListener("enabledChanged", updateEnabled);
+            sliderBar.addEventListener("click", onSliderBar_click);
+            leftArrow.addEventListener("click", onLeftArrow_click);
+            leftArrow.addEventListener("mouseDown", onLeftArrow_mouseDown);
+            leftArrow.addEventListener("mouseUp", onLeftArrow_mouseUp);
+            leftArrow.addEventListener("mouseOut", onLeftArrow_mouseOut);
+            rightArrow.addEventListener("click", onRightArrow_click);
+            rightArrow.addEventListener("mouseDown", onRightArrow_mouseDown);
+            rightArrow.addEventListener("mouseUp", onRightArrow_mouseUp);
+            rightArrow.addEventListener("mouseOut", onRightArrow_mouseOut);
+            handle.addEventListener("mouseDown", onHandle_mouseDown);
+        }
+
+        private function updateEnabled(event:Event = null):void
+        {
+            leftArrow.enabled = enabled;
+            rightArrow.enabled = enabled;
+            handle.visible = enabled;
+        }
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            updateIntervalWidthAndHandle();
+        }
+
+        private function onResize(event:ResizeEvent):void
+        {
+            updateIntervalWidthAndHandle();
+        }
+
+        public function onSliderBar_click(event:MouseEvent):void
+        {
+            moveSliderOnClick();
+        }
+
+        public function onLeftArrow_click(event:MouseEvent):void
+        {
+            leftClickHandler();
+        }
+
+        public function onLeftArrow_mouseDown(event:MouseEvent):void
+        {
+            leftButtonMouseDownHandler();
+        }
+
+        public function onLeftArrow_mouseUp(event:MouseEvent):void
+        {
+            leftButtonMouseUpHandler();
+        }
+
+        public function onLeftArrow_mouseOut(event:MouseEvent):void
+        {
+            leftButtonMouseUpHandler();
+        }
+
+        public function onRightArrow_click(event:MouseEvent):void
+        {
+            rightClickHandler();
+        }
+
+        public function onRightArrow_mouseDown(event:MouseEvent):void
+        {
+            rightButtonMouseDownHandler();
+        }
+
+        public function onRightArrow_mouseUp(event:MouseEvent):void
+        {
+            rightButtonMouseUpHandler();
+        }
+
+        public function onRightArrow_mouseOut(event:MouseEvent):void
+        {
+            rightButtonMouseUpHandler();
+        }
+
+        public function onHandle_mouseDown(event:MouseEvent):void
+        {
+            startSliderDrag(event);
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="sliderBar" height="12"  left="15" right="15" backgroundSize="100%" />
+    <mx:Button id="leftArrow" width="12" height="12"  left="0" />
+    <mx:Button id="rightArrow" width="12" height="12"  right="0" />
+    <mx:Image id="handle" maintainAspectRatio="false" height="10" y="1" />
+</mx:Canvas>

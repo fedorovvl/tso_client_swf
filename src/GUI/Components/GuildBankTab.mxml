@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    height="30" width="170" horizontalScrollPolicy="off">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import flash.events.KeyboardEvent;
+        import flash.events.MouseEvent;
+        import flash.events.IEventDispatcher;
+        import mx.controls.Button;
+        import mx.controls.listClasses.ListBase;
+        import mx.events.FlexEvent;
+        import mx.events.ListEvent;
+        import mx.events.PropertyChangeEvent;
+        import GuildSystem.cGuildBankTab;
+
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+            updateButtonLabel();
+            updateEditVisibility();
+        }
+
+        protected function canvas1_creationCompleteHandler(event:FlexEvent):void
+        {
+            button.selected = ((owner as ListBase).selectedItem == data);
+            owner.addEventListener(ListEvent.CHANGE, listItemChanged, false, 0, true);
+            owner.addEventListener(FlexEvent.VALUE_COMMIT, listItemChanged, false, 0, true);
+            editcontrol.editButton.addEventListener(MouseEvent.CLICK, editName);
+            editcontrol.cancelButton.addEventListener(MouseEvent.CLICK, cancelName);
+            editcontrol.acceptButton.addEventListener(MouseEvent.CLICK, acceptName);
+            nameInput.addEventListener(KeyboardEvent.KEY_DOWN, ignoreFocusChange);
+        }
+
+        private function listItemChanged(event:Event):void
+        {
+            button.selected = ((event.target as ListBase).selectedItem == data);
+            updateSelectedStyles();
+            if (!button.selected)
+            {
+                editcontrol.normalState(event);
+                nameInput.visible = false;
+            };
+        }
+
+        private function editName(event:Event):void
+        {
+            nameInput.text = data.name;
+            nameInput.visible = true;
+            nameInput.setFocus();
+        }
+
+        private function cancelName(event:Event):void
+        {
+            nameInput.visible = false;
+        }
+
+        private function acceptName(event:Event):void
+        {
+            globalFlash.gui.mGuildBankWindow.RenameTab((data as cGuildBankTab).id, nameInput.text);
+            data.name = nameInput.text;
+            nameInput.visible = false;
+        }
+
+        private function ignoreFocusChange(event:Event):void
+        {
+            event.stopPropagation();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.setStyle("backgroundAlpha", 0);
+            updateButtonLabel();
+            updateSelectedStyles();
+            updateEditVisibility();
+            addEventListener("creationComplete", onCreationComplete);
+            nameInput.addEventListener("show", onNameInputVisibility);
+            nameInput.addEventListener("hide", onNameInputVisibility);
+            button.addEventListener("click", updateSelectedStyles);
+            button.addEventListener("valueCommit", updateSelectedStyles);
+            globalFlash.staticEventDispatcher.addEventListener("propertyChange", onGlobalFlashChanged, false, 0, true);
+            connectBankWindow();
+        }
+
+        private function onCreationComplete(event:FlexEvent):void
+        {
+            canvas1_creationCompleteHandler(event);
+        }
+
+        private function onNameInputVisibility(event:Event):void
+        {
+            updateButtonLabel();
+        }
+
+        private function onGlobalFlashChanged(event:PropertyChangeEvent):void
+        {
+            if (event.property == "gui")
+            {
+                connectBankWindow();
+                updateEditVisibility();
+            };
+        }
+
+        private var bankWindow:Object;
+
+        private function connectBankWindow():void
+        {
+            var window:Object = (globalFlash.gui != null) ? globalFlash.gui.mGuildBankWindow : null;
+            if (bankWindow === window)
+            {
+                return;
+            };
+            if ((bankWindow is IEventDispatcher))
+            {
+                (bankWindow as IEventDispatcher).removeEventListener("propertyChange", onBankWindowChanged);
+            };
+            bankWindow = window;
+            if ((bankWindow is IEventDispatcher))
+            {
+                (bankWindow as IEventDispatcher).addEventListener("propertyChange", onBankWindowChanged, false, 0, true);
+            };
+        }
+
+        private function onBankWindowChanged(event:PropertyChangeEvent):void
+        {
+            if (event.property == "mIsLeader")
+            {
+                updateEditVisibility();
+            };
+        }
+
+        private function updateButtonLabel():void
+        {
+            if (button == null || nameInput == null)
+            {
+                return;
+            };
+            var label:String = "";
+            if (!nameInput.visible && data != null)
+            {
+                label = data.name;
+            };
+            button.label = label;
+        }
+
+        private function updateSelectedStyles(event:Event = null):void
+        {
+            if (button == null)
+            {
+                return;
+            };
+            button.setStyle("paddingBottom", (button.selected ? 4 : 6));
+            button.setStyle("paddingTop", (button.selected ? 4 : 2));
+            button.setStyle("fontWeight", (button.selected ? "bold" : "normal"));
+        }
+
+        private function updateEditVisibility():void
+        {
+            if (editcontrol == null)
+            {
+                return;
+            };
+            var leader:Boolean = (bankWindow != null && bankWindow.mIsLeader);
+            var payment:Boolean = (data != null && data.isPaymentTab);
+            editcontrol.visible = (leader && !payment);
+        }
+    ]]></mx:Script>
+
+    <mx:Button id="button" width="170" percentHeight="100" styleName="tab" focusEnabled="false"  paddingLeft="2" paddingRight="25" />
+    <mx:TextInput id="nameInput" maxChars="20" styleName="standardInput" visible="false"  left="2" right="50" top="2" bottom="2" textAlign="left" focusAlpha="0" />
+    <gui:EditControl id="editcontrol"  right="0" verticalCenter="0" />
+</mx:Canvas>

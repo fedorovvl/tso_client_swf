@@ -1,0 +1,8 @@
+﻿package Communication.VO
+{
+    public class dSpecialistTask_FindDepositVO extends dSpecialistTaskVO 
+    {
+
+
+    }
+}

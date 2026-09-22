@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import mx.events.PropertyChangeEvent;
+        import mx.events.ToolTipEvent;
+        import mx.states.SetProperty;
+        import mx.states.State;
+        import mx.states.State;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import GUI.Components.ToolTips.cToolTipUtil;
+        import GUI.Assets.gAssetManager;
+        import global;
+
+        public static const ALL:int = 0;
+        public static const FRIENDS:int = 1;
+        public static const ZONES:int = 2;
+        public static const GUILD:int = 3;
+
+        [Embed(source="../../../assets/embedded/friendslist/friendslist_neighbours_button_add_friends.png")]
+        private var iconAddFriends:Class;
+
+        [Embed(source="../../../assets/embedded/friendslist/friendslist_neighbours_button_home.png")]
+        private var iconHome:Class;
+
+        [Embed(source="../../../assets/embedded/friendslist/friendslist_neighbours_button_invite_friends.png")]
+        private var iconInviteFriends:Class;
+
+        private var uiBindableSource:flash.events.IEventDispatcher;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            var hideMailInvite:State = new State();
+            hideMailInvite.name = "hideMailInvite";
+            var hideInvite:SetProperty = new SetProperty();
+            hideInvite.target = btnInvite;
+            hideInvite.name = "visible";
+            hideInvite.value = false;
+            var shrinkAddFriend:SetProperty = new SetProperty();
+            shrinkAddFriend.target = btnAddFriend;
+            shrinkAddFriend.name = "height";
+            shrinkAddFriend.value = 40;
+            hideMailInvite.overrides = [hideInvite, shrinkAddFriend];
+            states = [hideMailInvite];
+            btnAddFriend.setStyle("icon", iconAddFriends);
+            btnInvite.setStyle("icon", iconInviteFriends);
+            btnReturnHome.setStyle("icon", iconHome);
+            refreshTips();
+            updateEnabled();
+            btnAddFriend.addEventListener("toolTipCreate", onBtnAddFriend_toolTipCreate);
+            btnInvite.addEventListener("toolTipCreate", onBtnInvite_toolTipCreate);
+            btnReturnHome.addEventListener("toolTipCreate", onBtnReturnHome_toolTipCreate);
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshTips, false, 0, true);
+            global.staticEventDispatcher.addEventListener("propertyChange", onGlobalChanged, false, 0, true);
+            connectUiBindable();
+        }
+
+        private function onGlobalChanged(event:PropertyChangeEvent):void
+        {
+            if (event.property == "ui_bindable")
+            {
+                connectUiBindable();
+                updateEnabled();
+            }
+            else if (event.property == "partner")
+            {
+                refreshTips();
+            };
+        }
+
+        private function connectUiBindable():void
+        {
+            var dispatcher:flash.events.IEventDispatcher = global.ui_bindable as flash.events.IEventDispatcher;
+            if (uiBindableSource === dispatcher)
+            {
+                return;
+            };
+            if (uiBindableSource != null)
+            {
+                uiBindableSource.removeEventListener("propertyChange", onUiBindableChanged);
+            };
+            uiBindableSource = dispatcher;
+            if (uiBindableSource != null)
+            {
+                uiBindableSource.addEventListener("propertyChange", onUiBindableChanged, false, 0, true);
+            };
+        }
+
+        private function onUiBindableChanged(event:PropertyChangeEvent):void
+        {
+            if (event.property == "mPacketLost")
+            {
+                updateEnabled();
+            };
+        }
+
+        private function updateEnabled():void
+        {
+            var packetLost:Boolean = (global.ui_bindable != null && global.ui_bindable.mPacketLost);
+            btnAddFriend.enabled = (!packetLost);
+            btnReturnHome.enabled = (!packetLost);
+        }
+
+        private function refreshTips(event:Event = null):void
+        {
+            var tip:*;
+            tip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "AddFriend");
+            btnAddFriend.toolTip = ((tip == undefined) ? null : String(tip));
+            if (global.partner != "")
+            {
+                tip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, ("InviteBy" + global.partner));
+            }
+            else
+            {
+                tip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "InviteByMail");
+            };
+            btnInvite.toolTip = ((tip == undefined) ? null : String(tip));
+            tip = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "ReturnHome");
+            btnReturnHome.toolTip = ((tip == undefined) ? null : String(tip));
+        }
+
+        public function onBtnAddFriend_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function onBtnInvite_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+
+        public function onBtnReturnHome_toolTipCreate(event:ToolTipEvent):void
+        {
+            cToolTipUtil.createToolTip(cToolTipUtil.SIMPLE_string, event);
+        }
+    ]]></mx:Script>
+
+    <mx:Canvas id="_FriendsListButtonBar_Canvas2" width="71" height="88" top="3" backgroundImage="{gAssetManager.GetClass('FriendFilterBackground')}">
+        <mx:Button id="btnAddFriend" width="65" height="20" styleName="filterFriendsList"  left="2" top="2" color="0x322000" themeColor="0x322000" />
+        <mx:Button id="btnInvite" width="65" height="20" styleName="filterFriendsList"  left="2" top="22" color="0x322000" themeColor="0x322000" />
+        <mx:Button id="btnReturnHome" width="65" height="40" styleName="returnHome"  left="2" top="42" color="0x322000" themeColor="0x322000" />
+    </mx:Canvas>
+</mx:Canvas>

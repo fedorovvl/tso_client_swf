@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
+    implements="GUI.Components.IGUIList"
+    width="910" height="500">
+    <mx:Script><![CDATA[
+        import __AS3__.vec.Vector;
+        import Enums.LOCA_GROUP;
+        import flash.display.DisplayObject;
+        import flash.events.Event;
+        import GUI.Assets.gAssetManager;
+        import GUI.Components.ItemRenderer.ExpeditionItemRenderer;
+        import GUI.Loca.cLocaManager;
+        import mx.core.ClassFactory;
+        import mx.events.EffectEvent;
+        import mx.events.FlexEvent;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.cacheAsBitmap = true;
+            this.clipContent = false;
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            _ColonyWindow_Image1.source = gAssetManager.GetClass("PanelOrnamentalTop");
+            _ColonyWindow_Image2.source = gAssetManager.GetClass("ColonyWindowIcon");
+            btnOK.setStyle("icon", gAssetManager.GetClass("ButtonIconOK"));
+            currentColony.itemRenderer = new ClassFactory(ExpeditionItemRenderer);
+            coloniesList.itemRenderer = new ClassFactory(ExpeditionItemRenderer);
+            fadeOut.addEventListener("effectEnd", __fadeOut_effectEnd);
+            btnClaimColony.addEventListener("enabledChanged", refreshLabels, false, 0, true);
+            cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+            busyOverlay.addEventListener("show", updateBusy);
+            busyOverlay.addEventListener("hide", updateBusy);
+            refreshLabels();
+            updateBusy();
+        }
+
+        private function loca(key:String):String
+        {
+            var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, key);
+            return value == undefined ? null : String(value);
+        }
+
+        private function tip(key:String):String
+        {
+            var value:* = cLocaManager.GetInstance().GetText(LOCA_GROUP.TOOLTIP, key);
+            return value == undefined ? null : String(value);
+        }
+
+        private function busyVisible(visible:Boolean):Boolean
+        {
+            return visible;
+        }
+
+        private function updateBusy(event:Event = null):void
+        {
+            _ColonyWindow_SpriteLibAnimation1.visible = busyVisible(busyOverlay.visible);
+        }
+
+        private function refreshLabels(event:Event = null):void
+        {
+            headline.text = loca("Colonies");
+            _ColonyWindow_CustomLabel2.text = loca("CurrentArchipelago");
+            _ColonyWindow_CustomLabel3.text = loca("YourColonies");
+            btnBuildDefenses.label = loca("EnterDefenseMode");
+            btnBuildDefenses.toolTip = tip("BuildColonyDefencesButton");
+            btnClaimColony.label = loca("MakeMyColony");
+            btnClaimColony.toolTip = btnClaimColony.enabled ? tip("ClaimColonyButton") : loca("NoSlots");
+        }
+
+        public function __fadeOut_effectEnd(event:EffectEvent):void
+        {
+            globalFlash.gui.ShowQuestWindowDelayed();
+        }
+
+        public function getAllItems(_arg_1:String):Vector.<DisplayObject>
+        {
+            return null;
+        }
+
+        public function getFirstItem(_arg_1:String):DisplayObject
+        {
+            return null;
+        }
+
+        override public function set data(value:Object):void
+        {
+            super.data = value;
+            if (this.busyOverlay)
+            {
+                this.display();
+            }
+            else
+            {
+                this.addEventListener(FlexEvent.CREATION_COMPLETE, this.display);
+            }
+        }
+
+        private function display(event:Event = null):void
+        {
+            this.removeEventListener(FlexEvent.CREATION_COMPLETE, this.display);
+        }
+    ]]></mx:Script>
+
+    <mx:states>
+        <mx:State id="collapsedState" name="collapsed">
+            <mx:SetProperty name="height" value="595" />
+        </mx:State>
+        <mx:State id="defaultState" name="default" />
+    </mx:states>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <mx:Canvas id="background" styleName="basicPanel" top="5" left="5" right="9" bottom="0" />
+    <mx:Image id="_ColonyWindow_Image1" horizontalCenter="0" top="-50" />
+    <mx:Image id="_ColonyWindow_Image2" horizontalCenter="0" top="-40" />
+    <mx:Canvas styleName="questPanelFooter" height="60" left="10" right="10" bottom="0" />
+    <gui:CustomLabel id="headline" left="46" right="46" top="15" fontWeight="bold" textAlign="center" color="0xFFFFFF" />
+    <gui:CloseButton id="btnClose" visible="true" top="10" right="24" />
+    <mx:Canvas id="mainBg" left="14" right="16" top="38" bottom="64" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+        <mx:VBox left="10" right="10" percentHeight="100">
+            <mx:HBox percentWidth="100" percentHeight="100">
+                <mx:Canvas id="current" width="225" height="230" styleName="detailsContentBox" backgroundAlpha="1" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+                    <mx:Canvas width="225" height="20" styleName="detailsSubHeader">
+                        <gui:CustomLabel id="_ColonyWindow_CustomLabel2" top="1" horizontalCenter="0" verticalCenter="0" fontWeight="bold" color="0xFFFFFF" textAlign="center" />
+                    </mx:Canvas>
+                    <mx:VBox top="30" percentWidth="100" verticalGap="8" horizontalAlign="center">
+                        <gui:CustomTileList id="currentColony" width="205" height="100" selectable="false" useRollOver="false" backgroundColor="3222046" backgroundAlpha="0" borderThickness="0" />
+                        <gui:StandardButton id="btnBuildDefenses" width="180" height="30" enabled="false" playSound="false" />
+                        <gui:StandardButton id="btnClaimColony" width="180" height="30" enabled="false" playSound="false" />
+                    </mx:VBox>
+                </mx:Canvas>
+                <mx:Canvas id="yourColonies" percentWidth="100" height="230" styleName="detailsContentBox" backgroundAlpha="1">
+                    <mx:Canvas styleName="detailsSubHeader" percentWidth="100" height="18">
+                        <gui:CustomLabel id="_ColonyWindow_CustomLabel3" top="1" horizontalCenter="0" fontWeight="bold" color="0xFFFFFF" textAlign="center" selectable="false" />
+                    </mx:Canvas>
+                    <mx:Canvas id="listBackground" top="5" bottom="5" left="5" right="5" backgroundAlpha="0" borderThickness="0" horizontalScrollPolicy="off" verticalScrollPolicy="auto">
+                        <gui:CustomTileList id="coloniesList" percentHeight="100" top="16" left="0" right="0" selectable="false" useRollOver="false" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0" backgroundAlpha="0" borderThickness="0" rowHeight="100" columnWidth="205" />
+                    </mx:Canvas>
+                </mx:Canvas>
+            </mx:HBox>
+            <gui:ColonyYieldPanel id="yieldPanel" percentWidth="100" percentHeight="100" />
+        </mx:VBox>
+        <mx:Canvas id="busyOverlay" styleName="detailsContentBox" left="0" right="0" top="0" bottom="0" visible="false">
+            <gui:SpriteLibAnimation id="_ColonyWindow_SpriteLibAnimation1" animationName="guianim_hourglass" loop="true" width="48" height="48" horizontalCenter="0" verticalCenter="0" />
+        </mx:Canvas>
+    </mx:Canvas>
+    <gui:StandardButton id="btnOK" width="70" height="30" horizontalCenter="0" bottom="10" playSound="false" />
+</mx:Canvas>

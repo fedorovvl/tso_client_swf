@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:menu="GUI.Components.circularmenu.*"
+    width="260" height="160" mouseEnabled="false">
+    <mx:Script><![CDATA[
+        import flash.display.DisplayObject;
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import flash.utils.getQualifiedClassName;
+        import mx.collections.ArrayCollection;
+        import mx.collections.ICollectionView;
+        import mx.collections.IViewCursor;
+        import mx.collections.XMLListCollection;
+        import mx.core.UIComponent;
+        import mx.effects.Fade;
+        import mx.events.PropertyChangeEvent;
+        import mx.events.ToolTipEvent;
+        import GUI.Assets.gAssetManager;
+
+        public var slotsShowEffect:Fade;
+        public var slotsHideEffect:Fade;
+
+        private var _dataProvider:ICollectionView;
+        private var dataProviderChanged:Boolean = false;
+
+        public function get dataProvider():Object
+        {
+            return (this._dataProvider);
+        }
+
+        public function set dataProvider(value:Object):void
+        {
+            var oldValue:Object = this._dataProvider;
+            setDataProviderInternal(value);
+            if (oldValue !== this._dataProvider)
+            {
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "dataProvider", oldValue, this._dataProvider));
+            };
+        }
+
+        private function setDataProviderInternal(_arg_1:Object):void
+        {
+            var _local_2:ArrayCollection;
+            var _local_3:Object;
+            if (_arg_1 === this._dataProvider)
+            {
+                return;
+            };
+            if ((_arg_1 is ICollectionView))
+            {
+                this._dataProvider = (_arg_1 as ICollectionView);
+            }
+            else
+            {
+                if (((_arg_1 is Array) || (_arg_1 is Vector)))
+                {
+                    _local_2 = new ArrayCollection();
+                    for each (_local_3 in _arg_1)
+                    {
+                        _local_2.addItem(_local_2);
+                    };
+                    this._dataProvider = _local_2;
+                }
+                else
+                {
+                    if ((getQualifiedClassName(_arg_1) == "XMLList"))
+                    {
+                        this._dataProvider = new XMLListCollection(_arg_1);
+                    }
+                    else
+                    {
+                        this._dataProvider = new ArrayCollection([_arg_1]);
+                    };
+                };
+            };
+            this.dataProviderChanged = true;
+            invalidateProperties();
+        }
+
+        private function getSlot(index:int):CircleSlot
+        {
+            var slotName:String = ("slot" + index);
+            if (hasOwnProperty(slotName))
+            {
+                return (this[slotName] as CircleSlot);
+            };
+            return (null);
+        }
+
+        override protected function commitProperties():void
+        {
+            var _local_1:IViewCursor;
+            var _local_2:int;
+            var _local_3:CircleSlot;
+            super.commitProperties();
+            if (this.dataProviderChanged)
+            {
+                _local_1 = this._dataProvider.createCursor();
+                _local_2 = 0;
+                while (_local_2 <= 5)
+                {
+                    _local_3 = this.getSlot(_local_2);
+                    _local_3.data = _local_1.current;
+                    if (_local_3.data == null)
+                    {
+                        _local_3.visible = false;
+                    };
+                    _local_1.moveNext();
+                    _local_2++;
+                };
+                this.dataProviderChanged = false;
+            };
+            refreshSlots();
+        }
+
+        public function open():void
+        {
+            if (!this.center.toggled)
+            {
+                this.center.toggled = true;
+            };
+        }
+
+        public function close():void
+        {
+            if (this.center.toggled)
+            {
+                this.center.toggled = false;
+            };
+        }
+
+        protected function slotClickHandler(event:MouseEvent):void
+        {
+            var index:int = int((event.currentTarget as UIComponent).id.substr(-1));
+            dispatchEvent(new CircleSlotEvent(event.currentTarget.data, index, CircleSlotEvent.SLOT_CLICKED));
+        }
+
+        protected function slotToolTipCreateHandler(event:ToolTipEvent):void
+        {
+        }
+
+        protected function centerToolTipCreateHandler(event:ToolTipEvent):void
+        {
+        }
+
+        protected function addedToStageHandler(event:Event):void
+        {
+            stage.addEventListener(MouseEvent.CLICK, this.outsideClickHandler);
+        }
+
+        protected function outsideClickHandler(event:MouseEvent):void
+        {
+            if (((this.center.toggled) && (!(contains((event.target as DisplayObject))))))
+            {
+                this.center.toggled = false;
+            };
+        }
+
+        private function refreshSlots(event:Event = null):void
+        {
+            if (!slot0)
+            {
+                return;
+            };
+            var cfgs:Array = [
+                {slot: slot4, hover: "CombatUICircle1Hovered", normal: "CombatUICircle1"},
+                {slot: slot2, hover: "CombatUICircle2Hovered", normal: "CombatUICircle2"},
+                {slot: slot5, hover: "CombatUICircle6Hovered", normal: "CombatUICircle6"},
+                {slot: slot3, hover: "CombatUICircle5Hovered", normal: "CombatUICircle5"},
+                {slot: slot1, hover: "CombatUICircle4Hovered", normal: "CombatUICircle4"},
+                {slot: slot0, hover: "CombatUICircle3Hovered", normal: "CombatUICircle3"}];
+            for each (var cfg:Object in cfgs)
+            {
+                var slot:CircleSlot = cfg.slot;
+                slot.visible = (center.toggled) && (!(slot.data == null));
+                slot.imageHovered = gAssetManager.GetClass(cfg.hover);
+                slot.imageNormal = gAssetManager.GetClass(cfg.normal);
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            var showEff:Fade = new Fade();
+            showEff.alphaFrom = 0;
+            showEff.alphaTo = 1;
+            showEff.duration = 200;
+            slotsShowEffect = showEff;
+            var hideEff:Fade = new Fade();
+            hideEff.alphaFrom = 1;
+            hideEff.alphaTo = 0;
+            hideEff.duration = 200;
+            slotsHideEffect = hideEff;
+            var geos:Object = {
+                slot4: {iconX: -5, iconY: -7, posHoveredX: 8, posHoveredY: 64, posNormalX: 13, posNormalY: 60, labelX: 0, labelY: 40},
+                slot2: {iconX: -1, iconY: -5, posHoveredX: 48.7, posHoveredY: 76, posNormalX: 49, posNormalY: 70, labelX: 20, labelY: 52},
+                slot5: {iconX: 0, iconY: -13, posHoveredX: 115, posHoveredY: 3, posNormalX: 109, posNormalY: 5, labelX: 58, labelY: -1},
+                slot3: {iconX: 10, iconY: -13, posHoveredX: 125, posHoveredY: 33, posNormalX: 119, posNormalY: 33, labelX: 72, labelY: 9},
+                slot1: {iconX: 8, iconY: -13, posHoveredX: 118, posHoveredY: 60.3, posNormalX: 111, posNormalY: 58, labelX: 70, labelY: 22},
+                slot0: {iconX: -4, iconY: -6, posHoveredX: 96, posHoveredY: 72, posNormalX: 93, posNormalY: 68, labelX: 37, labelY: 49}};
+            for (var name:String in geos)
+            {
+                var slot:CircleSlot = this[name];
+                var g:Object = geos[name];
+                slot.iconX = g.iconX;
+                slot.iconY = g.iconY;
+                slot.posHoveredX = g.posHoveredX;
+                slot.posHoveredY = g.posHoveredY;
+                slot.posNormalX = g.posNormalX;
+                slot.posNormalY = g.posNormalY;
+                slot.labelX = g.labelX;
+                slot.labelY = g.labelY;
+                slot.setStyle("showEffect", slotsShowEffect);
+                slot.setStyle("hideEffect", slotsHideEffect);
+                slot.addEventListener("click", slotClickHandler);
+                slot.addEventListener("toolTipCreate", slotToolTipCreateHandler);
+            };
+            center.addEventListener("toolTipCreate", centerToolTipCreateHandler);
+            center.addEventListener("toggleChangedEvent", refreshSlots);
+            addEventListener("addedToStage", addedToStageHandler);
+            refreshSlots();
+        }
+    ]]></mx:Script>
+    <mx:Canvas id="menuCanvas" clipContent="false" mouseEnabled="false">
+        <menu:CircleCenter id="center" x="69" y="37" />
+        <menu:CircleSlot id="slot4" />
+        <menu:CircleSlot id="slot2" />
+        <menu:CircleSlot id="slot5" />
+        <menu:CircleSlot id="slot3" />
+        <menu:CircleSlot id="slot1" />
+        <menu:CircleSlot id="slot0" />
+    </mx:Canvas>
+</mx:Canvas>

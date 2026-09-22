@@ -1,0 +1,230 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:bf="com.bluebyte.bluefire.flex3.defaultClient.*"
+    implements="com.bluebyte.bluefire.puremvc.view.IChatPanel"
+    cacheAsBitmap="true">
+    <mx:Script><![CDATA[
+        import com.bluebyte.bluefire.api.model.vo.ChannelVO;
+        import com.bluebyte.bluefire.puremvc.view.IBFList;
+        import com.bluebyte.bluefire.puremvc.view.IBFTextInput;
+        import flash.events.Event;
+        import flash.events.MouseEvent;
+        import mx.collections.ArrayCollection;
+        import mx.containers.VBox;
+        import mx.controls.Button;
+        import mx.controls.CheckBox;
+        import mx.controls.Label;
+        import mx.core.Application;
+        import mx.core.ClassFactory;
+        import mx.events.FlexEvent;
+        import mx.events.PropertyChangeEvent;
+
+        private var _selectedChannel:ChannelVO;
+
+        [Bindable(event="propertyChange")]
+        public function get selectedChannel():ChannelVO
+        {
+            return _selectedChannel;
+        }
+
+        public function set selectedChannel(value:ChannelVO):void
+        {
+            var oldValue:Object = _selectedChannel;
+            if (oldValue !== value)
+            {
+                _selectedChannel = value;
+                dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "selectedChannel", oldValue, value));
+            };
+        }
+
+        public function get messageInput():IBFTextInput
+        {
+            return this.chatInput;
+        }
+
+        public function get mucs():IBFList
+        {
+            return this.buttonBar;
+        }
+
+        public function get whispers():IBFList
+        {
+            return this.whispersList;
+        }
+
+        public function get editable():Boolean
+        {
+            return this.chatInput.editable;
+        }
+
+        public function activateWhisper():void
+        {
+            this.whispersList.visible = true;
+        }
+
+        public function deactivateWhisper():void
+        {
+            this.whispersList.visible = false;
+        }
+
+        public function handleClick(_arg_1:MouseEvent):void
+        {
+            this.messageInput.setFocus();
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            this.percentWidth = 100;
+            this.percentHeight = 100;
+            this.styleName = "chatPanel";
+            messageHistory.itemRenderer = new ClassFactory(ChatMessageItemRenderer);
+            whispersList.itemRenderer = new ClassFactory(ButtonBarItemRenderer);
+            buttonBar.itemRenderer = new ClassFactory(ButtonBarItemRenderer);
+            whispersList.dataProvider = new ArrayCollection();
+            buttonBar.dataProvider = new ArrayCollection();
+            _ChatPanel_Button1.addEventListener(MouseEvent.MOUSE_DOWN, button2_clickHandler);
+            _ChatPanel_Button2.addEventListener(MouseEvent.MOUSE_DOWN, button3_clickHandler);
+            autoScrollBox.addEventListener(MouseEvent.CLICK, button1_clickHandler);
+            syncChannelMessages();
+            this.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, onSelfPropertyChange);
+            syncButtonEnabled();
+            this.addEventListener("enabledChanged", onEnabledChanged);
+            syncAutoscrollBox();
+            messageHistory.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, onHistoryPropertyChange);
+            syncWhisperWidth();
+            whispersList.addEventListener(FlexEvent.SHOW, onWhisperVisibilityChanged);
+            whispersList.addEventListener(FlexEvent.HIDE, onWhisperVisibilityChanged);
+        }
+
+        private function syncChannelMessages():void
+        {
+            if (selectedChannel != null)
+                messageHistory.dataProvider = selectedChannel.messages;
+        }
+
+        private function onSelfPropertyChange(_arg_1:PropertyChangeEvent):void
+        {
+            if (_arg_1.property == "selectedChannel")
+                syncChannelMessages();
+        }
+
+        private function syncButtonEnabled():void
+        {
+            _ChatPanel_Button1.enabled = this.enabled;
+            _ChatPanel_Button2.enabled = this.enabled;
+        }
+
+        private function onEnabledChanged(_arg_1:Event):void
+        {
+            syncButtonEnabled();
+        }
+
+        private function syncAutoscrollBox():void
+        {
+            autoScrollBox.selected = messageHistory.autoscroll;
+        }
+
+        private function onHistoryPropertyChange(_arg_1:PropertyChangeEvent):void
+        {
+            if (_arg_1.property == "autoscroll")
+                syncAutoscrollBox();
+        }
+
+        private function syncWhisperWidth():void
+        {
+            whispersList.width = whispersList.visible ? 100 : 0;
+        }
+
+        private function onWhisperVisibilityChanged(_arg_1:FlexEvent):void
+        {
+            syncWhisperWidth();
+        }
+
+        private function button1_clickHandler(_arg_1:MouseEvent):void
+        {
+            this.messageHistory.autoscroll = (_arg_1.target as CheckBox).selected;
+        }
+
+        protected function button2_clickHandler(_arg_1:MouseEvent):void
+        {
+            Application.application.addEventListener(Event.ENTER_FRAME, this.HandleScrollUp);
+            Application.application.addEventListener(MouseEvent.MOUSE_UP, this.HandleScrollUpStop);
+        }
+
+        protected function button3_clickHandler(_arg_1:MouseEvent):void
+        {
+            Application.application.addEventListener(Event.ENTER_FRAME, this.HandleScrollDown);
+            Application.application.addEventListener(MouseEvent.MOUSE_UP, this.HandleScrollDownStop);
+        }
+
+        protected function HandleScrollUp(_arg_1:Event):void
+        {
+            this.messageHistory.ScrollList(-3);
+        }
+
+        protected function HandleScrollUpStop(_arg_1:Event):void
+        {
+            Application.application.removeEventListener(Event.ENTER_FRAME, this.HandleScrollUp);
+            Application.application.removeEventListener(MouseEvent.MOUSE_UP, this.HandleScrollUpStop);
+        }
+
+        protected function HandleScrollDown(_arg_1:Event):void
+        {
+            this.messageHistory.ScrollList(3);
+        }
+
+        protected function HandleScrollDownStop(_arg_1:Event):void
+        {
+            Application.application.removeEventListener(Event.ENTER_FRAME, this.HandleScrollDown);
+            Application.application.removeEventListener(MouseEvent.MOUSE_UP, this.HandleScrollDownStop);
+        }
+
+        private function changeTextAlignment(_arg_1:Event):void
+        {
+            var _local_4:Button;
+            if (_arg_1.target.dataProvider == null)
+            {
+                return;
+            }
+            _arg_1.target.setStyle("buttonWidth", (_arg_1.target.width / _arg_1.target.dataProvider.length));
+            var _local_2:int = _arg_1.target.dataProvider.length;
+            if (_local_2 == 0)
+            {
+                return;
+            }
+            var _local_3:int = 0;
+            while (_local_3 < _local_2)
+            {
+                _local_4 = (_arg_1.target.getChildAt(_local_3) as Button);
+                _local_4.setStyle("paddingTop", -3);
+                _local_3++;
+            }
+            (_arg_1.target.getChildAt(_arg_1.target.selectedIndex) as Button).setStyle("paddingTop", 5);
+        }
+    ]]></mx:Script>
+    <mx:HBox height="20" top="5" left="5" right="5" backgroundColor="0xCCCCCC" verticalAlign="middle">
+        <mx:Label id="status" text=""/>
+    </mx:HBox>
+    <mx:Canvas left="5" right="5" top="25" bottom="35">
+        <mx:VBox id="vbox" percentWidth="100" percentHeight="100" verticalGap="6">
+            <mx:HBox percentWidth="100" percentHeight="100">
+                <bf:ChatHistoryList id="messageHistory" editable="false" selectable="false"
+                    verticalScrollPolicy="off" variableRowHeight="true"
+                    percentWidth="100" percentHeight="100"
+                    backgroundAlpha="0" borderThickness="0" left="0"/>
+                <mx:Canvas width="18" percentHeight="100" clipContent="true">
+                    <mx:Button id="_ChatPanel_Button1" width="22" height="22" top="0" horizontalCenter="0"/>
+                    <mx:Button id="_ChatPanel_Button2" width="22" height="22" bottom="23" horizontalCenter="0"/>
+                    <mx:CheckBox id="autoScrollBox" bottom="0" horizontalCenter="-1"/>
+                </mx:Canvas>
+                <bf:CustomList id="whispersList" percentHeight="100" visible="false"
+                    labelField="name" top="0" right="0"/>
+                <bf:ChatToggleButtonBar id="buttonBar" columnCount="1" focusEnabled="false"
+                    percentHeight="100" width="100" top="0" right="0"/>
+            </mx:HBox>
+        </mx:VBox>
+    </mx:Canvas>
+    <bf:CustomInput id="chatInput" left="5" right="5" bottom="5" height="30"
+        maxChars="500" styleName="chatInput" restrict="^\&lt;"/>
+</mx:Canvas>

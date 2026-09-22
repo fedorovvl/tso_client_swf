@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tooltips:BasicDescriptionTip xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:tooltips="GUI.Components.ToolTips.*"
+    implements="GUI.Components.ToolTips.IDataToolTip">
+    <mx:Script><![CDATA[
+        import flash.events.Event;
+        import GUI.Loca.cLocaManager;
+        import Enums.LOCA_GROUP;
+        import BuffSystem.cBuff;
+        import BuffSystem.cBuffDefinition;
+        import Communication.VO.dBuffVO;
+        import Interface.RenderableItem;
+        import Communication.VO.EffectVO;
+
+        private var _resourceName:String;
+        private var _amount:String;
+
+        public function set toolTipData(_arg_1:Object):void
+        {
+            var _local_2:cBuff;
+            var _local_3:cBuffDefinition;
+            var _local_4:dBuffVO;
+            if ((_arg_1 is cBuff))
+            {
+                _local_2 = (_arg_1 as cBuff);
+                this._amount = _local_2.GetAmount().toString();
+                this._resourceName = _local_2.GetResourceName_string();
+            }
+            else
+            {
+                if ((_arg_1 is cBuffDefinition))
+                {
+                    _local_3 = (_arg_1 as cBuffDefinition);
+                    this._amount = _local_3.GetAmount().toString();
+                    this._resourceName = _local_3.GetResourceName_string();
+                }
+                else
+                {
+                    if ((_arg_1 is dBuffVO))
+                    {
+                        _local_4 = (_arg_1 as dBuffVO);
+                        this._amount = _local_4.amount.toString();
+                        this._resourceName = _local_4.resourceName_string;
+                    }
+                    else
+                    {
+                        if ((_arg_1 is RenderableItem))
+                        {
+                            this._amount = RenderableItem(_arg_1).getRenderAmount().toString();
+                            this._resourceName = RenderableItem(_arg_1).getResourceGFXName();
+                        }
+                        else
+                        {
+                            if ((_arg_1 is EffectVO))
+                            {
+                                this._amount = (_arg_1 as EffectVO).amount.toString();
+                                this._resourceName = (_arg_1 as EffectVO).name_string;
+                            };
+                        };
+                    };
+                };
+            };
+            invalidateProperties();
+        }
+
+        override protected function commitProperties():void
+        {
+            var _local_2:cLocaManager;
+            super.commitProperties();
+            var _local_1:String = text;
+            if (((_local_1 == defines.FILL_DEPOSIT_BUFF) && ((this._resourceName == "") || (this._resourceName == defines.FILL_DEPOSIT_BUFF))))
+            {
+                _local_1 = (_local_1 + "Any");
+            };
+            _local_2 = cLocaManager.GetInstance();
+            headline.text = _local_2.getLabel(_local_1, [this._amount, this._resourceName]);
+            if (_local_2.exist(LOCA_GROUP.DESCRIPTIONS, _local_1))
+            {
+                description.text = _local_2.GetText(LOCA_GROUP.DESCRIPTIONS, _local_1, [this._amount, this._resourceName]);
+                description.visible = true;
+                description.includeInLayout = true;
+            }
+            else
+            {
+                description.visible = false;
+                description.includeInLayout = false;
+            };
+        }
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            if (cLocaManager.GetInstance().IsInitialized())
+            {
+                invalidateProperties();
+            };
+            cLocaManager.GetInstance().addEventListener("languageChanged", onLanguageChanged, false, 0, true);
+        }
+
+        private function onLanguageChanged(event:Event):void
+        {
+            if (cLocaManager.GetInstance().IsInitialized())
+            {
+                invalidateProperties();
+            };
+        }
+    ]]></mx:Script>
+</tooltips:BasicDescriptionTip>

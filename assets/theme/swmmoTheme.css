@@ -1,0 +1,1740 @@
+@namespace mx "library://ns.adobe.com/flex/mx";
+
+.activeButtonStyle {
+}
+
+.activeTabStyle {
+    fontWeight: "bold";
+}
+
+.advancedDataGridStyles {
+    fontWeight: "bold";
+}
+
+.alertButtonStyle {
+    color: #0B333C;
+}
+
+mx|Alert {
+    paddingTop: 2;
+    borderColor: #869CA7;
+    roundedBottomCorners: true;
+    color: #FFFFFF;
+    buttonStyleName: "alertButtonStyle";
+    backgroundColor: #869CA7;
+    borderAlpha: 0.9;
+    paddingLeft: 10;
+    paddingBottom: 2;
+    backgroundAlpha: 0.9;
+    paddingRight: 10;
+}
+
+mx|ApplicationControlBar {
+    borderStyle: "applicationControlBar";
+    paddingTop: 5;
+    docked: false;
+    dropShadowEnabled: true;
+    shadowDistance: 5;
+    cornerRadius: 5;
+    fillColors: #FFFFFF, #FFFFFF;
+    fillAlphas: 0, 0;
+    paddingLeft: 8;
+    paddingBottom: 4;
+    paddingRight: 8;
+}
+
+mx|Application {
+    backgroundSize: "100%";
+    paddingTop: 24;
+    backgroundColor: #869CA7;
+    backgroundImage: ClassReference("mx.skins.halo.ApplicationBackground");
+    horizontalAlign: "center";
+    backgroundGradientAlphas: 1, 1;
+    paddingLeft: 24;
+    paddingBottom: 24;
+    paddingRight: 24;
+}
+
+mx|ButtonBarButton {
+    horizontalGap: 1;
+    skin: ClassReference("mx.skins.halo.ButtonBarButtonSkin");
+}
+
+mx|ButtonBar {
+    textAlign: "center";
+    horizontalAlign: "center";
+    verticalAlign: "middle";
+    verticalGap: 0;
+    horizontalGap: 0;
+}
+
+mx|Button {
+    fontWeight: "bold";
+    paddingTop: 2;
+    cornerRadius: 4;
+    textAlign: "center";
+    verticalGap: 2;
+    horizontalGap: 2;
+    skin: ClassReference("mx.skins.halo.ButtonSkin");
+    paddingLeft: 10;
+    paddingBottom: 2;
+    paddingRight: 10;
+}
+
+mx|CheckBox {
+    icon: ClassReference("mx.skins.halo.CheckBoxIcon");
+	skin: ClassReference("mx.skins.ProgrammaticSkin");
+    iconColor: #2B333C;
+    paddingLeft: 0;
+    paddingRight: 0;
+    fontWeight: "normal";
+    textAlign: "left";
+    horizontalGap: 5;
+}
+
+mx|ComboBox {
+    fontWeight: "bold";
+    disabledIconColor: #919999;
+    dropdownStyleName: "comboDropdown";
+    leading: 0;
+    arrowButtonWidth: 22;
+    cornerRadius: 5;
+    skin: ClassReference("mx.skins.halo.ComboBoxArrowSkin");
+    paddingLeft: 5;
+    paddingRight: 5;
+}
+
+.comboDropdown {
+    shadowDirection: "center";
+    fontWeight: "normal";
+    dropShadowEnabled: true;
+    leading: 0;
+    backgroundColor: #FFFFFF;
+    shadowDistance: 1;
+    cornerRadius: 0;
+    borderThickness: 0;
+    paddingLeft: 5;
+    paddingRight: 5;
+}
+
+mx|Container {
+    borderStyle: "none";
+}
+
+mx|ControlBar {
+    disabledOverlayAlpha: 0;
+    borderStyle: "controlBar";
+    paddingTop: 10;
+    verticalAlign: "middle";
+    paddingLeft: 10;
+    paddingBottom: 10;
+    paddingRight: 10;
+}
+
+mx|CursorManager {
+    busyCursor: ClassReference("mx.skins.halo.BusyCursor");
+    busyCursorBackground: Embed(source="../../assets/vector/shared/BusyCursor.swf", symbol="mx.skins.cursor.BusyCursor");
+}
+
+mx|DataGridItemRenderer {
+    paddingLeft: 5;
+}
+
+mx|DataGrid {
+    sortArrowSkin: ClassReference("mx.skins.halo.DataGridSortArrow");
+    columnDropIndicatorSkin: ClassReference("mx.skins.halo.DataGridColumnDropIndicator");
+    columnResizeSkin: ClassReference("mx.skins.halo.DataGridColumnResizeSkin");
+    stretchCursor: Embed(source="../../assets/vector/shared/cursorStretch.swf", symbol="cursorStretch");
+    alternatingItemColors: #F7F7F7, #FFFFFF;
+    headerStyleName: "dataGridStyles";
+    headerSeparatorSkin: ClassReference("mx.skins.halo.DataGridHeaderSeparator");
+    headerBackgroundSkin: ClassReference("mx.skins.halo.DataGridHeaderBackgroundSkin");
+    headerColors: #FFFFFF, #E6E6E6;
+    headerDragProxyStyleName: "headerDragProxyStyle";
+    verticalGridLineColor: #CCCCCC;
+}
+
+.dataGridStyles {
+    fontWeight: "bold";
+}
+
+.dateFieldPopup {
+    dropShadowEnabled: true;
+    backgroundColor: #FFFFFF;
+    borderThickness: 0;
+}
+
+mx|DragManager {
+    copyCursor: Embed(source="../../assets/vector/shared/DragCopy.swf", symbol="mx.skins.cursor.DragCopy");
+    moveCursor: Embed(source="../../assets/vector/shared/DragMove.swf", symbol="mx.skins.cursor.DragMove");
+    rejectCursor: Embed(source="../../assets/vector/shared/DragReject.swf", symbol="mx.skins.cursor.DragReject");
+    linkCursor: Embed(source="../../assets/vector/shared/DragLink.swf", symbol="mx.skins.cursor.DragLink");
+    defaultDragImageSkin: ClassReference("mx.skins.halo.DefaultDragImage");
+}
+
+.errorTip {
+    fontWeight: "bold";
+    borderStyle: "errorTipRight";
+    paddingTop: 4;
+    borderColor: #CE2929;
+    color: #FFFFFF;
+    fontSize: 9;
+    shadowColor: #000000;
+    paddingLeft: 4;
+    paddingBottom: 4;
+    paddingRight: 4;
+}
+
+mx|FormItemLabel {
+    textAlign: "right";
+}
+
+mx|FormItem {
+    indicatorSkin: Embed(source="../../assets/vector/shared/Required.swf", symbol="mx.containers.FormItem.Required");
+}
+
+mx|Form {
+    paddingTop: 16;
+    verticalGap: 6;
+    paddingLeft: 16;
+    paddingBottom: 16;
+    paddingRight: 16;
+}
+
+global {
+    fillColor: #FFFFFF;
+    kerning: false;
+    iconColor: #111111;
+    textRollOverColor: #2B333C;
+    horizontalAlign: "left";
+    shadowCapColor: #D5DDDD;
+    backgroundAlpha: 1;
+    filled: true;
+    textDecoration: "none";
+    roundedBottomCorners: true;
+    fontThickness: 0;
+    focusBlendMode: "normal";
+    fillColors: #FFFFFF, #CCCCCC, #FFFFFF, #EEEEEE;
+    horizontalGap: 8;
+    borderCapColor: #919999;
+    buttonColor: #6F7777;
+    indentation: 17;
+    selectionDisabledColor: #DDDDDD;
+    closeDuration: 250;
+    embedFonts: false;
+    paddingTop: 0;
+    letterSpacing: 0;
+    focusAlpha: 0.4;
+    bevel: true;
+    fontSize: 10;
+    shadowColor: #EEEEEE;
+    borderAlpha: 1;
+    paddingLeft: 0;
+    fontWeight: "normal";
+    indicatorGap: 14;
+    focusSkin: ClassReference("mx.skins.halo.HaloFocusRect");
+    dropShadowEnabled: false;
+    leading: 2;
+    borderSkin: ClassReference("mx.skins.halo.HaloBorder");
+    fontSharpness: 0;
+    modalTransparencyDuration: 100;
+    borderThickness: 1;
+    backgroundSize: "auto";
+    borderStyle: "inset";
+    borderColor: #B7BABC;
+    fontAntiAliasType: "advanced";
+    errorColor: #FF0000;
+    shadowDistance: 2;
+    horizontalGridLineColor: #F7F7F7;
+    stroked: false;
+    modalTransparencyColor: #DDDDDD;
+    cornerRadius: 0;
+    verticalAlign: "top";
+    textIndent: 0;
+    fillAlphas: 0.6, 0.4, 0.75, 0.65;
+    verticalGridLineColor: #D5DDDD;
+    themeColor: #009DFF;
+    version: "3.0.0";
+    shadowDirection: "center";
+    modalTransparency: 0.5;
+    repeatInterval: 35;
+    openDuration: 250;
+    textAlign: "left";
+    fontFamily: "Verdana";
+    textSelectedColor: #2B333C;
+    paddingBottom: 0;
+    strokeWidth: 1;
+    fontGridFitType: "pixel";
+    horizontalGridLines: false;
+    useRollOver: true;
+    verticalGridLines: true;
+    repeatDelay: 500;
+    fontStyle: "normal";
+    dropShadowColor: #000000;
+    focusThickness: 2;
+    verticalGap: 6;
+    disabledColor: #AAB3B3;
+    paddingRight: 0;
+    focusRoundedCorners: "tl tr bl br";
+    borderSides: "left top right bottom";
+    disabledIconColor: #999999;
+    modalTransparencyBlur: 3;
+    color: #0B333C;
+    selectionDuration: 250;
+    highlightAlphas: 0.3, 0;
+}
+
+.gripperSkin {
+    upSkin: Embed(source="../../assets/framework/gripper_up.png");
+    overSkin: Embed(source="../../assets/framework/gripper_up.png");
+    downSkin: Embed(source="../../assets/framework/gripper_up.png");
+}
+
+.headerDateText {
+    fontWeight: "bold";
+    textAlign: "center";
+}
+
+.headerDragProxyStyle {
+    fontWeight: "bold";
+}
+
+mx|HorizontalList {
+    textAlign: "center";
+}
+
+mx|HRule {
+    strokeColor: #C4CCCC;
+    strokeWidth: 2;
+}
+
+.linkButtonStyle {
+    paddingTop: 2;
+    paddingLeft: 2;
+    paddingBottom: 2;
+    paddingRight: 2;
+}
+
+mx|ListBase {
+    borderStyle: "solid";
+    paddingTop: 2;
+    backgroundColor: #FFFFFF;
+    backgroundDisabledColor: #DDDDDD;
+    dropIndicatorSkin: ClassReference("mx.skins.halo.ListDropIndicator");
+    paddingLeft: 2;
+    paddingBottom: 2;
+    paddingRight: 0;
+}
+
+.macCloseButton {
+    upSkin: Embed(source="../../assets/framework/mac_close_up.png");
+    overSkin: Embed(source="../../assets/framework/mac_close_over.png");
+    downSkin: Embed(source="../../assets/framework/mac_close_down.png");
+}
+
+.macMaxButton {
+    upSkin: Embed(source="../../assets/framework/mac_max_up.png");
+    overSkin: Embed(source="../../assets/framework/mac_max_over.png");
+    downSkin: Embed(source="../../assets/framework/mac_max_down.png");
+    disabledSkin: Embed(source="../../assets/framework/mac_max_dis.png");
+}
+
+.macMinButton {
+    upSkin: Embed(source="../../assets/framework/mac_min_up.png");
+    overSkin: Embed(source="../../assets/framework/mac_min_over.png");
+    downSkin: Embed(source="../../assets/framework/mac_min_down.png");
+    alpha: 0.5;
+    disabledSkin: Embed(source="../../assets/framework/mac_min_dis.png");
+}
+
+.opaquePanel {
+    borderColor: #FFFFFF;
+    backgroundColor: #FFFFFF;
+    headerColors: #E7E7E7, #D9D9D9;
+    footerColors: #E7E7E7, #C7C7C7;
+    borderAlpha: 1;
+}
+
+mx|Panel {
+    statusStyleName: "windowStatus";
+    borderStyle: "default";
+    paddingTop: 0;
+    borderColor: #E2E2E2;
+    backgroundColor: #FFFFFF;
+    cornerRadius: 4;
+    titleBackgroundSkin: ClassReference("mx.skins.halo.TitleBackground");
+    borderAlpha: 0.4;
+    paddingLeft: 0;
+    borderThicknessTop: 2;
+    resizeEndEffect: "Dissolve";
+    paddingRight: 0;
+    titleStyleName: "windowStyles";
+    roundedBottomCorners: false;
+    borderThicknessRight: 10;
+    dropShadowEnabled: true;
+    resizeStartEffect: "Dissolve";
+    borderSkin: ClassReference("mx.skins.halo.PanelSkin");
+    borderThickness: 0;
+    borderThicknessLeft: 10;
+    paddingBottom: 0;
+}
+
+.plain {
+    paddingTop: 0;
+    backgroundColor: #FFFFFF;
+    backgroundImage: "";
+    horizontalAlign: "left";
+    paddingLeft: 0;
+    paddingBottom: 0;
+    paddingRight: 0;
+}
+
+.popUpMenu {
+    fontWeight: "normal";
+    textAlign: "left";
+}
+
+mx|ProgressBar {
+    fontWeight: "bold";
+    trackColors: #E7E7E7, #FFFFFF;
+    leading: 0;
+    barSkin: ClassReference("mx.skins.halo.ProgressBarSkin");
+    trackSkin: ClassReference("mx.skins.halo.ProgressTrackSkin");
+    indeterminateMoveInterval: 28;
+    maskSkin: ClassReference("mx.skins.halo.ProgressMaskSkin");
+    indeterminateSkin: ClassReference("mx.skins.halo.ProgressIndeterminateSkin");
+}
+
+mx|RadioButton {
+    icon: ClassReference("mx.skins.halo.RadioButtonIcon");
+    cornerRadius: 7;
+    iconColor: #2B333C;
+    paddingLeft: 0;
+    paddingRight: 0;
+    fontWeight: "normal";
+    textAlign: "left";
+    horizontalGap: 5;
+}
+
+.richTextEditorTextAreaStyle {
+}
+
+mx|ScrollBar {
+    thumbOffset: 0;
+    paddingTop: 0;
+    borderColor: #B7BABC;
+    trackColors: #94999B, #E7E7E7;
+    trackSkin: ClassReference("mx.skins.halo.ScrollTrackSkin");
+    downArrowSkin: ClassReference("mx.skins.halo.ScrollArrowSkin");
+    cornerRadius: 4;
+    upArrowSkin: ClassReference("mx.skins.halo.ScrollArrowSkin");
+    paddingLeft: 0;
+    paddingBottom: 0;
+    thumbSkin: ClassReference("mx.skins.halo.ScrollThumbSkin");
+    paddingRight: 0;
+}
+
+.statusTextStyle {
+    color: #585858;
+    alpha: 0.6;
+    fontSize: 10;
+}
+
+.swatchPanelTextField {
+    borderStyle: "inset";
+    borderColor: #D5DDDD;
+    highlightColor: #C4CCCC;
+    backgroundColor: #FFFFFF;
+    shadowCapColor: #D5DDDD;
+    shadowColor: #D5DDDD;
+    paddingLeft: 5;
+    buttonColor: #6F7777;
+    borderCapColor: #919999;
+    paddingRight: 5;
+}
+
+mx|SWFLoader {
+    borderStyle: "none";
+    brokenImageSkin: Embed(source="../../assets/vector/shared/__brokenImage.swf", symbol="__brokenImage");
+    brokenImageBorderSkin: ClassReference("mx.skins.halo.BrokenImageBorderSkin");
+}
+
+.textAreaHScrollBarStyle {
+}
+
+mx|TextArea {
+    borderStyle: "solid";
+    verticalScrollBarStyleName: "textAreaVScrollBarStyle";
+    backgroundColor: #FFFFFF;
+    horizontalScrollBarStyleName: "textAreaHScrollBarStyle";
+    backgroundDisabledColor: #DDDDDD;
+}
+
+.textAreaVScrollBarStyle {
+}
+
+mx|TextInput {
+    backgroundColor: #FFFFFF;
+    backgroundDisabledColor: #DDDDDD;
+}
+
+mx|TileList {
+    textAlign: "center";
+    verticalAlign: "middle";
+    paddingLeft: 2;
+    paddingRight: 2;
+}
+
+.titleTextStyle {
+    color: #585858;
+    alpha: 0.6;
+    fontSize: 9;
+}
+
+mx|TitleWindow {
+    closeButtonDisabledSkin: Embed(source="../../assets/vector/shared/CloseButtonDisabled.swf", symbol="CloseButtonDisabled");
+    paddingTop: 4;
+    dropShadowEnabled: true;
+    backgroundColor: #FFFFFF;
+    closeButtonOverSkin: Embed(source="../../assets/vector/shared/CloseButtonOver.swf", symbol="CloseButtonOver");
+    closeButtonUpSkin: Embed(source="../../assets/vector/shared/CloseButtonUp.swf", symbol="CloseButtonUp");
+    closeButtonDownSkin: Embed(source="../../assets/vector/shared/CloseButtonDown.swf", symbol="CloseButtonDown");
+    cornerRadius: 8;
+    paddingLeft: 4;
+    paddingBottom: 4;
+    paddingRight: 4;
+}
+
+.todayStyle {
+    color: #FFFFFF;
+    textAlign: "center";
+}
+
+mx|ToolTip {
+    borderStyle: "toolTip";
+    paddingTop: 2;
+    borderColor: #919999;
+    backgroundColor: #FFFFCC;
+    borderSkin: ClassReference("mx.skins.halo.ToolTipBorder");
+    cornerRadius: 2;
+    fontSize: 9;
+    shadowColor: #000000;
+    paddingLeft: 4;
+    paddingBottom: 2;
+    backgroundAlpha: 0.95;
+    paddingRight: 4;
+}
+
+mx|VideoDisplay {
+    borderStyle: "none";
+    backgroundColor: #000000;
+}
+
+.weekDayStyle {
+    fontWeight: "bold";
+    textAlign: "center";
+}
+
+.winCloseButton {
+    upSkin: Embed(source="../../assets/framework/win_close_up.png");
+    overSkin: Embed(source="../../assets/framework/win_close_over.png");
+    downSkin: Embed(source="../../assets/framework/win_close_down.png");
+}
+
+.windowStatus {
+    color: #666666;
+}
+
+.windowStyles {
+    fontWeight: "bold";
+}
+
+.winMaxButton {
+    upSkin: Embed(source="../../assets/framework/win_max_up.png");
+    downSkin: Embed(source="../../assets/framework/win_max_down.png");
+    overSkin: Embed(source="../../assets/framework/win_max_over.png");
+    disabledSkin: Embed(source="../../assets/framework/win_max_dis.png");
+}
+
+.winMinButton {
+    upSkin: Embed(source="../../assets/framework/win_min_up.png");
+    downSkin: Embed(source="../../assets/framework/win_min_down.png");
+    overSkin: Embed(source="../../assets/framework/win_min_over.png");
+    disabledSkin: Embed(source="../../assets/framework/win_min_dis.png");
+}
+
+.winRestoreButton {
+    upSkin: Embed(source="../../assets/framework/win_restore_up.png");
+    downSkin: Embed(source="../../assets/framework/win_restore_down.png");
+    overSkin: Embed(source="../../assets/framework/win_restore_over.png");
+}
+
+.probeMarker123 {
+    color: #ABCDEF;
+}
+.friendBackgroundHighlight {
+    backgroundImage: Embed(source="../../assets/embedded/friendslist/friendslist_neighbours01_highlight.png");
+}
+
+.ornamentalBar {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/basicpanel/basicpanel_ornamental_bar_184.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_basicpanel_ornamental_bar_png_341049472");
+}
+
+.shopItemDetails {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/shop/shop_buy_item_bg_details_445.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_shop_buy_item_bg_details_png_1527904047");
+}
+
+.supportTempKickZone {
+    backgroundSize: "100%";
+    paddingTop: 8;
+    backgroundImage: Embed(source="../../assets/vector/embedded/infobar/infobar_infobar_mid_91.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_infobar_infobar_mid_png_1036396505");
+    paddingLeft: 15;
+    paddingRight: 15;
+}
+
+.mailContentBorder {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/mailwindow/mailwindow_mail_textbox_01_377.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_mailwindow_mail_textbox_01_png_943375727");
+}
+
+.detailsHeaderGreen {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/combatpreview/combatpreview_header_green_dark_208.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_combatpreview_header_green_dark_png_1169887620");
+}
+
+.tabBuildingMenu {
+    overSkin: Embed(source="../../assets/vector/embedded/buildingmenu/buildingmenu_building_tab_highlight_344.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buildingmenu_building_tab_highlight_png_830105193");
+    downSkin: Embed(source="../../assets/vector/embedded/buildingmenu/buildingmenu_building_tab_430.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buildingmenu_building_tab_png_223324153");
+    focusAlpha: 0;
+    selectedUpSkin: Embed(source="../../assets/vector/embedded/buildingmenu/buildingmenu_building_tab_selected_220.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buildingmenu_building_tab_selected_png_46239321");
+    textRollOverColor: #FFFFFF;
+    fontSize: 11;
+    focusThickness: 0;
+    paddingLeft: 0;
+    paddingRight: 0;
+    upSkin: Embed(source="../../assets/vector/embedded/buildingmenu/buildingmenu_building_tab_430.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buildingmenu_building_tab_png_223324153");
+    fontWeight: "normal";
+    selectedDownSkin: Embed(source="../../assets/vector/embedded/buildingmenu/buildingmenu_building_tab_selected_220.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buildingmenu_building_tab_selected_png_46239321");
+    color: #FFFFFF;
+    textSelectedColor: #FFFFFF;
+    selectedOverSkin: Embed(source="../../assets/vector/embedded/buildingmenu/buildingmenu_building_tab_selected_220.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buildingmenu_building_tab_selected_png_46239321");
+}
+
+.friendsListControllsLeft {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/friendslist/friendslist_friendslist1_50.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_friendslist_friendslist1_png_1066205025");
+}
+
+.tabSelected {
+    fontWeight: "bold";
+    focusAlpha: 0;
+    focusThickness: 0;
+    fontSize: 11;
+    paddingLeft: 0;
+    paddingRight: 0;
+}
+
+.chatTabNewMessage {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/chat/chat_bg_chattab_highlight_71.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_chat_bg_chattab_highlight_png_327754193");
+}
+
+.pvpSummaryContent {
+    backgroundSize: "100%";
+    backgroundColor: #453825;
+    backgroundAlpha: 1;
+}
+
+.economyProductionBgPrsdGreen {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_production_button1_prsd_380.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_production_button1_prsd_png_713761747");
+}
+
+.infoBarRight {
+    backgroundSize: "100%";
+    paddingTop: 8;
+    backgroundImage: Embed(source="../../assets/vector/embedded/infobar/infobar_infobar_right_44.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_infobar_infobar_right_png_1819258371");
+    paddingLeft: 15;
+    paddingRight: 75;
+}
+
+.generalStatusPanelBottom {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/generalstatuspanel/generalstatuspanel_bottom_panel_80.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_generalstatuspanel_bottom_panel_png_1204011314");
+}
+
+.friendsListBackground {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/embedded/friendslist/friendslist_friendslist4.png");
+}
+
+.economyListBg {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_economy_list_bg_442.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_economy_list_bg_png_1921330967");
+}
+
+.buildingListToolTip {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/buildingmenu/buildingmenu_tooltip_background_288.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buildingmenu_tooltip_background_png_1506329312");
+}
+
+.buildingListItem {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/buildingmenu/buildingmenu_bg_item_285.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buildingmenu_bg_item_png_1266629999");
+    backgroundAlpha: 1;
+}
+
+.skillOverlay {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/skillwindows/skillwindows_skill_prod_overlay_315.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_skillwindows_skill_prod_overlay_png_968431374");
+}
+
+.cameraControlPanel {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/camera/camera_camera_bg_406.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_camera_camera_bg_png_373364903");
+}
+
+.pvpProgressBarStandard {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/pvpprogressionwindow/pvpprogressionwindow_lvl_bar_std_300.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_pvpprogressionwindow_lvl_bar_std_png_694495095");
+}
+
+.actionBarBackground {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/actionbar/actionbar_actionbar1_412.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_actionbar_actionbar1_png_1806583558");
+}
+
+.neutral {
+    upSkin: Embed(source="../../assets/vector/embedded/buttons/buttons_neutral_121.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buttons_neutral_png_472449");
+    selectedDownSkin: Embed(source="../../assets/vector/embedded/buttons/buttons_neutral_highlight_74.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buttons_neutral_highlight_png_126810309");
+    downSkin: Embed(source="../../assets/vector/embedded/buttons/buttons_neutral_121.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buttons_neutral_png_472449");
+    overSkin: Embed(source="../../assets/vector/embedded/buttons/buttons_neutral_highlight_74.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buttons_neutral_highlight_png_126810309");
+    color: #000000;
+    selectedUpSkin: Embed(source="../../assets/vector/embedded/buttons/buttons_neutral_highlight_74.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buttons_neutral_highlight_png_126810309");
+    disabledSkin: Embed(source="../../assets/vector/embedded/buttons/buttons_standard_disabled_103.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buttons_standard_disabled_png_1680532543");
+    selectedOverSkin: Embed(source="../../assets/vector/embedded/buttons/buttons_neutral_highlight_74.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buttons_neutral_highlight_png_126810309");
+}
+
+.specialPanel {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/basicpanel/basicpanel_special_26.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_basicpanel_special_png_1430711127");
+}
+
+.populationToolTip {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/tooltips/tooltips_background_normal_163.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_tooltips_background_normal_png_136861892");
+}
+
+.friendsListControllsRight {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/friendslist/friendslist_friendslist3_265.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_friendslist_friendslist3_png_1048390957");
+}
+
+.shopFooter {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/shop/shop_buy_banner_bg_89.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_shop_buy_banner_bg_png_1326999013");
+}
+
+ScrollBar {
+    downArrowSkin: Embed(source="../../assets/gAssetManager/ScrollbarArrowDown.png");
+    trackSkin: Embed(source="../../assets/vector/embedded/scrollbars/scrollbars_bar_362.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_scrollbars_bar_png_650016021");
+    upArrowSkin: Embed(source="../../assets/embedded/scrollbars/scrollbars_arrow_up.png");
+    thumbSkin: Embed(source="../../assets/vector/embedded/scrollbars/scrollbars_slider_94.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_scrollbars_slider_png_2010332553");
+}
+
+.contentGeneratorResults {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/contentgenerator/contentgenerator_cg_results_bg_11.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_contentgenerator_cg_results_bg_png_1717140810");
+}
+
+.collectibleOverlay {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/collections/collections_production_bg_29.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_collections_production_bg_png_232659066");
+}
+
+.contentGeneratorTopRightGearHeader {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/embedded/contentgenerator/contentgenerator_cg_ornamental_right.png");
+}
+
+.detailsHeaderOrange {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/combatpreview/combatpreview_header_orange_83.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_combatpreview_header_orange_png_58182036");
+}
+
+.tierBarLeft {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/pvpprogressionwindow/pvpprogressionwindow_tier_bar_left_424.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_pvpprogressionwindow_tier_bar_left_png_195794176");
+}
+
+.vr {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/quest/quest_vertical_line_427.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_quest_vertical_line_png_522192692");
+}
+
+.detailsSubContentBoxHighlightSelected {
+    borderColor: #CDA069;
+    backgroundColor: #000000;
+    backgroundAlpha: 0.15;
+}
+
+.contentGeneratorCategoryButton {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/contentgenerator/contentgenerator_cg_menu_button_standard_65.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_contentgenerator_cg_menu_button_standard_png_806007806");
+}
+
+.economyTitleBg {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_economy_title_bg_23.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_economy_title_bg_png_1690831587");
+}
+
+.chatTab {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/chat/chat_bg_chattab_350.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_chat_bg_chattab_png_1743060807");
+    paddingLeft: 0;
+    paddingRight: 0;
+}
+
+.contentGeneratorBackground {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/contentgenerator/contentgenerator_cg_bg_400.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_contentgenerator_cg_bg_png_480569319");
+}
+
+.textBoxBackground {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/contentgenerator/contentgenerator_textbox_background_312.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_contentgenerator_textbox_background_png_741972658");
+}
+
+.infoBarMiddle {
+    backgroundSize: "100%";
+    paddingTop: 8;
+    backgroundImage: Embed(source="../../assets/vector/embedded/infobar/infobar_infobar_mid_38.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_infobar_infobar_mid_png_1036396525");
+    paddingLeft: 15;
+    paddingRight: 15;
+}
+
+.toolTip {
+    borderStyle: "solid";
+    borderColor: #979689;
+    backgroundColor: #2B271A;
+    cornerRadius: 5;
+    borderThickness: 1;
+    backgroundAlpha: 0.9;
+}
+
+.resourceListBGNormal {
+    backgroundImage: Embed(source="../../assets/embedded/economy/economy_production_button_bg_std.png");
+}
+
+.timeRemainingBar {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/eventwindow/eventwindow_widget_loading_bar_383.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_eventwindow_widget_loading_bar_png_68599114");
+}
+
+.economyItemBgGrey {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_item_background_grey_232.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_item_background_grey_png_900982953");
+}
+
+.detailsSubContentBoxHighlight {
+    borderColor: #75664D;
+    backgroundColor: #000000;
+    backgroundAlpha: 0.15;
+}
+
+Alert {
+    modalTransparency: 0.7;
+    modalTransparencyBlur: 0;
+    modalTransparencyColor: #000000;
+}
+
+.colonySlotActive {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/expeditions/expeditions_frame_active_386.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_expeditions_frame_active_png_259080529");
+}
+
+.pvpTabBackground {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/pvpprogressionwindow/pvpprogressionwindow_tab_bg_238.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_pvpprogressionwindow_tab_bg_png_1373460285");
+}
+
+.abort {
+    upSkin: Embed(source="../../assets/gAssetManager/ButtonIconAbort.png");
+    downSkin: Embed(source="../../assets/gAssetManager/ButtonIconAbort.png");
+    overSkin: Embed(source="../../assets/embedded/buttons/buttons_icon_abort_highlight.png");
+    disabledSkin: Embed(source="../../assets/gAssetManager/ButtonIconAbort.png");
+}
+
+.eventInfoContent {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/avatarSelection/avatarSelection_bg_02_214.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_avatarSelection_bg_02_png_504381759");
+}
+
+.questPanelFooter {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/quest/quest_quest_bg_bottom_421.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_quest_quest_bg_bottom_png_983369885");
+}
+
+.pvpSummaryTop {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/gAssetManager/PvPReportInfoFrameTop.png");
+}
+
+.newsPanelFooter {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/news/news_news_bg_bottom_356.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_news_news_bg_bottom_png_1965555469");
+}
+
+ActionBarRight {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/actionbar/actionbar_actionbar4_353.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_actionbar_actionbar4_png_1780170099");
+    horizontalGap: 15;
+    paddingBottom: 0;
+    paddingLeft: 5;
+    paddingRight: 50;
+}
+
+.tierBarRight {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/pvpprogressionwindow/pvpprogressionwindow_tier_bar_right_306.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_pvpprogressionwindow_tier_bar_right_png_987098922");
+}
+
+.close {
+    upSkin: Embed(source="../../assets/gAssetManager/Close.png");
+    downSkin: Embed(source="../../assets/gAssetManager/CloseHighlight.png");
+    overSkin: Embed(source="../../assets/gAssetManager/CloseHighlight.png");
+    disabledSkin: Embed(source="../../assets/embedded/buttons/buttons_x_inactive.png");
+}
+
+.labelLeft {
+    textAlign: "left";
+}
+
+.standardInput {
+    fontWeight: "normal";
+    borderStyle: "solid";
+    borderColor: #342E23;
+    backgroundColor: #584E3C;
+    color: #FFFFFF;
+    backgroundDisabledColor: #534C40;
+    focusAlpha: 0;
+    borderThickness: 1;
+    contentBackgroundColor: #584E3C;
+    disabledColor: #FFFFFF;
+}
+
+.yieldPanelResources {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/starmenu/starmenu_frame08_436.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_starmenu_frame08_png_49963030");
+}
+
+.economyProductionBgStdGreen {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_production_button1_std_100.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_production_button1_std_png_1195923587");
+}
+
+.contentGeneratorFooter {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/contentgenerator/contentgenerator_cg_ornamental_bottom_151.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_contentgenerator_cg_ornamental_bottom_png_371125865");
+}
+
+.detailsSubContentBox {
+    backgroundColor: #000000;
+    backgroundAlpha: 0.15;
+}
+
+.timeRemainingBarGreen {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/eventwindow/eventwindow_widget_loading_bar_green_35.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_eventwindow_widget_loading_bar_green_png_1949241666");
+}
+
+.contentGeneratorCategoryButtonMouseOver {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/contentgenerator/contentgenerator_cg_menu_button_mouseover_323.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_contentgenerator_cg_menu_button_mouseover_png_845870010");
+}
+
+ResourceAlert {
+    modalTransparency: 0.7;
+    modalTransparencyBlur: 0;
+    modalTransparencyColor: #000000;
+}
+
+.chatPrivateList {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/chat/chat_button_standard_217.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_chat_button_standard_png_1096028202");
+    paddingLeft: 0;
+    paddingRight: 0;
+}
+
+.tierBarProgressLeft {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/pvpprogressionwindow/pvpprogressionwindow_tier_progressbar_left_279.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_pvpprogressionwindow_tier_progressbar_left_png_478691141");
+}
+
+.volumeBar {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/options/options_panel_volume_std_133.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_options_panel_volume_std_png_1657090397");
+}
+
+.basicPanel {
+    backgroundSize: "100%";
+    fontWeight: "bold";
+    color: #FFFFFF;
+    backgroundImage: Embed(source="../../assets/vector/embedded/basicpanel/basicpanel_standard_148.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_basicpanel_standard_png_220459354");
+}
+
+.infoBarLeft {
+    backgroundSize: "100%";
+    paddingTop: 8;
+    backgroundImage: Embed(source="../../assets/vector/embedded/infobar/infobar_infobar_left_256.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_infobar_infobar_left_png_1578306045");
+    paddingLeft: 75;
+    paddingRight: 15;
+}
+
+.customAlert {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/alert/alert_alert_background_241.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_alert_alert_background_png_212345809");
+}
+
+.generalStatusPanelTop {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/embedded/generalstatuspanel/generalstatuspanel_top_panel.png");
+}
+
+.friendsListArrowFrame {
+    backgroundImage: Embed(source="../../assets/gAssetManager/FrameArrow.png");
+    horizontalAlign: "center";
+    verticalAlign: "middle";
+    verticalGap: 0;
+}
+
+.itemBackground {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/trade/trade_item_background_274.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_trade_item_background_png_491713407");
+}
+
+.comboDropdown {
+    shadowDirection: "right";
+    fontWeight: "normal";
+    borderColor: #836641;
+    dropShadowEnabled: true;
+    backgroundColor: #836641;
+    rollOverColor: #836641;
+    shadowDistance: 3;
+    borderThickness: 0;
+    cornerRadius: 2;
+    textRollOverColor: #FFFFFF;
+    selectionColor: #836641;
+    textSelectedColor: #FFFFFF;
+}
+
+.subpanel3 {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/basicpanel/basicpanel_subpanel_3_53.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_basicpanel_subpanel_3_png_829163560");
+}
+
+.populationTipLabel {
+    fontWeight: "bold";
+    color: #FFFFFF;
+    textAlign: "left";
+}
+
+.subpanel2 {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/basicpanel/basicpanel_subpanel_2_371.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_basicpanel_subpanel_2_png_825316328");
+}
+
+.subpanel1 {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/basicpanel/basicpanel_subpanel_1_169.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_basicpanel_subpanel_1_png_842868191");
+}
+
+.buildQueue {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/buildqueue/buildqueue_background_181.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buildqueue_background_png_1351004097");
+}
+
+.contentGeneratorTitleBackground {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/contentgenerator/contentgenerator_title_background_294.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_contentgenerator_title_background_png_968627007");
+}
+
+.detailsContentBoxDark {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/colonywindow/colonywindow_colony_yield_panel_left_41.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_colonywindow_colony_yield_panel_left_png_216000915");
+}
+
+.noBackground {
+    borderStyle: "none";
+    contentBackgroundAlpha: 0;
+    focusAlpha: 0;
+    borderThickness: 0;
+    borderAlpha: 0;
+    backgroundAlpha: 0;
+}
+
+.pvpCampBottom {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/embedded/combat3pvpreport/combat3pvpreport_frame_bottom_selected_camp.png");
+}
+
+.headlineWhite {
+    color: #FFFFFF;
+}
+
+.edit {
+    upSkin: Embed(source="../../assets/embedded/buttons/buttons_icon_pencil_standard.png");
+    downSkin: Embed(source="../../assets/embedded/buttons/buttons_icon_pencil_standard.png");
+    overSkin: Embed(source="../../assets/embedded/guild/guild_icon_pencil_mouseover.png");
+    disabledSkin: Embed(source="../../assets/embedded/buttons/buttons_icon_pencil_standard.png");
+}
+
+.mailDataGridHeader {
+    fontWeight: "bold";
+    useRollOver: false;
+    paddingLeft: 2;
+    paddingRight: 2;
+}
+
+.skillTimeline {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/skillwindows/skillwindows_timeline_bg_329.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_skillwindows_timeline_bg_png_1920876520");
+}
+
+.filterFriendsList {
+    upSkin: Embed(source="../../assets/vector/embedded/friendslist/friendslist_neighbours_tab_standard_439.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_friendslist_neighbours_tab_standard_png_602280490");
+    selectedDownSkin: Embed(source="../../assets/vector/embedded/friendslist/friendslist_neighbours_tab_push_291.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_friendslist_neighbours_tab_push_png_1039703364");
+    downSkin: Embed(source="../../assets/vector/embedded/friendslist/friendslist_neighbours_tab_push_291.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_friendslist_neighbours_tab_push_png_1039703364");
+    overSkin: Embed(source="../../assets/vector/embedded/friendslist/friendslist_neighbours_tab_mouseover_253.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_friendslist_neighbours_tab_mouseover_png_1413736842");
+    selectedUpSkin: Embed(source="../../assets/vector/embedded/friendslist/friendslist_neighbours_tab_push_291.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_friendslist_neighbours_tab_push_png_1039703364");
+    disabledSkin: Embed(source="../../assets/vector/embedded/friendslist/friendslist_neighbours_tab_standard_439.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_friendslist_neighbours_tab_standard_png_602280490");
+    paddingLeft: 1;
+    selectedOverSkin: Embed(source="../../assets/vector/embedded/friendslist/friendslist_neighbours_tab_push_291.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_friendslist_neighbours_tab_push_png_1039703364");
+    paddingRight: 1;
+}
+
+.economyConsumptionBgPrsd {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_consumption_button_bg_prsd_106.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_consumption_button_bg_prsd_png_530012527");
+}
+
+.specialClaim {
+    fontWeight: "bold";
+    color: #FFEF00;
+    fontSize: 15;
+}
+
+.lightBackground {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/reconnectwindow/reconnectwindow_light_bg_154.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_reconnectwindow_light_bg_png_1569063610");
+}
+
+.economyStatusGreen {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_economy_overview_button_green_130.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_economy_overview_button_green_png_948063471");
+}
+
+.detailsHeaderRed {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/combatpreview/combatpreview_header_red_244.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_combatpreview_header_red_png_219805170");
+}
+
+.economyProductionTotal {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_production_button2_std_124.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_production_button2_std_png_1692104323");
+}
+
+.economyProductionBgStd {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_production_button_bg_std_5.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_production_button_bg_std_png_395508375");
+}
+
+CustomAlert {
+    modalTransparency: 0.7;
+    modalTransparencyBlur: 0;
+    modalTransparencyColor: #000000;
+}
+
+.accept {
+    upSkin: Embed(source="../../assets/gAssetManager/ButtonIconOK.png");
+    downSkin: Embed(source="../../assets/embedded/buttons/buttons_checkmark_push.png");
+    overSkin: Embed(source="../../assets/embedded/guild/guild_checkmark_mouseover.png");
+    disabledSkin: Embed(source="../../assets/embedded/guild/guild_checkmark_disable.png");
+}
+
+.zoneBuffItemBackground {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/zonebuff/zonebuff_zonebuff_background_97.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_zonebuff_zonebuff_background_png_325450659");
+}
+
+.chatMaximizeButton {
+    upSkin: Embed(source="../../assets/embedded/chat/chat_maximize_standard.png");
+    downSkin: Embed(source="../../assets/embedded/chat/chat_maximize_standard.png");
+    overSkin: Embed(source="../../assets/embedded/chat/chat_maximize_highlighted.png");
+}
+
+.tab {
+    overSkin: Embed(source="../../assets/vector/embedded/chat/chat_bg_chattab_350.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_chat_bg_chattab_png_1743060807");
+    downSkin: Embed(source="../../assets/vector/embedded/chat/chat_bg_chattab_350.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_chat_bg_chattab_png_1743060807");
+    focusAlpha: 0;
+    selectedUpSkin: Embed(source="../../assets/vector/embedded/chat/chat_bg_chattab_selected_202.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_chat_bg_chattab_selected_png_1109493271");
+    textRollOverColor: #FFFFFF;
+    fontSize: 11;
+    focusThickness: 0;
+    paddingLeft: 0;
+    paddingRight: 0;
+    upSkin: Embed(source="../../assets/vector/embedded/chat/chat_bg_chattab_350.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_chat_bg_chattab_png_1743060807");
+    fontWeight: "normal";
+    selectedDownSkin: Embed(source="../../assets/vector/embedded/chat/chat_bg_chattab_selected_202.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_chat_bg_chattab_selected_png_1109493271");
+    color: #FFFFFF;
+    textSelectedColor: #FFFFFF;
+    selectedOverSkin: Embed(source="../../assets/vector/embedded/chat/chat_bg_chattab_selected_202.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_chat_bg_chattab_selected_png_1109493271");
+}
+
+.pvpProgressBarBackground {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/pvpprogressionwindow/pvpprogressionwindow_lvl_bar_bg_17.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_pvpprogressionwindow_lvl_bar_bg_png_155649201");
+}
+
+.colonySlotUnactive {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/expeditions/expeditions_frame_unactive_268.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_expeditions_frame_unactive_png_1882168189");
+}
+
+.paymentAlert {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/alert/alert_alert_payment_background_229.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_alert_alert_payment_background_png_1371262271");
+}
+
+.tierBarProgress {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/pvpprogressionwindow/pvpprogressionwindow_tier_progressbar_center_374.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_pvpprogressionwindow_tier_progressbar_center_png_908300897");
+}
+
+.optionsMenu {
+    upSkin: Embed(source="../../assets/vector/embedded/options/options_textbutton_standard_235.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_options_textbutton_standard_png_1753930321");
+    downSkin: Embed(source="../../assets/vector/embedded/options/options_textbutton_mouseover_250.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_options_textbutton_mouseover_png_1582626929");
+    overSkin: Embed(source="../../assets/vector/embedded/options/options_textbutton_mouseover_250.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_options_textbutton_mouseover_png_1582626929");
+    color: #E6C486;
+    textRollOverColor: #E6C486;
+    disabledSkin: Embed(source="../../assets/vector/embedded/options/options_textbutton_inactive_205.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_options_textbutton_inactive_png_2067790033");
+    paddingLeft: 3;
+    paddingBottom: 5;
+    textSelectedColor: #E6C486;
+    paddingRight: 5;
+}
+
+.listBackgroundShadow {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/buildinginfo/buildinginfo_tilelist_bg_127.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buildinginfo_tilelist_bg_png_1597845375");
+}
+
+.chatInput {
+    backgroundSize: "100%";
+    borderStyle: "solid";
+    paddingTop: 0;
+    backgroundColor: "none";
+    color: #FFFFFF;
+    borderThickness: 0;
+    backgroundImage: Embed(source="../../assets/vector/embedded/chat/chat_textbox_166.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_chat_textbox_png_1911574705");
+    focusAlpha: 0;
+    fontSize: 12;
+    paddingLeft: 3;
+    paddingBottom: 0;
+    paddingRight: 3;
+}
+
+.eventInfoTopBackground {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/avatarSelection/avatarSelection_bg_01_199.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_avatarSelection_bg_01_png_504957817");
+}
+
+.backgroundHighlight {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/trade/trade_item_background_highlight_247.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_trade_item_background_highlight_png_950770889");
+}
+
+.detailsContentBox {
+    backgroundColor: #75664D;
+    backgroundAlpha: 0.75;
+}
+
+.economyConsumptionBgPrsdRed {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_consumption_button1_prsd_157.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_consumption_button1_prsd_png_1443244167");
+}
+
+.questTriggerDescription {
+    textAlign: "left";
+}
+
+.tierBar {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/pvpprogressionwindow/pvpprogressionwindow_tier_bar_center_193.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_pvpprogressionwindow_tier_bar_center_png_404914044");
+}
+
+.detailsSpecialContentBox {
+    backgroundColor: #231D12;
+    backgroundAlpha: 0.75;
+}
+
+.economyConsumptionBgStdGrey {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_consumption_button2_std_388.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_consumption_button2_std_png_154960111");
+}
+
+.contentGeneratorTopLeftGearHeader {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/embedded/contentgenerator/contentgenerator_cg_ornamental_left.png");
+}
+
+.skillColorBG {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/skillwindows/skillwindows_skill_color_bg_139.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_skillwindows_skill_color_bg_png_125179285");
+}
+
+.addFriendBackground {
+    backgroundImage: Embed(source="../../assets/gAssetManager/AddFriendBackground.png");
+}
+
+.tradeDetailsBoxLeft {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/trade/trade_avatar_box_448.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_trade_avatar_box_png_960709383");
+}
+
+.resourceListBGOver {
+    backgroundImage: Embed(source="../../assets/embedded/economy/economy_production_button_bg_prsd.png");
+}
+
+Panel {
+    paddingTop: 0;
+    paddingLeft: 0;
+    paddingBottom: 0;
+    paddingRight: 0;
+}
+
+.ComboBox {
+    upSkin: Embed(source="../../assets/vector/embedded/buttons/buttons_standard_403.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buttons_standard_png_1836082007");
+    overSkin: Embed(source="../../assets/vector/embedded/buttons/buttons_neutral_121.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buttons_neutral_png_472449");
+    downSkin: Embed(source="../../assets/vector/embedded/buttons/buttons_neutral_121.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buttons_neutral_png_472449");
+    color: #FFFFFF;
+    rollOverColor: #FFFFFF;
+    textSelectedColor: #FFFFFF;
+}
+
+.buildingsList {
+    borderStyle: "none";
+    useRollOver: false;
+    selectionColor: "none";
+    backgroundAlpha: 0;
+    paddingLeft: 5;
+}
+
+.timeRemainingBackground {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/eventwindow/eventwindow_widget_loading_bar_empty_347.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_eventwindow_widget_loading_bar_empty_png_339876223");
+}
+
+.detailsHeaderLightGreen {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/combatpreview/combatpreview_header_green_light_62.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_combatpreview_header_green_light_png_51834380");
+}
+
+.delete {
+    upSkin: Embed(source="../../assets/embedded/mailwindow/mailwindow_x_button_standard.png");
+    downSkin: Embed(source="../../assets/embedded/mailwindow/mailwindow_x_button_push.png");
+    overSkin: Embed(source="../../assets/embedded/mailwindow/mailwindow_x_button_mouseover.png");
+    disabledSkin: Embed(source="../../assets/embedded/mailwindow/mailwindow_x_button_disable.png");
+}
+
+.economyConsumptionBgStdRed {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_consumption_button1_std_109.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_consumption_button1_std_png_903363857");
+}
+
+.economyItemBgGreen {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_item_background_green_320.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_item_background_green_png_1413739911");
+}
+
+.detailsHeaderSolid {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/basicpanel/basicpanel_header_solid_341.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_basicpanel_header_solid_png_1900357697");
+}
+
+.cultureBuildingbonusValueNeutral {
+    color: #FFFFFF;
+}
+
+.questOrnamental {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/quest/quest_quest_ornamental1_142.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_quest_quest_ornamental1_png_19538313");
+}
+
+.economyStatusYellow {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_economy_overview_button_yellow_59.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_economy_overview_button_yellow_png_228629639");
+}
+
+.chatPrivateListNewMessage {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/chat/chat_button_selected_178.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_chat_button_selected_png_325455126");
+}
+
+.eventInfoMiddleBar {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/avatarSelection/avatarSelection_frame_338.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_avatarSelection_frame_png_1910961118");
+}
+
+.chatScaleButton {
+    upSkin: Embed(source="../../assets/embedded/chat/chat_scale_standard.png");
+    downSkin: Embed(source="../../assets/embedded/chat/chat_scale_standard.png");
+    overSkin: Embed(source="../../assets/embedded/chat/chat_scale_highlighted.png");
+}
+
+.economyStatusRed {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_economy_overview_button_red_20.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_economy_overview_button_red_png_838980773");
+}
+
+.closeSmall {
+    upSkin: Embed(source="../../assets/embedded/buttons/buttons_x_small_standard.png");
+    downSkin: Embed(source="../../assets/embedded/buttons/buttons_x_small_selected.png");
+    overSkin: Embed(source="../../assets/embedded/buttons/buttons_x_small_selected.png");
+    disabledSkin: Embed(source="../../assets/embedded/buttons/buttons_x_small_standard.png");
+}
+
+.tierBarLeftDisabled {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/pvpprogressionwindow/pvpprogressionwindow_tier_bar_left_disa_77.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_pvpprogressionwindow_tier_bar_left_disa_png_1196853800");
+}
+
+.friendBackground {
+    backgroundImage: Embed(source="../../assets/embedded/friendslist/friendslist_neighbours01.png");
+}
+
+.pvpProgressBarHighlight {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/pvpprogressionwindow/pvpprogressionwindow_lvl_bar_mo_136.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_pvpprogressionwindow_lvl_bar_mo_png_1564675511");
+}
+
+.tierBarDisabled {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/pvpprogressionwindow/pvpprogressionwindow_tier_bar_center_disa_32.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_pvpprogressionwindow_tier_bar_center_disa_png_905098820");
+}
+
+.contentGeneratorGearHeader {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/contentgenerator/contentgenerator_cg_ornamental_top_418.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_contentgenerator_cg_ornamental_top_png_1515995759");
+}
+
+.skillTreeBG {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/skillwindows/skillwindows_skilltree_bg_172.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_skillwindows_skilltree_bg_png_71921428");
+}
+
+.pvpProgressBarStandardOverlay {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/pvpprogressionwindow/pvpprogressionwindow_lvl_bar_std_overlay_282.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_pvpprogressionwindow_lvl_bar_std_overlay_png_1576116119");
+}
+
+.economyConsumptionBgStd {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_consumption_button_bg_std_368.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_consumption_button_bg_std_png_1932826435");
+}
+
+.economyStatusGrey {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_economy_overview_button_grey_271.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_economy_overview_button_grey_png_1822680849");
+}
+
+.optionsPanel {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/options/options_panel_bg_panel_14.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_options_panel_bg_panel_png_72946004");
+}
+
+.questPanelHeader {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/quest/quest_quest_bg_top_326.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_quest_quest_bg_top_png_1634474702");
+}
+
+.addFriendBackgroundHighlight {
+    backgroundImage: Embed(source="../../assets/embedded/friendslist/friendslist_neighbours00_highlight.png");
+}
+
+.tierBarRightDisabled {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/pvpprogressionwindow/pvpprogressionwindow_tier_bar_right_disa_115.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_pvpprogressionwindow_tier_bar_right_disa_png_1935588610");
+}
+
+.backgroundNormal {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/trade/trade_item_background_276.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_trade_item_background_png_491713369");
+}
+
+.pvpRankTop {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/embedded/pvpprogressionwindow/pvpprogressionwindow_progression_header.png");
+}
+
+.contentGeneratorController {
+    backgroundImage: Embed(source="../../assets/embedded/contentgenerator/contentgenerator_plate.png");
+}
+
+.chatMinimizeButton {
+    upSkin: Embed(source="../../assets/embedded/chat/chat_minimize_standard.png");
+    downSkin: Embed(source="../../assets/embedded/chat/chat_minimize_standard.png");
+    overSkin: Embed(source="../../assets/embedded/chat/chat_minimize_highlighted.png");
+}
+
+.tierBarProgressRight {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/pvpprogressionwindow/pvpprogressionwindow_tier_progressbar_right_211.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_pvpprogressionwindow_tier_progressbar_right_png_1159819477");
+}
+
+ActionBarCenter {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/actionbar/actionbar_actionbar3_415.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_actionbar_actionbar3_png_1811650001");
+}
+
+.economyProductionBgStdGrey {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_consumption_button2_std_388.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_consumption_button2_std_png_154960111");
+}
+
+ToolTip {
+    fontWeight: "bold";
+    borderStyle: "solid";
+    borderColor: #979689;
+    fontGridFitType: "subpixel";
+    backgroundColor: #2B271A;
+    fontAntiAliasType: "advanced";
+    color: #FFFFFF;
+    fontSharpness: -22;
+    cornerRadius: 5;
+    fontThickness: -114;
+    fontFamily: "DefaultFontEmbeddedCFF";
+    fontSize: 12;
+    backgroundAlpha: 0.9;
+}
+
+.detailsHeader {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/basicpanel/basicpanel_header_145.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_basicpanel_header_png_2144013287");
+}
+
+.colonyCurrent {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/expeditions/expeditions_frame_current_397.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_expeditions_frame_current_png_114742041");
+}
+
+.economyProductionBgPrsd {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_production_button_bg_prsd_8.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_production_button_bg_prsd_png_1803479437");
+}
+
+.pvpRankLevelBoxBackground {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/pvpprogressionwindow/pvpprogressionwindow_progressbar_bg_118.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_pvpprogressionwindow_progressbar_bg_png_86227668");
+}
+
+.pvpSummaryBottom {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/embedded/combat3pvpreport/combat3pvpreport_info_frame_bottom.png");
+}
+
+.contentGeneratorCategoryButtonSelected {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/contentgenerator/contentgenerator_cg_menu_button_pushed_262.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_contentgenerator_cg_menu_button_pushed_png_504009738");
+}
+
+.volumeBarDisabled {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/options/options_panel_volume_disa_47.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_options_panel_volume_disa_png_207148349");
+}
+
+.generalButtonBg {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/buildinginfo/buildinginfo_button_background_86.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buildinginfo_button_background_png_614181047");
+}
+
+.infoBarBoth {
+    backgroundSize: "100%";
+    paddingTop: 8;
+    backgroundImage: Embed(source="../../assets/vector/embedded/infobar/infobar_infobar_both_335.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_infobar_infobar_both_png_1811538161");
+    paddingLeft: 15;
+    paddingRight: 75;
+}
+
+.chatPrivateListSelected {
+    backgroundSize: "100%";
+    fontWeight: "bold";
+    backgroundImage: Embed(source="../../assets/vector/embedded/chat/chat_button_active_223.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_chat_button_active_png_585164040");
+}
+
+.chatTabSelected {
+    backgroundSize: "100%";
+    fontWeight: "bold";
+    backgroundImage: Embed(source="../../assets/vector/embedded/chat/chat_bg_chattab_selected_202.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_chat_bg_chattab_selected_png_1109493271");
+}
+
+.questionmark {
+    upSkin: Embed(source="../../assets/embedded/buttons/buttons_icon_questionmark2.png");
+    downSkin: Embed(source="../../assets/embedded/buttons/buttons_icon_questionmark2_mo.png");
+    overSkin: Embed(source="../../assets/embedded/buttons/buttons_icon_questionmark2_mo.png");
+}
+
+.detailsSubHeader {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/basicpanel/basicpanel_subheader_394.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_basicpanel_subheader_png_1888757504");
+}
+
+.hr {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/trade/trade_line_409.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_trade_line_png_85406532");
+}
+
+.economyConsumptionTotal {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_consumption_button3_std_332.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_consumption_button3_std_png_1524027677");
+}
+
+.premiumAccountPanelFooter {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/quest/quest_quest_bg_bottom_421.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_quest_quest_bg_bottom_png_983369885");
+}
+
+.subpanelbare {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/basicpanel/basicpanel_subpanel_2_bare_259.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_basicpanel_subpanel_2_bare_png_1599372926");
+}
+
+.unassign {
+    upSkin: Embed(source="../../assets/embedded/buttons/buttons_unassign_standard.png");
+    downSkin: Embed(source="../../assets/embedded/buttons/buttons_unassign_selected.png");
+    overSkin: Embed(source="../../assets/embedded/buttons/buttons_unassign_selected.png");
+    disabledSkin: Embed(source="../../assets/embedded/buttons/buttons_unassign_standard.png");
+}
+
+ActionBarLeft {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/actionbar/actionbar_actionbar2_433.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_actionbar_actionbar2_png_1779695478");
+    horizontalGap: 15;
+    paddingBottom: 0;
+    paddingLeft: 50;
+    paddingRight: 5;
+}
+
+.pvpRankBackground {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/pvpprogressionwindow/pvpprogressionwindow_progression_bg_190.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_pvpprogressionwindow_progression_bg_png_540153784");
+}
+
+.achievementSidebar {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/achievement/achievement_achievement_sidebar_info_bg_full_303.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_achievement_achievement_sidebar_info_bg_full_png_380341631");
+}
+
+.goldhr {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/skillwindows/skillwindows_skilltree_ornamental01_112.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_skillwindows_skilltree_ornamental01_png_239026878");
+}
+
+.detailsHeaderYellow {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/combatpreview/combatpreview_header_yellow_68.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_combatpreview_header_yellow_png_30156784");
+}
+
+.returnHome {
+    upSkin: Embed(source="../../assets/vector/embedded/friendslist/friendslist_neighbours_tab_home_standard_175.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_friendslist_neighbours_tab_home_standard_png_1978779346");
+    downSkin: Embed(source="../../assets/vector/embedded/friendslist/friendslist_neighbours_tab_home_push_187.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_friendslist_neighbours_tab_home_push_png_341798796");
+    overSkin: Embed(source="../../assets/vector/embedded/friendslist/friendslist_neighbours_tab_home_mouseover_160.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_friendslist_neighbours_tab_home_mouseover_png_1292068430");
+    disabledSkin: Embed(source="../../assets/vector/embedded/friendslist/friendslist_neighbours_tab_standard_439.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_friendslist_neighbours_tab_standard_png_602280490");
+    paddingLeft: 1;
+    paddingRight: 1;
+}
+
+.detailsSubContentBoxNormal {
+    borderStyle: "none";
+    backgroundColor: #000000;
+    backgroundAlpha: 0.15;
+}
+
+.questPanelFooterReward {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/quest/quest_quest_bg_bottom_gold_359.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_quest_quest_bg_bottom_gold_png_141053293");
+}
+
+.standard {
+    upSkin: Embed(source="../../assets/vector/embedded/buttons/buttons_standard_403.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buttons_standard_png_1836082007");
+    selectedDownSkin: Embed(source="../../assets/vector/embedded/buttons/buttons_standard_highlight_226.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buttons_standard_highlight_png_1214836021");
+    downSkin: Embed(source="../../assets/vector/embedded/buttons/buttons_standard_highlight_226.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buttons_standard_highlight_png_1214836021");
+    overSkin: Embed(source="../../assets/vector/embedded/buttons/buttons_standard_highlight_226.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buttons_standard_highlight_png_1214836021");
+    color: #000000;
+    selectedUpSkin: Embed(source="../../assets/vector/embedded/buttons/buttons_standard_highlight_226.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buttons_standard_highlight_png_1214836021");
+    disabledSkin: Embed(source="../../assets/vector/embedded/buttons/buttons_standard_disabled_103.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buttons_standard_disabled_png_1680532543");
+    selectedOverSkin: Embed(source="../../assets/vector/embedded/buttons/buttons_standard_highlight_226.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_buttons_standard_highlight_png_1214836021");
+}
+
+.detailsSubHeaderLight {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/basicpanel/basicpanel_subheader_light_365.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_basicpanel_subheader_light_png_1892909838");
+}
+
+.friendsList {
+    backgroundSize: "100%";
+    paddingTop: 3;
+    useRollOver: false;
+    backgroundImage: Embed(source="../../assets/embedded/friendslist/friendslist_friendslist2.png");
+    borderThickness: 0;
+    paddingLeft: 0;
+    paddingBottom: 0;
+    paddingRight: 0;
+}
+
+.shopFooterSmall {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/shop/shop_footer_318.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_shop_footer_png_949584915");
+}
+
+.eventInfoCurtainHeader {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/avatarSelection/avatarSelection_header_297.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_avatarSelection_header_png_459908209");
+}
+
+.economyItemBgRed {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_item_background_red_196.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_item_background_red_png_71183559");
+}
+
+.pin {
+    upSkin: Embed(source="../../assets/embedded/buttons/buttons_pin_standard.png");
+    selectedDownSkin: Embed(source="../../assets/embedded/buttons/buttons_pin_highlight_prsd.png");
+    downSkin: Embed(source="../../assets/embedded/buttons/buttons_pin_highlight.png");
+    overSkin: Embed(source="../../assets/embedded/buttons/buttons_pin_highlight.png");
+    selectedUpSkin: Embed(source="../../assets/embedded/buttons/buttons_pin_standard_prsd.png");
+    disabledSkin: Embed(source="../../assets/embedded/buttons/buttons_pin_inactive.png");
+    selectedOverSkin: Embed(source="../../assets/embedded/buttons/buttons_pin_highlight_prsd.png");
+}
+
+.cultureBuildingbonusValuePositive {
+    color: #00FF00;
+}
+
+.colonyReward {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/expeditions/expeditions_frame_bonus_309.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_expeditions_frame_bonus_png_39987431");
+}
+
+.economySubListBg {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/economy/economy_economy_sublist_bg_56.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_economy_economy_sublist_bg_png_1146048233");
+}
+
+.contentGeneratorRewardPanel {
+    backgroundSize: "100%";
+    backgroundImage: Embed(source="../../assets/vector/embedded/contentgenerator/contentgenerator_cg_popup_bg_391.swf", symbol="SWMMO__embed_css_____data_src_gfx_embedded_contentgenerator_cg_popup_bg_png_243923123");
+}
+

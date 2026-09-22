@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+    width="67" height="128" styleName="cameraControlPanel" cacheAsBitmap="true">
+
+    <mx:Script><![CDATA[
+        import GUI.Assets.gAssetManager;
+        import mx.controls.Button;
+
+        [Embed('../../../assets/embedded/camera/camera_x_standard.png')]
+        private var closeUp:Class;
+        [Embed('../../../assets/embedded/camera/camera_x_push.png')]
+        private var closeDown:Class;
+        [Embed('../../../assets/embedded/camera/camera_x_mouseover.png')]
+        private var closeOver:Class;
+        [Embed('../../../assets/embedded/camera/camera_scale_up_standard.png')]
+        private var zoomInUp:Class;
+        [Embed('../../../assets/embedded/camera/camera_scale_up_mouseover.png')]
+        private var zoomInOver:Class;
+        [Embed('../../../assets/embedded/camera/camera_scale_up_inactive.png')]
+        private var zoomInDisabled:Class;
+        [Embed('../../../assets/embedded/camera/camera_scale_down_standard.png')]
+        private var zoomOutUp:Class;
+        [Embed('../../../assets/embedded/camera/camera_scale_down_mouseover.png')]
+        private var zoomOutOver:Class;
+        [Embed('../../../assets/embedded/camera/camera_scale_down_inactive.png')]
+        private var zoomOutDisabled:Class;
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            setStyle("showEffect", fadeIn);
+            setStyle("hideEffect", fadeOut);
+            applySkins(btnClose, closeUp, closeDown, closeOver, closeUp);
+            applyArrowSkins(btnUp, "N");
+            applyArrowSkins(btnLeft, "W");
+            applyArrowSkins(btnRight, "E");
+            applyArrowSkins(btnDown, "S");
+            applySkins(btnZoomIn, zoomInUp, zoomInOver, zoomInOver, zoomInDisabled);
+            applySkins(btnZoomOut, zoomOutUp, zoomOutOver, zoomOutOver, zoomOutDisabled);
+        }
+
+        private function applyArrowSkins(button:Button, direction:String):void
+        {
+            var up:Class = gAssetManager.GetClass("ArrowSmall" + direction + "Up");
+            var over:Class = gAssetManager.GetClass("ArrowSmall" + direction + "Over");
+            applySkins(button, up, over, over, up);
+        }
+
+        private function applySkins(button:Button, up:Class, down:Class,
+                                    over:Class, disabled:Class):void
+        {
+            button.setStyle("upSkin", up);
+            button.setStyle("downSkin", down);
+            button.setStyle("overSkin", over);
+            button.setStyle("disabledSkin", disabled);
+        }
+    ]]></mx:Script>
+
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="1" duration="150" />
+    <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
+
+    <mx:Button id="btnClose" x="50" y="3" width="13" height="13" />
+
+    <mx:Button id="btnUp" x="23" y="19" width="22" height="22" />
+
+    <mx:Button id="btnLeft" x="5" y="37" width="22" height="22" />
+
+    <mx:Button id="btnRight" x="41" y="37" width="22" height="22" />
+
+    <mx:Button id="btnDown" x="23" y="55" width="22" height="22" />
+
+    <mx:Button id="btnZoomIn" x="5" y="77" width="30" height="31" />
+
+    <mx:Button id="btnZoomOut" x="34" y="77" width="30" height="31" />
+
+</mx:Canvas>
+
+
+
+
