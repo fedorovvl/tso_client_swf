@@ -2,7 +2,8 @@
 {
     public class dZoneCheckVO 
     {
-
+        public var zoneCheckSumBuffs:int;
+        public var zoneCheckSumBlackMarketAuction:int;
         public var zoneCheckSumGarrisons:int;
         public var zoneCheckSumCombat:int;
         public var zoneCheckSumSquads:int;

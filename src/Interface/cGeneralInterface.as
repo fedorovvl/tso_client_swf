@@ -19,6 +19,7 @@
     import Communication.VO.dZoneVO;
     import converted.bluebyte.tso.reaction.ReactionManager;
     import Communication.VO.dZoneCheckVO;
+    import Communication.VO.dPersistedBuffApplianceVO;
     import mx.formatters.DateFormatter;
     import ItemRegistry.ItemRegistry;
     import Communication.VO.Guild.dGuildVO;
@@ -1417,6 +1418,28 @@
             this.mZoneCheckVO.zoneCheckSumSquads = _local_14;
             this.mZoneCheckVO.zoneCheckSumCombat = _local_15;
             this.mZoneCheckVO.zoneCheckSumCollectionParts = this.mContentGeneratorManager.CalculateZoneCheckSum();
+            var _local_26:int;
+            var _local_27:ArrayCollection = this.mZoneBuffManager.getZoneBuffsForPersistence();
+            var _local_28:dPersistedBuffApplianceVO;
+            var _local_29:cBuffDefinition;
+            var _local_30:Number;
+            if (_local_27 != null)
+            {
+                for each (_local_28 in _local_27)
+                {
+                    if (_local_28 != null)
+                    {
+                        _local_29 = cBuffDefinition.GetById(_local_28.buffID);
+                        if (_local_29 != null)
+                        {
+                            _local_30 = (_local_28.startTime + _local_29.getDuration(_local_28.applianceMode));
+                            _local_26 = (_local_26 ^ ((Math.abs(_local_30) < 2147483648) ? int(_local_30) : int(0x80000000)));
+                        };
+                    };
+                };
+            };
+            this.mZoneCheckVO.zoneCheckSumBuffs = _local_26;
+            this.mZoneCheckVO.zoneCheckSumBlackMarketAuction = -1;
             this.mZoneCheckUpdateVO = this.mZoneCheckVO;
         }
 
