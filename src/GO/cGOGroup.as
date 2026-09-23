@@ -549,6 +549,7 @@
                     _local_12.mExternalData = _arg_5;
                 };
                 _local_12.mGfxResourceListName_string = _arg_5.GetAttributeString_string("name");
+                global.getApplication().mMemoryMonitor.RegisterGOSpriteLibContainer(_local_12);
                 _local_12.mGfxResourceSettlerName_string = _arg_5.GetAttributeString_string("resourceSettlerName");
                 _local_12.mGfxResourceListNr = _arg_1.length;
                 _local_12.mSmokeEffectSetName_string = _arg_5.GetAttributeString_string(this.SMOKE_EFFECT_SET_NAME);

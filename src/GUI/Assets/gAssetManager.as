@@ -2358,6 +2358,21 @@
         private static var shopItems:BitmapFileMap = new BitmapFileMap();
         private static var iconspack:BitmapFileMap = new BitmapFileMap();
         private static var loadedGfxVector:Vector.<BitmapFileMap> = new Vector.<BitmapFileMap>();
+
+        public static function CalculateLoadedBitmapMemory():Number
+        {
+            var _local_1:Dictionary = new Dictionary(true);
+            var _local_2:Number = 0;
+            var _local_3:BitmapFileMap;
+            for each (_local_3 in loadedGfxVector)
+            {
+                if (_local_3 != null)
+                {
+                    _local_2 = (_local_2 + _local_3.calculateUniqueBitmapMemory(_local_1));
+                };
+            };
+            return (_local_2);
+        }
         private static var countTotal:int = 0;
         private static var countLoaded:int = 0;
         private static var completeFunction:Function;
@@ -2532,6 +2547,7 @@
 
         private static function CompleteHandlerAMFPackLoaderBIN(_arg_1:Event):void
         {
+            global.getApplication().mMemoryMonitor.RegisterLoadedBin((_arg_1.target as TSOURLLoader).bytesTotal);
             var _local_2:BinDataHolderVO = ((_arg_1.target as TSOURLLoader).data as ByteArray).readObject();
             binFiles = new BinFileMap(_local_2);
             countLoaded++;
@@ -2618,6 +2634,7 @@
         private static function CompleteHandlerAMFPackLoader(event:Event):void
         {
             var dictionary:String;
+            global.getApplication().mMemoryMonitor.RegisterLoadedGraphic((event.target as TSOURLLoader).bytesTotal);
             var gfxArray:BinDataHolderVO = ((event.target as TSOURLLoader).data as ByteArray).readObject();
             var filename:String = (event.target as TSOURLLoader).filename;
             switch (filename.substring(10, (filename.length - 4)).replace(/[0-9]/g, ""))

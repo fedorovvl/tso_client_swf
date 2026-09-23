@@ -34,6 +34,7 @@
         import GUI.GAME.Chat.TSOChatMediator;
         import mx.controls.dataGridClasses.DataGridColumn;
         import nLib.cLog;
+        import nLib.gMemoryMonitor;
         import mx.core.UIComponent;
         import mx.events.FlexEvent;
         import mx.states.SetProperty;
@@ -78,6 +79,8 @@
         [Bindable]
         public var mGameInterface:cGameInterface;
         [Bindable]
+        public var mMemoryMonitor:gMemoryMonitor = new gMemoryMonitor();
+        [Bindable]
         public var bootstrap:Bootstrap = new Bootstrap();
         [Bindable]
         public var runningState:State;
@@ -89,6 +92,24 @@
                 ClientLogger.log(("SWMMO invokeEvent.arguments: " + _arg_1.arguments.toString()));
                 gInitStaticForAllZones.parseCommandLineArguments(_arg_1.arguments);
             });
+
+            // TEMPORARY RUFFLE FALLBACK: standalone Ruffle exposes -P values as
+            // FlashVars, but does not provide a CLI positional argument for the
+            // AIR InvokeEvent. Feed those values through the existing parser.
+            if (this.parameters != null)
+            {
+                var ruffleArguments:Array = [];
+                var parameterName:String;
+                for (parameterName in this.parameters)
+                {
+                    ruffleArguments.push(parameterName + "=" + this.parameters[parameterName]);
+                };
+                if (ruffleArguments.length > 0)
+                {
+                    ClientLogger.log("SWMMO: using FlashVars as command line arguments (temporary Ruffle fallback)");
+                    gInitStaticForAllZones.parseCommandLineArguments(ruffleArguments);
+                };
+            };
         }
 
         private function configureApplication():Boolean
@@ -534,6 +555,9 @@
             </mx:AddChild>
             <mx:AddChild position="lastChild">
                 <gui:CameraControlPanel id="GAMESTATE_ID_CAMERA_CONTROL_PANEL" y="195" x="130" visible="false" />
+            </mx:AddChild>
+            <mx:AddChild position="lastChild">
+                <gui:MemoryMonitorPanel id="GAMESTATE_ID_MEMORY_MONITOR" visible="false" horizontalCenter="0" verticalCenter="0" />
             </mx:AddChild>
             <mx:AddChild position="lastChild">
                 <gui:NewsWindow id="GAMESTATE_ID_NEWS_WINDOW" visible="false" horizontalCenter="0" verticalCenter="0" />

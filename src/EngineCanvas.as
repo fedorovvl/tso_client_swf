@@ -105,6 +105,7 @@
             global.ui = _local_3;
             global.ui_bindable = _local_3;
             this.gameRoot.mGameInterface = _local_3;
+            this.gameRoot.mMemoryMonitor.Init(_local_3);
             this.gameInterfaceAvailable = true;
             global.services = ServiceManager.getInstance();
             _local_3.mInitStartTime = getTimer();

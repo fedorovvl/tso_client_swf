@@ -6,6 +6,7 @@
     import flash.display.Bitmap;
     import flash.display.Loader;
     import flash.utils.ByteArray;
+    import flash.display.BitmapData;
 
     public class BitmapFileMap extends BinFileMap 
     {
@@ -59,6 +60,25 @@
                 return (null);
             };
             return (this.id2bitmap[_local_2] as Bitmap);
+        }
+
+        public function calculateUniqueBitmapMemory(_seen:Dictionary):Number
+        {
+            var _local_1:Object;
+            var _local_2:Bitmap;
+            var _local_3:BitmapData;
+            var _local_4:Number = 0;
+            for each (_local_1 in this.id2bitmap)
+            {
+                _local_2 = (_local_1 as Bitmap);
+                _local_3 = ((_local_2 != null) ? _local_2.bitmapData : null);
+                if (((_local_3 != null) && (!(_seen[_local_3]))))
+                {
+                    _seen[_local_3] = true;
+                    _local_4 = (_local_4 + ((_local_3.width * _local_3.height) * 4));
+                };
+            };
+            return (_local_4);
         }
 
         private function cloneBitmap(_arg_1:Bitmap):Bitmap

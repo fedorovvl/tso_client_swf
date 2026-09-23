@@ -59,6 +59,7 @@
         public function cSpriteLibContainer(_arg_1:String, _arg_2:Function, _arg_3:int, _arg_4:Boolean, _arg_5:Boolean, _arg_6:int)
         {
             super();
+            global.getApplication().mMemoryMonitor.RegisterSpriteLibContainer(this);
             this.mStreamingInProgress = false;
             if (_arg_1 == null)
             {
@@ -610,6 +611,7 @@
             var _local_4:dIndices;
             var _local_2:TSOURLLoader = (_arg_1.target as TSOURLLoader);
             _local_2.removeEventListener(Event.COMPLETE, this.CompleteHandlerLoadLib);
+            global.getApplication().mMemoryMonitor.RegisterLoadedBin(_local_2.bytesTotal);
             if (this.mNofStreamUpgrades != 0)
             {
                 _local_3 = this.LoadSpriteLibFromBinaryData(_local_2.data);

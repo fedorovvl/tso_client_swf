@@ -89,6 +89,7 @@
     import GUI.GAME.cEconomyOverview;
     import GUI.GAME.cConstructionInfoPanel;
     import GUI.GAME.cCameraControlPanel;
+    import GUI.GAME.cMemoryMonitorPanel;
     import Interface.cGeneralInterface;
     import GUI.GAME.cZoneBuffPanel;
     import GUI.GAME.cWarehouseInfoPanel;
@@ -223,6 +224,7 @@
         public var mEconomyOverview:cEconomyOverview;
         public var mConstructionInfoPanel:cConstructionInfoPanel;
         public var mCameraControlPanel:cCameraControlPanel;
+        public var mMemoryMonitorPanel:cMemoryMonitorPanel;
         private var mGeneralInterface:cGeneralInterface;
         public var mZoneBuffPanel:cZoneBuffPanel;
         public var mWarehouseInfoPanel:cWarehouseInfoPanel;
@@ -308,6 +310,8 @@
             this.mOptionsPanel.Init(_local_2.GAMESTATE_ID_AVATAR.options);
             this.mCameraControlPanel = new cCameraControlPanel();
             this.mCameraControlPanel.Init(_local_2.GAMESTATE_ID_CAMERA_CONTROL_PANEL);
+            this.mMemoryMonitorPanel = new cMemoryMonitorPanel();
+            this.mMemoryMonitorPanel.Init(_local_2.GAMESTATE_ID_MEMORY_MONITOR);
             this.mAvatar = new cAvatar();
             this.mAvatar.Init(_local_2.GAMESTATE_ID_AVATAR);
             this.mHiredTroopsPoolPanel = new cHiredTroopsPoolPanel();

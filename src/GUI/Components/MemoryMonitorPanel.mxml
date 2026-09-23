@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:local="GUI.Components.*" width="382" height="375">
+
+    <mx:Script><![CDATA[
+        import com.bluebyte.tso.util.ClientLogger;
+        import flash.events.MouseEvent;
+        import flash.net.FileReference;
+        import mx.formatters.DateFormatter;
+        import nLib.gMemoryMonitor;
+
+        override protected function childrenCreated():void
+        {
+            super.childrenCreated();
+            title = "Memory Monitor";
+            setStyle("layout", "absolute");
+            btnTrace.addEventListener(MouseEvent.CLICK, traceReport);
+            btnSave.addEventListener(MouseEvent.CLICK, saveDefaultReport);
+            btnSaveAlpha.addEventListener(MouseEvent.CLICK, saveAlphaReport);
+            refreshValues();
+        }
+
+        public function refreshValues():void
+        {
+            if (((global.getApplication() == null) || (global.getApplication().mMemoryMonitor == null)))
+            {
+                return;
+            };
+            var monitor:gMemoryMonitor = global.getApplication().mMemoryMonitor;
+            valueSprites.text = monitor.FormatAsMB_string(monitor.mUsedBytesSprites);
+            valueUnscaled.text = monitor.FormatAsMB_string(monitor.mUsedBytesUnscaled);
+            valueScaled.text = monitor.FormatAsMB_string(monitor.mUsedBytesScaled);
+            valueAssets.text = monitor.FormatAsMB_string(monitor.mAssetBitmapMemory);
+            valueOther.text = monitor.FormatAsMB_string(monitor.mOtherMemory);
+            valueOverlap.text = monitor.FormatAsMB_string(monitor.mBitmapAccountingOverlap);
+            valueTotal.text = monitor.FormatAsMB_string(monitor.mTotalMemory);
+            valueFree.text = monitor.FormatAsMB_string(monitor.mFreeMemory);
+            valueNative.text = monitor.FormatAsMB_string(monitor.mNativeMemory);
+            valuePrivate.text = monitor.FormatAsMB_string(monitor.mPrivateMemory);
+        }
+
+        private function traceReport(event:MouseEvent):void
+        {
+            var report:String = global.getApplication().mMemoryMonitor.GenerateReport_string(0, -1);
+            trace(report);
+            ClientLogger.log(report);
+        }
+
+        private function saveDefaultReport(event:MouseEvent):void
+        {
+            saveReport(-1);
+        }
+
+        private function saveAlphaReport(event:MouseEvent):void
+        {
+            saveReport(int(alphaValue.text));
+        }
+
+        private function saveReport(alphaThreshold:int):void
+        {
+            var now:Date = new Date();
+            var formatter:DateFormatter = new DateFormatter();
+            formatter.formatString = "YYYY-MM-DD_J-NN";
+            var report:String = global.getApplication().mMemoryMonitor.GenerateReport_string(0, alphaThreshold);
+            new FileReference().save(report,
+                "MemoryMonitorReport_" + formatter.format(now) + ".txt");
+        }
+    ]]></mx:Script>
+
+    <mx:Form x="0" y="0" percentWidth="100">
+        <mx:FormItem label="Original loaded Sprites:" labelStyleName="customTextAlignLabel">
+            <local:CustomLabel id="valueSprites" width="80" textAlign="right" />
+        </mx:FormItem>
+        <mx:FormItem label="Unscaled Bitmaps:" labelStyleName="customTextAlignLabel">
+            <local:CustomLabel id="valueUnscaled" width="80" textAlign="right" />
+        </mx:FormItem>
+        <mx:FormItem label="Scaled Bitmaps:" labelStyleName="customTextAlignLabel">
+            <local:CustomLabel id="valueScaled" width="80" textAlign="right" />
+        </mx:FormItem>
+        <mx:FormItem label="Asset manager Bitmaps:" labelStyleName="customTextAlignLabel">
+            <local:CustomLabel id="valueAssets" width="80" textAlign="right" />
+        </mx:FormItem>
+        <mx:FormItem label="AVM2 unclassified:" labelStyleName="customTextAlignLabel">
+            <local:CustomLabel id="valueOther" width="80" textAlign="right" />
+        </mx:FormItem>
+        <mx:FormItem label="Bitmap estimate overlap:" labelStyleName="customTextAlignLabel">
+            <local:CustomLabel id="valueOverlap" width="80" textAlign="right" />
+        </mx:FormItem>
+        <mx:FormItem label="AVM2 managed memory:" labelStyleName="customTextAlignLabel" width="211">
+            <local:CustomLabel id="valueTotal" width="80" textAlign="right" fontWeight="bold" />
+        </mx:FormItem>
+        <mx:FormItem label="AVM2 free reserve:" labelStyleName="customTextAlignLabel">
+            <local:CustomLabel id="valueFree" width="80" textAlign="right" />
+        </mx:FormItem>
+        <mx:FormItem label="AIR native / overhead:" labelStyleName="customTextAlignLabel">
+            <local:CustomLabel id="valueNative" width="80" textAlign="right" />
+        </mx:FormItem>
+        <mx:FormItem label="AIR private memory:" labelStyleName="customTextAlignLabel">
+            <local:CustomLabel id="valuePrivate" width="80" textAlign="right" fontWeight="bold" />
+        </mx:FormItem>
+    </mx:Form>
+
+    <local:CustomText x="10" y="264" width="135" height="20"
+        text="Check Alphapixel (0-255)" />
+    <local:CustomTextInput id="alphaValue" x="153" y="264" width="56" text="64" />
+
+    <mx:ControlBar horizontalAlign="right">
+        <mx:Button id="btnTrace" label="Trace report" />
+        <mx:Button id="btnSave" label="Save report" />
+        <mx:Button id="btnSaveAlpha" label="Save report Alpha Info" />
+    </mx:ControlBar>
+</mx:Panel>

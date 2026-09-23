@@ -189,6 +189,7 @@
 
         private function handleComplete(_arg_1:Event):void
         {
+            global.getApplication().mMemoryMonitor.RegisterLoadedXML(this.loader.bytesTotal);
             if (mRenderer == null)
             {
                 mStoredEvent = _arg_1;

@@ -5,6 +5,9 @@
     import flash.utils.Dictionary;
     import nLib.gMisc;
     import flash.utils.getQualifiedClassName;
+    import flash.filesystem.File;
+    import flash.filesystem.FileMode;
+    import flash.filesystem.FileStream;
     import __AS3__.vec.*;
 
     public class ClientLogger 
@@ -15,12 +18,35 @@
         private static var messages:Vector.<String> = new Vector.<String>();
         private static var missingLoca:Dictionary = new Dictionary();
         private static var loadLog:Vector.<String> = new Vector.<String>();
+        private static var logFile:File = File.applicationStorageDirectory.resolvePath("client.log");
 
 
         private static function add(_arg_1:String, _arg_2:Boolean):void
         {
             _arg_1 = _arg_1.replace(/((?:dsoAuthToken|mAuthToken|authrandom|randomauth)\s*[:=]\s*)[^&\s]+/gi, "$1[redacted]");
-            trace(_arg_1);
+            var _local_3:String = ((_arg_2) ? formatter.format(new Date()) : "") + _arg_1;
+            trace(_local_3);
+            messages.push(_local_3);
+            if (messages.length > MAX_LOG)
+            {
+                messages.shift();
+            };
+            try
+            {
+                var _local_4:FileStream = new FileStream();
+                _local_4.open(logFile, FileMode.APPEND);
+                _local_4.writeUTFBytes(_local_3 + "\r\n");
+                _local_4.close();
+            }
+            catch (_error:Error)
+            {
+                // Logging must never interrupt the game client.
+            };
+        }
+
+        public static function getLogFilePath():String
+        {
+            return (logFile.nativePath);
         }
 
         public static function logMissingLoca(_arg_1:String, _arg_2:String):void

@@ -83,6 +83,7 @@
         private function CompleteHandlerLoadPNG(_arg_1:Event):void
         {
             var _local_2:LoaderInfo = this.mImageLoader.contentLoaderInfo;
+            global.getApplication().mMemoryMonitor.RegisterLoadedGraphic(_local_2.bytesTotal);
             this.mOriginalGraphicsImage = this.mImageLoader.content;
             this.mOriginalGraphicsImageBitmapData = Bitmap(this.mImageLoader.content).bitmapData;
             this.mImageLoader = null;
