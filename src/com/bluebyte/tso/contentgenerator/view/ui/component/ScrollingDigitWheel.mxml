@@ -1,21 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml">
     <mx:Script><![CDATA[
-        import mx.events.FlexEvent;
-
         [Bindable]
         public var digitGap:int = 0;
         public var numberOfDigits:int = 0;
+        private var desiredValue:int = 0;
+        private var spinnersCreated:Boolean = false;
 
         override protected function childrenCreated():void
         {
             super.childrenCreated();
-            this.addEventListener("creationComplete", creationCompleteHandler);
-        }
-
-        protected function creationCompleteHandler(_arg_1:FlexEvent):void
-        {
-            this.createSpinners();
+            callLater(createSpinners);
         }
 
         private function getWheelGap(value:int):Number
@@ -36,13 +31,24 @@
                 this.wheelContainer.addChild(_local_2);
                 _local_1++;
             }
+            spinnersCreated = true;
+            applyDesiredValue();
         }
 
         public function SetDesiredValue(_arg_1:int):void
         {
-            var _local_2:String = this.addLeadingZeros(_arg_1, this.numberOfDigits);
+            desiredValue = _arg_1;
+            if (spinnersCreated)
+            {
+                applyDesiredValue();
+            };
+        }
+
+        private function applyDesiredValue():void
+        {
+            var _local_2:String = this.addLeadingZeros(desiredValue, this.numberOfDigits);
             var _local_3:int;
-            while (_local_3 < _local_2.length)
+            while (_local_3 < _local_2.length && _local_3 < this.wheelContainer.numChildren)
             {
                 (this.wheelContainer.getChildAt(_local_3) as Spinner).targetNumber = int(_local_2.charAt(_local_3));
                 _local_3++;

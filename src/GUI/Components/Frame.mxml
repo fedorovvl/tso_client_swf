@@ -47,7 +47,7 @@
 
         private var _filterOverride:Boolean = false;
         private var _contentType:String = "normal";
-        private var _type:String;
+        private var _type:String = Frame.EMPTY;
         private var _glowEffect:Boolean = false;
         private var _movable:Boolean = true;
         private var _adventureDifficulty:int;
@@ -113,7 +113,7 @@
 
         public function set type(_arg_1:String):void
         {
-            this._type = _arg_1;
+            this._type = _arg_1 ? _arg_1 : Frame.EMPTY;
             this.invalidateData();
         }
 

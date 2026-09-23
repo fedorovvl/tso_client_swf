@@ -30,6 +30,7 @@
         override protected function childrenCreated():void
         {
             super.childrenCreated();
+            failedIndicator.source = gAssetManager.GetBitmap("DailyLoginFailed");
             this.lm = cLocaManager.GetInstance();
         }
 

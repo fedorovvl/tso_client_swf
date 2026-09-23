@@ -2,212 +2,177 @@
 <mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml">
     <mx:Script><![CDATA[
         import flash.events.Event;
-        import flash.events.MouseEvent;
-
         import mx.containers.Canvas;
         import mx.controls.Image;
         import mx.events.EffectEvent;
-        import mx.events.FlexEvent;
+        import GUI.Components.LegacyMxmlContent;
 
-        import GUI.Assets.gAssetManager;
-        import Sound.cSoundManager;
+        [Embed(source="../../../../../../../../assets/gAssetManager/congen_number_00.png")]
+        private var digit0:Class;
+        [Embed(source="../../../../../../../../assets/gAssetManager/congen_number_01.png")]
+        private var digit1:Class;
+        [Embed(source="../../../../../../../../assets/gAssetManager/congen_number_02.png")]
+        private var digit2:Class;
+        [Embed(source="../../../../../../../../assets/gAssetManager/congen_number_03.png")]
+        private var digit3:Class;
+        [Embed(source="../../../../../../../../assets/gAssetManager/congen_number_04.png")]
+        private var digit4:Class;
+        [Embed(source="../../../../../../../../assets/gAssetManager/congen_number_05.png")]
+        private var digit5:Class;
+        [Embed(source="../../../../../../../../assets/gAssetManager/congen_number_06.png")]
+        private var digit6:Class;
+        [Embed(source="../../../../../../../../assets/gAssetManager/congen_number_07.png")]
+        private var digit7:Class;
+        [Embed(source="../../../../../../../../assets/gAssetManager/congen_number_08.png")]
+        private var digit8:Class;
+        [Embed(source="../../../../../../../../assets/gAssetManager/congen_number_09.png")]
+        private var digit9:Class;
 
         private var isCreated:Boolean = false;
         private var isScrolling:Boolean = false;
-        private var hasCycled:Boolean = false;
-
-        public var targetNumber:int = 0;
+        private var layoutHeight:Number = -1;
+        private var _targetNumber:int = 0;
 
         [Bindable]
         public var currentNumber:int = 0;
 
+        public function get targetNumber():int
+        {
+            return _targetNumber;
+        }
+
+        public function set targetNumber(value:int):void
+        {
+            _targetNumber = Math.max(0, Math.min(9, value));
+        }
+
         override protected function childrenCreated():void
         {
             super.childrenCreated();
-            setStyle("backgroundAlpha", 1);
-            this.horizontalScrollPolicy = "off";
-            this.verticalScrollPolicy = "off";
-            addEventListener(FlexEvent.CREATION_COMPLETE, canvas1_creationCompleteHandler);
-            addEventListener(Event.ENTER_FRAME, canvas1_enterFrameHandler);
+            horizontalScrollPolicy = "off";
+            verticalScrollPolicy = "off";
+            LegacyMxmlContent.createChildren(block0);
+            LegacyMxmlContent.createChildren(block1);
+            LegacyMxmlContent.createChildren(block2);
+            digitAbove.source = digitClass(9);
+            digitCurrent.source = digitClass(0);
+            digitBelow.source = digitClass(1);
+            scrollDown.targets = [block0, block1, block2];
+            scrollUp.targets = [block0, block1, block2];
+            scrollDown.addEventListener(EffectEvent.EFFECT_END, scrollDownEndHandler);
+            scrollUp.addEventListener(EffectEvent.EFFECT_END, scrollUpEndHandler);
+            addEventListener(Event.ENTER_FRAME, enterFrameHandler);
+            isCreated = true;
         }
 
-        private function bindScrollDownYBy(h:Number):Number
+        override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void
         {
-            return (h);
+            super.updateDisplayList(unscaledWidth, unscaledHeight);
+            if (layoutHeight == unscaledHeight)
+            {
+                return;
+            };
+            layoutHeight = unscaledHeight;
+            block0.height = unscaledHeight;
+            block1.height = unscaledHeight;
+            block2.height = unscaledHeight;
+            block0.y = -unscaledHeight;
+            block1.y = 0;
+            block2.y = unscaledHeight;
+            scrollDown.yBy = unscaledHeight;
+            scrollUp.yBy = -unscaledHeight;
         }
 
-        private function bindScrollUpYBy(h:Number):Number
+        private function enterFrameHandler(event:Event):void
         {
-            return (-(h));
-        }
-
-        private function bindEffectTargets(b0:Canvas, b1:Canvas, b2:Canvas):Array
-        {
-            return ([b0, b1, b2]);
-        }
-
-        private function bindBlockHeight(h:Number):Number
-        {
-            return (h);
+            if (!isCreated || isScrolling || currentNumber == _targetNumber || layoutHeight <= 0)
+            {
+                return;
+            };
+            if (currentNumber > _targetNumber)
+            {
+                if (Math.abs(currentNumber - _targetNumber) < 5)
+                    moveLower();
+                else
+                    moveHigher();
+            }
+            else if (Math.abs(_targetNumber - currentNumber) < 5)
+            {
+                moveHigher();
+            }
+            else
+            {
+                moveLower();
+            };
         }
 
         private function moveHigher():void
         {
-            if (!this.isScrolling)
-            {
-                this.isScrolling = true;
-                this.scrollUp.end();
-                this.scrollUp.play();
-                if (globalFlash.gui.mContentGeneratorPanel.IsGemsRequired())
-                {
-                    cSoundManager.getInstance().playEffect(cSoundManager.CG_GEM_CLICK);
-                }
-                else
-                {
-                    cSoundManager.getInstance().playEffect(cSoundManager.CG_SHORT_COUNT);
-                };
-            };
+            isScrolling = true;
+            scrollUp.end();
+            scrollUp.play();
         }
 
         private function moveLower():void
         {
-            if (!this.isScrolling)
-            {
-                this.isScrolling = true;
-                this.scrollDown.end();
-                this.scrollDown.play();
-                if (globalFlash.gui.mContentGeneratorPanel.IsGemsRequired())
-                {
-                    cSoundManager.getInstance().playEffect(cSoundManager.CG_GEM_CLICK);
-                }
-                else
-                {
-                    cSoundManager.getInstance().playEffect(cSoundManager.CG_SHORT_COUNT);
-                };
-            };
+            isScrolling = true;
+            scrollDown.end();
+            scrollDown.play();
         }
 
-        private function getDownNumber():int
+        private function scrollUpEndHandler(event:EffectEvent):void
         {
-            var _local_1:int = (this.currentNumber - 2);
-            if (_local_1 < 0)
+            var block:Canvas = event.effectInstance.target as Canvas;
+            if (block != null && block.y < -layoutHeight)
             {
-                _local_1 = (10 + _local_1);
+                block.y = layoutHeight;
+                (block.getChildAt(0) as Image).source = digitClass(getUpNumber());
             };
-            if (this.currentNumber > 0)
+            isScrolling = false;
+        }
+
+        private function scrollDownEndHandler(event:EffectEvent):void
+        {
+            var block:Canvas = event.effectInstance.target as Canvas;
+            if (block != null && block.y > layoutHeight)
             {
-                this.currentNumber--;
-            }
-            else
-            {
-                this.currentNumber = 9;
+                block.y = -layoutHeight;
+                (block.getChildAt(0) as Image).source = digitClass(getDownNumber());
             };
-            return (_local_1);
+            isScrolling = false;
         }
 
         private function getUpNumber():int
         {
-            var _local_1:int = (this.currentNumber + 2);
-            if (_local_1 > 9)
-            {
-                _local_1 = (_local_1 - 10);
-            };
-            if (this.currentNumber < 9)
-            {
-                this.currentNumber++;
-            }
-            else
-            {
-                this.currentNumber = 0;
-            };
-            return (_local_1);
+            var next:int = (currentNumber + 2) % 10;
+            currentNumber = (currentNumber + 1) % 10;
+            return next;
         }
 
-        protected function canvas1_creationCompleteHandler(_arg_1:FlexEvent):void
+        private function getDownNumber():int
         {
-            this.block0.y = -(this.height);
-            this.block1.y = 0;
-            this.block2.y = this.height;
-            this.isCreated = true;
-            this.scrollDown.addEventListener(EffectEvent.EFFECT_END, this.scrollDownEndHandler);
-            this.scrollUp.addEventListener(EffectEvent.EFFECT_END, this.scrollUpEndHandler);
+            var next:int = (currentNumber + 8) % 10;
+            currentNumber = (currentNumber + 9) % 10;
+            return next;
         }
 
-        protected function canvas1_enterFrameHandler(_arg_1:Event):void
+        private function digitClass(value:int):Class
         {
-            if (((this.isCreated) && (!(this.isScrolling))))
-            {
-                if (this.currentNumber != this.targetNumber)
-                {
-                    if (this.currentNumber > this.targetNumber)
-                    {
-                        if (Math.abs((this.currentNumber - this.targetNumber)) < 5)
-                        {
-                            this.moveLower();
-                        }
-                        else
-                        {
-                            this.moveHigher();
-                        };
-                    }
-                    else
-                    {
-                        if (Math.abs((this.targetNumber - this.currentNumber)) < 5)
-                        {
-                            this.moveHigher();
-                        }
-                        else
-                        {
-                            this.moveLower();
-                        };
-                    };
-                };
-            };
-        }
-
-        private function scrollUpEndHandler(_arg_1:EffectEvent):void
-        {
-            var _local_2:Canvas = (_arg_1.effectInstance.target as Canvas);
-            if (_local_2.y < -(this.height))
-            {
-                _local_2.y = this.height;
-                (_local_2.getChildAt(0) as Image).source = gAssetManager.GetClass(("congen_number_0" + this.getUpNumber().toString()));
-            };
-            this.isScrolling = false;
-        }
-
-        private function scrollDownEndHandler(_arg_1:EffectEvent):void
-        {
-            var _local_2:Canvas = (_arg_1.effectInstance.target as Canvas);
-            if (_local_2.y > this.height)
-            {
-                _local_2.y = -(this.height);
-                (_local_2.getChildAt(0) as Image).source = gAssetManager.GetClass(("congen_number_0" + this.getDownNumber().toString()));
-            };
-            this.isScrolling = false;
-        }
-
-        protected function upClickHandler(_arg_1:MouseEvent):void
-        {
-            this.moveHigher();
-        }
-
-        protected function downClickHandler(_arg_1:MouseEvent):void
-        {
-            this.moveLower();
+            return ([digit0, digit1, digit2, digit3, digit4,
+                digit5, digit6, digit7, digit8, digit9][value] as Class);
         }
     ]]></mx:Script>
 
-    <mx:Move id="scrollDown" duration="100" yBy="{bindScrollDownYBy(height)}" targets="{bindEffectTargets(block0, block1, block2)}" />
-    <mx:Move id="scrollUp" duration="100" yBy="{bindScrollUpYBy(height)}" targets="{bindEffectTargets(block0, block1, block2)}" />
+    <mx:Move id="scrollDown" duration="100" />
+    <mx:Move id="scrollUp" duration="100" />
 
-    <mx:Canvas id="block0" x="0" percentWidth="100" height="{bindBlockHeight(height)}" backgroundColor="0x777777" backgroundAlpha="1">
-        <mx:Image id="_Spinner_Image1" x="0" y="0" percentWidth="100" percentHeight="100" source="{gAssetManager.GetClass('congen_number_09')}" />
+    <mx:Canvas id="block0" x="0" percentWidth="100">
+        <mx:Image id="digitAbove" x="0" y="0" percentWidth="100" percentHeight="100" />
     </mx:Canvas>
-    <mx:Canvas id="block1" x="0" percentWidth="100" height="{bindBlockHeight(height)}" backgroundColor="0x999999" backgroundAlpha="1">
-        <mx:Image id="_Spinner_Image2" x="0" y="0" percentWidth="100" percentHeight="100" source="{gAssetManager.GetClass('congen_number_00')}" />
+    <mx:Canvas id="block1" x="0" percentWidth="100">
+        <mx:Image id="digitCurrent" x="0" y="0" percentWidth="100" percentHeight="100" />
     </mx:Canvas>
-    <mx:Canvas id="block2" x="0" percentWidth="100" height="{bindBlockHeight(height)}" backgroundColor="0xAAAAAA" backgroundAlpha="1">
-        <mx:Image id="_Spinner_Image3" x="0" y="0" percentWidth="100" percentHeight="100" source="{gAssetManager.GetClass('congen_number_01')}" />
+    <mx:Canvas id="block2" x="0" percentWidth="100">
+        <mx:Image id="digitBelow" x="0" y="0" percentWidth="100" percentHeight="100" />
     </mx:Canvas>
 </mx:Canvas>

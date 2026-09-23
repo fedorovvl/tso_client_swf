@@ -13,6 +13,8 @@
             this.styleName = "contentGeneratorRewardPanel";
             this.minHeight = 324;
             LegacyMxmlContent.createChildren(buttonCanvas);
+            leftButtonDeco.source = gAssetManager.GetClass("ContentGeneratorButtonDecoLeft");
+            rightButtonDeco.source = gAssetManager.GetClass("ContentGeneratorButtonDecoRight");
             var contentTargets:Array = [contentBox, buttonCanvas];
             hideContent.targets = contentTargets;
             hideContent.value = false;

@@ -69,11 +69,13 @@
         private var spinButtonTimer:Timer = new Timer(200, 1);
         public var enableActionsDelayTimer:Timer = new Timer(1500, 1);
         private var defaultActionUnlockTimer:Timer = new Timer(30000, 1);
+        private var incrementStep:int = 1;
+        private var decrementStep:int = 1;
 
 
         protected function spinButtonTimerCompleteHandler(_arg_1:TimerEvent):void
         {
-            this.mPanel.spinButton.source = gAssetManager.GetClass("congen_button");
+            this.mPanel.setSpinButtonState("normal");
         }
 
         override public function SetData(_arg_1:cBuilding):void
@@ -120,7 +122,7 @@
 
         protected function spinButtonMouseOverHandler(_arg_1:MouseEvent):void
         {
-            this.mPanel.spinButton.source = gAssetManager.GetClass("congen_button_mouseover");
+            this.mPanel.setSpinButtonState("over");
         }
 
         public function IsGemsRequired():Boolean
@@ -146,11 +148,23 @@
             this.mPanel.spinButton.addEventListener(MouseEvent.MOUSE_OUT, this.spinButtonMouseOutHandler);
             this.mPanel.completeCollectionButton.addEventListener(MouseEvent.CLICK, this.completeCollectionClickHandler);
             this.mPanel.incrementButton.addEventListener(MouseEvent.MOUSE_DOWN, this.incrementRollsDownHandler);
+            this.mPanel.incrementTensButton.addEventListener(MouseEvent.MOUSE_DOWN, this.incrementRollsDownHandler);
+            this.mPanel.incrementHundredsButton.addEventListener(MouseEvent.MOUSE_DOWN, this.incrementRollsDownHandler);
             this.mPanel.decrementButton.addEventListener(MouseEvent.MOUSE_DOWN, this.decrementRollsDownHandler);
+            this.mPanel.decrementTensButton.addEventListener(MouseEvent.MOUSE_DOWN, this.decrementRollsDownHandler);
+            this.mPanel.decrementHundredsButton.addEventListener(MouseEvent.MOUSE_DOWN, this.decrementRollsDownHandler);
             this.mPanel.incrementButton.addEventListener(MouseEvent.MOUSE_UP, this.incrementRollsUpHandler);
+            this.mPanel.incrementTensButton.addEventListener(MouseEvent.MOUSE_UP, this.incrementRollsUpHandler);
+            this.mPanel.incrementHundredsButton.addEventListener(MouseEvent.MOUSE_UP, this.incrementRollsUpHandler);
             this.mPanel.decrementButton.addEventListener(MouseEvent.MOUSE_UP, this.decrementRollsUpHandler);
+            this.mPanel.decrementTensButton.addEventListener(MouseEvent.MOUSE_UP, this.decrementRollsUpHandler);
+            this.mPanel.decrementHundredsButton.addEventListener(MouseEvent.MOUSE_UP, this.decrementRollsUpHandler);
             this.mPanel.incrementButton.addEventListener(MouseEvent.MOUSE_OUT, this.incrementRollsOutHandler);
+            this.mPanel.incrementTensButton.addEventListener(MouseEvent.MOUSE_OUT, this.incrementRollsOutHandler);
+            this.mPanel.incrementHundredsButton.addEventListener(MouseEvent.MOUSE_OUT, this.incrementRollsOutHandler);
             this.mPanel.decrementButton.addEventListener(MouseEvent.MOUSE_OUT, this.decrementRollsOutHandler);
+            this.mPanel.decrementTensButton.addEventListener(MouseEvent.MOUSE_OUT, this.decrementRollsOutHandler);
+            this.mPanel.decrementHundredsButton.addEventListener(MouseEvent.MOUSE_OUT, this.decrementRollsOutHandler);
             this.enableActionsDelayTimer.addEventListener(TimerEvent.TIMER, this.enabledActionsDelayTimerHandler);
             this.incrementRepeatTimer.addEventListener(TimerEvent.TIMER, this.incrementTimerHandler);
             this.decrementRepeatTimer.addEventListener(TimerEvent.TIMER, this.decrementTimerHandler);
@@ -226,7 +240,7 @@
 
         private function decrementRollsOutHandler(_arg_1:MouseEvent):void
         {
-            (_arg_1.target as CGDecrementButton).bg.source = gAssetManager.GetClass("congen_down");
+            (_arg_1.currentTarget as CGDecrementButton).bg.source = gAssetManager.GetClass("congen_down");
             this.decrementRepeatTimer.stop();
         }
 
@@ -256,7 +270,10 @@
         {
             if (this.IsActionsEnabled)
             {
-                (_arg_1.target as CGIncrementButton).bg.source = gAssetManager.GetClass("congen_up_pressed");
+                var button:CGIncrementButton = (_arg_1.currentTarget as CGIncrementButton);
+                this.incrementStep = ((button == this.mPanel.incrementHundredsButton) ? 100 : ((button == this.mPanel.incrementTensButton) ? 10 : 1));
+                button.bg.source = gAssetManager.GetClass("congen_up_pressed");
+                this.playSpinnerClickSound();
                 this.incrementRolls();
                 this.incrementRepeatTimer.delay = 500;
                 this.incrementRepeatTimer.reset();
@@ -285,16 +302,27 @@
 
         private function incrementRolls():void
         {
-            if (this.numberOfRolls == 99)
+            this.numberOfRolls = this.cycleRollDigit(this.numberOfRolls, this.incrementStep, 1);
+            this.mPanel.selectorSpinner.SetDesiredValue(this.numberOfRolls);
+            this.updateCurrentRollCosts(this.numberOfRolls);
+        }
+
+        private function cycleRollDigit(value:int, place:int, direction:int):int
+        {
+            var digit:int = int(value / place) % 10;
+            var nextDigit:int;
+            if (place == 1)
             {
-                this.numberOfRolls = 1;
+                if (direction > 0)
+                    nextDigit = ((digit >= 9) ? 1 : (digit + 1));
+                else
+                    nextDigit = ((digit <= 1) ? 9 : (digit - 1));
             }
             else
             {
-                this.numberOfRolls++;
+                nextDigit = (digit + direction + 10) % 10;
             };
-            this.mPanel.selectorSpinner.SetDesiredValue(this.numberOfRolls);
-            this.updateCurrentRollCosts(this.numberOfRolls);
+            return (value - (digit * place) + (nextDigit * place));
         }
 
         public function GetPanel():ContentGeneratorPanel
@@ -343,11 +371,26 @@
         {
             if (this.IsActionsEnabled)
             {
-                (_arg_1.target as CGDecrementButton).bg.source = gAssetManager.GetClass("congen_down_pressed");
+                var button:CGDecrementButton = (_arg_1.currentTarget as CGDecrementButton);
+                this.decrementStep = ((button == this.mPanel.decrementHundredsButton) ? 100 : ((button == this.mPanel.decrementTensButton) ? 10 : 1));
+                button.bg.source = gAssetManager.GetClass("congen_down_pressed");
+                this.playSpinnerClickSound();
                 this.decrementRolls();
                 this.decrementRepeatTimer.delay = 500;
                 this.decrementRepeatTimer.reset();
                 this.decrementRepeatTimer.start();
+            };
+        }
+
+        private function playSpinnerClickSound():void
+        {
+            if (this.IsGemsRequired())
+            {
+                cSoundManager.getInstance().playEffect(cSoundManager.CG_GEM_CLICK);
+            }
+            else
+            {
+                cSoundManager.getInstance().playEffect(cSoundManager.CG_SHORT_COUNT);
             };
         }
 
@@ -361,7 +404,7 @@
 
         private function incrementRollsUpHandler(_arg_1:MouseEvent):void
         {
-            (_arg_1.target as CGIncrementButton).bg.source = gAssetManager.GetClass("congen_up_highlight");
+            (_arg_1.currentTarget as CGIncrementButton).bg.source = gAssetManager.GetClass("congen_up_highlight");
             this.incrementRepeatTimer.stop();
         }
 
@@ -388,7 +431,7 @@
 
         private function decrementRollsUpHandler(_arg_1:MouseEvent):void
         {
-            (_arg_1.target as CGDecrementButton).bg.source = gAssetManager.GetClass("congen_down_highlight");
+            (_arg_1.currentTarget as CGDecrementButton).bg.source = gAssetManager.GetClass("congen_down_highlight");
             this.decrementRepeatTimer.stop();
         }
 
@@ -430,14 +473,7 @@
 
         private function decrementRolls():void
         {
-            if (this.numberOfRolls == 1)
-            {
-                this.numberOfRolls = 99;
-            }
-            else
-            {
-                this.numberOfRolls--;
-            };
+            this.numberOfRolls = this.cycleRollDigit(this.numberOfRolls, this.decrementStep, -1);
             this.mPanel.selectorSpinner.SetDesiredValue(this.numberOfRolls);
             this.updateCurrentRollCosts(this.numberOfRolls);
         }
@@ -524,7 +560,7 @@
             ClientLogger.log(((((("BREA: " + this.selectedCategory) + "###") + this.selectedCollection) + "###") + this.IsActionsEnabled));
             if ((((!(this.selectedCategory == null)) && (!(this.selectedCollection == null))) && (this.IsActionsEnabled)))
             {
-                this.mPanel.spinButton.source = gAssetManager.GetClass("congen_button_pushed");
+                this.mPanel.setSpinButtonState("pushed");
                 this.spinButtonTimer.reset();
                 this.spinButtonTimer.start();
                 _local_2 = 0;
@@ -585,7 +621,7 @@
         {
             this.isVideoPlaying = false;
             this.mPanel.ani.playheadTime = 0;
-            this.mPanel.spinButton.source = gAssetManager.GetClass("congen_button");
+            this.mPanel.setSpinButtonState("normal");
             if (!this.isWaitingForServer)
             {
                 this.ProcessRollComplete();
@@ -638,7 +674,7 @@
 
         private function incrementRollsOutHandler(_arg_1:MouseEvent):void
         {
-            (_arg_1.target as CGIncrementButton).bg.source = gAssetManager.GetClass("congen_up");
+            (_arg_1.currentTarget as CGIncrementButton).bg.source = gAssetManager.GetClass("congen_up");
             this.incrementRepeatTimer.stop();
         }
 
@@ -649,7 +685,7 @@
 
         protected function spinButtonMouseOutHandler(_arg_1:MouseEvent):void
         {
-            this.mPanel.spinButton.source = gAssetManager.GetClass("congen_button");
+            this.mPanel.setSpinButtonState("normal");
         }
 
         public function updateContentDefinitions():void

@@ -26,6 +26,13 @@
         [Embed(source="../../../../../../../../assets/embedded/contentgenerator/contentgenerator_cg_header_gfx.png")]
         private var _embed_mxml_____data_src_gfx_embedded_contentgenerator_cg_header_gfx_png_1879267541:Class;
 
+        [Embed(source="../../../../../../../../assets/gAssetManager/congen_button.png")]
+        private var spinButtonNormal:Class;
+        [Embed(source="../../../../../../../../assets/gAssetManager/congen_button_mouseover.png")]
+        private var spinButtonOver:Class;
+        [Embed(source="../../../../../../../../assets/gAssetManager/congen_button_pushed.png")]
+        private var spinButtonPushed:Class;
+
         private var _mAutoRewindEnabled:Boolean = false;
 
         [Bindable(event="propertyChange")]
@@ -65,6 +72,16 @@
             LegacyMxmlContent.createChildren(controllerCanvas);
             headerImage.source = _embed_mxml_____data_src_gfx_embedded_contentgenerator_cg_header_gfx_png_1879267541;
             headerCrystalImage.source = _embed_mxml_____data_src_gfx_embedded_contentgenerator_cg_header_crystal_png_979580629;
+            crystalResourceIcon.source = gAssetManager.GetResourceIcon("Crystal");
+            gemResourceIcon.source = gAssetManager.GetResourceIcon("HardCurrency");
+            crystalSpinnerImage.source = gAssetManager.GetResourceIcon("Crystal");
+            gemSpinnerImage.source = gAssetManager.GetResourceIcon("HardCurrency");
+            setSpinButtonState("normal");
+            btnAddCash.setStyle("icon", gAssetManager.GetClass("ButtonIconHardCurrency"));
+            btnAddCash.setStyle("upSkin", gAssetManager.GetClass("ButtonAddCashUp"));
+            btnAddCash.setStyle("downSkin", gAssetManager.GetClass("ButtonAddCashOver"));
+            btnAddCash.setStyle("overSkin", gAssetManager.GetClass("ButtonAddCashOver"));
+            btnAddCash.setStyle("disabledSkin", gAssetManager.GetClass("ButtonAddCashDisabled"));
             setStyle("showEffect", fadeIn);
             setStyle("hideEffect", fadeOut);
             categoryButtonContainer.itemRenderer = new ClassFactory(ContentGeneratorCategoryItemRenderer);
@@ -74,6 +91,22 @@
             ani.autoRewind = mAutoRewindEnabled;
             refreshLabels();
             cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+        }
+
+        public function setSpinButtonState(state:String):void
+        {
+            if (state == "over")
+            {
+                spinButton.source = spinButtonOver;
+            }
+            else if (state == "pushed")
+            {
+                spinButton.source = spinButtonPushed;
+            }
+            else
+            {
+                spinButton.source = spinButtonNormal;
+            };
         }
 
         private function locaLabel(key:String):String
@@ -106,7 +139,11 @@
             completeCollectionButton.toolTip = locaText(LOCA_GROUP.TOOLTIP, "CGCompleteCollectionButton");
             possibleResultsLabel.text = locaLabel("PossibleResults");
             incrementButton.toolTip = locaText(LOCA_GROUP.TOOLTIP, "CGIncrementRolls");
+            incrementTensButton.toolTip = incrementButton.toolTip;
+            incrementHundredsButton.toolTip = incrementButton.toolTip;
             decrementButton.toolTip = locaText(LOCA_GROUP.TOOLTIP, "CGDecrementRolls");
+            decrementTensButton.toolTip = decrementButton.toolTip;
+            decrementHundredsButton.toolTip = decrementButton.toolTip;
             spinButton.toolTip = locaText(LOCA_GROUP.TOOLTIP, "CGRollButton");
         }
 
@@ -276,14 +313,18 @@
     <mx:Canvas id="footerCanvas" bottom="14" left="2" right="0" width="44" height="107" styleName="contentGeneratorFooter" mouseEnabled="false" />
     <gui:CustomTileList id="resultsList" width="230" height="160" selectable="false"
         bottom="49" right="34" backgroundAlpha="0" borderStyle="none" paddingBottom="0" />
-    <mx:Canvas id="controllerCanvas" left="100" bottom="0" width="327" height="144" styleName="contentGeneratorController">
-        <cg:CGIncrementButton id="incrementButton" left="34" top="23" width="25" height="23" />
-        <cg:ScrollingDigitWheel id="selectorSpinner" left="32" top="55" width="33" height="25" digitGap="2" numberOfDigits="2" />
-        <cg:CGDecrementButton id="decrementButton" left="34" top="84" width="25" height="23" />
-        <gui:TSOImage id="crystalSpinnerImage" top="35" left="70" source="{gAssetManager.GetResourceIcon('Crystal')}" />
-        <cg:ScrollingDigitWheel id="crystalSpinner" left="98" top="37" width="87" height="25" digitGap="2" numberOfDigits="5" />
-        <gui:TSOImage id="gemSpinnerImage" top="70" left="69" source="{gAssetManager.GetResourceIcon('HardCurrency')}" />
-        <cg:ScrollingDigitWheel id="gemSpinner" left="99" top="71" width="87" height="25" digitGap="2" numberOfDigits="5" />
-        <gui:TSOImage id="spinButton" left="210" top="21" width="88" height="88" source="{gAssetManager.GetClass('congen_button')}" />
+    <mx:Canvas id="controllerCanvas" left="100" bottom="0" width="344" height="144" styleName="contentGeneratorController">
+        <cg:CGIncrementButton id="incrementHundredsButton" left="30" top="36" width="18" height="18" />
+        <cg:CGIncrementButton id="incrementTensButton" left="48" top="36" width="18" height="18" />
+        <cg:CGIncrementButton id="incrementButton" left="66" top="36" width="18" height="18" />
+        <cg:ScrollingDigitWheel id="selectorSpinner" left="28" top="58" width="58" height="27" digitGap="2" numberOfDigits="3" />
+        <cg:CGDecrementButton id="decrementHundredsButton" left="29" top="87" width="18" height="18" />
+        <cg:CGDecrementButton id="decrementTensButton" left="48" top="87" width="18" height="18" />
+        <cg:CGDecrementButton id="decrementButton" left="66" top="87" width="18" height="18" />
+        <gui:TSOImage id="crystalSpinnerImage" top="39" left="89" source="{gAssetManager.GetResourceIcon('Crystal')}" />
+        <cg:ScrollingDigitWheel id="crystalSpinner" left="118" top="40" width="87" height="25" digitGap="2" numberOfDigits="5" />
+        <gui:TSOImage id="gemSpinnerImage" top="75" left="89" source="{gAssetManager.GetResourceIcon('HardCurrency')}" />
+        <cg:ScrollingDigitWheel id="gemSpinner" left="118" top="74" width="87" height="25" digitGap="2" numberOfDigits="5" />
+        <gui:TSOImage id="spinButton" left="232" top="26" width="88" height="88" source="{gAssetManager.GetClass('congen_button')}" />
     </mx:Canvas>
 </mx:Canvas>
