@@ -1,4 +1,4 @@
-﻿package Modifier
+package Modifier
 {
     import Model.Observer;
     import Interface.cGameInterface;
@@ -36,7 +36,7 @@
                 {
                     for each (_local_4 in this.propertySignals_vector)
                     {
-                        this.notifiers_vector.concat(this.gi.channels.CHANNEL_MAP.addObserver(_local_3, _local_4, this));
+                        this.notifiers_vector = this.notifiers_vector.concat(this.gi.channels.CHANNEL_MAP.addObserver(_local_3, _local_4, this));
                     };
                 };
             };

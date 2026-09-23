@@ -1,4 +1,4 @@
-﻿package Skill
+package Skill
 {
     import flash.events.EventDispatcher;
     import Interface.cGeneralInterface;
@@ -49,6 +49,15 @@
             {
                 this.mDirtyIndicator = DIRTY_INDICATOR.CREATED_BIT;
             };
+        }
+
+        public function dispose():void
+        {
+            for each (var modifier:Modifier in this._modifier_vector)
+            {
+                modifier.dispose();
+            }
+            this._modifier_vector.length = 0;
         }
 
         public function isTrait():Boolean

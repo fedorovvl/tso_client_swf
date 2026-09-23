@@ -1,4 +1,4 @@
-﻿package Tasks
+package Tasks
 {
     import Fulfilments.FulfilmentsManager;
     import Trigger.Triggerable;
@@ -197,6 +197,11 @@
 
         override public function dispose():void
         {
+            if (this.resetTrigger != null)
+            {
+                this.resetTrigger.dispose();
+                this.resetTrigger = null;
+            }
             super.dispose();
             this.gi = null;
         }

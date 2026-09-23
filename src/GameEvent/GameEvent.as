@@ -1,4 +1,4 @@
-﻿package GameEvent
+package GameEvent
 {
     import Trigger.Triggerable;
     import Communication.VO.GameEventVO;
@@ -71,21 +71,16 @@
 
         public function trigger(_arg_1:Trigger):void
         {
-            var _local_2:int;
-            _local_2 = 0;
-            while (_local_2 < this.trigger_vector.length)
+            var index:int = this.trigger_vector.indexOf(_arg_1);
+            if (index >= 0)
             {
-                if (_local_2 >= 0)
+                this.trigger_vector.splice(index, 1);
+                _arg_1.dispose();
+                if (this.trigger_vector.length == 0)
                 {
-                    this.trigger_vector.splice(_local_2, 1);
-                    if (this.trigger_vector.length == 0)
-                    {
-                        this.startEvent();
-                    };
-                    return;
-                };
-                _local_2++;
-            };
+                    this.startEvent();
+                }
+            }
         }
 
         public function reset():void

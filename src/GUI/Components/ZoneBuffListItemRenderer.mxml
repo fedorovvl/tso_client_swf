@@ -95,12 +95,13 @@
         protected function creationCompleteHandler(event:FlexEvent):void
         {
             btnItemClose.addEventListener(MouseEvent.CLICK, removeBuffClickHandler);
-            refreshTimer.addEventListener(TimerEvent.TIMER, timerTick);
-            refreshTimer.start();
+            refreshTimer.addEventListener(TimerEvent.TIMER, timerTick, false, 0, true);
+            if (stage != null) refreshTimer.start();
         }
 
         private function UpdateRemainingTime():void
         {
+            if (buffAppliance == null || buffTimeRemaining == null) return;
             var definition:cBuffDefinition;
             var total:Number;
             var remaining:Number;
@@ -121,11 +122,24 @@
         override protected function childrenCreated():void
         {
             super.childrenCreated();
+            addEventListener(Event.ADDED_TO_STAGE, handleAddedToStage);
+            addEventListener(Event.REMOVED_FROM_STAGE, handleRemovedFromStage);
 
             refreshTip();
             addEventListener("creationComplete", onCreationComplete);
             addEventListener("toolTipCreate", onToolTipCreate);
             cLocaManager.GetInstance().addEventListener("languageChanged", refreshTip, false, 0, true);
+        }
+
+        private function handleAddedToStage(event:Event):void
+        {
+            UpdateRemainingTime();
+            refreshTimer.start();
+        }
+
+        private function handleRemovedFromStage(event:Event):void
+        {
+            refreshTimer.stop();
         }
 
         private function refreshTip(event:Event = null):void

@@ -1,4 +1,4 @@
-﻿package com.bluebyte.tso.conditionsystem.logic
+package com.bluebyte.tso.conditionsystem.logic
 {
     import flash.utils.Dictionary;
     import mx.collections.ArrayCollection;
@@ -14,7 +14,7 @@
     public class ConditionManager 
     {
 
-        private var map:Dictionary = new Dictionary();
+        private var map:Dictionary = new Dictionary(true);
 
 
         public function Init(_arg_1:ConditionCollectionVO):void

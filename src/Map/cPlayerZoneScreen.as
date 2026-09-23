@@ -1,4 +1,4 @@
-﻿package Map
+package Map
 {
     import Model.Notifier;
     import Communication.VO.dTrackedMissionListVO;
@@ -726,8 +726,12 @@
         {
             var _local_5:cGO;
             _local_5 = cGO.CreateGoFromLevelObject(_arg_1, _arg_2, _arg_3, this.mGeneralInterface);
-            _local_5 = this.SetGoAtGridPosition(_arg_1, _local_5, _arg_2, _arg_4);
-            return (_local_5);
+            var placed:cGO = this.SetGoAtGridPosition(_arg_1, _local_5, _arg_2, _arg_4);
+            if (placed == null && _local_5 != null)
+            {
+                _local_5.dispose();
+            }
+            return placed;
         }
 
         public function ColonyRemove(_arg_1:int):void

@@ -1,4 +1,4 @@
-﻿package Map.SubMaps
+package Map.SubMaps
 {
     import Model.Notifier;
     import nLib.IndexedContainer;
@@ -615,6 +615,7 @@
 
         override public function dispose():void
         {
+            this.ResetStreetPreview();
             if (this.renderLayers != null)
             {
                 this.renderLayers.dispose();
@@ -625,6 +626,7 @@
 
         public function Clear():void
         {
+            this.ResetStreetPreview();
             var _local_1:int;
             var _local_2:Dictionary;
             this.mFreeLandscape_vector.length = 0;
@@ -2933,7 +2935,11 @@
 
         public function ResetStreetPreview():void
         {
-            this.mStreetCreationPreview_vector = new Vector.<cStreet>();
+            for each (var preview:cStreet in this.mStreetCreationPreview_vector)
+            {
+                if (preview != null) preview.dispose();
+            }
+            this.mStreetCreationPreview_vector.length = 0;
         }
 
         private function renderFogBorders(_arg_1:cClippingRectangle, _arg_2:int, _arg_3:int, _arg_4:int, _arg_5:int):void

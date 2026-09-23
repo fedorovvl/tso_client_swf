@@ -1,4 +1,4 @@
-﻿package Model
+package Model
 {
     import flash.events.EventDispatcher;
     import __AS3__.vec.Vector;
@@ -14,6 +14,43 @@
         private var channelMap:ChannelMap;
         private var observers:HashMapWrapper = null;
 
+
+        public function debugObserverCount(property:String):int
+        {
+            if (this.observers == null) return 0;
+            var entries:HashSetWrapper = this.observers.getItem(property) as HashSetWrapper;
+            return entries == null ? 0 : int(entries.size());
+        }
+
+        public function debugObserverSnapshot():String
+        {
+            var result:String = "";
+            if (this.observers == null) return result;
+            for each (var key:String in this.observers.keySet())
+            {
+                result += key + "=" + this.debugObserverCount(key) + ";";
+            }
+            return result;
+        }
+
+        public function debugObserverTypes(property:String):String
+        {
+            var result:String = "";
+            if (this.observers == null) return result;
+            var entries:HashSetWrapper = this.observers.getItem(property) as HashSetWrapper;
+            if (entries == null) return result;
+            for each (var observer:Object in entries.toArray())
+            {
+                var type:String = flash.utils.getQualifiedClassName(observer);
+                result += type;
+                if (type == "Trigger.Triggers::OnDateTrigger")
+                {
+                    result += " -> " + flash.utils.getQualifiedClassName(observer.getTriggerable());
+                }
+                result += ";";
+            }
+            return result;
+        }
 
         public function notifyPropertyObserver(_arg_1:String, _arg_2:Object):void
         {

@@ -1,4 +1,4 @@
-﻿package ServerState
+package ServerState
 {
     import converted.bluebyte.tso.quests.logic.QuestManagerStatic;
     import nLib.cLog;
@@ -170,6 +170,25 @@
                 _local_16.dispose();
             };
             this.mGeneralInterface.mCurrentPlayerZone.GetSpecialists_vector().length = 0;
+            // Detach before Init replaces the old map, or Clear empties its containers.
+            var oldMap:Object = this.mGeneralInterface.mCurrentPlayerZone.mStreetDataMap;
+            if (oldMap != null)
+            {
+                var oldContainers:Array = [oldMap.mBuildingContainer, oldMap.mDepositContainer,
+                    oldMap.mStreetContainer, oldMap.mLandscapeContainer];
+                for each (var oldContainer:Object in oldContainers)
+                {
+                    if (oldContainer == null) continue;
+                    for each (var oldObject:Object in oldContainer.mContainer)
+                    {
+                        var oldIso:GO.cIsoGO = oldObject as GO.cIsoGO;
+                        if (oldIso != null)
+                        {
+                            this.mGeneralInterface.channels.ZONE.removePropertyObserver("FOG_RECALCULATED", oldIso);
+                        }
+                    }
+                }
+            }
             if ((((!(_arg_4)) || (_local_14)) || (_local_15)))
             {
                 this.mGeneralInterface.mCurrentPlayerZone.Init(_arg_1);
@@ -657,6 +676,7 @@
                 _local_7 = new cBuilding(this.mGeneralInterface, this.mGeneralInterface.mCurrentViewedZoneID);
                 _local_7.SetUniqueId(_arg_2.uniqueId);
                 _local_7._setGridRaw(_local_5);
+                _local_7.dispose();
                 return (null);
             };
             _local_6.setPlayerID(_local_3);

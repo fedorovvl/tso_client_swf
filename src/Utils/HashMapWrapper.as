@@ -1,4 +1,4 @@
-﻿package Utils
+package Utils
 {
     import flash.utils.Dictionary;
 
@@ -51,6 +51,9 @@
         {
             var _local_2:Object = this.dict[_arg_1];
             delete this.dict[_arg_1];
+            // Cached snapshots must not retain removed keys or values.
+            this._keySet = null;
+            this._valueSet = null;
             this.invalidated = true;
             return (_local_2);
         }
@@ -64,12 +67,18 @@
             };
             _local_1 = null;
             this.dict = new Dictionary();
+            // Cached snapshots must not retain removed keys or values.
+            this._keySet = null;
+            this._valueSet = null;
             this.invalidated = true;
         }
 
         public function putItem(_arg_1:Object, _arg_2:Object):Object
         {
             this.dict[_arg_1] = _arg_2;
+            // Cached snapshots must not retain removed keys or values.
+            this._keySet = null;
+            this._valueSet = null;
             this.invalidated = true;
             return (_arg_2);
         }

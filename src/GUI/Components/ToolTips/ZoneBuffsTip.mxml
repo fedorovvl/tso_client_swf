@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*"
     implements="mx.core.IToolTip"
-    width="325" minHeight="40" styleName="toolTip">
+    width="325" minHeight="40">
     <mx:Script><![CDATA[
         import flash.events.Event;
         import flash.events.TimerEvent;
@@ -33,10 +33,20 @@
             if (!timer)
             {
                 timer = new Timer(500, 0);
-                timer.addEventListener(TimerEvent.TIMER, timerTickHandler);
-                timer.start();
+                timer.addEventListener(TimerEvent.TIMER, timerTickHandler, false, 0, true);
             };
+            if (stage != null) timer.start();
             refresh();
+        }
+
+        private function handleAddedToStage(event:Event):void
+        {
+            invalidateProperties();
+        }
+
+        private function handleRemovedFromStage(event:Event):void
+        {
+            if (timer != null) timer.stop();
         }
 
         private function timerTickHandler(_arg_1:TimerEvent):void
@@ -97,6 +107,9 @@
         override protected function childrenCreated():void
         {
             super.childrenCreated();
+            this.styleName = "toolTip";
+            addEventListener(Event.ADDED_TO_STAGE, handleAddedToStage);
+            addEventListener(Event.REMOVED_FROM_STAGE, handleRemovedFromStage);
             refreshTitle();
             cLocaManager.GetInstance().addEventListener("languageChanged", refreshTitle, false, 0, true);
         }

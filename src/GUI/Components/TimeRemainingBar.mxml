@@ -2,6 +2,7 @@
 <mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:gui="GUI.Components.*">
     <mx:Script><![CDATA[
         import flash.utils.Timer;
+        import flash.events.Event;
         import flash.events.TimerEvent;
         import com.bluebyte.tso.util.TimeUtil;
         import GUI.Loca.cLocaManager;
@@ -15,8 +16,20 @@
             super.childrenCreated();
             for each (var edge:String in ["left", "right", "top", "bottom"])
                 barFrame.setStyle(edge, 3);
-            timer.addEventListener(TimerEvent.TIMER, updateTime);
+            timer.addEventListener(TimerEvent.TIMER, updateTime, false, 0, true);
+            addEventListener(Event.ADDED_TO_STAGE, handleAddedToStage);
+            addEventListener(Event.REMOVED_FROM_STAGE, handleRemovedFromStage);
             updateTime();
+        }
+
+        private function handleAddedToStage(event:Event):void
+        {
+            updateTime();
+        }
+
+        private function handleRemovedFromStage(event:Event):void
+        {
+            timer.stop();
         }
 
         public function SetDates(start:Number, stop:Number):void
@@ -30,11 +43,12 @@
         {
             if (!timeRemainingLabel || !barCanvas) return;
             var duration:Number = stopDate - startDate;
-            if (duration <= 1) return;
+            if (duration <= 1) { timer.stop(); return; }
             var remaining:Number = Math.max(0, stopDate - TimeUtil.getServerTime());
             timeRemainingLabel.text = cLocaManager.GetInstance().FormatDuration(remaining, cLocaManager.DURATION_FORMAT_SHORT);
             barCanvas.percentWidth = 100 * remaining / duration;
-            timer.start();
+            if (stage != null && remaining > 0) timer.start();
+            else timer.stop();
         }
     ]]></mx:Script>
     <mx:Canvas styleName="timeRemainingBackground" percentWidth="100" percentHeight="100" />

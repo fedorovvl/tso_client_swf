@@ -34,7 +34,7 @@
             };
             if ((_currentValue2 - _stepWidth2) < _value2)
             {
-                _currentValue2 = (_currentValue2 - _stepWidth2);
+                _currentValue2 = _value2;
             }
             else
             {

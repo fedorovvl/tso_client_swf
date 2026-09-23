@@ -28,6 +28,7 @@
                 _local_2 = 0;
             };
             this.mLastTicks = _local_1;
+            _local_2 = Math.min(_local_2, 100);
             this.mDeltaTicksMs = _local_2;
             this.mDeltaTicksOne = ((_local_2 / 1000) * this.SCALE_GAME_FRAMERATE);
         }

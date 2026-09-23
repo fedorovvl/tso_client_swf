@@ -6,7 +6,7 @@
         import Enums.LOCA_GROUP;
         import GUI.Assets.gAssetManager;
         import GUI.Loca.cLocaManager;
-        import flash.utils.setInterval;
+        import flash.utils.setTimeout;
         import mx.effects.easing.Cubic;
         import mx.events.EffectEvent;
 
@@ -54,7 +54,7 @@
         public function onHideTip_effectEnd(event:EffectEvent):void
         {
             tipOfTheDay.text = _tipText;
-            setInterval(function ():void
+            setTimeout(function ():void
             {
                 tipOfTheDay.visible = true;
             }, 50);

@@ -1,4 +1,4 @@
-﻿package Interface
+package Interface
 {
     import Tracks.IdleDetection;
     import Tracks.UITimeAndClickDetection;
@@ -2710,6 +2710,14 @@
 
         override public function ClearLevelOnTheFly():void
         {
+            for each (var oldList:cSkillList in skillLists_vector)
+            {
+                if (oldList == null) continue;
+                for each (var oldSkill:Skill.cSkill in oldList.getItems_vector())
+                {
+                    if (oldSkill != null) oldSkill.dispose();
+                }
+            }
             mCurrentPlayerZone.ClearOnTheFly();
             mComputeResourceCreation.ResetResourceCreation();
             global.getApplication().particlePlane.stop();

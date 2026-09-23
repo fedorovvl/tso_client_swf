@@ -1,4 +1,4 @@
-﻿package Model
+package Model
 {
     import Utils.HashMapWrapper;
     import __AS3__.vec.Vector;
@@ -27,6 +27,17 @@
             _local_3.push(_arg_1);
         }
 
+
+        public function debugObserverSnapshot():String
+        {
+            var result:String = "";
+            for each (var key:String in this.mappedChannels.keySet())
+            {
+                var channel:Notifier = this.mappedChannels.getItem(key) as Notifier;
+                if (channel != null) result += key + "=" + channel.debugObserverSnapshot() + ";";
+            }
+            return result;
+        }
 
         public function addObserver(_arg_1:String, _arg_2:String, _arg_3:Observer):Vector.<Notifier>
         {
