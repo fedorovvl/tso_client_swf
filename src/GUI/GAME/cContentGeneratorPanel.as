@@ -36,11 +36,15 @@
     import GUI.Components.CustomAlert;
     import com.bluebyte.tso.contentgenerator.view.ui.itemrenderer.ContentGeneratorRewardItemRenderer;
     import flash.geom.Point;
+    import flash.utils.ByteArray;
     import Communication.VO.EffectVO;
     import __AS3__.vec.*;
 
     public final class cContentGeneratorPanel extends cBasicInfoPanel implements Observer 
     {
+
+        [Embed(source="../../../assets/embedded/contentgenerator/content_generator_roll_animation.flv", mimeType="application/octet-stream")]
+        private static const EmbeddedRollAnimation:Class;
 
         private var isFirstOpen:Boolean = true;
         private var lastRollTimestamp:Number = 0;
@@ -174,7 +178,7 @@
             this.defaultActionUnlockTimer.reset();
             this.defaultActionUnlockTimer.start();
             this.mPanel.ani.addEventListener(VideoEvent.COMPLETE, this.videoCompleteHandler);
-            this.mPanel.ani.source = cFilenameUtil.findHashMapping("video/content_generator_roll_animation.mp4");
+            this.mPanel.ani.setEmbeddedSource(new EmbeddedRollAnimation() as ByteArray);
         }
 
         public function WasItemEnabled(_arg_1:String):Boolean
@@ -510,9 +514,9 @@
                 {
                     volume = 0;
                 };
-                this.mPanel.ani.volume = volume;
-                this.mPanel.ani.playheadTime = 0;
-                this.mPanel.ani.play();
+                this.mPanel.ani.setEmbeddedVolume(volume);
+                this.mPanel.ani.rewindEmbedded();
+                this.mPanel.ani.playEmbedded();
                 this.isVideoPlaying = true;
                 cSoundManager.getInstance().playEffect(cSoundManager.CG_START_ROLL);
             }
@@ -620,7 +624,7 @@
         protected function videoCompleteHandler(_arg_1:VideoEvent):void
         {
             this.isVideoPlaying = false;
-            this.mPanel.ani.playheadTime = 0;
+            this.mPanel.ani.rewindEmbedded();
             this.mPanel.setSpinButtonState("normal");
             if (!this.isWaitingForServer)
             {
