@@ -105,7 +105,7 @@
             var explorerTaskDefinition2:cSpecialistSubTaskDefinition;
             var geologistTask:cSpecialistTask;
             var geologistTaskDefinition:cSpecialistSubTaskDefinition;
-            if (ignore)
+            if (((ignore) || (((defines.AVATAR_MESSAGE_EXCLUSIONS != null) && (defines.AVATAR_MESSAGE_EXCLUSIONS.indexOf(_messageType) != -1)))))
             {
                 return;
             };

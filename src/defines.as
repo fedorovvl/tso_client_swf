@@ -15,6 +15,7 @@
         public static var CLIENT_EXPERIMENTAL:int = 0;
         public static var CLIENT_ZONEID:int = 0;
         public static var CHAT_FONT_SIZE:int = 12;
+        public static var AVATAR_MESSAGE_EXCLUSIONS:Array = [];
         public static var INFO_RESOURCE_2:String = "Coin";
         public static var INFO_RESOURCE_1:String = "Tool";
         public static var GFX_CACHE:Boolean = false;
