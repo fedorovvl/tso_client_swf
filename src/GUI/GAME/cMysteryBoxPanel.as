@@ -152,6 +152,40 @@
             Show();
         }
 
+        private function GetGroupedDisplayItems(_arg_1:Object):Array
+        {
+            var _local_2:Array = [];
+            var _local_3:Object = {};
+            var _local_4:Object;
+            var _local_5:dBuffVO;
+            var _local_6:dBuffVO;
+            var _local_7:String;
+            for each (_local_4 in _arg_1)
+            {
+                if ((_local_4 is dBuffVO))
+                {
+                    _local_5 = (_local_4 as dBuffVO);
+                    _local_7 = (((_local_5.buffName_string.length + ":") + _local_5.buffName_string) + (("|" + _local_5.resourceName_string.length) + ":")) + _local_5.resourceName_string;
+                    _local_6 = (_local_3[_local_7] as dBuffVO);
+                    if (_local_6 != null)
+                    {
+                        _local_6.amount = (_local_6.amount + _local_5.amount);
+                    }
+                    else
+                    {
+                        _local_6 = dBuffVO.cloneDBuffVO(_local_5);
+                        _local_3[_local_7] = _local_6;
+                        _local_2.push(_local_6);
+                    };
+                }
+                else
+                {
+                    _local_2.push(_local_4);
+                };
+            };
+            return (_local_2);
+        }
+
         public function SetResult(_items:dLootItemsVO):void
         {
             var vo:* = undefined;
@@ -165,7 +199,7 @@
             };
             this.mPanel.rewardText.text = this.mLM.GetText(LOCA_GROUP.DESCRIPTIONS, "ContentMysteryBox");
             this.mPanel.busyAnim.visible = false;
-            for each (vo in _items.items)
+            for each (vo in this.GetGroupedDisplayItems(_items.items))
             {
                 if (((vo is dResourceVO) && ((vo.name_string == "XP") || (vo.name_string == defines.PVP_XP_string))))
                 {

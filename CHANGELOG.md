@@ -6,6 +6,10 @@
 
 - Fixed XP icon in rewards
 
+### 🎨 UI / UX
+
+- Grouped MysterBox rewards
+
 ## 2026-10-05
 
 ### ✨ FEATURE
