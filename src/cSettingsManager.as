@@ -38,6 +38,7 @@ package
         private var mUiScale:int = 2;
         private var mShowStoppedProduction:Boolean;
         private var mShowSettlers:Boolean;
+        public var showBuildingBuffTimers:Boolean = false;
 
         public function cSettingsManager(_arg_1:SingletonEnforcer)
         {

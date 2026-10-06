@@ -17,7 +17,7 @@
     import GUI.Components.ItemRenderer.StarMenuItemRenderer;
     import Communication.VO.dUniqueID;
     import Enums.LOCA_GROUP;
-    import Communication.VO.dResourcesVO;
+    import Communication.VO.dResourceVO;
     import mx.events.ToolTipEvent;
     import GUI.Components.ToolTips.cToolTipUtil;
     import Communication.VO.dBuffVO;
@@ -167,11 +167,12 @@
             this.mPanel.busyAnim.visible = false;
             for each (vo in _items.items)
             {
-                if (((vo is dResourcesVO) && (vo.name_string == "XP")))
+                if (((vo is dResourceVO) && ((vo.name_string == "XP") || (vo.name_string == defines.PVP_XP_string))))
                 {
                     item = vo;
                     frame = new Frame();
                     frame.contentType = Frame.CONTENT_TYPE_RESOURCE;
+                    frame.type = Frame.BUFF_INSTANT;
                     frame.amount = vo.amount;
                     frame.content = vo.name_string;
                     frame.toolTip = this.mLM.GetText(LOCA_GROUP.RESOURCES, vo.name_string);

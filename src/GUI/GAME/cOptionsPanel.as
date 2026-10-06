@@ -48,10 +48,12 @@
             this.mPanel.btnEventWindow.addEventListener(MouseEvent.CLICK, this.OpenEventWindow);
             this.mPanel.btnSupport.addEventListener(MouseEvent.CLICK, this.OpenSupport);
             this.mPanel.btnForum.addEventListener(MouseEvent.CLICK, this.ToggleMemoryPanel);
+            this.mPanel.btnBuffTimers.addEventListener(MouseEvent.CLICK, this.ToggleBuffTimers);
             this.mPanel.btnLogout.addEventListener(MouseEvent.CLICK, this.Logout);
             this.mPanel.btnPlayerOptions.addEventListener(MouseEvent.CLICK, this.OpenOptions);
             this.mPanel.btnToggleEffects.selected = cSettingsManager.getInstance().sfxMuted;
             this.mPanel.btnToggleLoops.selected = cSettingsManager.getInstance().loopsMuted;
+            this.mPanel.btnBuffTimers.selected = cSettingsManager.getInstance().showBuildingBuffTimers;
             this.mPanel.btnExpandCollapse.addEventListener(MouseEvent.CLICK, this.ToggleSize);
             this.ToggleEventWindowButton();
             if (global.partner != "")
@@ -91,6 +93,12 @@
             {
                 globalFlash.gui.mMemoryMonitorPanel.Show();
             };
+        }
+
+        private function ToggleBuffTimers(_arg_1:MouseEvent):void
+        {
+            cSettingsManager.getInstance().showBuildingBuffTimers = (!(cSettingsManager.getInstance().showBuildingBuffTimers));
+            this.mPanel.btnBuffTimers.selected = cSettingsManager.getInstance().showBuildingBuffTimers;
         }
 
         private function OpenOptions(_arg_1:MouseEvent):void
@@ -179,8 +187,8 @@
 
         private function ToggleButtons(_arg_1:Boolean):void
         {
-            this.mPanel.btnPlayerOptions.enabled = (this.mPanel.btnToggleLoops.enabled = (this.mPanel.btnToggleEffects.enabled = (this.mPanel.btnCamera.enabled = (this.mPanel.btnHelp.enabled = (this.mPanel.btnEventWindow.enabled = (this.mPanel.btnSupport.enabled = (this.mPanel.btnForum.enabled = _arg_1)))))));
-            this.mPanel.btnPlayerOptions.mouseEnabled = (this.mPanel.btnToggleLoops.mouseEnabled = (this.mPanel.btnToggleEffects.mouseEnabled = (this.mPanel.btnCamera.mouseEnabled = (this.mPanel.btnHelp.mouseEnabled = (this.mPanel.btnEventWindow.mouseEnabled = (this.mPanel.btnSupport.mouseEnabled = (this.mPanel.btnForum.enabled = _arg_1)))))));
+            this.mPanel.btnPlayerOptions.enabled = (this.mPanel.btnToggleLoops.enabled = (this.mPanel.btnToggleEffects.enabled = (this.mPanel.btnCamera.enabled = (this.mPanel.btnHelp.enabled = (this.mPanel.btnEventWindow.enabled = (this.mPanel.btnSupport.enabled = (this.mPanel.btnForum.enabled = (this.mPanel.btnBuffTimers.enabled = _arg_1))))))));
+            this.mPanel.btnPlayerOptions.mouseEnabled = (this.mPanel.btnToggleLoops.mouseEnabled = (this.mPanel.btnToggleEffects.mouseEnabled = (this.mPanel.btnCamera.mouseEnabled = (this.mPanel.btnHelp.mouseEnabled = (this.mPanel.btnEventWindow.mouseEnabled = (this.mPanel.btnSupport.mouseEnabled = (this.mPanel.btnForum.mouseEnabled = (this.mPanel.btnBuffTimers.mouseEnabled = _arg_1))))))));
             this.ToggleEventWindowButton();
         }
 

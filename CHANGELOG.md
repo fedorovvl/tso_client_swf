@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-06
+
+### 🐛 FIX
+
+- Fixed XP icon in rewards
+
 ## 2026-10-05
 
 ### ✨ FEATURE

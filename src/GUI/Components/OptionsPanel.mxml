@@ -138,8 +138,8 @@
             btnLogout.setStyle("disabledSkin", _embed_mxml_____data_src_gfx_embedded_options_login_inactive_png_460316693);
             expandResize.target = this;
             _OptionsPanel_Resize2.target = this;
-            _OptionsPanel_Fade1.targets = [btnPlayerOptions, btnToggleLoops, btnToggleEffects, btnCamera, btnHelp, btnEventWindow, btnSupport, btnForum];
-            _OptionsPanel_Fade2.targets = [btnPlayerOptions, btnToggleLoops, btnToggleEffects, btnCamera, btnHelp, btnEventWindow, btnSupport, btnForum];
+            _OptionsPanel_Fade1.targets = [btnPlayerOptions, btnToggleLoops, btnToggleEffects, btnCamera, btnHelp, btnEventWindow, btnSupport, btnForum, btnBuffTimers];
+            _OptionsPanel_Fade2.targets = [btnPlayerOptions, btnToggleLoops, btnToggleEffects, btnCamera, btnHelp, btnEventWindow, btnSupport, btnForum, btnBuffTimers];
             btnToggleLoops.addEventListener("toolTipCreate", __btnToggleLoops_toolTipCreate);
             btnToggleEffects.addEventListener("toolTipCreate", __btnToggleEffects_toolTipCreate);
             btnCamera.addEventListener("toolTipCreate", __btnCamera_toolTipCreate);
@@ -172,6 +172,7 @@
             btnSupport.label = ((value == undefined) ? null : String(value));
             value = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Forum");
             btnForum.label = ((value == undefined) ? null : String(value));
+            btnBuffTimers.label = "Buff timer";
             value = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "OptionsExpandCollapse");
             btnExpandCollapse.toolTip = ((value == undefined) ? null : String(value));
             value = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, "Fullscreen");
@@ -256,11 +257,11 @@
     ]]></mx:Script>
 
     <mx:Parallel id="expand">
-        <mx:Resize id="expandResize" heightFrom="48" heightTo="160" />
+        <mx:Resize id="expandResize" heightFrom="48" heightTo="180" />
         <mx:Fade id="_OptionsPanel_Fade1" alphaFrom="0" alphaTo="1" duration="800" />
     </mx:Parallel>
     <mx:Parallel id="collapse">
-        <mx:Resize id="_OptionsPanel_Resize2" heightFrom="137" heightTo="48" />
+        <mx:Resize id="_OptionsPanel_Resize2" heightFrom="180" heightTo="48" />
         <mx:Fade id="_OptionsPanel_Fade2" alphaFrom="1" alphaTo="0" duration="500" />
     </mx:Parallel>
 
@@ -269,10 +270,11 @@
         <mx:Button id="btnToggleLoops" left="26" top="3" width="30" height="31" toggle="true" alpha="0" />
         <mx:Button id="btnToggleEffects" left="55" top="3" width="30" height="31" toggle="true" alpha="0" />
         <mx:Button id="btnCamera" left="84" top="3" width="30" height="31" alpha="0" />
-        <gui:OptionsMenuButton id="btnHelp" left="0" bottom="80" alpha="0" />
-        <gui:OptionsMenuButton id="btnEventWindow" left="0" bottom="60" alpha="0" />
-        <gui:OptionsMenuButton id="btnSupport" left="0" bottom="40" alpha="0" />
-        <gui:OptionsMenuButton id="btnForum" left="0" bottom="20" alpha="0" />
+        <gui:OptionsMenuButton id="btnHelp" left="0" bottom="100" alpha="0" />
+        <gui:OptionsMenuButton id="btnEventWindow" left="0" bottom="80" alpha="0" />
+        <gui:OptionsMenuButton id="btnSupport" left="0" bottom="60" alpha="0" />
+        <gui:OptionsMenuButton id="btnForum" left="0" bottom="40" alpha="0" />
+        <gui:OptionsMenuButton id="btnBuffTimers" left="0" bottom="20" toggle="true" alpha="0" />
         <mx:HBox horizontalAlign="center" horizontalGap="-2" left="-10" bottom="0" width="130">
             <mx:Button id="btnExpandCollapse" toggle="true" width="44" height="21" />
             <mx:Button id="btnFullScreen" width="44" height="21" />

@@ -1584,6 +1584,18 @@
             mGeneralInterface.mCurrentPlayerZone.RenderTextCenter(cBackbuffer.mBackBuffer, cLocaManager.GetInstance().getLabel("BuffNameAndTimeOnBuilding", [_local_4, _local_5]), GetXInt(), _local_6);
         }
 
+        public function RenderBuffTimeOnly():void
+        {
+            var _local_1:BuffAppliance = this.GetBuffToRenderTooltip();
+            if (_local_1 == null)
+            {
+                return;
+            };
+            var _local_2:String = cLocaManager.GetInstance().FormatDuration((_local_1.GetBuffDefinition().getDuration(_local_1.GetApplicanceMode()) - (global.getApplication().mGameInterface.GetClientTime() - _local_1.GetStartTime())), cLocaManager.DURATION_FORMAT_SHORT);
+            var _local_3:Number = ((GetYInt() - (global.streetGridY * 2)) + ((this.mIsDepositInfoShowing) ? 130 : 68));
+            mGeneralInterface.mCurrentPlayerZone.RenderTextCenter(cBackbuffer.mBackBuffer, _local_2, GetXInt(), _local_3);
+        }
+
         public function getWarehouseToWorkyardTime():Number
         {
             return (this.mWayWarehouseToWorkyard);
@@ -2081,9 +2093,12 @@
                     {
                         this.renderProgressTimeRemaining();
                     };
-                    if ((((((this.mPlayerID == mGeneralInterface.mHomePlayer.GetPlayerId()) && (!(this.IsUpgradeInProgress()))) && (!(this.mBuildingMode == BUILDING_MODE_DESTRUCTION))) && (!(StringUtils.startsWith(this.mBuildingName_string, defines.DESTROYABLE_MOUNTAIN_string)))) && (!(CollectionsManager.getInstance().getBuildingIsCollectible(this.GetBuildingName_string())))))
+                    if (!(cSettingsManager.getInstance().showBuildingBuffTimers))
                     {
-                        this.RenderBuffTimeLeft();
+                        if ((((((this.mPlayerID == mGeneralInterface.mHomePlayer.GetPlayerId()) && (!(this.IsUpgradeInProgress()))) && (!(this.mBuildingMode == BUILDING_MODE_DESTRUCTION))) && (!(StringUtils.startsWith(this.mBuildingName_string, defines.DESTROYABLE_MOUNTAIN_string)))) && (!(CollectionsManager.getInstance().getBuildingIsCollectible(this.GetBuildingName_string())))))
+                        {
+                            this.RenderBuffTimeLeft();
+                        };
                     };
                     this.mIsMouseOver = false;
                 }
@@ -2092,6 +2107,13 @@
                     if (((((!(CollectionsManager.getInstance().getBuildingIsCollectible(this.GetBuildingName_string()))) && (this.mBuildingMode == BUILDING_MODE_DESTRUCTION)) || (this.mBuildingMode == BUILDING_MODE_CONSTRUCTION)) || (this.IsUpgradeInProgress())))
                     {
                         this.renderProgressPercent();
+                    };
+                };
+                if (cSettingsManager.getInstance().showBuildingBuffTimers)
+                {
+                    if ((((((this.mPlayerID == mGeneralInterface.mHomePlayer.GetPlayerId()) && (!(this.IsUpgradeInProgress()))) && (!(this.mBuildingMode == BUILDING_MODE_DESTRUCTION))) && (!(StringUtils.startsWith(this.mBuildingName_string, defines.DESTROYABLE_MOUNTAIN_string)))) && (!(CollectionsManager.getInstance().getBuildingIsCollectible(this.GetBuildingName_string())))))
+                    {
+                        this.RenderBuffTimeOnly();
                     };
                 };
             };
