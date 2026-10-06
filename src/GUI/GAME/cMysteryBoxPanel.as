@@ -186,6 +186,30 @@
             return (_local_2);
         }
 
+        private function FormatFrameAmount(_arg_1:FlexEvent):void
+        {
+            var _local_2:Frame = (_arg_1.currentTarget as Frame);
+            if ((((_local_2 != null) && (_local_2.amountLabel != null)) && (_local_2.amountLabel.text != "")))
+            {
+                _local_2.amountLabel.text = this.mLM.FormatNumber(_local_2.amount);
+            };
+        }
+
+        private function FormatRendererAmount(_arg_1:FlexEvent):void
+        {
+            var _local_2:StarMenuItemRenderer = (_arg_1.currentTarget as StarMenuItemRenderer);
+            var _local_3:cBuff;
+            if ((((_local_2 == null) || (_local_2.amountLabel == null)) || (_local_2.amountLabel.text == "")))
+            {
+                return;
+            };
+            _local_3 = (_local_2.data as cBuff);
+            if (_local_3 != null)
+            {
+                _local_2.amountLabel.text = this.mLM.FormatNumber(_local_3.GetAmount());
+            };
+        }
+
         public function SetResult(_items:dLootItemsVO):void
         {
             var vo:* = undefined;
@@ -205,6 +229,7 @@
                 {
                     item = vo;
                     frame = new Frame();
+                    frame.addEventListener(FlexEvent.DATA_CHANGE, this.FormatFrameAmount, false, 0, true);
                     frame.contentType = Frame.CONTENT_TYPE_RESOURCE;
                     frame.type = Frame.BUFF_INSTANT;
                     frame.amount = vo.amount;
@@ -224,6 +249,7 @@
                         {
                             item = cBuff.CreateBuffFromVO(vo);
                             gemFrame = new Frame();
+                            gemFrame.addEventListener(FlexEvent.DATA_CHANGE, this.FormatFrameAmount, false, 0, true);
                             gemFrame.contentType = Frame.CONTENT_TYPE_RESOURCE;
                             gemFrame.type = Frame.BUFF_INSTANT;
                             gemFrame.amount = vo.amount;
@@ -242,6 +268,7 @@
                         };
                     };
                     renderer = new StarMenuItemRenderer();
+                    renderer.addEventListener(FlexEvent.DATA_CHANGE, this.FormatRendererAmount, false, 0, true);
                     renderer.data = item;
                     this.mPanel.itemsList.addChild(renderer);
                 };

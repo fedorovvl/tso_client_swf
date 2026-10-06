@@ -9,6 +9,7 @@
 ### 🎨 UI / UX
 
 - Grouped MysterBox rewards
+- Format amount label in MysteryBox
 
 ## 2026-10-05
 
