@@ -6,6 +6,8 @@
     public class dServerAction 
     {
 
+        [Transient]
+        public var command:int;
         public var endGrid:int;
         public var grid:int;
         public var data:Object;
@@ -20,6 +22,13 @@
             _local_5.endGrid = _arg_3;
             _local_5.data = _arg_4;
             return (_local_5);
+        }
+
+        public static function createForCommand(_arg_1:int, _arg_2:int, _arg_3:int, _arg_4:int, _arg_5:Object):dServerAction
+        {
+            var _local_6:dServerAction = create(_arg_2, _arg_3, _arg_4, _arg_5);
+            _local_6.command = _arg_1;
+            return (_local_6);
         }
 
 

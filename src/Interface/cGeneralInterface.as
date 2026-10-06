@@ -1650,6 +1650,27 @@ package Interface
             return (_local_7);
         }
 
+        public function SendServerActionBatch(_arg_1:Array):Array
+        {
+            var _local_2:dServerAction;
+            if (((_arg_1 == null) || (_arg_1.length == 0)))
+            {
+                return (_arg_1);
+            };
+            for each (_local_2 in _arg_1)
+            {
+                if (_local_2 != null)
+                {
+                    if (_local_2.command == 0)
+                    {
+                        throw (new ArgumentError("dServerAction.command must be set for SendServerActionBatch"));
+                    };
+                    this.mClientMessages.SendMessagetoServer(_local_2.command, this.mCurrentViewedZoneID, _local_2);
+                };
+            };
+            return (_arg_1);
+        }
+
         protected function setCurrentTaskManager(_arg_1:TaskManager):void
         {
             if (this.mCurrentTaskManager != null)
