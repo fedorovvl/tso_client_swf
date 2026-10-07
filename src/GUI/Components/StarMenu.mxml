@@ -58,6 +58,9 @@
             sortCombo.itemRenderer = new ClassFactory(StarMenuComboBoxItem);
             sortCombo.dataProvider = sortOptions;
             searchIcon.source = gAssetManager.GetClass("SearchBtnIcon");
+            searchInput.addEventListener(Event.CHANGE, updateSearchClearButton);
+            searchClearButton.addEventListener(MouseEvent.CLICK, clearSearch);
+            updateSearchClearButton();
             itemList.nullItemRenderer = new ClassFactory(StarMenuNullItemRenderer);
             itemList.itemRenderer = new ClassFactory(StarMenuItemRenderer);
             for each (var padding:String in ["paddingLeft", "paddingRight", "paddingTop", "paddingBottom"])
@@ -69,6 +72,18 @@
             updateSortArrow();
             updateDragonPosition();
             addEventListener(FlexEvent.CREATION_COMPLETE, activateResizeHandle, false, 0, true);
+        }
+
+        private function updateSearchClearButton(event:Event=null):void
+        {
+            searchClearButton.visible = searchInput.text.length > 0;
+        }
+
+        private function clearSearch(event:MouseEvent):void
+        {
+            searchInput.text = "";
+            searchInput.dispatchEvent(new Event(Event.CHANGE));
+            searchInput.setFocus();
         }
 
         private function activateResizeHandle(event:FlexEvent):void
@@ -209,7 +224,10 @@
                     <gui:StandardButton id="btnArrow" label="" labelPlacement="left" width="20" />
                 </mx:HBox>
                 <mx:HBox id="searchControls" mouseEnabled="true" verticalAlign="middle" right="5" horizontalGap="5">
-                    <gui:CustomTextInput id="searchInput" styleName="standardInput" height="20" width="200" />
+                    <mx:Canvas id="searchField" width="200" height="20" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+                        <gui:CustomTextInput id="searchInput" styleName="standardInput" height="20" width="200" paddingRight="22" />
+                        <mx:Button id="searchClearButton" styleName="closeSmall" width="13" height="12" right="4" top="4" focusEnabled="false" />
+                    </mx:Canvas>
                     <mx:Image id="searchIcon" />
                 </mx:HBox>
             </mx:Canvas>

@@ -1042,6 +1042,7 @@ import flash.geom.Matrix;
 import flash.geom.Rectangle;
 import mx.core.BitmapAsset;
 import Utils.StringUtils;
+import Enums.SPECIALIST_TYPE;
 
 class StarMenuSpecialistTabIcon extends BitmapAsset
 {
@@ -1177,6 +1178,7 @@ class SortOptions
     public var Amount:int;
     public var Type:Number;
     public var Group:int;
+    private var item:Object;
 
     public static function compareDefault(_arg_1:SortOptions, _arg_2:SortOptions, _arg_3:int):Number
     {
@@ -1247,6 +1249,7 @@ class SortOptions
         var _local_14:String;
         var groupItem:cSpecialistGroupStarItem;
         super();
+        this.item = _arg_1;
         var _local_2:* = "";
         var _local_3:Number = 0;
         var _local_4:int;
@@ -1333,7 +1336,49 @@ class SortOptions
 
     public function filter(_arg_1:String):Boolean
     {
-        return (this.Name.search(_arg_1) > -1);
+        if (this.Name.indexOf(_arg_1) > -1)
+        {
+            return true;
+        };
+        var loca:cLocaManager = cLocaManager.GetInstance();
+        if (!loca.IsInitialized())
+        {
+            return false;
+        };
+        var key:String;
+        var group:String = LOCA_GROUP.DESCRIPTIONS;
+        var params:Array = null;
+        if (this.item is cSpecialist)
+        {
+            key = SPECIALIST_TYPE.toString((this.item as cSpecialist).GetType());
+        }
+        else if (this.item is cBuff)
+        {
+            var buff:cBuff = this.item as cBuff;
+            key = buff.GetBuffDefinition().GetName_string();
+            var resource:String = buff.GetResourceName_string();
+            params = [loca.FormatNumber(buff.GetAmount()), resource];
+            if (key == defines.ADVENTURE_BUFF)
+            {
+                key = resource;
+                group = LOCA_GROUP.ADVENTURE_OPENER;
+            }
+            else if (key.indexOf(defines.CHANGE_COLOR_SCHEME_BUFF) == 0)
+            {
+                key = defines.CHANGE_COLOR_SCHEME_BUFF + "_" + resource;
+            }
+            else if (key == defines.FILL_DEPOSIT_BUFF && (resource == "" || resource == defines.FILL_DEPOSIT_BUFF))
+            {
+                key += "Any";
+            };
+        };
+        // Resolve on search so language and amount changes cannot stale the description.
+        if (!key || !loca.exist(group, key))
+        {
+            return false;
+        };
+        var description:String = loca.GetText(group, key, params);
+        return description.replace(replacePattern, "").toLocaleLowerCase().indexOf(_arg_1) > -1;
     }
 
     /*private*/ function getEffectType(_arg_1:String):String
