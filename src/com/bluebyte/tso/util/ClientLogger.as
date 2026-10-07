@@ -8,17 +8,21 @@
     import flash.filesystem.File;
     import flash.filesystem.FileMode;
     import flash.filesystem.FileStream;
+    import flash.events.DataEvent;
+    import flash.events.EventDispatcher;
     import __AS3__.vec.*;
 
     public class ClientLogger 
     {
 
+        public static const LOG:String = "log";
         private static const MAX_LOG:int = 2000;
         private static var formatter:DateFormatter = genFormatter();
         private static var messages:Vector.<String> = new Vector.<String>();
         private static var missingLoca:Dictionary = new Dictionary();
         private static var loadLog:Vector.<String> = new Vector.<String>();
         private static var logFile:File = File.applicationStorageDirectory.resolvePath("client.log");
+        private static var dispatcher:EventDispatcher = new EventDispatcher();
 
 
         private static function add(_arg_1:String, _arg_2:Boolean):void
@@ -42,6 +46,29 @@
             {
                 // Logging must never interrupt the game client.
             };
+            try
+            {
+                dispatcher.dispatchEvent(new DataEvent(LOG, false, false, _local_3));
+            }
+            catch (_error:Error)
+            {
+                // A subscriber must never interrupt logging or the game client.
+            };
+        }
+
+        public static function addEventListener(_arg_1:String, _arg_2:Function, _arg_3:Boolean=false, _arg_4:int=0, _arg_5:Boolean=false):void
+        {
+            dispatcher.addEventListener(_arg_1, _arg_2, _arg_3, _arg_4, _arg_5);
+        }
+
+        public static function removeEventListener(_arg_1:String, _arg_2:Function, _arg_3:Boolean=false):void
+        {
+            dispatcher.removeEventListener(_arg_1, _arg_2, _arg_3);
+        }
+
+        public static function hasEventListener(_arg_1:String):Boolean
+        {
+            return (dispatcher.hasEventListener(_arg_1));
         }
 
         public static function getLogFilePath():String
