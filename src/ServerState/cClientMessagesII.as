@@ -1652,6 +1652,13 @@ package ServerState
 
         private function SendMessageDirectlyToServer(_arg_1:int, _arg_2:int, _arg_3:Object, _arg_4:String, _arg_5:Responding=null):void
         {
+            if (((_arg_1 == COMMAND.TRADE_GET_USER_TRADES) || (_arg_1 == COMMAND.TRADE_GET_UPDATES)) || (_arg_1 == COMMAND.GET_TRADE_HISTORY))
+            {
+                if (defines.CLIENT_ZONEID != 0)
+                {
+                    return;
+                };
+            };
             var _local_7:AsyncToken;
             var _local_8:RemoteObject;
             var _local_9:RemoteObject;
@@ -1885,6 +1892,13 @@ package ServerState
 
         public function SendMessagetoServer(_arg_1:int, _arg_2:int, _arg_3:Object, _arg_4:Responding=null):void
         {
+            if (((_arg_1 == COMMAND.TRADE_GET_USER_TRADES) || (_arg_1 == COMMAND.TRADE_GET_UPDATES)) || (_arg_1 == COMMAND.GET_TRADE_HISTORY))
+            {
+                if (defines.CLIENT_ZONEID != 0)
+                {
+                    return;
+                };
+            };
             if (global.useBigBrother)
             {
                 if (((this.mLastVisitedZoneID == _arg_2) && (!(this.mLastResultServerName == ""))))
