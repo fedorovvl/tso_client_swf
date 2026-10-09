@@ -3,6 +3,8 @@
     width="560" height="480">
     <mx:Script><![CDATA[
         import flash.events.Event;
+        import flash.events.MouseEvent;
+        import flash.display.Stage;
         import mx.core.ClassFactory;
         import mx.events.FlexEvent;
         import mx.events.ToolTipEvent;
@@ -11,6 +13,14 @@
         import Enums.LOCA_GROUP;
         import GUI.Components.ItemRenderer.SpecialistTravelItemRenderer;
         import GUI.Components.ToolTips.cToolTipUtil;
+
+        private static const MIN_PANEL_WIDTH:Number = 560;
+        private static const MIN_PANEL_HEIGHT:Number = 480;
+        private var resizeStage:Stage;
+        private var resizeStartMouseX:Number;
+        private var resizeStartMouseY:Number;
+        private var resizeStartWidth:Number;
+        private var resizeStartHeight:Number;
 
         override protected function childrenCreated():void
         {
@@ -32,6 +42,57 @@
             fetchingData.addEventListener(FlexEvent.HIDE, syncBusyIndicator, false, 0, true);
             refreshLabels();
             cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
+            addEventListener(FlexEvent.CREATION_COMPLETE, activateResizeHandle, false, 0, true);
+            addEventListener(FlexEvent.HIDE, stopResize, false, 0, true);
+            addEventListener(Event.REMOVED_FROM_STAGE, stopResize, false, 0, true);
+        }
+
+        private function activateResizeHandle(event:FlexEvent):void
+        {
+            removeEventListener(FlexEvent.CREATION_COMPLETE, activateResizeHandle);
+            resizeHandle.graphics.beginFill(0x302719, 0.92);
+            resizeHandle.graphics.drawRect(0, 0, 16, 16);
+            resizeHandle.graphics.endFill();
+            resizeHandle.graphics.lineStyle(2, 0xD6A94C, 1);
+            resizeHandle.graphics.moveTo(5, 13);
+            resizeHandle.graphics.lineTo(13, 5);
+            resizeHandle.graphics.moveTo(9, 13);
+            resizeHandle.graphics.lineTo(13, 9);
+            resizeHandle.addEventListener(MouseEvent.MOUSE_DOWN, startResize, false, 0, true);
+        }
+
+        private function startResize(event:MouseEvent):void
+        {
+            event.stopImmediatePropagation();
+            if (stage == null) return;
+            stopResize();
+            resizeStage = stage;
+            resizeStartMouseX = event.stageX;
+            resizeStartMouseY = event.stageY;
+            resizeStartWidth = width;
+            resizeStartHeight = height;
+            resizeStage.addEventListener(MouseEvent.MOUSE_MOVE, resizePanel, false, 0, true);
+            resizeStage.addEventListener(MouseEvent.MOUSE_UP, stopResize, false, 0, true);
+            resizeStage.addEventListener(Event.MOUSE_LEAVE, stopResize, false, 0, true);
+        }
+
+        private function resizePanel(event:MouseEvent):void
+        {
+            if (resizeStage == null) return;
+            var maximumWidth:Number = Math.max(MIN_PANEL_WIDTH, resizeStage.stageWidth - x);
+            var maximumHeight:Number = Math.max(MIN_PANEL_HEIGHT, resizeStage.stageHeight - y);
+            width = Math.min(maximumWidth, Math.max(MIN_PANEL_WIDTH, resizeStartWidth + event.stageX - resizeStartMouseX));
+            height = Math.min(maximumHeight, Math.max(MIN_PANEL_HEIGHT, resizeStartHeight + event.stageY - resizeStartMouseY));
+            event.updateAfterEvent();
+        }
+
+        private function stopResize(event:Event = null):void
+        {
+            if (resizeStage == null) return;
+            resizeStage.removeEventListener(MouseEvent.MOUSE_MOVE, resizePanel);
+            resizeStage.removeEventListener(MouseEvent.MOUSE_UP, stopResize);
+            resizeStage.removeEventListener(Event.MOUSE_LEAVE, stopResize);
+            resizeStage = null;
         }
 
         private function syncColonyLayout(event:Event = null):void
@@ -72,7 +133,7 @@
             </mx:Canvas>
         </mx:Canvas>
         <mx:Canvas styleName="listBackgroundShadow" left="8" right="26" top="100" bottom="113" />
-        <gui:CustomTileList id="availableSpecialists" columnWidth="255" columnCount="2" rowHeight="84" verticalScrollPolicy="auto" horizontalScrollPolicy="off" left="11" right="9" top="102" bottom="116" paddingTop="0" paddingBottom="0" paddingLeft="0" paddingRight="0" useRollOver="false" borderThickness="0" backgroundAlpha="0" />
+        <gui:CustomTileList id="availableSpecialists" columnWidth="255" rowHeight="84" verticalScrollPolicy="auto" horizontalScrollPolicy="off" left="11" right="9" top="102" bottom="116" paddingTop="0" paddingBottom="0" paddingLeft="0" paddingRight="0" useRollOver="false" borderThickness="0" backgroundAlpha="0" />
         <mx:Canvas id="confirmFooter" left="7" right="8" bottom="13">
             <mx:Canvas styleName="detailsSubHeader" height="18" percentWidth="100">
                 <gui:CustomLabel id="_SpecialistTravelPanel_CustomLabel3" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
@@ -90,5 +151,6 @@
         <mx:Canvas id="fetchingData" visible="false" backgroundColor="6970177" backgroundAlpha="0.7" left="8" right="8" top="100" bottom="113">
             <gui:SpriteLibAnimation id="_SpecialistTravelPanel_SpriteLibAnimation1" animationName="guianim_hourglass" loop="true" visible="false" width="48" height="48" horizontalCenter="0" verticalCenter="0" />
         </mx:Canvas>
+        <mx:Canvas id="resizeHandle" width="16" height="16" right="1" bottom="1" buttonMode="true" useHandCursor="true" />
     </mx:Array></gui:subComponents>
 </gui:BasicPanel>

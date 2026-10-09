@@ -14,7 +14,6 @@
     import GUI.Loca.cLocaManager;
     import Enums.LOCA_GROUP;
     import Enums.KILL_SWITCH;
-    import Specialists.cSpecialistDescription;
     import Enums.SPECIALIST_TYPE;
     import GUI.Components.ItemRenderer.SpecialistTravelItemRenderer;
     import Skill.cSkill;
@@ -141,15 +140,21 @@
                 this.mPanel.colonyLimitsPanel.visible = false;
                 this.lockedByKillSwitch = this.mGI.killswitch.isLocked(KILL_SWITCH.ADVENTURE_TRAVEL);
             };
-            for each (_local_6 in this.mGI.mCurrentPlayerZone.GetSpecialists_vector().sort(cSpecialistDescription.CompareBySortIndex))
+            for each (_local_6 in this.mGI.mCurrentPlayerZone.GetSpecialists_vector())
             {
                 if ((((_local_6.getPlayerID() == this.mGI.mCurrentPlayer.GetPlayerId()) && (_local_6.GetTask() == null)) && ((((_local_6.GetBaseType() == SPECIALIST_TYPE.GENERAL) || (_local_6.GetBaseType() == SPECIALIST_TYPE.TRANSPORTER_GENERAL)) && (!(_local_2))) || ((_local_6.GetBaseType() == SPECIALIST_TYPE.ADMIRAL) && (_local_2)))))
                 {
                     _local_4.addItem(new SpecialistTravelItemData(_local_6, _local_2, _local_3));
                 };
             };
+            _local_4.source.sort(compareSpecialistsDefault);
             this.mPanel.availableSpecialists.dataProvider = _local_4;
             this.mPanel.btnOK.enabled = false;
+        }
+
+        private function compareSpecialistsDefault(first:SpecialistTravelItemData, second:SpecialistTravelItemData):Number
+        {
+            return cStarMenu.CompareDefault(first.specialist, second.specialist, 1);
         }
 
         override public function Show():void
