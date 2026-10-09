@@ -287,13 +287,10 @@
                                     this.AddMenuItem("CompareAchievements", _local_5, this.CompareAchievements, ((_local_5) ? "" : _local_6.GetText(LOCA_GROUP.LABELS, "CantCompareAchi")));
                                 };
                                 this.AddMenuItem("RemoveFriend", true, this.ConfirmRemoveFriend);
-                                if (_arg_2 == "ChatWindow")
+                                this.mInviteAdventure = this.GetInvitableAdventure(this.mPlayer.id);
+                                if (this.mInviteAdventure != null)
                                 {
-                                    this.mInviteAdventure = this.GetInvitableAdventure(this.mPlayer.id);
-                                    if (this.mInviteAdventure != null)
-                                    {
-                                        this.AddMenuItem((_local_6.GetText(LOCA_GROUP.LABELS, "GuildInvite") + ": " + _local_6.GetText(LOCA_GROUP.ADVENTURE_NAME, this.mInviteAdventure.adventureName)), true, this.InviteToAdventure, "", null, null, null, "");
-                                    };
+                                    this.AddMenuItem((_local_6.GetText(LOCA_GROUP.LABELS, "GuildInvite") + ": " + _local_6.GetText(LOCA_GROUP.ADVENTURE_NAME, this.mInviteAdventure.adventureName)), true, this.InviteToAdventure, "", null, null, null, "");
                                 };
                             }
                             else
@@ -312,13 +309,10 @@
                                     {
                                         this.AddMenuItem("CompareAchievements", _local_5, this.CompareAchievements, ((_local_5) ? "" : _local_6.GetText(LOCA_GROUP.LABELS, "CantCompareAchi")));
                                     };
-                                    if (_arg_2 == "ChatWindow")
+                                    this.mInviteAdventure = this.GetInvitableAdventure(this.mPlayer.id);
+                                    if (this.mInviteAdventure != null)
                                     {
-                                        this.mInviteAdventure = this.GetInvitableAdventure(this.mPlayer.id);
-                                        if (this.mInviteAdventure != null)
-                                        {
-                                            this.AddMenuItem((_local_6.GetText(LOCA_GROUP.LABELS, "GuildInvite") + ": " + _local_6.GetText(LOCA_GROUP.ADVENTURE_NAME, this.mInviteAdventure.adventureName)), true, this.InviteToAdventure, "", null, null, null, "");
-                                        };
+                                        this.AddMenuItem((_local_6.GetText(LOCA_GROUP.LABELS, "GuildInvite") + ": " + _local_6.GetText(LOCA_GROUP.ADVENTURE_NAME, this.mInviteAdventure.adventureName)), true, this.InviteToAdventure, "", null, null, null, "");
                                     };
                                 }
                                 else

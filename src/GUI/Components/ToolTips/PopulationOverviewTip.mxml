@@ -33,6 +33,7 @@
         private static const NEW_COMBAT_TIER_RESTRICTION:int = 3;
 
         private var _text:String;
+        private var childrenReady:Boolean = false;
 
         public function get text():String
         {
@@ -60,6 +61,10 @@
             var _local_22:Number;
             var _local_23:dResource;
             this._text = _arg_1;
+            if (!this.childrenReady)
+            {
+                return;
+            };
             var _local_2:cGeneralInterface = global.ui;
             if (global.ui.IsAdventureZone())
             {
@@ -400,6 +405,8 @@
             refreshLabels();
             cLocaManager.GetInstance().addEventListener("languageChanged", refreshLabels, false, 0, true);
             addEventListener("currentStateChange", onStateChange);
+            this.childrenReady = true;
+            this.text = this._text;
         }
     ]]></mx:Script>
     <mx:Canvas id="titleBox" styleName="economyTitleBg" height="20" top="6" left="7" right="7">
