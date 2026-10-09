@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-09
+
+### ✨ FEATURE
+
+- Added an adventure invitation action to the bottom-bar player context menu for friends and guild members.
+
+### 🐛 FIX
+
+- Fixed a crash when opening the population overview tooltip before its child controls were initialized.
+
 ## 2026-10-06
 
 ### 🐛 FIX
