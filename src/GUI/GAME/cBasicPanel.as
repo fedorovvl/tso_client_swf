@@ -8,6 +8,10 @@
     import flash.events.Event;
     import mx.core.UIComponent;
     import GUI.Components.BasicPanel;
+    import GUI.WindowGeometry;
+    import flash.utils.Timer;
+    import flash.events.TimerEvent;
+    import mx.events.ResizeEvent;
 
     public class cBasicPanel extends cGuiBaseElement 
     {
@@ -21,6 +25,12 @@
         protected var openSound:String = "MenuOpen";
         private var clickOffsetX:int;
         private var clickOffsetY:int;
+        private var geometryEnabled:Boolean = false;
+        private var geometryReady:Boolean = false;
+        private var initialWidth:Number;
+        private var initialHeight:Number;
+        private var geometrySaveTimer:Timer;
+        private var defaultGeometry:Object;
 
 
         public static function IsCurrentActivePanelVisible():Boolean
@@ -82,6 +92,7 @@
 
         override public function Show():void
         {
+            this.RestoreWindowGeometry();
             this.hideCurrent();
             this.hideCurrentSecondary();
             global.ui.channels.INPUT.notifyPropertyObserver(EVENT_SHOW, mUiElement.id);
@@ -98,6 +109,7 @@
 
         protected function HideWithoutQueue():void
         {
+            this.SaveWindowGeometry();
             this.UnselectBuildingWhenHide();
             super.Hide();
             if (_mCurrentActivePanel == this)
@@ -109,6 +121,7 @@
 
         public function ShowSecondaryPanel():void
         {
+            this.RestoreWindowGeometry();
             this.hideCurrentSecondary();
             mCurrentActiveSecondaryPanel = this;
             super.Show();
@@ -129,6 +142,7 @@
 
         private function MouseUpHandler(_arg_1:Event):void
         {
+            this.SaveWindowGeometry();
             global.getApplication().removeEventListener(MouseEvent.MOUSE_UP, this.MouseUpHandler);
             global.getApplication().stage.removeEventListener(Event.MOUSE_LEAVE, this.MouseUpHandler);
             global.getApplication().removeEventListener(MouseEvent.MOUSE_MOVE, this.MouseMoveHandler);
@@ -136,7 +150,64 @@
 
         protected function EnableDragging():void
         {
+            if (!geometryEnabled)
+            {
+                geometryEnabled = true;
+                initialWidth = mUiElement.width;
+                initialHeight = mUiElement.height;
+                geometrySaveTimer = new Timer(300, 1);
+                geometrySaveTimer.addEventListener(TimerEvent.TIMER_COMPLETE, SaveWindowGeometry);
+                mUiElement.addEventListener(ResizeEvent.RESIZE, WindowResized, false, 0, true);
+                WindowGeometry.events.addEventListener(WindowGeometry.RESET, ResetWindowGeometry, false, 0, true);
+            };
             mUiElement.addEventListener(MouseEvent.MOUSE_DOWN, this.MouseDownHandler, false, 0, true);
+        }
+
+        private function RestoreWindowGeometry():void
+        {
+            if (!geometryEnabled) return;
+            geometryReady = false;
+            if (defaultGeometry == null)
+            {
+                defaultGeometry = {x:mUiElement.x, y:mUiElement.y, styles:{}};
+                for each (var style:String in ["left", "right", "top", "bottom", "horizontalCenter", "verticalCenter"])
+                    defaultGeometry.styles[style] = mUiElement.getStyle(style);
+            };
+            WindowGeometry.restore(mUiElement, initialWidth, initialHeight);
+            geometryReady = true;
+        }
+
+        private function ResetWindowGeometry(event:Event):void
+        {
+            if (defaultGeometry == null) return;
+            geometryReady = false;
+            geometrySaveTimer.reset();
+            mUiElement.width = initialWidth;
+            mUiElement.height = initialHeight;
+            mUiElement.x = defaultGeometry.x;
+            mUiElement.y = defaultGeometry.y;
+            for (var style:String in defaultGeometry.styles)
+            {
+                var value:Object = defaultGeometry.styles[style];
+                if (value === undefined) mUiElement.clearStyle(style);
+                else mUiElement.setStyle(style, value);
+            };
+            mUiElement.validateNow();
+            geometryReady = true;
+        }
+
+        private function WindowResized(event:Event):void
+        {
+            if (!geometryReady || !IsVisible()) return;
+            geometrySaveTimer.reset();
+            geometrySaveTimer.start();
+        }
+
+        private function SaveWindowGeometry(event:Event = null):void
+        {
+            if (!geometryEnabled || !geometryReady) return;
+            geometrySaveTimer.reset();
+            WindowGeometry.save(mUiElement);
         }
 
         protected function UnselectBuildingWhenHide():void
