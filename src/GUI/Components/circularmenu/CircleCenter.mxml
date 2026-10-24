@@ -73,6 +73,16 @@
         {
             removeEventListener(FlexEvent.CREATION_COMPLETE, this.completeHandler);
             stage.addEventListener(MouseEvent.CLICK, this.outsideClickHandler);
+            this.addEventListener(Event.REMOVED_FROM_STAGE, this.removedFromStageHandler);
+        }
+
+        protected function removedFromStageHandler(event:Event):void
+        {
+            this.removeEventListener(Event.REMOVED_FROM_STAGE, this.removedFromStageHandler);
+            if (this.stage)
+            {
+                this.stage.removeEventListener(MouseEvent.CLICK, this.outsideClickHandler);
+            };
         }
 
         private function outsideClickHandler(event:MouseEvent):void

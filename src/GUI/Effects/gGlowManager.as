@@ -33,6 +33,7 @@
             {
                 _arg_1.filters = [];
                 elements.splice(_local_2, 1);
+                delete specificGlows[_arg_1.toString()];
             };
         }
 
