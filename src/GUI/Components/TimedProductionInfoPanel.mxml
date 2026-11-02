@@ -344,13 +344,15 @@
                     <mx:Label id="_TimedProductionInfoPanel_Label1" top="1" horizontalCenter="0" color="0xFFFFFF" fontWeight="bold" />
                 </mx:Canvas>
                 <mx:Canvas styleName="detailsContentBox" left="1" right="1" top="18" bottom="0">
-                    <mx:HBox styleName="detailsSubContentBox" height="62" horizontalAlign="left" verticalAlign="middle" left="5" right="5" top="5">
-                        <mx:Image id="selectedUnitIcon" width="26" height="25" />
-                        <mx:Label id="selectedUnitName" color="0xFFFFFF" />
-                        <mx:Canvas percentHeight="100" percentWidth="100" horizontalScrollPolicy="off">
-                            <mx:Text id="selectedUnitDescription" percentWidth="100" selectable="false" fontWeight="normal" paddingLeft="0" paddingTop="0" paddingBottom="0" paddingRight="12" />
-                        </mx:Canvas>
-                    </mx:HBox>
+                    <mx:Canvas styleName="detailsSubContentBox" height="62" left="5" right="5" top="5" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+                        <mx:Image id="selectedUnitIcon" width="26" height="25" left="0" verticalCenter="0" />
+                        <mx:VBox left="32" right="5" top="2" bottom="2" verticalGap="0" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+                            <mx:Text id="selectedUnitName" percentWidth="100" selectable="false" color="0xFFFFFF" paddingLeft="0" paddingTop="0" paddingBottom="0" paddingRight="0" />
+                            <mx:Canvas percentHeight="100" percentWidth="100" minHeight="0" horizontalScrollPolicy="off">
+                                <mx:Text id="selectedUnitDescription" percentWidth="100" selectable="false" fontWeight="normal" paddingLeft="0" paddingTop="0" paddingBottom="0" paddingRight="12" />
+                            </mx:Canvas>
+                        </mx:VBox>
+                    </mx:Canvas>
                     <mx:HBox height="55" top="70" left="5" right="5">
                         <mx:VBox width="200" verticalGap="5">
                             <mx:HBox percentWidth="100" horizontalAlign="center" verticalAlign="middle">

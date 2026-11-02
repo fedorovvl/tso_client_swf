@@ -314,8 +314,8 @@
                 case XIFFConnectionMediator.XIFF_CONNECT:
                     this.connection.username = this._connectionProxy.player.name;
                     this.connection.password = this._connectionProxy.player.password;
-                    this.connection.port = 443;
-                    this.connection.secure = true;
+                    this.connection.secure = this._connectionProxy.server.secure;
+                    this.connection.port = this._connectionProxy.server.port;
                     this.connection.server = this._connectionProxy.server.ip;
                     sendNotification(XIFFConnectionMediator.XIFF_CONNECTION_CREATED, this.connection);
                     this.connection.disableSASLMechanism("ANONYMOUS");

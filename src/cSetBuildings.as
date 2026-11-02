@@ -1,4 +1,4 @@
-﻿package 
+package 
 {
     import GUI.Components.CustomAlert;
     import GUI.Components.ResourceAlert;
@@ -52,6 +52,7 @@
     import GO.cStreet;
     import ServerState.gEconomics;
     import ServerState.cComputeResourceCreation;
+    import ServerState.ForestMechanicsRules;
     import PathFinding.cPathFinder;
     import nLib.cBackbuffer;
     import BuffSystem.cBuffDefinition;
@@ -65,6 +66,8 @@
     {
 
         private var mPreviewPathOldCursorGridIdx:int = -1;
+        private var mPreviewForestPath:cPathObject = null;
+        private var mPreviewRoadRevision:Number = -1;
         private var mCursorGrid:int = 0;
         private var mForceRenderTransportDuration:Boolean;
         public var mMilitaryPathVisible:Boolean;
@@ -659,6 +662,16 @@
             var _local_17:*;
             var _local_18:int;
             var _local_5:cBuilding = this.mGeneralInterface.GetSelectedBuilding();
+            var forestProduction:cResourceCreation = _local_5 != null ? _local_5.GetResourceCreation() : null;
+            var serverForest:Boolean = this.mGeneralInterface.mCurrentCursor.GetEditMode() != COMMAND.MOVE_BUILDING && this.mGeneralInterface.mComputeResourceCreation.IsServerForestPlanter(forestProduction);
+            var productionRoadPreview:Boolean = this.mGeneralInterface.mCurrentCursor.GetEditMode() != COMMAND.MOVE_BUILDING
+                && this.mGeneralInterface.mComputeResourceCreation.UsesProductionRoads(forestProduction);
+            var roadRevision:Number = productionRoadPreview ? this.mGeneralInterface.mPathFinder.productionRoadRevision : -1;
+            var forestPath:cPathObject = null;
+            if (serverForest && !forestProduction.GetRemove() && forestProduction.GetDepositBuildingGridPos() != -1)
+            {
+                forestPath = forestProduction.GetDepositPath();
+            }
             if (((((((((((this.mGeneralInterface.mCurrentCursor.GetEditMode() == COMMAND.ATTACK_BUILDING) || (this.mGeneralInterface.mCurrentCursor.GetEditMode() == COMMAND.MOVE_GARISSON)) || (this.mGeneralInterface.mCurrentCursor.GetEditMode() == COMMAND.COMBAT3_CHOOSE_UNIT)) || (!(_local_5 == null))) || (this.mGeneralInterface.mCurrentCursor.GetEditMode() == COMMAND.GET_COMBAT_PREVIEW)) || (this.mGeneralInterface.mCurrentCursor.GetEditMode() == COMMAND.SET_BUILDING_IN_GAME)) || (this.mGeneralInterface.mCurrentCursor.GetEditMode() == COMMAND.SET_BUILDING_IN_DEFENSE_MODE)) || (this.mGeneralInterface.mCurrentCursor.GetEditMode() == COMMAND.SET_BUILDING_IN_DEFENSE_MODE_BY_BUFF)) || (this.mGeneralInterface.mCurrentCursor.GetEditMode() == COMMAND.SET_BUILDING_BY_BUFF)) || (this.mGeneralInterface.mCurrentCursor.GetEditMode() == COMMAND.MOVE_BUILDING)))
             {
                 _local_8 = -1;
@@ -677,8 +690,10 @@
                         _local_8 = this.mGeneralInterface.mCurrentCursor.GetGridPosition();
                     };
                 };
-                if (((!(this.mPreviewPathOldCursorGridIdx == _local_8)) || (_arg_2)))
+                if (((!(this.mPreviewPathOldCursorGridIdx == _local_8)) || (_arg_2) || forestPath !== this.mPreviewForestPath || roadRevision != this.mPreviewRoadRevision))
                 {
+                    this.mPreviewForestPath = forestPath;
+                    this.mPreviewRoadRevision = roadRevision;
                     this.mPreviewPathOldCursorGridIdx = _local_8;
                     this.mPathTime = -1;
                     this.mGeneralInterface.mCurrentPlayerZone.mStreetDataMap.ResetStreetPreview();
@@ -825,34 +840,62 @@
                                             };
                                         };
                                     } while (_local_6);
-                                    this.mPreviewPathObject = this.mGeneralInterface.mPathFinder.CalculatePathForDestinations(_local_7, this.mGeneralInterface.mPathFinder.GetWarehouseDestinations(_arg_1), _local_9);
+                                    if (productionRoadPreview)
+                                    {
+                                        _local_7 = _local_5.GetStreetGridEntry();
+                                        this.mPreviewPathObject = this.mGeneralInterface.mPathFinder.CalculateProductionWarehousePath(
+                                            _local_7, _local_5.getPlayerID());
+                                    }
+                                    else
+                                    {
+                                        this.mPreviewPathObject = this.mGeneralInterface.mPathFinder.CalculatePathForDestinations(
+                                            _local_7, this.mGeneralInterface.mPathFinder.GetWarehouseDestinations(_arg_1), _local_9);
+                                    }
                                     this.mGeneralInterface.mCurrentPlayerZone.mStreetDataMap.CreatePreviewPath(this.mPreviewPathObject, cStreet.TYPE_PRODUCTION_WORKYARD);
                                     this.mPathTime = ((this.mPreviewPathObject.pathLenX20000 / cComputeResourceCreation.SETTLER_WALK_SPEED_INT) / this.mGeneralInterface.mGlobalTimeScale);
                                     if (_local_14.externalResource_string != "")
                                     {
                                         if (((_local_15.mAddDepositAmount == -1) && (_local_15.mRestrictPlacingToDeposit == null)))
                                         {
-                                            _local_18 = -1;
-                                            if (_local_14.amountRemoved >= 0)
+                                            if (serverForest)
                                             {
-                                                _local_18 = cPathFinder.AMOUNT_TYPE_ABOVE_ZERO;
-                                                this.mIsFillUpBuilding = false;
+                                                // Planting targets may have no deposit yet. Use the server path.
+                                                this.mPreviewPathObject = forestPath;
+                                                if (forestPath != null && forestPath.pathLenX10000 != 0)
+                                                {
+                                                    this.mGeneralInterface.mCurrentPlayerZone.mStreetDataMap.CreatePreviewPath(forestPath, cStreet.TYPE_PRODUCTION_DEPOSIT);
+                                                    this.mPathTime += ((forestPath.pathLenX20000 / cComputeResourceCreation.SETTLER_WALK_SPEED_INT) / this.mGeneralInterface.mGlobalTimeScale);
+                                                }
                                             }
                                             else
                                             {
-                                                _local_18 = cPathFinder.AMOUNT_TYPE_BELOW_MAX;
-                                                this.mIsFillUpBuilding = true;
-                                            };
-                                            this.mPreviewPathObject = this.mGeneralInterface.mPathFinder.CalculatePathForDestinations(_local_7, this.mGeneralInterface.mPathFinder.GetDepositDestinations(_local_14.externalResource_string, _arg_1, _local_18), _local_9);
-                                            if (this.mPreviewPathObject.pathLenX10000 != 0)
-                                            {
-                                                this.mGeneralInterface.mCurrentPlayerZone.mStreetDataMap.CreatePreviewPath(this.mPreviewPathObject, cStreet.TYPE_PRODUCTION_DEPOSIT);
-                                                this.mPathTime = (this.mPathTime + ((this.mPreviewPathObject.pathLenX20000 / cComputeResourceCreation.SETTLER_WALK_SPEED_INT) / this.mGeneralInterface.mGlobalTimeScale));
+                                                _local_18 = -1;
+                                                if (_local_14.amountRemoved >= 0)
+                                                {
+                                                    _local_18 = cPathFinder.AMOUNT_TYPE_ABOVE_ZERO;
+                                                    this.mIsFillUpBuilding = false;
+                                                }
+                                                else
+                                                {
+                                                    _local_18 = cPathFinder.AMOUNT_TYPE_BELOW_MAX;
+                                                    this.mIsFillUpBuilding = true;
+                                                };
+                                                var depositDestinations:Vector.<int> = this.mGeneralInterface.mPathFinder.GetDepositDestinations(_local_14.externalResource_string, _arg_1, _local_18);
+                                                if (ForestMechanicsRules.IsWoodHarvester(_local_14, this.mGeneralInterface.mCurrentPlayerZone.forestMechanicsVersion))
+                                                {
+                                                    depositDestinations = ForestMechanicsRules.FilterDestinations(this.mGeneralInterface.mCurrentPlayerZone.mMapWidth, _local_8, depositDestinations);
+                                                }
+                                                this.mPreviewPathObject = this.mGeneralInterface.mPathFinder.CalculatePathForDestinations(_local_7, depositDestinations, _local_9);
+                                                if (this.mPreviewPathObject.pathLenX10000 != 0)
+                                                {
+                                                    this.mGeneralInterface.mCurrentPlayerZone.mStreetDataMap.CreatePreviewPath(this.mPreviewPathObject, cStreet.TYPE_PRODUCTION_DEPOSIT);
+                                                    this.mPathTime = (this.mPathTime + ((this.mPreviewPathObject.pathLenX20000 / cComputeResourceCreation.SETTLER_WALK_SPEED_INT) / this.mGeneralInterface.mGlobalTimeScale));
+                                                }
+                                                else
+                                                {
+                                                    this.mPathTime = 0;
+                                                };
                                             }
-                                            else
-                                            {
-                                                this.mPathTime = 0;
-                                            };
                                         };
                                     }
                                     else

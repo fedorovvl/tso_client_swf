@@ -130,6 +130,11 @@
                     }
                 }
             }
+            var guildMember:dGuildPlayerListItemVO = this.GetGuildMemberById(this.mGI.mCurrentPlayer.GetPlayerId());
+            if (guildMember != null)
+            {
+                guildMember.presenceShow = show;
+            }
         }
 
         private function ScheduleOnlineFilterRefresh():void

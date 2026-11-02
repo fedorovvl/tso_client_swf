@@ -20,6 +20,7 @@
     public class cDeposit extends cIsoGO implements Skilled 
     {
 
+        public var forestUniqueID:dUniqueID;
         private var mAccessible:int = 0;
         private var mGOSetListName_string:String = null;
         private var mName_string:String;
@@ -45,6 +46,7 @@
         {
             var _local_3:cDeposit = cDeposit.CreateFromString(global.guiIconGroup, ("Deposit" + _arg_1.name_string), _arg_2);
             _local_3.Init(_arg_1.name_string, _arg_1.gridIdx, _arg_1.amount, _arg_1.maxAmount, _arg_1.depositGroupdId, _arg_1.accessible, _arg_1.emptied, _arg_1.goSetListName_string, _arg_1.refillable, _arg_1.skills);
+            _local_3.forestUniqueID = _arg_1.forestUniqueID;
             return (_local_3);
         }
 
@@ -246,6 +248,7 @@
         public function CreateDepositVOFromDeposit():dDepositVO
         {
             var _local_1:dDepositVO = new dDepositVO();
+            _local_1.forestUniqueID = this.forestUniqueID;
             _local_1.accessible = this.GetAccessibleType();
             _local_1.gridIdx = GetGrid();
             _local_1.depositGroupdId = this.GetDepositGroupID();

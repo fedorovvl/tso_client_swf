@@ -72,6 +72,10 @@
 
         public function onBtnInstant_click(argument1:MouseEvent):void
         {
+            if (!global.ui.mComputeResourceCreation.HasConstructionRoad(data as cBuilding))
+            {
+                return;
+            }
             this.btnInstant.enabled = false;
             this.dispatchEvent(new ListEvent(cBuildQueue.INSTANT_BUILD, true, false, 0, (data as cBuilding).GetGrid()));
         }
@@ -267,7 +271,14 @@
                     buildingIcon.source = dataProxy.bitmap;
                 }
                 btnRemove.enabled = !(global.ui_bindable.mPacketLost);
-                btnInstant.enabled = !(global.ui_bindable.mPacketLost);
+                var building:cBuilding = data as cBuilding;
+                var roadMissing:Boolean = building != null
+                    && !global.ui.mComputeResourceCreation.HasConstructionRoad(building);
+                btnInstant.enabled = !global.ui_bindable.mPacketLost && !roadMissing;
+                if (roadMissing)
+                {
+                    walkingSettler.visible = false;
+                }
             }
             finally
             {

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="52">
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="GUI.Components.ItemRenderer.*" xmlns:ui="GUI.Components.*" width="35">
     <mx:Script><![CDATA[
         import mx.containers.Canvas;
         import mx.controls.Image;
@@ -99,7 +99,7 @@
             super.childrenCreated();
             this.horizontalScrollPolicy = "off";
             this.verticalScrollPolicy = "off";
-            this.width = 52;
+            this.width = 35;
             this.addEventListener("toolTipCreate", this.onOrderCostsCompactItemRenderer_Canvas1_toolTipCreate);
             rendererReady = true;
             rendererUpdates = new RendererPresentationUpdates(this, refreshRendererPresentation);

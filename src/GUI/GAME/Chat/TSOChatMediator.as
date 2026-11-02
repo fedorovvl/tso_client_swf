@@ -657,6 +657,7 @@
         public function Reconnect(_arg_1:HandShakeVO):void
         {
             var _local_2:ServerVO;
+            var chatProtocol:String;
             if (this._connectionCreationInProgress)
             {
                 return;
@@ -677,6 +678,24 @@
             {
                 return;
             };
+            if (_arg_1 == null || _arg_1.chatConnection == null)
+            {
+                return;
+            }
+            chatProtocol = URLUtil.getProtocol(_arg_1.chatConnection).toLowerCase();
+            if (chatProtocol != "http" && chatProtocol != "https")
+            {
+                return;
+            }
+            _local_2 = new ServerVO();
+            _local_2.secure = chatProtocol == "https";
+            _local_2.port = URLUtil.getPort(_arg_1.chatConnection);
+            if (_local_2.port <= 0)
+            {
+                _local_2.port = _local_2.secure ? 443 : 80;
+            }
+            _local_2.ip = URLUtil.getServerName(_arg_1.chatConnection);
+            facade.sendNotification(BlueFireFacade.UPDATE_SERVER_DATA, _local_2);
             if (!connectionProxy.player)
             {
                 connectionProxy.player = new PlayerVO();
@@ -686,10 +705,6 @@
             {
                 connectionProxy.player.id = global.ui.mCurrentPlayer.GetPlayerId();
                 connectionProxy.player.password = _arg_1.chatPassword;
-                _local_2 = new ServerVO();
-                _local_2.port = URLUtil.getPort(_arg_1.chatConnection);
-                _local_2.ip = URLUtil.getServerName(_arg_1.chatConnection);
-                facade.sendNotification(BlueFireFacade.UPDATE_SERVER_DATA, _local_2);
             }
             else
             {

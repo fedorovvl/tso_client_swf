@@ -1,4 +1,4 @@
-﻿package PathFinding
+package PathFinding
 {
     import __AS3__.vec.Vector;
     import Interface.cGeneralInterface;
@@ -16,6 +16,7 @@
 
         private var destinations_Warehouse_vector:Vector.<int> = null;
         private var pathCostMatrix_Warehouse_list:Vector.<int> = null;
+        private var productionRoadMatrix:Vector.<int> = null;
         private var playerId:int;
         private var mGeneralInterface:cGeneralInterface;
 
@@ -156,6 +157,7 @@
         {
             this.destinations_Warehouse_vector = null;
             this.pathCostMatrix_Warehouse_list = null;
+            this.productionRoadMatrix = null;
             this.DepositName_DestinationsAboveZero_map = new Object();
             this.DepositName_PathCostMatrixAboveZero_map = new Object();
             this.DepositName_DestinationsBelowMax_map = new Object();
@@ -166,6 +168,23 @@
         {
             this.destinations_Warehouse_vector = null;
             this.pathCostMatrix_Warehouse_list = null;
+            this.productionRoadMatrix = null;
+        }
+
+        public function invalidateProductionRoadMatrix():void
+        {
+            this.productionRoadMatrix = null;
+        }
+
+        public function getProductionRoadMatrix():Vector.<int>
+        {
+            if (this.productionRoadMatrix == null)
+            {
+                this.getCostMatrixForWarehouse_list();
+                this.productionRoadMatrix = this.mGeneralInterface.mCreatePath.CalculatePathCostMatrix_listIntern(
+                    this.destinations_Warehouse_vector, null, 100000, true);
+            }
+            return (this.productionRoadMatrix);
         }
 
         public function getCostMatrixForWarehouse_list():Vector.<int>

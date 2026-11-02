@@ -193,6 +193,7 @@ package ServerState
             {
                 this.mGeneralInterface.mCurrentPlayerZone.Init(_arg_1);
             };
+            this.mGeneralInterface.mCurrentPlayerZone.SetForestSnapshot(_arg_1);
             var _local_17:Vector.<cPlayerData> = new Vector.<cPlayerData>();
             for each (_local_18 in this.mGeneralInterface.GetPlayerList_vector())
             {
@@ -792,6 +793,7 @@ package ServerState
             var _local_4:int = _arg_1.gridIdx;
             var _local_5:cDeposit = (this.mGeneralInterface.mCurrentPlayerZone.SetAtGridPosition(this.mGeneralInterface.mCurrentPlayer, OBJECTTYPE.DEPOSIT, ("Deposit" + _arg_1.name_string), _local_4) as cDeposit);
             _local_5.Init(_arg_1.name_string, _local_4, _arg_1.amount, _arg_1.maxAmount, _arg_1.depositGroupdId, _arg_1.accessible, _arg_1.emptied, _arg_1.goSetListName_string, _arg_1.refillable, _arg_1.skills);
+            _local_5.forestUniqueID = _arg_1.forestUniqueID;
             if (_arg_3)
             {
                 _local_5.SetAmount(0);

@@ -4225,7 +4225,7 @@ package Interface
                     {
                         _local_6 = (_arg_1.data as dQuestElementVO);
                         QuestManagerStatic.ApplyRewardEffects(this, _local_6, this.mGameTickCommandPlayer);
-                        mQuestClientCallbacks.RefreshLastQuestList(_local_6);
+                        mQuestClientCallbacks.RewardEffectsConfirmed(_local_6);
                         _local_7 = _local_6.isReset;
                     };
                     return;

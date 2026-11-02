@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-11-01
+
+### 🐛 FIX
+
+- Fixed Hidden Veins quest (new DepositDepletedTrigger)
+
+## 2026-10-22
+
+### 🐛 FIX
+
+- Fixed own presence icon
+
+## 2026-10-21
+
+### 🐛 FIX
+
+- Fixed Cultural Building details layout.
+- Fixed DismissMailsAlert layout.
+
 ## 2026-10-18
 
 ### ✨ FEATURE

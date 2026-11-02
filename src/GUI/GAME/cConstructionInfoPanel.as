@@ -67,6 +67,7 @@
             var _local_10:int;
             var _local_2:String = _arg_1.GetBuildingName_string();
             this.mBuilding = _arg_1;
+            this.mPanel.btnInstant.enabled = this.mGI.mComputeResourceCreation.HasConstructionRoad(_arg_1);
             this.mPanel.label = cLocaManager.GetInstance().GetText(LOCA_GROUP.BUILDINGS, _local_2);
             this.mPanel.buildingHeader.description.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.DESCRIPTIONS, _local_2);
             this.mPanel.buildingHeader.image.source = gAssetManager.GetBuildingIcon(_local_2);
@@ -145,10 +146,19 @@
                     };
                 };
             };
+            if (!this.mGI.mComputeResourceCreation.HasConstructionRoad(this.mBuilding))
+            {
+                this.mPanel.timeLabel.text = "Нет дороги к складу";
+                this.mPanel.timeLabel.visible = true;
+            }
         }
 
         private function InstantBuild(_arg_1:MouseEvent):void
         {
+            if (!this.mGI.mComputeResourceCreation.HasConstructionRoad(this.mBuilding))
+            {
+                return;
+            }
             var _local_2:cResources = this.mGI.mCurrentPlayerZone.GetResources(this.mGI.mCurrentPlayer);
             if (_local_2.HasPlayerResource(defines.HARD_CURRENCY_RESOURCE_NAME_string, this.mBuilding.GetBuildInstantCosts()))
             {

@@ -5,6 +5,7 @@
 
         public var port:int;
         public var ip:String;
+        public var secure:Boolean = true;
 
 
     }

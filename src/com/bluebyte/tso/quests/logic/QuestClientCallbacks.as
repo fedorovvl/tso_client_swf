@@ -280,6 +280,12 @@
             this.needsRefreshQuestList = true;
         }
 
+        public function RewardEffectsConfirmed(quest:dQuestElementVO):void
+        {
+            this.RefreshLastQuestList(quest);
+            this.observer.startPostEffects(quest.GetQuestDefinition());
+        }
+
         public function RewardOkButtonPressedFromGui(_arg_1:dQuestElementVO):void
         {
             if (((!(this.IsActive())) || (!(this.mGeneralInterface.IsCurrentPlayerQuestPlayer()))))

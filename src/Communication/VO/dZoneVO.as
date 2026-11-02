@@ -12,6 +12,7 @@
     public class dZoneVO 
     {
 
+        public var forestMechanicsVersion:int = 0;
         public var hasAltDefaultAnimals:Boolean;
         public var contest:Object = null;
         public var activateProduction:Boolean = false;

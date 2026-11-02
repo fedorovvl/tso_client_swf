@@ -10,6 +10,7 @@
     public class dDepositVO implements IEventDispatcher 
     {
 
+        public var forestUniqueID:dUniqueID;
         private var _287344023gridIdx:uint;
         private var _1141400650accessible:int;
         private var _1266057854depositGroupdId:int;

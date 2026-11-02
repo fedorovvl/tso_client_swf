@@ -1,4 +1,4 @@
-﻿package Map
+package Map
 {
     import flash.utils.Dictionary;
     import Interface.cGeneralInterface;
@@ -7,6 +7,9 @@
     import Interface.cGameInterface;
     import Enums.RENDER_LAYER;
     import GO.cGOGroup;
+    import GUI.Assets.ForestPlantingAnimation;
+    import ServerState.cResourceCreation;
+    import nLib.cPosInt;
 
     public class cGoSetListAnimationManager 
     {
@@ -46,6 +49,22 @@
             _local_7.object = _arg_5;
             this.mAnimations[_arg_1] = _local_7;
             this.mGeneralInterface.channels.RENDER.renderObjectAdded(_local_7);
+        }
+
+        public function AddForestPlantingAnimation(grid:int, production:cResourceCreation):void
+        {
+            var animation:cGoSetListAnimationItem = new cForestPlantingAnimationItem();
+            animation.gridPos = grid;
+            animation.mGI = this.mGeneralInterface as cGameInterface;
+            gCalculations.ConvertStreetGridToPixelPos(this.mGeneralInterface.mCurrentPlayerZone, grid, animation.pixelPos);
+            var treeOffset:cPosInt = ForestPlantingAnimation.GetPlantingOffset(production.forestPlantingGraphics);
+            animation.pixelPos.x += treeOffset.x;
+            // Match WalkOnDepositPath's final worker position, not the deposit icon origin.
+            animation.pixelPos.y += treeOffset.y - global.streetGridYHalf;
+            animation.animGoSetListContainer = ForestPlantingAnimation.Create();
+            animation.object = production;
+            this.mAnimations[grid] = animation;
+            this.mGeneralInterface.channels.RENDER.renderObjectAdded(animation);
         }
 
         public function RenderCompute():void

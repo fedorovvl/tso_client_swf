@@ -1,4 +1,4 @@
-﻿package PathFinding
+package PathFinding
 {
     import Interface.cGeneralInterface;
     import __AS3__.vec.Vector;
@@ -11,6 +11,7 @@
         public static const AMOUNT_TYPE_BELOW_MAX:int = 1;
 
         public var map_PlayerId_CostMatrices:Object = new Object();
+        public var productionRoadRevision:uint = 0;
         private var mGeneralInterface:cGeneralInterface;
 
         public function cPathFinder(_arg_1:cGeneralInterface)
@@ -69,8 +70,45 @@
             return (_local_5);
         }
 
+        public function InvalidateProductionRoads():void
+        {
+            this.productionRoadRevision++;
+            for each (var matrices:cCostMatrices in this.map_PlayerId_CostMatrices)
+            {
+                matrices.invalidateProductionRoadMatrix();
+            }
+        }
+
+        public function HasProductionWarehouseConnection(grid:int, playerId:int):Boolean
+        {
+            var matrices:cCostMatrices = this.map_PlayerId_CostMatrices[playerId];
+            if (matrices == null)
+            {
+                matrices = new cCostMatrices(playerId, this.mGeneralInterface);
+                this.map_PlayerId_CostMatrices[playerId] = matrices;
+            }
+            var costs:Vector.<int> = matrices.getProductionRoadMatrix();
+            return (grid >= 0 && grid < costs.length
+                && (costs[grid] < cCreatePath.WAYPOINT_UNSET || costs[grid] == cCreatePath.WAYPOINT_DEST));
+        }
+
+        public function CalculateProductionWarehousePath(grid:int, playerId:int):cPathObject
+        {
+            var matrices:cCostMatrices = this.map_PlayerId_CostMatrices[playerId];
+            if (matrices == null)
+            {
+                matrices = new cCostMatrices(playerId, this.mGeneralInterface);
+                this.map_PlayerId_CostMatrices[playerId] = matrices;
+            }
+            var path:cPathObject = this.mGeneralInterface.mCreatePath.CalculateStreetPathFromMatrix(
+                grid, matrices.getProductionRoadMatrix(), true);
+            path.dest_vector = path.dest_vector.reverse();
+            return (path);
+        }
+
         public function InvalidateAll(_arg_1:int):void
         {
+            this.productionRoadRevision++;
             var _local_2:cCostMatrices = this.map_PlayerId_CostMatrices[_arg_1];
             if (_local_2 != null)
             {
@@ -80,6 +118,7 @@
 
         public function InvalidateWarehouseMatrix(_arg_1:int):void
         {
+            this.productionRoadRevision++;
             var _local_2:cCostMatrices = this.map_PlayerId_CostMatrices[_arg_1];
             if (_local_2 != null)
             {

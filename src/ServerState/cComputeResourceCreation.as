@@ -1,4 +1,4 @@
-﻿package ServerState
+package ServerState
 {
     import __AS3__.vec.Vector;
     import nLib.cPosInt;
@@ -29,6 +29,9 @@
     import Collections.CollectionsManager;
     import Enums.DIRTY_INDICATOR;
     import Communication.VO.dResourceCreationVO;
+    import Communication.VO.dPathVO;
+    import Communication.VO.UpdateVO.dForestPlantingStartedVO;
+    import Map.cGoSetListAnimationManager;
     import __AS3__.vec.*;
 
     public class cComputeResourceCreation 
@@ -220,6 +223,7 @@
                     this.mResourceCreationResources = this.mGeneralInterface.mCurrentPlayerZone.GetResources(this.mResourceCreationPlayer);
                     if (_local_3.GetRemove())
                     {
+                        this.UpdateForestPlantingAnimation(_local_3);
                         _local_3.SetSettlerKIStateDeactivate();
                         if (((_local_3.GetAssignedSettler()) && (!(this.mResourceCreationResources == null))))
                         {
@@ -230,7 +234,8 @@
                     }
                     else
                     {
-                        if (_local_3.GetResourceCreationDefinition() != null)
+                        var roadPaused:Boolean = this.UpdateProductionRoadPause(_local_3);
+                        if (!roadPaused && _local_3.GetResourceCreationDefinition() != null)
                         {
                             if (_local_3.GetResourceCreationDefinition().typeEnumResourceType == RESOURCE_TYPE.CREATED_BY_BUILDING)
                             {
@@ -245,7 +250,8 @@
                                 };
                             };
                         };
-                        _local_4 = this.IncreaseResource(_local_3, this.mGeneralInterface.mClientDeltaTime);
+                        _local_4 = roadPaused ? INCREASE_RESOURCE_RESULT_OK
+                            : this.IncreaseResource(_local_3, this.mGeneralInterface.mClientDeltaTime);
                         if (_local_4 != INCREASE_RESOURCE_RESULT_OK)
                         {
                             if (_local_4 == INCREASE_RESOURCE_SET_SETTLER_TO_IDLE)
@@ -257,6 +263,7 @@
                                 };
                             };
                         };
+                        this.UpdateForestPlantingAnimation(_local_3);
                         _local_5 = _local_3.GetResourceCreationDefinition();
                         if (_local_5 != null)
                         {
@@ -265,7 +272,7 @@
                                 _local_6 = _local_3.GetResourceCreationHouse();
                                 if (((!(_local_3.GetRemove())) && (!(_local_6 == null))))
                                 {
-                                    if (_local_6.GetGOContainer().mDepositAnimName_string != null)
+                                    if (!this.IsServerForestPlanter(_local_3) && _local_6.GetGOContainer().mDepositAnimName_string != null)
                                     {
                                         if (_local_3.GetDepositBuildingGridPos() != -1)
                                         {
@@ -305,8 +312,344 @@
             this.mResourceCreation_vector = new Vector.<cResourceCreation>();
         }
 
+        private function UpdateForestPlantingAnimation(production:cResourceCreation):void
+        {
+            var manager:cGoSetListAnimationManager = this.mGeneralInterface.mCurrentPlayerZone.mGoSetListAnimationManager;
+            var building:cBuilding = production.GetResourceCreationHouse();
+            var active:Boolean = this.IsServerForestPlanter(production) && !production.GetRemove() && building != null;
+            if (active)
+            {
+                active = building.GetBuildingMode() == cBuilding.BUILDING_MODE_WORKANIM_IS_WORKING_AT_EXTERNAL_DEPOSIT
+                    && building.IsProductionActive() && !building.IsUpgradeInProgress() && !building.IsProductionLevelTooLow()
+                    && production.GetProductionState() == cResourceCreation.PRODUCTIONSTATE_WORKING;
+            }
+            var grid:int = active ? production.GetDepositBuildingGridPos() : -1;
+            var previousGrid:int = production.forestAnimationGrid;
+            if (previousGrid != -1 && previousGrid != grid)
+            {
+                if (manager.IsAnimationAtGridPos(previousGrid) && manager.GetAnimAtPos(previousGrid).object === production)
+                {
+                    manager.Remove(previousGrid);
+                }
+                production.forestAnimationGrid = -1;
+            }
+            if (grid == -1)
+            {
+                return;
+            }
+            if (!manager.IsAnimationAtGridPos(grid))
+            {
+                manager.AddForestPlantingAnimation(grid, production);
+                production.forestAnimationGrid = grid;
+            }
+        }
+
+        public function UsesConstructionRoads(building:cBuilding):Boolean
+        {
+            if (this.mGeneralInterface.mCurrentPlayerZone.forestMechanicsVersion != 1
+                || building == null || building.GetGOContainer().mConstructBuildingWithoutSettler)
+            {
+                return (false);
+            }
+            var definition:dResourceCreationDefinition = gEconomics.GetResourcesCreationDefinitionForBuilding(
+                building.GetBuildingName_string());
+            // Match the server's configured ResourceDefinition/Creation Building rule.
+            // A construction mode alone does not make a warehouse or residence a producer.
+            if (definition == null || definition.typeEnumResourceType != RESOURCE_TYPE.CREATED_BY_BUILDING)
+            {
+                return (false);
+            }
+            var mode:int = building.GetBuildingMode();
+            return (mode == cBuilding.BUILDING_MODE_QUEUED
+                || mode == cBuilding.BUILDING_MODE_SET_BUILDING_GROUND_PLACE
+                || mode == cBuilding.BUILDING_MODE_SETTLER_WALKS_TO_BUILDING_GROUND_PLACE
+                || mode == cBuilding.BUILDING_MODE_CONSTRUCTION
+                || mode == cBuilding.BUILDING_MODE_BUILDER_WALKS_FROM_RESOURCECREATIONHOUSE_TO_STOREHOUSE);
+        }
+
+        public function HasConstructionRoad(building:cBuilding):Boolean
+        {
+            return (!this.UsesConstructionRoads(building)
+                || this.mGeneralInterface.mPathFinder.HasProductionWarehouseConnection(
+                    building.GetStreetGridEntry(), building.getPlayerID()));
+        }
+
+        public function UsesProductionRoads(production:cResourceCreation):Boolean
+        {
+            if (this.mGeneralInterface.mCurrentPlayerZone.forestMechanicsVersion != 1 || production == null)
+            {
+                return (false);
+            }
+            var building:cBuilding = production.GetResourceCreationHouse();
+            var definition:dResourceCreationDefinition = production.GetResourceCreationDefinition();
+            return (this.UsesConstructionRoads(building)
+                || (building != null && building.IsBuildingInProduction() && definition != null
+                    && definition.typeEnumResourceType == RESOURCE_TYPE.CREATED_BY_BUILDING));
+        }
+
+        private function UpdateProductionRoadPause(production:cResourceCreation):Boolean
+        {
+            if (!this.UsesProductionRoads(production))
+            {
+                return (false);
+            }
+            var revision:uint = this.mGeneralInterface.mPathFinder.productionRoadRevision;
+            if (production.productionRoadRevision == revision && !production.HasInvalidatedPaths())
+            {
+                return (production.productionRoadPaused
+                    || production.GetProductionState() == cResourceCreation.PRODUCTIONSTATE_MISSING_STREET);
+            }
+            production.productionRoadRevision = revision;
+            var building:cBuilding = production.GetResourceCreationHouse();
+            if (this.UsesConstructionRoads(building))
+            {
+                return (this.UpdateConstructionRoadPause(production));
+            }
+            var path:cPathObject = this.mGeneralInterface.mPathFinder.CalculateProductionWarehousePath(
+                building.GetStreetGridEntry(), building.getPlayerID());
+            if (path.dest_vector.length == 0)
+            {
+                if (!production.productionRoadPaused)
+                {
+                    production.productionRoadPaused = true;
+                }
+                production.SetProductionState(cResourceCreation.PRODUCTIONSTATE_MISSING_STREET);
+                return (true);
+            }
+            production.productionRoadPaused = false;
+            if (production.GetProductionState() == cResourceCreation.PRODUCTIONSTATE_MISSING_STREET)
+            {
+                // Match ProductionTransactions.recalculateWarehousePaths on road restoration.
+                production.SetProductionState(!building.IsProductionActive()
+                    ? cResourceCreation.PRODUCTIONSTATE_STOPPED_PRODUCTION
+                    : production.GetAssignedSettler()
+                        ? cResourceCreation.PRODUCTIONSTATE_WORKING
+                        : cResourceCreation.PRODUCTIONSTATE_ERROR_WAITING_FOR_SETTLER);
+            }
+            this.CalculateProductionPath(production, true);
+            return (false);
+        }
+
+        private function UpdateConstructionRoadPause(production:cResourceCreation):Boolean
+        {
+            var building:cBuilding = production.GetResourceCreationHouse();
+            var path:cPathObject = this.mGeneralInterface.mPathFinder.CalculateProductionWarehousePath(
+                building.GetStreetGridEntry(), building.getPlayerID());
+            var mode:int = building.GetBuildingMode();
+            if (path.dest_vector.length == 0)
+            {
+                if (production.constructionRoadPausedAt < 0)
+                {
+                    production.constructionRoadPausedAt = this.mGeneralInterface.GetClientTime();
+                }
+                production.productionRoadPaused = true;
+                production.SetProductionState(cResourceCreation.PRODUCTIONSTATE_MISSING_STREET);
+                production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_NONE);
+                return (true);
+            }
+            var wasPaused:Boolean = production.productionRoadPaused
+                || production.GetProductionState() == cResourceCreation.PRODUCTIONSTATE_MISSING_STREET;
+            if (production.constructionRoadPausedAt >= 0)
+            {
+                if (mode != cBuilding.BUILDING_MODE_BUILDER_WALKS_FROM_RESOURCECREATIONHOUSE_TO_STOREHOUSE)
+                {
+                    building.mBuildingCreationTime += this.mGeneralInterface.GetClientTime() - production.constructionRoadPausedAt;
+                }
+                production.constructionRoadPausedAt = -1;
+            }
+            this.CalculateProductionPath(production, true);
+            production.SetInvalidatePaths(false);
+            production.productionRoadPaused = false;
+            if (production.GetProductionState() == cResourceCreation.PRODUCTIONSTATE_MISSING_STREET)
+            {
+                production.SetProductionState(cResourceCreation.PRODUCTIONSTATE_WORKING);
+            }
+            if (mode == cBuilding.BUILDING_MODE_CONSTRUCTION)
+            {
+                production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_IS_WORKING_IN_RESOURCE_CREATION_HOUSE);
+            }
+            else if (mode != cBuilding.BUILDING_MODE_QUEUED)
+            {
+                production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_WALKING_ON_RESOURCE_PATH);
+            }
+            // The current delta may still include waiting before the road acknowledgement.
+            return (wasPaused);
+        }
+
+        public function IsServerForestPlanter(production:cResourceCreation):Boolean
+        {
+            if (this.mGeneralInterface.mCurrentPlayerZone.forestMechanicsVersion != 1 || production == null)
+            {
+                return (false);
+            }
+            var definition:dResourceCreationDefinition = production.GetResourceCreationDefinition();
+            if (definition == null || definition.amountRemoved >= 0)
+            {
+                return (false);
+            }
+            // The resource set is the agreed forest-planting.properties policy.
+            return (definition.externalResource_string == "Wood" || definition.externalResource_string == "RealWood" || definition.externalResource_string == "ExoticWood");
+        }
+
+        public function StartForestPlanting(production:cResourceCreation, update:dForestPlantingStartedVO):Boolean
+        {
+            if (update.pathVO == null || update.arrivesAt < update.startsAt || update.finishesAt < update.arrivesAt)
+            {
+                cLog.warning("Invalid server forest planting path or times");
+                return (false);
+            }
+            var building:cBuilding = production.GetResourceCreationHouse();
+            var path:cPathObject = new cPathObject();
+            for each (var grid:int in update.pathVO.mPath)
+            {
+                path.AddPathPoint(this.mGeneralInterface, grid);
+            }
+            path.RefreshLength();
+            production.SetDepositPath(path);
+            production.SetDepositBuildingGridPos(update.gridIdx);
+            production.forestWorkDuration = update.finishesAt - update.arrivesAt;
+            production.forestPlantingGraphics = update.goSetListName_string;
+            production.SetGatheredResource(0);
+            production.SetProductionState(cResourceCreation.PRODUCTIONSTATE_WORKING);
+            production.SetWorkingSettler();
+            var now:Number = this.mGeneralInterface.GetClientTime();
+            if (now < update.arrivesAt)
+            {
+                var duration:Number = update.arrivesAt - update.startsAt;
+                production.pathPos = duration > 0 ? int(path.pathLenX10000 * Math.max(0, now - update.startsAt) / duration) : path.pathLenX10000;
+                building.SetBuildingMode(cBuilding.BUILDING_MODE_SETTLER_WALKS_FROM_RESOURCECREATIONHOUSE_TO_EXTERNAL_RESOURCE);
+                production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_WALKING_ON_DEPOSIT_PATH);
+            }
+            else if (now < update.finishesAt || !building.IsProductionActive() || building.IsUpgradeInProgress())
+            {
+                production.pathPos = path.pathLenX10000;
+                building.mStartWorkCounter = int(Math.min(production.forestWorkDuration, now - update.arrivesAt));
+                building.SetBuildingMode(cBuilding.BUILDING_MODE_WORKANIM_IS_WORKING_AT_EXTERNAL_DEPOSIT);
+                production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_IS_WORKING_IN_EXTERNAL_WORKYARD);
+            }
+            else
+            {
+                production.pathPos = Math.min(path.pathLenX20000, path.pathLenX10000 + int((now - update.finishesAt) * SETTLER_WALK_SPEED_INT));
+                building.SetBuildingMode(cBuilding.BUILDING_MODE_SETTLER_WALKS_FROM_EXTERNAL_RESOURCE_TO_RESOURCECREATIONHOUSE);
+                production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_WALKING_ON_DEPOSIT_PATH);
+            }
+            return (true);
+        }
+
+        private function AdvanceForestWorker(production:cResourceCreation, delta:int):Boolean
+        {
+            var building:cBuilding = production.GetResourceCreationHouse();
+            if (building == null)
+            {
+                return (false);
+            }
+            var path:cPathObject = production.GetDepositPath();
+            var warehousePath:cPathObject = production.GetPath();
+            var overflow:int;
+            switch (building.GetBuildingMode())
+            {
+                case cBuilding.BUILDING_MODE_WORKANIM_IS_WORKING_AT_WORKYARD_EXTERNAL_WORKYARD_SYSTEM_ACTIVE:
+                    // Only a server StartedVO may select the next target.
+                    production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_IS_WORKING_IN_RESOURCE_CREATION_HOUSE);
+                    return (true);
+                case cBuilding.BUILDING_MODE_SETTLER_WALKS_FROM_RESOURCECREATIONHOUSE_TO_EXTERNAL_RESOURCE:
+                    if (path == null)
+                    {
+                        return (true);
+                    }
+                    production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_WALKING_ON_DEPOSIT_PATH);
+                    production.pathPos += delta * SETTLER_WALK_SPEED_INT;
+                    if (production.pathPos >= path.pathLenX10000)
+                    {
+                        building.mStartWorkCounter = int((production.pathPos - path.pathLenX10000) / SETTLER_WALK_SPEED_INT);
+                        production.pathPos = path.pathLenX10000;
+                        building.SetBuildingMode(cBuilding.BUILDING_MODE_WORKANIM_IS_WORKING_AT_EXTERNAL_DEPOSIT);
+                        production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_IS_WORKING_IN_EXTERNAL_WORKYARD);
+                    }
+                    return (true);
+                case cBuilding.BUILDING_MODE_WORKANIM_IS_WORKING_AT_EXTERNAL_DEPOSIT:
+                    production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_IS_WORKING_IN_EXTERNAL_WORKYARD);
+                    if (!building.IsProductionActive() || building.IsUpgradeInProgress() || building.IsProductionLevelTooLow())
+                    {
+                        return (true);
+                    }
+                    building.mStartWorkCounter += delta;
+                    var workDuration:Number = isNaN(production.forestWorkDuration) ? production.GetWorkTime() * 1000 : production.forestWorkDuration;
+                    if (building.mStartWorkCounter >= workDuration && path != null)
+                    {
+                        overflow = int(building.mStartWorkCounter - workDuration);
+                        production.pathPos = path.pathLenX10000 + overflow * SETTLER_WALK_SPEED_INT;
+                        building.SetBuildingMode(cBuilding.BUILDING_MODE_SETTLER_WALKS_FROM_EXTERNAL_RESOURCE_TO_RESOURCECREATIONHOUSE);
+                        production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_WALKING_ON_DEPOSIT_PATH);
+                        production.SetWorkingSettler();
+                    }
+                    return (true);
+                case cBuilding.BUILDING_MODE_SETTLER_WALKS_FROM_EXTERNAL_RESOURCE_TO_RESOURCECREATIONHOUSE:
+                    if (path == null)
+                    {
+                        return (true);
+                    }
+                    production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_WALKING_ON_DEPOSIT_PATH);
+                    production.pathPos += delta * SETTLER_WALK_SPEED_INT;
+                    if (production.pathPos >= path.pathLenX20000)
+                    {
+                        if (warehousePath == null || production.GetStoreHouse() == null)
+                        {
+                            production.pathPos = path.pathLenX20000;
+                            production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_WAIT_FOR_STORE_HOUSE);
+                            return (true);
+                        }
+                        overflow = production.pathPos - path.pathLenX20000;
+                        production.SetDepositBuildingGridPos(-1);
+                        production.SetDepositPath(null);
+                        production.pathPos = warehousePath.pathLenX10000 + overflow;
+                        production.SetWorkingSettler();
+                        building.SetBuildingMode(cBuilding.BUILDING_MODE_SETTLER_WALKS_FROM_RESOURCECREATIONHOUSE_TO_STOREHOUSE);
+                        production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_WALKING_ON_RESOURCE_PATH);
+                    }
+                    return (true);
+                case cBuilding.BUILDING_MODE_SETTLER_WALKS_FROM_RESOURCECREATIONHOUSE_TO_STOREHOUSE:
+                    if (warehousePath == null || production.GetStoreHouse() == null)
+                    {
+                        production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_WAIT_FOR_STORE_HOUSE);
+                        return (true);
+                    }
+                    production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_WALKING_ON_RESOURCE_PATH);
+                    production.pathPos += delta * SETTLER_WALK_SPEED_INT;
+                    if (production.pathPos >= warehousePath.pathLenX20000)
+                    {
+                        // Delivery is server-owned; only turn the visual worker around.
+                        production.pathPos -= warehousePath.pathLenX20000;
+                        production.SetWorkingSettler();
+                        building.SetBuildingMode(cBuilding.BUILDING_MODE_SETTLER_WALKS_FROM_STOREHOUSE_TO_RESOURCECREATIONHOUSE);
+                    }
+                    return (true);
+                case cBuilding.BUILDING_MODE_SETTLER_WALKS_FROM_STOREHOUSE_TO_RESOURCECREATIONHOUSE:
+                    if (warehousePath == null || production.GetStoreHouse() == null)
+                    {
+                        production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_WAIT_FOR_STORE_HOUSE);
+                        return (true);
+                    }
+                    production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_WALKING_ON_RESOURCE_PATH);
+                    production.pathPos += delta * SETTLER_WALK_SPEED_INT;
+                    if (production.pathPos >= warehousePath.pathLenX10000)
+                    {
+                        production.pathPos = warehousePath.pathLenX10000;
+                        building.mStartWorkCounter = 0;
+                        building.SetBuildingMode(cBuilding.BUILDING_MODE_WORKANIM_IS_WORKING_AT_WORKYARD_EXTERNAL_WORKYARD_SYSTEM_ACTIVE);
+                        production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_IS_WORKING_IN_RESOURCE_CREATION_HOUSE);
+                    }
+                    return (true);
+            }
+            return (false);
+        }
+
         public function SearchForNearestDepositFast(_arg_1:cResourceCreation):Boolean
         {
+            if (this.IsServerForestPlanter(_arg_1))
+            {
+                return (false);
+            }
             var _local_3:cPathObject;
             var _local_6:int;
             var _local_7:cDeposit;
@@ -335,7 +678,16 @@
             {
                 _local_6 = cPathFinder.AMOUNT_TYPE_BELOW_MAX;
             };
-            _local_3 = this.mGeneralInterface.mPathFinder.CalculatePathForDeposit(_local_2, _local_5, _local_4, _local_6);
+            if (ForestMechanicsRules.IsWoodHarvester(_arg_1.GetResourceCreationDefinition(), this.mGeneralInterface.mCurrentPlayerZone.forestMechanicsVersion))
+            {
+                var destinations:Vector.<int> = this.mGeneralInterface.mPathFinder.GetDepositDestinations(_local_2, _local_4, _local_6);
+                destinations = ForestMechanicsRules.FilterDestinations(this.mGeneralInterface.mCurrentPlayerZone.mMapWidth, _arg_1.GetResourceCreationHouse().GetGrid(), destinations);
+                _local_3 = destinations.length > 0 ? this.mGeneralInterface.mPathFinder.CalculatePathForDestinations(_local_5, destinations, null) : null;
+            }
+            else
+            {
+                _local_3 = this.mGeneralInterface.mPathFinder.CalculatePathForDeposit(_local_2, _local_5, _local_4, _local_6);
+            }
             if (((!(_local_3 == null)) && (_local_3.dest_vector.length > 0)))
             {
                 _local_8 = _local_3.dest_vector[(_local_3.dest_vector.length - 1)];
@@ -350,6 +702,10 @@
 
         private function IncreaseResource(_arg_1:cResourceCreation, _arg_2:int):int
         {
+            if (this.IsServerForestPlanter(_arg_1) && this.AdvanceForestWorker(_arg_1, _arg_2))
+            {
+                return (INCREASE_RESOURCE_RESULT_OK);
+            }
             var _local_3:cDeposit;
             var _local_4:int;
             var _local_5:int;
@@ -396,9 +752,15 @@
                     case cBuilding.BUILDING_MODE_SET_BUILDING_GROUND_PLACE:
                         if (!_local_8.GetGOContainer().mConstructBuildingWithoutSettler)
                         {
+                            if (this.UsesConstructionRoads(_local_8))
+                            {
+                                // Queue waiting and road pauses are not builder travel time.
+                                _local_8.mBuildingCreationTime = this.mCurrentTime;
+                            }
                             _local_4 = int((this.mCurrentTime - _local_8.mBuildingCreationTime));
                             _arg_1.pathPos = (_local_4 * SETTLER_WALK_SPEED_INT);
-                            if (((_local_8.IsBuildOnWater()) || (_local_8.IgnoreWarehousePath())))
+                            if (!this.UsesConstructionRoads(_local_8)
+                                && (_local_8.IsBuildOnWater() || _local_8.IgnoreWarehousePath()))
                             {
                                 _local_8.SetBuildingMode(cBuilding.BUILDING_MODE_CONSTRUCTION);
                             }
@@ -486,7 +848,8 @@
                                 this.mGeneralInterface.mPathFinder.InvalidateDepositMatrix(_local_8.getPlayerID(), _local_3.GetName_string(), cPathFinder.AMOUNT_TYPE_ABOVE_ZERO);
                             };
                             this.mGeneralInterface.mCurrentPlayerZone.mStreetDataMap.CalculateBorders();
-                            if (((!(_local_8.GetGOContainer().mConstructBuildingWithoutSettler)) && (!(_local_8.IsBuildOnWater()))))
+                            if (!_local_8.GetGOContainer().mConstructBuildingWithoutSettler
+                                && (this.UsesConstructionRoads(_local_8) || !_local_8.IsBuildOnWater()))
                             {
                                 _local_8.SetBuildingMode(cBuilding.BUILDING_MODE_BUILDER_WALKS_FROM_RESOURCECREATIONHOUSE_TO_STOREHOUSE);
                                 _arg_1.SetSettlerKIState(cSettlerKI.SETTLER_STATE_WALKING_ON_RESOURCE_PATH);
@@ -734,6 +1097,12 @@
                                 _arg_1.pathPos = (_arg_1.GetDepositPath().pathLenX10000 + (_local_4 * SETTLER_WALK_SPEED_INT));
                                 _local_3 = this.mGeneralInterface.mCurrentPlayerZone.mStreetDataMap.mDepositContainer.get(_arg_1.GetDepositBuildingGridPos());
                                 _arg_1.SetGatheredResource(0);
+                                if (_local_3 != null && ForestMechanicsRules.IsWoodHarvester(_local_7, this.mGeneralInterface.mCurrentPlayerZone.forestMechanicsVersion)
+                                    && !ForestMechanicsRules.WithinRadius(this.mGeneralInterface.mCurrentPlayerZone.mMapWidth, _local_8.GetGrid(), _local_3.GetGrid()))
+                                {
+                                    // The house may have moved since this route was selected.
+                                    _local_3 = null;
+                                }
                                 if (_local_3 != null)
                                 {
                                     if (((_local_3.GetAmount() > 0) || (_arg_1.GetResourceCreationDefinition().amountRemoved < 0)))
@@ -1100,15 +1469,49 @@
                 return (false);
             };
             var _local_4:int = _local_3.getPlayerID();
-            var _local_5:cPathObject = this.mGeneralInterface.mPathFinder.CalculatePathForWarehouse(_local_3.GetStreetGridEntry(), _local_4);
+            var roadsOnly:Boolean = this.UsesProductionRoads(_arg_1);
+            var _local_5:cPathObject = roadsOnly
+                ? this.mGeneralInterface.mPathFinder.CalculateProductionWarehousePath(_local_3.GetStreetGridEntry(), _local_4)
+                : this.mGeneralInterface.mPathFinder.CalculatePathForWarehouse(_local_3.GetStreetGridEntry(), _local_4);
             if (((_local_5 == null) || (_local_5.dest_vector.length < 1)))
             {
+                if (roadsOnly)
+                {
+                    this.UpdateProductionRoadPause(_arg_1);
+                    return (true);
+                }
                 _arg_1.SetStoreHouse(null);
                 return (false);
             };
             var _local_6:int = (_local_5.dest_vector[0] as dPathObjectItem).streetGridIdx;
             var _local_7:int = gCalculations.MoveStreetGridToDir8(this.mGeneralInterface.mCurrentPlayerZone, _local_6, defines.DIR8_NORTH_WEST);
             var _local_8:cBuilding = this.mGeneralInterface.mCurrentPlayerZone.mStreetDataMap.mBuildingContainer.get(_local_7);
+            if (roadsOnly)
+            {
+                _local_8 = null;
+                for each (var warehouse:cBuilding in this.mGeneralInterface.mCurrentPlayerZone.mStreetDataMap.GetBuildings_vector())
+                {
+                    if (warehouse != null && warehouse.IsBuildingActive() && warehouse.IsWarehouseType()
+                        && warehouse.getPlayerID() == _local_4 && warehouse.GetStreetGridEntry() == _local_6)
+                    {
+                        _local_8 = warehouse;
+                        break;
+                    }
+                }
+            }
+            if (this.UsesConstructionRoads(_local_3) && _arg_2
+                && _local_3.GetBuildingMode() == cBuilding.BUILDING_MODE_BUILDER_WALKS_FROM_RESOURCECREATIONHOUSE_TO_STOREHOUSE
+                && _arg_1.GetPath() != null)
+            {
+                // pathPos includes the outbound leg; preserve distance on the return leg.
+                var returnedDistance:int = Math.max(0, _arg_1.pathPos - _arg_1.GetPath().pathLenX10000);
+                _arg_1.pathPos = _local_5.pathLenX10000 + Math.min(returnedDistance, _local_5.pathLenX10000);
+            }
+            else if (this.UsesConstructionRoads(_local_3) && _arg_2
+                && _local_3.GetBuildingMode() == cBuilding.BUILDING_MODE_SETTLER_WALKS_TO_BUILDING_GROUND_PLACE)
+            {
+                _arg_1.pathPos = Math.min(_arg_1.pathPos, _local_5.pathLenX10000);
+            }
             _arg_1.SetStoreHouse(_local_8);
             _arg_1.SetPath(_local_5);
             if (!_arg_2)
@@ -1155,7 +1558,7 @@
             {
                 return (false);
             };
-            if (_arg_2.GetStoreHouse() == null)
+            if (_arg_2.GetStoreHouse() == null && !this.UsesConstructionRoads(_arg_2.GetResourceCreationHouse()))
             {
                 _arg_2.SetPath(null);
             };
@@ -1171,6 +1574,10 @@
         public function ErrorResetResourceCreation(_arg_1:cResourceCreation):void
         {
             var _local_2:cBuilding = _arg_1.GetResourceCreationHouse();
+            if (this.UsesConstructionRoads(_local_2))
+            {
+                return;
+            }
             if (_local_2 == null)
             {
                 if (cLog.isInfoEnabled())
@@ -1233,13 +1640,21 @@
             _local_6.SetGatheredResource(_arg_1.gatheredResource);
             _local_6.SetProductionState(_arg_1.productionState);
             _local_6.SetDepositBuildingGridPos(_arg_1.depositBuildingGridPos);
+            _local_6.forestPlantingGraphics = _arg_1.forestPlantingGraphics;
             _local_6.SetRemove(_arg_1.remove);
             _local_6.SetUniqueID(_arg_1.uniqueID);
             if (_local_2 != null)
             {
                 _local_2.SetResourceCreation(_local_6);
                 this.AssignSettlerGfx(_local_6);
-                if (_local_4 != null)
+                if (this.UsesConstructionRoads(_local_2))
+                {
+                    if (_arg_1.pathVO != null && _arg_1.pathVO.mPath.length > 0)
+                    {
+                        _local_6.SetPath(this.ReadConstructionPath(_arg_1.pathVO));
+                    }
+                }
+                else if (_local_4 != null)
                 {
                     if (((!(_local_4.externalResource_string == null)) && (!(_local_4.externalResource_string == ""))))
                     {
@@ -1311,6 +1726,23 @@
                 };
             };
             _local_6.mDirtyIndicator = DIRTY_INDICATOR.CLEAN;
+        }
+
+        private function ReadConstructionPath(value:dPathVO):cPathObject
+        {
+            var path:cPathObject = new cPathObject();
+            for each (var grid:int in value.mPath)
+            {
+                var item:dPathObjectItem = new dPathObjectItem();
+                item.streetGridIdx = grid;
+                var position:cPosInt = new cPosInt();
+                gCalculations.ConvertStreetGridToPixelPos(this.mGeneralInterface.mCurrentPlayerZone, grid, position);
+                item.x = position.x;
+                item.y = position.y;
+                path.dest_vector.push(item);
+            }
+            path.RefreshLength();
+            return (path);
         }
 
 

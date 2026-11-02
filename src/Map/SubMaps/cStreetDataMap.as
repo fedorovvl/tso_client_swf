@@ -1,6 +1,7 @@
 package Map.SubMaps
 {
     import Model.Notifier;
+    import GUI.Assets.RoadEntranceMarker;
     import nLib.IndexedContainer;
     import nLib.AdditionalData;
     import GO.cBuilding;
@@ -34,6 +35,7 @@ package Map.SubMaps
     import Enums.RENDER_LAYER;
     import Utils.DictionaryUtils;
     import ServerState.dResourceCreationDefinition;
+    import ServerState.gEconomics;
     import GUI.Loca.cLocaManager;
     import Enums.LOCA_GROUP;
     import flash.display.BlendMode;
@@ -635,6 +637,7 @@ package Map.SubMaps
             this.mBuildingContainer.clear();
             this.mDepositContainer.clear();
             this.mStreetContainer.clear();
+            this.mGeneralInterface.mPathFinder.InvalidateProductionRoads();
             this.mLandscapeContainer.clear();
             this.mWatchingContainer.clear();
             this.mLandmarkContainer.clear();
@@ -662,6 +665,53 @@ package Map.SubMaps
             {
                 (_arg_1 as cCombatData).dispose();
             };
+        }
+        
+        public function RenderRoadEntrances():void
+        {
+            var mode:int = this.mGeneralInterface.mCurrentCursor.GetEditMode();
+            if (this.mGeneralInterface.mCurrentPlayerZone.forestMechanicsVersion != 1)
+            {
+                return;
+            }
+            var playerId:int = this.mGeneralInterface.mCurrentPlayer.GetPlayerId();
+            for each (var building:cBuilding in this.GetBuildings_vector())
+            {
+                if (building == null || building.getPlayerID() != playerId)
+                {
+                    continue;
+                }
+                var construction:Boolean = this.mGeneralInterface.mComputeResourceCreation.UsesConstructionRoads(building)
+                    && (building.IsConstructionStarted() || building.GetBuildingMode() == cBuilding.BUILDING_MODE_QUEUED);
+                if (!construction && mode != COMMAND.BUILD_WAY && mode != COMMAND.BUILD_WAY_SECONDARY)
+                {
+                    continue;
+                }
+                var definition:dResourceCreationDefinition = gEconomics.GetResourcesCreationDefinitionForBuilding(building.GetBuildingName_string());
+                if (!construction && !building.IsWarehouseType()
+                    && (definition == null || definition.typeEnumResourceType != RESOURCE_TYPE.CREATED_BY_BUILDING))
+                {
+                    continue;
+                }
+                var entry:int = building.GetStreetGridEntry();
+                if (entry < 0 || entry >= this.mGeneralInterface.mCurrentPlayerZone.mMapWidth
+                    * this.mGeneralInterface.mCurrentPlayerZone.mMapHeight || this.IsFogAtGridPosition(entry))
+                {
+                    continue;
+                }
+                gCalculations.ConvertStreetGridToPixelPos(this.mGeneralInterface.mCurrentPlayerZone, entry, this.mTempPos);
+                // Resource-path settlers use the same grid anchor minus half a street cell.
+                this.mTempPos.y -= global.streetGridYHalf;
+                this.mGeneralInterface.mZoom.CalculateScrollPos(this.mTempPos);
+                if (this.mTempPos.x < -12 || this.mTempPos.x > cBackbuffer.GetWidth() + 12
+                    || this.mTempPos.y < 0 || this.mTempPos.y > cBackbuffer.GetHeight() + 30)
+                {
+                    continue;
+                }
+                var connected:Boolean = this.mGeneralInterface.mPathFinder.HasProductionWarehouseConnection(entry, playerId);
+                RoadEntranceMarker.Render(this.mTempPos.x, this.mTempPos.y, connected,
+                    this.mGeneralInterface.mZoom.mFactorDivDefaultZoom);
+            }
         }
 
         public function ShowStreetPreview():void
@@ -1209,6 +1259,7 @@ package Map.SubMaps
                 };
                 _arg_1.SetGrid(_arg_2);
                 this.mStreetContainer.put(_arg_2, _arg_1);
+                this.mGeneralInterface.mPathFinder.InvalidateProductionRoads();
                 return (true);
             };
             return (false);
@@ -1913,6 +1964,7 @@ package Map.SubMaps
             else
             {
                 this.SetStreetGridPos(_local_6, _arg_3);
+                this.mGeneralInterface.mPathFinder.InvalidateProductionRoads();
                 this.mGeneralInterface.mCurrentPlayerZone.SetBackgroundHasChanged(true);
             };
         }
@@ -2944,6 +2996,7 @@ package Map.SubMaps
         public function SetBlocked(_arg_1:int, _arg_2:int):void
         {
             this.mAdditionalData.set(_arg_1, AdditionalDataTSO.Blocked, _arg_2);
+            this.mGeneralInterface.mPathFinder.InvalidateProductionRoads();
         }
 
         public function ResetStreetPreview():void
@@ -3037,6 +3090,7 @@ package Map.SubMaps
             if (_local_2 != null)
             {
                 this.mStreetContainer.remove(_arg_1);
+                this.mGeneralInterface.mPathFinder.InvalidateProductionRoads();
                 this.mStreetVectorChanged = true;
                 return (true);
             };
@@ -4135,6 +4189,7 @@ package Map.SubMaps
         public function ResetStreetList():void
         {
             this.mStreetContainer.clear();
+            this.mGeneralInterface.mPathFinder.InvalidateProductionRoads();
         }
 
         public function RenderFreeBackgroundAnimated(_arg_1:int):void

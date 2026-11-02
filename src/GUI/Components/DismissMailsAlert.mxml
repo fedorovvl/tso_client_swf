@@ -105,7 +105,7 @@
             _local_14.minHeight = 175;
             _local_14.content.setStyle("paddingLeft", 0);
             _local_14.content.setStyle("paddingRight", 4);
-            _local_14.content.setStyle("paddingBottom", 10);
+            _local_14.content.setStyle("paddingBottom", 15);
             _local_14.content.setStyle("horizontalCenter", 0);
             _local_14.width = 375;
             _local_14.grpCollectable.visible = (_local_14.grpCollectable.includeInLayout = (_arg_7 > 0));
@@ -327,10 +327,10 @@
     ]]></mx:Script>
     <mx:Image id="paymentOrnament" y="-25" horizontalCenter="0"
         source="@Embed(source='../../../assets/embedded/alert/alert_alert_payment_ornament.png')" />
-    <mx:Box id="titleBox" percentWidth="100" horizontalAlign="center">
+    <mx:Box id="titleBox" percentWidth="100" height="35" horizontalAlign="center">
         <gui:CustomLabel id="titleLabel" paddingTop="6" paddingLeft="10" paddingRight="10" paddingBottom="10" textAlign="center" color="0xFFFFFF" fontWeight="bold" />
     </mx:Box>
-    <mx:VBox id="content" paddingTop="5" paddingBottom="25" paddingLeft="20" paddingRight="20" horizontalAlign="center" verticalGap="7">
+    <mx:VBox id="content" top="35" paddingTop="5" paddingBottom="25" paddingLeft="20" paddingRight="20" horizontalAlign="center" verticalGap="7">
         <mx:Canvas id="grpCollectable" styleName="mailContentBorder" width="330" height="110">
             <mx:Image id="collectIcon" x="2" y="7"
                 source="@Embed(source='../../../assets/embedded/mailwindow/mailwindow_icon_find_treasure.png')" />

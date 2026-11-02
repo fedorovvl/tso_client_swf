@@ -65,6 +65,10 @@
         private function InstantBuild(_arg_1:ListEvent):void
         {
             var _local_2:cBuilding = this.mGI.mCurrentPlayerZone.GetBuildingFromGridPosition(_arg_1.rowIndex);
+            if (_local_2 == null || !this.mGI.mComputeResourceCreation.HasConstructionRoad(_local_2))
+            {
+                return;
+            }
             var _local_3:cResources = this.mGI.mCurrentPlayerZone.GetResources(this.mGI.mCurrentPlayer);
             if (_local_3.HasPlayerResource(defines.HARD_CURRENCY_RESOURCE_NAME_string, _local_2.GetBuildInstantCosts()))
             {

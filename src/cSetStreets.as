@@ -76,6 +76,7 @@
                 if (this.mSetStartPoint)
                 {
                     this.mStartingPositionGridIdx = _local_3;
+                    this.oldCursorGridIdx = -1;
                     _local_6 = new Vector.<int>(1);
                     _local_6.push(this.mStartingPositionGridIdx);
                     this.mPathCostMatrix_list = this.mGeneralInterface.mCreatePath.CalculatePathCostMatrix_list(_local_6, null);
@@ -89,7 +90,10 @@
                     this.mPathObject = this.mGeneralInterface.mCreatePath.CalculateStreetPathFromMatrix(_local_3, this.mPathCostMatrix_list);
                     _arg_2.mStreetDataMap.CreateStreetWayFromPathStreet(_arg_1, this.mPathObject, false);
                     _arg_2.mStreetDataMap.ResetStreetPreview();
-                    this.mGeneralInterface.mCurrentCursor.SetCursorEditMode(COMMAND.SELECT_BUILDING);
+                    if (this.mGeneralInterface.mCurrentPlayerZone.forestMechanicsVersion != 1)
+                    {
+                        this.mGeneralInterface.mCurrentCursor.SetCursorEditMode(COMMAND.SELECT_BUILDING);
+                    }
                     this.mGeneralInterface.SendServerAction(COMMAND.BUILD_WAY_SECONDARY, 0, _local_3, this.mStartingPositionGridIdx, null);
                 };
                 this.mSetStartPoint = (!(this.mSetStartPoint));

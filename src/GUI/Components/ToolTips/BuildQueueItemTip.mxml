@@ -34,6 +34,16 @@
             var _local_9:int;
             this._text = _arg_1;
             this.nameLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.BUILDINGS, this._text);
+            var roadMissing:Boolean = !global.ui.mComputeResourceCreation.HasConstructionRoad(this._building);
+            if (roadMissing && this._building.GetBuildingMode() != cBuilding.BUILDING_MODE_QUEUED)
+            {
+                this.costsList.visible = false;
+                this.costsList.includeInLayout = false;
+                this.durationLabel.visible = true;
+                this.durationLabel.includeInLayout = true;
+                this.durationLabel.text = "Нет дороги к складу";
+                return;
+            }
             var _local_2:Number = 0;
             switch (this._building.GetBuildingMode())
             {
@@ -90,6 +100,13 @@
                         };
                     };
             };
+            if (roadMissing)
+            {
+                this.durationLabel.text = "Нет дороги к складу"
+                    + (this.durationLabel.visible ? "\n" + this.durationLabel.text : "");
+                this.durationLabel.visible = true;
+                this.durationLabel.includeInLayout = true;
+            }
         }
     ]]></mx:Script>
     <gui:CustomLabel id="nameLabel" top="5" left="5" right="5" fontWeight="bold" color="0xFFFFFF" />

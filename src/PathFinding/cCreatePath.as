@@ -1,10 +1,11 @@
-﻿package PathFinding
+package PathFinding
 {
     import Interface.cGeneralInterface;
     import __AS3__.vec.Vector;
     import nLib.gMisc;
     import nLib.cLog;
     import GO.cBlockingData;
+    import GO.cStreet;
     import __AS3__.vec.*;
 
     public class cCreatePath 
@@ -120,7 +121,7 @@
             return (this.CalculatePathCostMatrix_listIntern(_arg_1, _arg_2, 100000));
         }
 
-        public function CalculatePathCostMatrix_listIntern(_arg_1:Vector.<int>, _arg_2:Vector.<PFAdditionalData>, _arg_3:int):Vector.<int>
+        public function CalculatePathCostMatrix_listIntern(_arg_1:Vector.<int>, _arg_2:Vector.<PFAdditionalData>, _arg_3:int, roadsOnly:Boolean = false):Vector.<int>
         {
             var _local_7:Vector.<int>;
             var _local_8:int;
@@ -140,7 +141,9 @@
             var _local_6:Vector.<int> = new Vector.<int>();
             for each (_local_8 in _arg_1)
             {
-                if (((_local_8 > 0) && (_local_8 < this.costMatrix_list.length)))
+                if (((_local_8 > 0) && (_local_8 < this.costMatrix_list.length))
+                    && (!roadsOnly || (this.costMatrix_list[_local_8] == WAYPOINT_UNSET
+                        && this.HasProductionRoad(_local_8))))
                 {
                     this.costMatrix_list[_local_8] = WAYPOINT_DEST;
                     _local_5.push(_local_8);
@@ -160,25 +163,29 @@
                     _local_16 = (-(_local_13) + this.mGeneralInterface.mCurrentPlayerZone.mMapWidth);
                     _local_17 = (-(_local_13) - this.mGeneralInterface.mCurrentPlayerZone.mMapWidth);
                     _local_18 = (_local_10 + _local_14);
-                    if ((((_local_18 >= 0) && (_local_18 < _local_9)) && (this.costMatrix_list[_local_18] == WAYPOINT_UNSET)))
+                    if ((((_local_18 >= 0) && (_local_18 < _local_9)) && (this.costMatrix_list[_local_18] == WAYPOINT_UNSET))
+                        && (!roadsOnly || this.CanProductionRoadStep(_local_10, _local_18, 0)))
                     {
                         this.costMatrix_list[_local_18] = _local_4;
                         _local_6.push(_local_18);
                     };
                     _local_18 = (_local_10 + _local_15);
-                    if ((((_local_18 >= 0) && (_local_18 < _local_9)) && (this.costMatrix_list[_local_18] == WAYPOINT_UNSET)))
+                    if ((((_local_18 >= 0) && (_local_18 < _local_9)) && (this.costMatrix_list[_local_18] == WAYPOINT_UNSET))
+                        && (!roadsOnly || this.CanProductionRoadStep(_local_10, _local_18, 1)))
                     {
                         this.costMatrix_list[_local_18] = _local_4;
                         _local_6.push(_local_18);
                     };
                     _local_18 = (_local_10 + _local_16);
-                    if ((((_local_18 >= 0) && (_local_18 < _local_9)) && (this.costMatrix_list[_local_18] == WAYPOINT_UNSET)))
+                    if ((((_local_18 >= 0) && (_local_18 < _local_9)) && (this.costMatrix_list[_local_18] == WAYPOINT_UNSET))
+                        && (!roadsOnly || this.CanProductionRoadStep(_local_10, _local_18, 2)))
                     {
                         this.costMatrix_list[_local_18] = _local_4;
                         _local_6.push(_local_18);
                     };
                     _local_18 = (_local_10 + _local_17);
-                    if ((((_local_18 >= 0) && (_local_18 < _local_9)) && (this.costMatrix_list[_local_18] == WAYPOINT_UNSET)))
+                    if ((((_local_18 >= 0) && (_local_18 < _local_9)) && (this.costMatrix_list[_local_18] == WAYPOINT_UNSET))
+                        && (!roadsOnly || this.CanProductionRoadStep(_local_10, _local_18, 3)))
                     {
                         this.costMatrix_list[_local_18] = _local_4;
                         _local_6.push(_local_18);
@@ -192,7 +199,7 @@
             return (this.costMatrix_list);
         }
 
-        public function CalculateStreetPathFromMatrix(_arg_1:int, _arg_2:Vector.<int>):cPathObject
+        public function CalculateStreetPathFromMatrix(_arg_1:int, _arg_2:Vector.<int>, roadsOnly:Boolean = false):cPathObject
         {
             var _local_9:int;
             var _local_10:int;
@@ -227,7 +234,8 @@
                 {
                     _local_10 = defines.DIR4_NORTH_EAST;
                     _local_11 = ((_local_6 + _local_9) - this.mGeneralInterface.mCurrentPlayerZone.mMapWidth);
-                    _local_12 = _arg_2[_local_11];
+                    _local_12 = (roadsOnly && !this.CanProductionRoadStep(_local_6, _local_11, _local_10))
+                        ? WAYPOINT_BLOCKED : _arg_2[_local_11];
                 };
                 if ((((_local_7 <= _local_12) || (_local_8 == defines.DIR4_NORTH_EAST)) && (!(_local_12 == WAYPOINT_DEST))))
                 {
@@ -235,7 +243,8 @@
                     {
                         _local_10 = defines.DIR4_SOUTH_EAST;
                         _local_11 = ((_local_6 + _local_9) + this.mGeneralInterface.mCurrentPlayerZone.mMapWidth);
-                        _local_12 = _arg_2[_local_11];
+                        _local_12 = (roadsOnly && !this.CanProductionRoadStep(_local_6, _local_11, _local_10))
+                            ? WAYPOINT_BLOCKED : _arg_2[_local_11];
                     };
                     if ((((_local_7 <= _local_12) || (_local_8 == defines.DIR4_SOUTH_EAST)) && (!(_local_12 == WAYPOINT_DEST))))
                     {
@@ -243,7 +252,8 @@
                         {
                             _local_10 = defines.DIR4_SOUTH_WEST;
                             _local_11 = (((_local_6 - 1) + _local_9) + this.mGeneralInterface.mCurrentPlayerZone.mMapWidth);
-                            _local_12 = _arg_2[_local_11];
+                            _local_12 = (roadsOnly && !this.CanProductionRoadStep(_local_6, _local_11, _local_10))
+                                ? WAYPOINT_BLOCKED : _arg_2[_local_11];
                         };
                         if ((((_local_7 <= _local_12) || (_local_8 == defines.DIR4_SOUTH_WEST)) && (!(_local_12 == WAYPOINT_DEST))))
                         {
@@ -251,7 +261,8 @@
                             {
                                 _local_10 = defines.DIR4_NORTH_WEST;
                                 _local_11 = (((_local_6 - 1) + _local_9) - this.mGeneralInterface.mCurrentPlayerZone.mMapWidth);
-                                _local_12 = _arg_2[_local_11];
+                                _local_12 = (roadsOnly && !this.CanProductionRoadStep(_local_6, _local_11, _local_10))
+                                    ? WAYPOINT_BLOCKED : _arg_2[_local_11];
                             };
                         };
                     };
@@ -263,22 +274,26 @@
                         case defines.DIR4_NORTH_EAST:
                             _local_10 = defines.DIR4_NORTH_EAST;
                             _local_11 = ((_local_6 + _local_9) - this.mGeneralInterface.mCurrentPlayerZone.mMapWidth);
-                            _local_12 = _arg_2[_local_11];
+                            _local_12 = (roadsOnly && !this.CanProductionRoadStep(_local_6, _local_11, _local_10))
+                                ? WAYPOINT_BLOCKED : _arg_2[_local_11];
                             break;
                         case defines.DIR4_SOUTH_EAST:
                             _local_10 = defines.DIR4_SOUTH_EAST;
                             _local_11 = ((_local_6 + _local_9) + this.mGeneralInterface.mCurrentPlayerZone.mMapWidth);
-                            _local_12 = _arg_2[_local_11];
+                            _local_12 = (roadsOnly && !this.CanProductionRoadStep(_local_6, _local_11, _local_10))
+                                ? WAYPOINT_BLOCKED : _arg_2[_local_11];
                             break;
                         case defines.DIR4_SOUTH_WEST:
                             _local_10 = defines.DIR4_SOUTH_WEST;
                             _local_11 = (((_local_6 - 1) + _local_9) + this.mGeneralInterface.mCurrentPlayerZone.mMapWidth);
-                            _local_12 = _arg_2[_local_11];
+                            _local_12 = (roadsOnly && !this.CanProductionRoadStep(_local_6, _local_11, _local_10))
+                                ? WAYPOINT_BLOCKED : _arg_2[_local_11];
                             break;
                         case defines.DIR4_NORTH_WEST:
                             _local_10 = defines.DIR4_NORTH_WEST;
                             _local_11 = (((_local_6 - 1) + _local_9) - this.mGeneralInterface.mCurrentPlayerZone.mMapWidth);
-                            _local_12 = _arg_2[_local_11];
+                            _local_12 = (roadsOnly && !this.CanProductionRoadStep(_local_6, _local_11, _local_10))
+                                ? WAYPOINT_BLOCKED : _arg_2[_local_11];
                             break;
                     };
                 };
@@ -307,6 +322,27 @@
             };
             _local_3.RefreshLength();
             return (_local_3);
+        }
+
+        private function HasProductionRoad(grid:int):Boolean
+        {
+            var street:cStreet = this.mGeneralInterface.mCurrentPlayerZone.mStreetDataMap.GetStreetFromGridPosition(grid);
+            return (street != null && street.GetStreetBits() != 0);
+        }
+
+        private function CanProductionRoadStep(origin:int, target:int, direction:int):Boolean
+        {
+            var width:int = this.mGeneralInterface.mCurrentPlayerZone.mMapWidth;
+            if (target < 0 || target >= width * this.mGeneralInterface.mCurrentPlayerZone.mMapHeight
+                || Math.abs(target % width - origin % width) > 1)
+            {
+                return (false);
+            }
+            var street:cStreet = this.mGeneralInterface.mCurrentPlayerZone.mStreetDataMap.GetStreetFromGridPosition(origin);
+            var neighbour:cStreet = this.mGeneralInterface.mCurrentPlayerZone.mStreetDataMap.GetStreetFromGridPosition(target);
+            return (street != null && neighbour != null
+                && (street.GetStreetBits() & (1 << direction)) != 0
+                && (neighbour.GetStreetBits() & (1 << ((direction + 2) % 4))) != 0);
         }
 
         public function initCostMatrix(_arg_1:Vector.<PFAdditionalData>):void

@@ -107,6 +107,7 @@
         override public function Show():void
         {
             super.Show();
+            this.Refresh();
         }
 
         protected function musicMinusButtonClickHandler(_arg_1:MouseEvent):void
@@ -188,6 +189,25 @@
 
         public function Refresh():void
         {
+            if (!this.mPanel.initialized)
+            {
+                return;
+            }
+            this.setUseHalfSizeGraphicsState(this.sm.showHalfSizeGraphics);
+            this.setBuffAnimationState(!this.sm.showBuffAnimations);
+            this.setSectorMarkerState(this.sm.showSectorMarkers);
+            this.setGeneralMarkerState(this.sm.showGeneralMarkers);
+            this.setGeneralNameState(!this.sm.showGeneralName);
+            this.setShowSettlersState(this.sm.showSettlers);
+            this.setShowAnimalsState(this.sm.showAnimals);
+            this.setShowSmokeState(this.sm.showSmoke);
+            this.setMusicMutedState(this.sm.loopsMuted);
+            this.setSfxMutedState(this.sm.sfxMuted);
+            this.setShowMissingSettlerState(this.sm.showMissingSettler);
+            this.setShowMissingResourcesState(this.sm.showMissingResources);
+            this.setShowFullWarehouseState(this.sm.showFullWarehouse);
+            this.setShowStoppedProductionState(this.sm.showStoppedProduction);
+            this.Update();
         }
 
         protected function showMissingResourcesClickHandler(_arg_1:MouseEvent):void
@@ -287,7 +307,7 @@
             this.mPanel.showFullWarehouseButton.addEventListener(MouseEvent.CLICK, this.showFullWarehouseClickHandler);
             this.mPanel.showStoppedProductionButton.addEventListener(MouseEvent.CLICK, this.showStoppedProductionClickHandler);
             this.mPanel.addEventListener(MouseEvent.MOUSE_DOWN, this.MouseDownHandler);
-            this.setUiScaleState(this.sm.uiScale);
+            this.Refresh();
         }
 
         public function setShowFullWarehouseState(_arg_1:Boolean):void

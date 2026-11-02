@@ -94,6 +94,7 @@
     import Trigger.Triggers.AdventureLostTrigger;
     import Trigger.Triggers.PayToFinishTrigger;
     import Trigger.Triggers.RefillDepositsTrigger;
+    import Trigger.Triggers.DepositDepletedTrigger;
     import Trigger.Triggers.CheckGenericValueTrigger;
     import Trigger.Triggers.RollCollectionTrigger;
     import Trigger.Triggers.CompleteCollectionTrigger;
@@ -218,6 +219,7 @@
             triggerHashMap.putItem(TRIGGER_ACTION.ACTION_ADVENTURE_LOST_string, new TriggerHashMapVO(AdventureLostTrigger, false));
             triggerHashMap.putItem(TRIGGER_ACTION.ACTION_PAY_TO_FINISH_string, new TriggerHashMapVO(PayToFinishTrigger, false));
             triggerHashMap.putItem(TRIGGER_ACTION.ACTION_REFILL_DEPOSITS_string, new TriggerHashMapVO(RefillDepositsTrigger, true));
+            triggerHashMap.putItem(DepositDepletedTrigger.XML_string, new TriggerHashMapVO(DepositDepletedTrigger, true));
             triggerHashMap.putItem(TRIGGER_ACTION.ACTION_CHECK_GENERIC_VALUE_TRIGGER, new TriggerHashMapVO(CheckGenericValueTrigger, false));
             triggerHashMap.putItem(TRIGGER_ACTION.ACTION_ROLL_COLLECTION_TRIGGER, new TriggerHashMapVO(RollCollectionTrigger, true));
             triggerHashMap.putItem(TRIGGER_ACTION.ACTION_COMPLETE_COLLECTION_TRIGGER, new TriggerHashMapVO(CompleteCollectionTrigger, true));

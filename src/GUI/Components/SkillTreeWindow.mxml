@@ -19,6 +19,7 @@
             super.childrenCreated();
             LegacyMxmlContent.createChildren(content);
             LegacyMxmlContent.createChildren(backgroundFooter);
+            _SkillTreeWindow_Image1.source = gAssetManager.GetClass("PanelOrnamentalTop");
             setStyle("showEffect", fadeIn);
             setStyle("hideEffect", fadeOut);
             fadeOut.addEventListener(EffectEvent.EFFECT_END, __fadeOut_effectEnd);
@@ -93,7 +94,7 @@
     <mx:Fade id="fadeOut" alphaFrom="1" alphaTo="0" duration="150" />
 
     <mx:Canvas id="background" styleName="basicPanel" top="5" left="5" right="9" bottom="0" />
-    <mx:Image id="_SkillTreeWindow_Image1" horizontalCenter="0" top="-50" source="{gAssetManager.GetClass('PanelOrnamentalTop')}" />
+    <mx:Image id="_SkillTreeWindow_Image1" horizontalCenter="0" top="-50" />
     <gui:CustomLabel id="headline" left="46" top="15" right="46" textAlign="center" color="0xFFFFFF" />
     <gui:CloseButton id="btnClose" top="10" right="24" />
     <mx:Image id="iconPlaceholder" x="225" y="-42" width="50" height="60" />

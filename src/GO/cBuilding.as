@@ -1,4 +1,4 @@
-﻿package GO
+package GO
 {
     import MilitarySystem.iMilitaryUnitHolder;
     import Modifier.Modifieable;
@@ -1769,6 +1769,13 @@
             return (this.mGoGroup.GetNrFromName(this.mBuildingName_string));
         }
 
+        private function HasMissingProductionRoad():Boolean
+        {
+            return (mGeneralInterface.mComputeResourceCreation.UsesProductionRoads(this.mResourceCreation)
+                && (this.mResourceCreation.productionRoadPaused
+                    || this.mResourceCreation.GetProductionState() == cResourceCreation.PRODUCTIONSTATE_MISSING_STREET));
+        }
+
         protected function renderProductionActive(_arg_1:int, _arg_2:int):void
         {
             if (((((!(this.mResourceCreation == null)) && (!(this.IsProductionLevelTooLow()))) && (!(this.IsProductionActive()))) && (cSettingsManager.getInstance().showStoppedProduction)))
@@ -2930,6 +2937,11 @@
                         this.getConstructionAnimEffectSet().Animate(mGeneralInterface.mCalculateTicks.mDeltaTicksOne);
                         this.getConstructionAnimEffectSet().Render(GetXInt(), GetYInt());
                     };
+                    if (this.HasMissingProductionRoad())
+                    {
+                        gGfxResource.mBuildingInfoIcons.SetSubType(cResourceCreation.PRODUCTIONSTATE_MISSING_STREET);
+                        gGfxResource.mBuildingInfoIcons.RenderPos(_local_1, ((_local_2 - (global.streetGridY + global.streetGridYHalf)) - mGeneralInterface.mWobblingInt));
+                    }
                     return;
                 case BUILDING_MODE_DESTRUCTION:
                     this.renderBuildingModeDestruction(this.mProgressPercent, mXScaled, mYScaled, _local_1, _local_2);
@@ -3061,87 +3073,95 @@
                     }
                     else
                     {
-                        this.renderProductionActive(_local_1, _local_2);
-                        if (((!(this.mResourceCreation == null)) && (!(this.IsProductionLevelTooLow()))))
+                        if (this.HasMissingProductionRoad())
                         {
-                            _local_3 = this.mResourceCreation.GetProductionStateIconIndex();
-                            if (_local_3 > -1)
+                            gGfxResource.mBuildingInfoIcons.SetSubType(cResourceCreation.PRODUCTIONSTATE_MISSING_STREET);
+                            gGfxResource.mBuildingInfoIcons.RenderPos(_local_1, ((_local_2 - (global.streetGridY + global.streetGridY)) - mGeneralInterface.mWobblingInt));
+                        }
+                        else
+                        {
+                            this.renderProductionActive(_local_1, _local_2);
+                            if (((!(this.mResourceCreation == null)) && (!(this.IsProductionLevelTooLow()))))
                             {
-                                _local_6 = (mGeneralInterface.GetClientTime() - this.mBuildingCreationTime);
-                                if (_local_6 < defines.BUILDING_INFO_ICON_TIME_FOR_DELAY)
+                                _local_3 = this.mResourceCreation.GetProductionStateIconIndex();
+                                if (_local_3 > -1)
                                 {
-                                    if (this.mBuildingInfoIconDelayEndTime == -1)
+                                    _local_6 = (mGeneralInterface.GetClientTime() - this.mBuildingCreationTime);
+                                    if (_local_6 < defines.BUILDING_INFO_ICON_TIME_FOR_DELAY)
                                     {
-                                        this.mBuildingInfoIconDelayEndTime = (gMisc.GetTimeSinceStartup() + global.buildingInfoIconDelay);
+                                        if (this.mBuildingInfoIconDelayEndTime == -1)
+                                        {
+                                            this.mBuildingInfoIconDelayEndTime = (gMisc.GetTimeSinceStartup() + global.buildingInfoIconDelay);
+                                        };
+                                    }
+                                    else
+                                    {
+                                        this.mBuildingInfoIconDelayEndTime = -1;
+                                    };
+                                    if (((this.IsProductionActive()) && (this.mBuildingInfoIconDelayEndTime < gMisc.GetTimeSinceStartup())))
+                                    {
+                                        switch (_local_3)
+                                        {
+                                            case cResourceCreation.PRODUCTIONSTATE_ERROR_WAREHOUSE_FULL:
+                                                if (cSettingsManager.getInstance().showFullWarehouse)
+                                                {
+                                                    gGfxResource.mBuildingInfoIcons.SetSubType(_local_3);
+                                                    gGfxResource.mBuildingInfoIcons.RenderPos(_local_1, ((_local_2 - (global.streetGridY + global.streetGridY)) - mGeneralInterface.mWobblingInt));
+                                                };
+                                                break;
+                                            case cResourceCreation.PRODUCTIONSTATE_ERROR_WAITING_FOR_SETTLER:
+                                                if (cSettingsManager.getInstance().showMissingSettler)
+                                                {
+                                                    gGfxResource.mBuildingInfoIcons.SetSubType(_local_3);
+                                                    gGfxResource.mBuildingInfoIcons.RenderPos(_local_1, ((_local_2 - (global.streetGridY + global.streetGridY)) - mGeneralInterface.mWobblingInt));
+                                                };
+                                                break;
+                                            case cResourceCreation.PRODUCTIONSTATE_ERROR_NECESSARY_RESOURCE_MISSING:
+                                                if (cSettingsManager.getInstance().showMissingResources)
+                                                {
+                                                    gGfxResource.mBuildingInfoIcons.SetSubType(_local_3);
+                                                    gGfxResource.mBuildingInfoIcons.RenderPos(_local_1, ((_local_2 - (global.streetGridY + global.streetGridY)) - mGeneralInterface.mWobblingInt));
+                                                };
+                                                break;
+                                            default:
+                                                gGfxResource.mBuildingInfoIcons.SetSubType(_local_3);
+                                                gGfxResource.mBuildingInfoIcons.RenderPos(_local_1, ((_local_2 - (global.streetGridY + global.streetGridY)) - mGeneralInterface.mWobblingInt));
+                                        };
                                     };
                                 }
                                 else
                                 {
                                     this.mBuildingInfoIconDelayEndTime = -1;
-                                };
-                                if (((this.IsProductionActive()) && (this.mBuildingInfoIconDelayEndTime < gMisc.GetTimeSinceStartup())))
-                                {
-                                    switch (_local_3)
+                                    if (((this.mBuildingMode == BUILDING_MODE_WORKANIM_IS_WORKING_AT_WORKYARD_LOCAL_WORKYARD_SYSTEM) || (this.mBuildingMode == BUILDING_MODE_WORKANIM_IS_WORKING_AT_WORKYARD_EXTERNAL_WORKYARD_SYSTEM_ACTIVE)))
                                     {
-                                        case cResourceCreation.PRODUCTIONSTATE_ERROR_WAREHOUSE_FULL:
-                                            if (cSettingsManager.getInstance().showFullWarehouse)
-                                            {
-                                                gGfxResource.mBuildingInfoIcons.SetSubType(_local_3);
-                                                gGfxResource.mBuildingInfoIcons.RenderPos(_local_1, ((_local_2 - (global.streetGridY + global.streetGridY)) - mGeneralInterface.mWobblingInt));
-                                            };
-                                            break;
-                                        case cResourceCreation.PRODUCTIONSTATE_ERROR_WAITING_FOR_SETTLER:
-                                            if (cSettingsManager.getInstance().showMissingSettler)
-                                            {
-                                                gGfxResource.mBuildingInfoIcons.SetSubType(_local_3);
-                                                gGfxResource.mBuildingInfoIcons.RenderPos(_local_1, ((_local_2 - (global.streetGridY + global.streetGridY)) - mGeneralInterface.mWobblingInt));
-                                            };
-                                            break;
-                                        case cResourceCreation.PRODUCTIONSTATE_ERROR_NECESSARY_RESOURCE_MISSING:
-                                            if (cSettingsManager.getInstance().showMissingResources)
-                                            {
-                                                gGfxResource.mBuildingInfoIcons.SetSubType(_local_3);
-                                                gGfxResource.mBuildingInfoIcons.RenderPos(_local_1, ((_local_2 - (global.streetGridY + global.streetGridY)) - mGeneralInterface.mWobblingInt));
-                                            };
-                                            break;
-                                        default:
-                                            gGfxResource.mBuildingInfoIcons.SetSubType(_local_3);
-                                            gGfxResource.mBuildingInfoIcons.RenderPos(_local_1, ((_local_2 - (global.streetGridY + global.streetGridY)) - mGeneralInterface.mWobblingInt));
+                                        if (((!(this.mSmokeEffectSet == null)) && (cSettingsManager.getInstance().showSmoke)))
+                                        {
+                                            this.renderSmokeEffect(_local_1, _local_2);
+                                        };
                                     };
+                                };
+                                if (((!(this.IsProductionActive())) && (cSettingsManager.getInstance().showStoppedProduction)))
+                                {
+                                    gGfxResource.mBuildingInfoIcons.SetSubType(cResourceCreation.PRODUCTIONSTATE_STOPPED_PRODUCTION);
+                                    gGfxResource.mBuildingInfoIcons.RenderPos(_local_1, ((_local_2 - (global.streetGridY + global.streetGridY)) - mGeneralInterface.mWobblingInt));
                                 };
                             }
                             else
                             {
-                                this.mBuildingInfoIconDelayEndTime = -1;
-                                if (((this.mBuildingMode == BUILDING_MODE_WORKANIM_IS_WORKING_AT_WORKYARD_LOCAL_WORKYARD_SYSTEM) || (this.mBuildingMode == BUILDING_MODE_WORKANIM_IS_WORKING_AT_WORKYARD_EXTERNAL_WORKYARD_SYSTEM_ACTIVE)))
+                                if (((((!(this.productionQueue == null)) && (this.productionQueue.mTimedProductions_vector.length > 0)) && (this.productionQueue.mTimedProductions_vector[0].readyForDeliver)) && (this.showWaitForPickupIcon)))
                                 {
-                                    if (((!(this.mSmokeEffectSet == null)) && (cSettingsManager.getInstance().showSmoke)))
+                                    gGfxResource.mBuildingInfoIcons.SetSubType(this.waitForPickupSpriteIndex);
+                                    gGfxResource.mBuildingInfoIcons.RenderPos(_local_1, ((_local_2 - (global.streetGridY + global.streetGridY)) - mGeneralInterface.mWobblingInt));
+                                };
+                                if (this.GetGOContainer().mShowSmokeEvenIfNotWorking)
+                                {
+                                    for each (_local_7 in this.mSmokeEffectSet)
                                     {
-                                        this.renderSmokeEffect(_local_1, _local_2);
+                                        _local_7.Render(_local_1, _local_2);
                                     };
                                 };
                             };
-                            if (((!(this.IsProductionActive())) && (cSettingsManager.getInstance().showStoppedProduction)))
-                            {
-                                gGfxResource.mBuildingInfoIcons.SetSubType(cResourceCreation.PRODUCTIONSTATE_STOPPED_PRODUCTION);
-                                gGfxResource.mBuildingInfoIcons.RenderPos(_local_1, ((_local_2 - (global.streetGridY + global.streetGridY)) - mGeneralInterface.mWobblingInt));
-                            };
                         }
-                        else
-                        {
-                            if (((((!(this.productionQueue == null)) && (this.productionQueue.mTimedProductions_vector.length > 0)) && (this.productionQueue.mTimedProductions_vector[0].readyForDeliver)) && (this.showWaitForPickupIcon)))
-                            {
-                                gGfxResource.mBuildingInfoIcons.SetSubType(this.waitForPickupSpriteIndex);
-                                gGfxResource.mBuildingInfoIcons.RenderPos(_local_1, ((_local_2 - (global.streetGridY + global.streetGridY)) - mGeneralInterface.mWobblingInt));
-                            };
-                            if (this.GetGOContainer().mShowSmokeEvenIfNotWorking)
-                            {
-                                for each (_local_7 in this.mSmokeEffectSet)
-                                {
-                                    _local_7.Render(_local_1, _local_2);
-                                };
-                            };
-                        };
                     };
                     if (((this.mSpecialUpgradeReady) && (!(this.IsUpgradeInProgress()))))
                     {

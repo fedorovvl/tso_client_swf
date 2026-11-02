@@ -1,4 +1,4 @@
-﻿package ServerState
+package ServerState
 {
     import Modifier.Modifieable;
     import GO.cSettler;
@@ -16,6 +16,13 @@
 
     public class cResourceCreation implements Modifieable 
     {
+
+        public var productionRoadRevision:Number = -1;
+        public var productionRoadPaused:Boolean = false;
+        public var constructionRoadPausedAt:Number = -1;
+        public var forestWorkDuration:Number = NaN;
+        public var forestAnimationGrid:int = -1;
+        public var forestPlantingGraphics:String = null;
 
         public static const RESOURCE_CREATION:String = "RESOURCE_CREATION";
         public static const RESOURCE_CREATION_APPLY_MODIFIERS:String = "RESOURCE_CREATION_APPLY_MODIFIERS";

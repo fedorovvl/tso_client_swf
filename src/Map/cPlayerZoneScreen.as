@@ -5,6 +5,12 @@ package Map
     import AdventureSystem.cAdventure;
     import Colony.cColony;
     import SettlerKI.cSettlerManager;
+    import SettlerKI.cSettlerKI;
+    import ServerState.cResourceCreation;
+    import Communication.VO.UpdateVO.dRemovedForestDepositVO;
+    import Communication.VO.UpdateVO.dForestPlantingStartedVO;
+    import Communication.VO.UpdateVO.dPlantedForestDepositVO;
+    import Communication.VO.dDepositVO;
     import Map.SubMaps.cBackgroundRectangleDataMap;
     import Map.SubMaps.cStreetDataMap;
     import __AS3__.vec.Vector;
@@ -83,6 +89,11 @@ package Map
 
         public static const HOME_ZONE_string:String = "Home";
 
+        public var forestMechanicsVersion:int = 0;
+        private var forestSnapshotTime:Number = 0;
+        private var forestKnownIDs:Dictionary = new Dictionary();
+        private var forestTombstones:Dictionary = new Dictionary();
+        private var forestStarted:Dictionary = new Dictionary();
         public var mTrackedMissionList:dTrackedMissionListVO = null;
         public var mSpecialistGroups:dSpecialistGroupsVO = null;
         private var mAdventure:cAdventure = null;
@@ -1421,6 +1432,7 @@ package Map
                 this.mGeneralInterface.mSetBuildings.ShowPreviewPath(this.mGeneralInterface.mCurrentPlayer.GetPlayerId(), (this.mGeneralInterface.mCurrentCursor.GetEditMode() == COMMAND.MOVE_GARISSON));
                 this.mGeneralInterface.mCurrentCursor.PostPathRender();
             };
+            this.mStreetDataMap.RenderRoadEntrances();
             if (cBackbuffer.ACTIVATE_SEGMENTBUFFER)
             {
                 this.mTempRect.x = (this.mGeneralInterface.mZoom.mCacheZoomInvScaleScrollPosXMinusHalfScreenWidth + global.screenWidthHalf);
@@ -2075,6 +2087,163 @@ package Map
         public function RemoveDepositIcon(_arg_1:int):void
         {
             this.mGoSetListAnimationManager.RemoveSingleAnimation(_arg_1);
+        }
+
+        public function SetForestSnapshot(snapshot:dZoneVO):void
+        {
+            if (snapshot.forestMechanicsVersion != 0 && snapshot.forestMechanicsVersion != 1)
+            {
+                throw new Error("Unsupported forest mechanics version: " + snapshot.forestMechanicsVersion);
+            }
+            this.forestMechanicsVersion = snapshot.forestMechanicsVersion;
+            this.forestSnapshotTime = snapshot.serverTime;
+            this.forestKnownIDs = new Dictionary();
+            this.forestTombstones = new Dictionary();
+            this.forestStarted = new Dictionary();
+            for each (var deposit:dDepositVO in snapshot.deposits)
+            {
+                if (!dUniqueID.isEmpty(deposit.forestUniqueID))
+                {
+                    this.forestKnownIDs[deposit.forestUniqueID.toKeyString()] = true;
+                }
+            }
+        }
+
+        public function StartForestPlanting(update:dForestPlantingStartedVO):void
+        {
+            if (this.forestMechanicsVersion != 1 || update.startsAt <= this.forestSnapshotTime || dUniqueID.isEmpty(update.buildingUniqueID))
+            {
+                return;
+            }
+            var key:String = update.buildingUniqueID.toKeyString();
+            if (this.forestStarted[key] != null && Number(this.forestStarted[key]) >= update.startsAt)
+            {
+                return;
+            }
+            var building:cBuilding = this.mStreetDataMap.GetBuildingByUniqueId(update.buildingUniqueID);
+            if (building == null || !this.mGeneralInterface.mComputeResourceCreation.IsServerForestPlanter(building.GetResourceCreation()))
+            {
+                return;
+            }
+            if (this.mGeneralInterface.mComputeResourceCreation.StartForestPlanting(building.GetResourceCreation(), update))
+            {
+                this.forestStarted[key] = update.startsAt;
+            }
+        }
+
+        public function PlantForestDeposit(update:dPlantedForestDepositVO):void
+        {
+            if (this.forestMechanicsVersion != 1 || update.eventTime <= this.forestSnapshotTime || update.depositVO == null || dUniqueID.isEmpty(update.depositVO.forestUniqueID))
+            {
+                return;
+            }
+            var key:String = update.depositVO.forestUniqueID.toKeyString();
+            if (this.forestKnownIDs[key] || this.forestTombstones[key])
+            {
+                return;
+            }
+            if (this.mStreetDataMap.mDepositContainer.get(update.depositVO.gridIdx) != null)
+            {
+                cLog.warning("Forest planting conflicts with occupied deposit grid: " + update.depositVO.gridIdx);
+                return;
+            }
+            var deposit:cDeposit = cDeposit.CreateDepositFromVO(update.depositVO, this.mGeneralInterface);
+            if (!this.mStreetDataMap.SetDepositGridPos(this.mGeneralInterface.mCurrentPlayer, deposit, update.depositVO.gridIdx))
+            {
+                deposit.dispose();
+                return;
+            }
+            this.forestKnownIDs[key] = true;
+            this.mStreetDataMap.RefreshDepositGfx(update.depositVO.gridIdx);
+            this.RefreshForestPaths();
+        }
+
+        private function RefreshForestPaths():void
+        {
+            this.mStreetDataMap.CalculateBlockingGrid();
+            var invalidatedPlayers:Dictionary = new Dictionary();
+            for each (var building:cBuilding in this.mStreetDataMap.GetBuildings_vector())
+            {
+                if (building != null && !invalidatedPlayers[building.getPlayerID()])
+                {
+                    this.mGeneralInterface.mPathFinder.InvalidateAll(building.getPlayerID());
+                    invalidatedPlayers[building.getPlayerID()] = true;
+                }
+            }
+            this.mGeneralInterface.mPathFinder.InvalidateAll(this.mGeneralInterface.mCurrentPlayer.GetPlayerId());
+            this.SetBackgroundHasChanged(true);
+        }
+
+        public function RemoveForestDeposit(update:dRemovedForestDepositVO):void
+        {
+            if (this.forestMechanicsVersion != 1 || update.eventTime <= this.forestSnapshotTime || dUniqueID.isEmpty(update.forestUniqueID))
+            {
+                return;
+            }
+            this.forestTombstones[update.forestUniqueID.toKeyString()] = true;
+            var deposit:cDeposit = this.mStreetDataMap.mDepositContainer.get(update.gridIdx);
+            if (deposit == null || deposit.GetName_string() != update.name_string || !update.forestUniqueID.eq(deposit.forestUniqueID))
+            {
+                return;
+            }
+
+            for each (var building:cBuilding in this.mStreetDataMap.GetBuildings_vector())
+            {
+                if (building == null)
+                {
+                    continue;
+                }
+                var production:cResourceCreation = building.GetResourceCreation();
+                if (production != null && !production.GetRemove())
+                {
+                    this.ReturnWorkerFromRemovedForest(production, update.gridIdx);
+                }
+            }
+
+            this.RemoveDepositIcon(update.gridIdx);
+            this.mStreetDataMap.RemoveDepositGridPos(update.gridIdx, true);
+            deposit.dispose();
+            this.RefreshForestPaths();
+        }
+
+        private function ReturnWorkerFromRemovedForest(production:cResourceCreation, gridIdx:int):void
+        {
+            if (this.mGeneralInterface.mComputeResourceCreation.IsServerForestPlanter(production))
+            {
+                return;
+            }
+            if (production.GetDepositBuildingGridPos() != gridIdx)
+            {
+                return;
+            }
+            production.SetDepositBuildingGridPos(-1);
+            var building:cBuilding = production.GetResourceCreationHouse();
+            var path:cPathObject = production.GetDepositPath();
+            if (building == null || path == null)
+            {
+                return;
+            }
+            switch (building.GetBuildingMode())
+            {
+                case cBuilding.BUILDING_MODE_WORKANIM_IS_WORKING_AT_EXTERNAL_DEPOSIT:
+                    production.pathPos = path.pathLenX10000;
+                    break;
+                case cBuilding.BUILDING_MODE_SETTLER_WALKS_FROM_RESOURCECREATIONHOUSE_TO_EXTERNAL_RESOURCE:
+                    production.pathPos = path.pathLenX20000 - production.pathPos;
+                    break;
+                default:
+                    return;
+            }
+            building.SetBuildingMode(cBuilding.BUILDING_MODE_SETTLER_WALKS_FROM_EXTERNAL_RESOURCE_TO_RESOURCECREATIONHOUSE);
+            if (production.GetGatheredResource() > 0)
+            {
+                production.SetWorkingSettlerCarries();
+            }
+            else
+            {
+                production.SetWorkingSettler();
+            }
+            production.SetSettlerKIState(cSettlerKI.SETTLER_STATE_WALKING_ON_DEPOSIT_PATH);
         }
 
         public function Scroll(_arg_1:int, _arg_2:Number):void

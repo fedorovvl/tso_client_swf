@@ -292,12 +292,31 @@
                 _local_1 = this.mQueue_vector[0];
                 if (_local_1.GetBuildingMode() == cBuilding.BUILDING_MODE_QUEUED)
                 {
+                    if (!this.mGeneralInterface.mComputeResourceCreation.HasConstructionRoad(_local_1))
+                    {
+                        if (_local_1.GetResourceCreation() != null
+                            && _local_1.GetResourceCreation().GetProductionState() != cResourceCreation.PRODUCTIONSTATE_MISSING_STREET)
+                        {
+                            _local_1.GetResourceCreation().SetProductionState(cResourceCreation.PRODUCTIONSTATE_MISSING_STREET);
+                            this.UpdateGUI();
+                        }
+                        this.updateTempSlotsTimer();
+                        return;
+                    }
                     _local_2 = this.mGeneralInterface.mCurrentPlayerZone.GetResourcesForPlayerID(_local_1.getPlayerID());
                     if (((!(_local_2 == null)) && (_local_2.CanPlayerAffordBuilding(_local_1.GetBuildingName_string()))))
                     {
                         this.mUserNotified = false;
                         _local_1.mBuildingCreationTime = this.mGeneralInterface.GetClientTime();
                         _local_1.mBuildingProgress = 0;
+                        if (this.mGeneralInterface.mComputeResourceCreation.UsesConstructionRoads(_local_1)
+                            && _local_1.GetResourceCreation() != null)
+                        {
+                            _local_1.GetResourceCreation().constructionRoadPausedAt = -1;
+                            _local_1.GetResourceCreation().productionRoadPaused = false;
+                            _local_1.GetResourceCreation().productionRoadRevision = -1;
+                            _local_1.GetResourceCreation().SetProductionState(cResourceCreation.PRODUCTIONSTATE_WORKING);
+                        }
                         _local_1.Buy();
                         _local_1.SetBuildingMode(cBuilding.BUILDING_MODE_SET_BUILDING_GROUND_PLACE);
                         this.UpdateGUI();

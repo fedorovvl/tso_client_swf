@@ -1,8 +1,9 @@
-﻿package Communication.VO
+package Communication.VO
 {
     public class dResourceCreationVO 
     {
 
+        public var forestPlantingGraphics:String = null;
         public var playerId:int;
         public var remove:Boolean;
         public var gatheredResource:int;

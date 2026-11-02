@@ -1,4 +1,4 @@
-﻿package SettlerKI
+package SettlerKI
 {
     import ServerState.cResourceCreation;
     import GO.cSettler;
@@ -68,6 +68,12 @@
             };
             var _local_3:int = this.mResourceCreation.pathPos;
             var _local_4:Number = (mSettler.mGeneralInterface.GetClientTime() - mSettler.mGeneralInterface.mLastGameTickRefreshClientTime);
+            if (mSettler.mGeneralInterface.mComputeResourceCreation.UsesProductionRoads(this.mResourceCreation)
+                && (this.mResourceCreation.productionRoadPaused
+                    || this.mResourceCreation.GetProductionState() == cResourceCreation.PRODUCTIONSTATE_MISSING_STREET))
+            {
+                _local_4 = 0;
+            }
             _local_3 = (_local_3 + (_local_4 * cComputeResourceCreation.SETTLER_WALK_SPEED_INT));
             if (((!(this.mResourceCreation.GetRemove())) && (!(this.mResourceCreation.GetResourceCreationHouse() == null))))
             {
@@ -149,6 +155,12 @@
             };
             var _local_3:int = this.mResourceCreation.pathPos;
             var _local_4:Number = (mSettler.mGeneralInterface.GetClientTime() - mSettler.mGeneralInterface.mLastGameTickRefreshClientTime);
+            if (mSettler.mGeneralInterface.mComputeResourceCreation.UsesProductionRoads(this.mResourceCreation)
+                && (this.mResourceCreation.productionRoadPaused
+                    || this.mResourceCreation.GetProductionState() == cResourceCreation.PRODUCTIONSTATE_MISSING_STREET))
+            {
+                _local_4 = 0;
+            }
             _local_3 = (_local_3 + (_local_4 * cComputeResourceCreation.SETTLER_WALK_SPEED_INT));
             if (((!(this.mResourceCreation.GetRemove())) && (!(this.mResourceCreation.GetResourceCreationHouse() == null))))
             {
