@@ -157,8 +157,26 @@
 
         private static function destroyItem(_arg_1:GTween):void
         {
+            var _local_2:DisplayObject;
+            var _local_3:Bitmap;
             _arg_1.suppressEvents = true;
-            global.getApplication().stage.removeChild((_arg_1.target as DisplayObject));
+            _local_2 = (_arg_1.target as DisplayObject);
+            if (_local_2 == null)
+            {
+                return;
+            };
+            _local_3 = (_local_2 as Bitmap);
+            if (((!(_local_3 == null)) && (!(_local_3.bitmapData == null))))
+            {
+                if (_local_3.bitmapData != dummyBMD)
+                {
+                    _local_3.bitmapData.dispose();
+                };
+            };
+            if (_local_2.parent)
+            {
+                _local_2.parent.removeChild(_local_2);
+            };
         }
 
         private static function flyTo(_arg_1:DisplayObject, _arg_2:Point, _arg_3:Function, _arg_4:int=0):void

@@ -643,6 +643,11 @@ package Map.SubMaps
             this.mLandmarkContainer.clear();
             this.mGeneralInterface.channels.RENDER.clearLayer(RENDER_LAYER.STATIC);
             this.mGeneralInterface.channels.RENDER.clearLayer(RENDER_LAYER.LABELS);
+            if (this.mCombatContainer)
+            {
+                this.mCombatContainer.forEach(this.disposeCombatData);
+                this.mCombatContainer.clear();
+            };
             this.mAdditionalData.clear();
             this.mAdditionalData2.clear();
             for each (_local_2 in this.pickups)
@@ -654,6 +659,14 @@ package Map.SubMaps
             this.ResetListsAndScrolling();
         }
 
+        private function disposeCombatData(_arg_1:Object):void
+        {
+            if ((_arg_1 is cCombatData))
+            {
+                (_arg_1 as cCombatData).dispose();
+            };
+        }
+        
         public function RenderRoadEntrances():void
         {
             var mode:int = this.mGeneralInterface.mCurrentCursor.GetEditMode();
