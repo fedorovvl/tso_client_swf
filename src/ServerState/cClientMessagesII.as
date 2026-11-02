@@ -2237,6 +2237,23 @@ package ServerState
                     return;
                 };
             };
+            // Login can return the same expired/reset payloads as a normal visit.
+            if (_arg_1.type == COMMAND.GET_ZONE_ON_LOGIN || _arg_1.type == COMMAND.GET_ZONE)
+            {
+                    if ((_local_2.data is dAdventureExpiredVO))
+                    {
+                        CustomAlert.show("AdventureZoneExpired", "AdventureZoneExpired", Alert.OK);
+                        AdventureManager.getInstance().removeAdventure((_local_2.data as dAdventureExpiredVO).zoneID);
+                        globalFlash.gui.mLoadingZonePanel.Hide();
+                        return;
+                    };
+                    if ((_local_2.data is dAdventureResetVO))
+                    {
+                        CustomAlert.show("AdventureZoneReset", "AdventureZoneReset", Alert.OK);
+                        globalFlash.gui.mLoadingZonePanel.Hide();
+                        return;
+                    };
+            };
             switch (_arg_1.type)
             {
                 case COMMAND.GET_ZONE_ON_LOGIN:
@@ -2263,19 +2280,6 @@ package ServerState
                     ShareManager.getInstance();
                     globalFlash.gui.mChatPanel.Refresh();
                 case COMMAND.GET_ZONE:
-                    if ((_local_2.data is dAdventureExpiredVO))
-                    {
-                        CustomAlert.show("AdventureZoneExpired", "AdventureZoneExpired", Alert.OK);
-                        AdventureManager.getInstance().removeAdventure((_local_2.data as dAdventureExpiredVO).zoneID);
-                        globalFlash.gui.mLoadingZonePanel.Hide();
-                        return;
-                    };
-                    if ((_local_2.data is dAdventureResetVO))
-                    {
-                        CustomAlert.show("AdventureZoneReset", "AdventureZoneReset", Alert.OK);
-                        globalFlash.gui.mLoadingZonePanel.Hide();
-                        return;
-                    };
                     global.maxAnimalsOnMap = _local_2.data.maxAnimalsOnMap;
                     global.defaultAnimals = ((_local_2.data.hasAltDefaultAnimals) ? _local_2.data.defaultAnimals : null);
                     this.mGameInterface.mCurrentPlayerZone.setAlternativeWater(_local_2.data.alternativeWater);

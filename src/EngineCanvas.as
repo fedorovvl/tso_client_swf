@@ -19,6 +19,7 @@
     import GUI.cGuiBaseElement;
     import mx.core.UIComponent;
     import mx.core.mx_internal; 
+    import mx.messaging.FlexClient;
 
     use namespace mx_internal;
 
@@ -89,6 +90,22 @@
 
         public function bootup():void
         {
+            // Consume child-window arguments synchronously, before constructing the
+            // interface or sending requests. The HTML wrapper's timer is too late.
+            var startupZone:String = gInitStaticForAllZones.getStringArgument("zoneid");
+            if (startupZone != null && int(startupZone) != 0)
+            {
+                var startupAuth:String = gInitStaticForAllZones.getStringArgument("authrandom");
+                var startupFlex:String = gInitStaticForAllZones.getStringArgument("flexid");
+                if (startupAuth == null || startupFlex == null || startupFlex.length == 0)
+                {
+                    throw new Error("Missing child-window session arguments");
+                };
+                defines.CLIENT_ZONEID = int(startupZone);
+                defines.CLIENT_AUTHRANDOM = int(startupAuth);
+                cClientMessagesII.mAuthRandomClient = defines.CLIENT_AUTHRANDOM;
+                FlexClient.getInstance().id = startupFlex;
+            };
             gMisc.InitTimeSinceStartup();
             if (global.gameState != "MainMenu")
             {
