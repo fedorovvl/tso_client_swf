@@ -28,7 +28,18 @@
 
         public function InitBlockingPreview(_arg_1:int):void
         {
-            this.mCombatPreviewPath = new cCombatPreviewPath(this.mGeneralInterface, _arg_1, _arg_1, null);
+            this.setPreviewPath(new cCombatPreviewPath(this.mGeneralInterface, _arg_1, _arg_1, null));
+        }
+
+        // Replaces the path being edited. The streets of the previous one are
+        // disposed first: they stay registered on channels.ZONE otherwise.
+        private function setPreviewPath(_arg_1:cCombatPreviewPath):void
+        {
+            if (((!(this.mCombatPreviewPath == null)) && (!(this.mCombatPreviewPath == _arg_1))))
+            {
+                this.mCombatPreviewPath.disposeStreets();
+            };
+            this.mCombatPreviewPath = _arg_1;
         }
 
         public function removePath(_arg_1:int):void
@@ -75,7 +86,7 @@
         {
             items.push(new dContextItemVO("Path", function ():void
             {
-                mCombatPreviewPath = path;
+                setPreviewPath(path);
                 mMoveGridStart = (EditMode == COMMAND.MOVE_BLOCKING_PATH_PREVIEW_START);
                 mGeneralInterface.mCurrentCursor.SetCursorEditMode(EditMode);
                 mGeneralInterface.mCombatPersitedPreview.DeleteCombatPreviewPath(path.mUniqueId);
@@ -106,7 +117,7 @@
                     };
                 };
             };
-            this.mCombatPreviewPath = null;
+            this.setPreviewPath(null);
         }
 
         public function MouseClickOnMap(_arg_1:cPlayerData, _arg_2:cPlayerZoneScreen):Boolean
@@ -124,7 +135,7 @@
                     {
                         if (_local_3.length == 1)
                         {
-                            this.mCombatPreviewPath = _local_3[0];
+                            this.setPreviewPath(_local_3[0]);
                             if (((this.mCombatPreviewPath.GetGridStart() == this.mGeneralInterface.mCurrentCursor.GetGridPosition()) || (this.mCombatPreviewPath.isGridInBlocking(this.mGeneralInterface.mCurrentCursor.GetGridPosition()))))
                             {
                                 this.mMoveGridStart = true;
@@ -196,7 +207,7 @@
                                 };
                                 this.mGeneralInterface.mClientMessages.SendMessagetoServer(COMMAND.MOVE_BLOCKING_PATH_PREVIEW_START, this.mGeneralInterface.mCurrentViewedZoneID, this.mCombatPreviewPath.CreateVO());
                                 this.mGeneralInterface.mCombatPersitedPreview.AddPreviewPath(this.mCombatPreviewPath.CreateVO());
-                                this.mCombatPreviewPath = null;
+                                this.setPreviewPath(null);
                                 this.mGeneralInterface.mCurrentCursor.SetCursorEditMode(COMMAND.SELECT_BUILDING);
                             }
                             else
@@ -209,7 +220,7 @@
                                     };
                                     this.mGeneralInterface.mClientMessages.SendMessagetoServer(COMMAND.MOVE_BLOCKING_PATH_PREVIEW_TARGET, this.mGeneralInterface.mCurrentViewedZoneID, this.mCombatPreviewPath.CreateVO());
                                     this.mGeneralInterface.mCombatPersitedPreview.AddPreviewPath(this.mCombatPreviewPath.CreateVO());
-                                    this.mCombatPreviewPath = null;
+                                    this.setPreviewPath(null);
                                     this.mGeneralInterface.mCurrentCursor.SetCursorEditMode(COMMAND.SELECT_BUILDING);
                                 };
                             };

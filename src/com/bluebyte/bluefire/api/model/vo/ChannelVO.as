@@ -9,6 +9,8 @@
     public class ChannelVO implements IEventDispatcher 
     {
 
+        private static const MAX_MESSAGES:int = 500;
+
         private var _rooms:ArrayCollection = new ArrayCollection();
         private var _sortingIndex:int;
         private var _important:Boolean;
@@ -107,6 +109,13 @@
 
         public function addMessage(_arg_1:MessageVO):void
         {
+            // Bounded history. Without a cap every message received during the
+            // session stays referenced here, so memory grows for as long as the
+            // client runs. The cap matches ChatHistory.maxEntries in ChatPanel.
+            while (this._messages.length >= MAX_MESSAGES)
+            {
+                this._messages.removeItemAt(0);
+            };
             this._messages.addItem(_arg_1);
         }
 
