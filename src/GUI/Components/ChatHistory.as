@@ -105,7 +105,10 @@
             {
                 return;
             };
-            var _local_2:int = Math.min(0, (this.collection.length - this.maxEntries));
+            // Index of the first item that may get a renderer. This was Math.min,
+            // which is never above 0, so a channel switch built a renderer for
+            // every stored message instead of only the newest maxEntries.
+            var _local_2:int = Math.max(0, (this.collection.length - this.maxEntries));
             var _local_3:int = int(getStyle("verticalGap"));
             var _local_4:int = Math.min(this.collection.length, this.maxEntries);
             while (numChildren > _local_4)
