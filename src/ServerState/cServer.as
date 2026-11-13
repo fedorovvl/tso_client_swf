@@ -589,6 +589,10 @@ package ServerState
             {
                 this.mGeneralInterface.mCurrentPlayerZone.ColonyAdd(_local_41);
             };
+            if (this.mGeneralInterface.mCombatPersitedPreview != null)
+            {
+                this.mGeneralInterface.mCombatPersitedPreview.dispose();
+            };
             this.mGeneralInterface.mCombatPersitedPreview = new cCombatPersistedPreview(this.mGeneralInterface);
             for each (_local_42 in _arg_1.combatPreviewPaths)
             {
