@@ -129,7 +129,7 @@ package ServerState
             {
                 base = base.substr(0, base.length - 1);
             };
-            return (base + "/v1/territories/" + encodeURIComponent(global.territory) + "/realms/" + encodeURIComponent(global.realm) + "/zones/" + cClientMessagesII.mAuthUser);
+            return (base + "/v1/territories/" + encodeURIComponent(global.territory) + "/realms/" + encodeURIComponent(global.realm) + "/zones/" + this.mZoneId);
         }
 
         private function IoErrorHandler(_arg_1:IOErrorEvent):void
