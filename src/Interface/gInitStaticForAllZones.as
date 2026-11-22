@@ -152,6 +152,10 @@
             global.gameState = "Game";
             global.useExternalServer = getBooleanParameter("e", "swmmo.use_external_server", defines.USE_EXTERNAL_SERVER);
             global.useBigBrother = getBooleanParameter("ubb", "swmmo.use_big_brother", defines.USE_BIG_BROTHER);
+            global.useULS = getBooleanParameter("uls", "swmmo.use_uls", false);
+            global.ulsURL = getStringParameter("ls", "swmmo.uls_url", null);
+            global.territory = getStringParameter("territory", "swmmo.territory", null);
+            global.realm = getStringParameter("realm", "swmmo.realm", null);
             global.bigBrotherURL = getStringParameter("bb", "swmmo.big_brother_url", defines.BIG_BROTHER_URL);
             global.staticFilesURL = getStringParameter("s", "swmmo.static_url", defines.STATIC_FILES_URL);
             defines.GFX_CACHE = getBooleanParameter("gfxcache", "swmmo.gfxcache", false);
@@ -161,7 +165,7 @@
                 cFilenameUtil.resetCDNs();
             };
             global.m_JSInitCall = getStringParameter("initJSCallFunction", "", "initJSCallFunction");
-            if (!global.useBigBrother)
+            if (!global.useBigBrother || global.useULS)
             {
                 global.settingsEnvironment = getStringParameter("settingsEnvironment", "swmmo.settings_environment", "default");
                 global.eventLoadingScreen = getStringParameter("eventLoadingScreen", "swmmo.event_loadingscreen", defines.DEFAULT_UNDEFINED);

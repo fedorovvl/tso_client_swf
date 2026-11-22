@@ -237,6 +237,10 @@
         public static var useExternalServer:Boolean;
         public static var useBigBrother:Boolean;
         public static var bigBrotherURL:String;
+        public static var useULS:Boolean;
+        public static var ulsURL:String;
+        public static var territory:String;
+        public static var realm:String;
         public static var staticFilesURL:String;
         public static var staticFilesURLList:Array;
         public static var userCountry:String;

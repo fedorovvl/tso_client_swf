@@ -1,1 +1,6 @@
 reference/
+client.swf
+assets/version.txt
+assets/theme/swmmo-theme.swf
+compile.log
+linker-config.xml

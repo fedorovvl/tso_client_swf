@@ -48,7 +48,14 @@ package ServerState
             this.mURLRequest.url = global.bigBrotherURL;
             this.mURLRequest.method = URLRequestMethod.POST;
             this.mURLRequest.data = _local_6;
-            this.mURLRequest.url = ((global.bigBrotherURL + "Z") + new Date().getTime());
+            if (global.useULS)
+            {
+                this.mURLRequest.url = this.getULSRequestURL();
+            }
+            else
+            {
+                this.mURLRequest.url = ((global.bigBrotherURL + "Z") + new Date().getTime());
+            };
             this.mURLLoader = new URLLoader();
             this.mURLLoader.dataFormat = URLLoaderDataFormat.TEXT;
             this.ConfigureListeners(this.mURLLoader);
@@ -62,7 +69,10 @@ package ServerState
         {
             if (this.mTimer != null)
             {
-                this.mURLRequest.url = ((global.bigBrotherURL + "Z") + new Date().getTime());
+                if (!global.useULS)
+                {
+                    this.mURLRequest.url = ((global.bigBrotherURL + "Z") + new Date().getTime());
+                };
                 this.mURLLoader.load(this.mURLRequest);
             };
         }
@@ -73,7 +83,29 @@ package ServerState
             {
                 return;
             };
-            var _local_2:String = String(URLLoader(_arg_1.target).data).replace(":123443", "");
+            var _local_2:String;
+            if (global.useULS)
+            {
+                try
+                {
+                    var response:Object = JSON.parse(String(URLLoader(_arg_1.target).data));
+                    if (response.state != "assigned" || response.url == null || String(response.url).length == 0)
+                    {
+                        throw new Error("ULS did not return an assigned GameServer URL");
+                    };
+                    _local_2 = String(response.url);
+                }
+                catch (error:Error)
+                {
+                    this.dispose();
+                    global.ui.mClientMessages.FaultHandler(new FaultEvent("ULS response error: " + error.message));
+                    return;
+                };
+            }
+            else
+            {
+                _local_2 = String(URLLoader(_arg_1.target).data).replace(":123443", "");
+            };
             if (_local_2.indexOf("http://") == 0 && _local_2.indexOf(":443/") >= 0)
             {
                 _local_2 = "https://" + _local_2.substr("http://".length);
@@ -88,6 +120,16 @@ package ServerState
                 this.mLoginQueueStatus.update(_local_2);
                 this.mTimer.start();
             };
+        }
+
+        private function getULSRequestURL():String
+        {
+            var base:String = global.ulsURL;
+            while (base.charAt(base.length - 1) == "/")
+            {
+                base = base.substr(0, base.length - 1);
+            };
+            return (base + "/v1/territories/" + encodeURIComponent(global.territory) + "/realms/" + encodeURIComponent(global.realm) + "/zones/" + cClientMessagesII.mAuthUser);
         }
 
         private function IoErrorHandler(_arg_1:IOErrorEvent):void

@@ -52,7 +52,7 @@
         override public function Show():void
         {
             super.Show();
-            this.mPanel.loadingLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, ((global.useBigBrother) ? "LoginQueueInit" : "LoadingZone"));
+            this.mPanel.loadingLabel.text = cLocaManager.GetInstance().GetText(LOCA_GROUP.LABELS, (((global.useBigBrother) && (!(global.useULS))) ? "LoginQueueInit" : "LoadingZone"));
             globalFlash.gui.windowController.setTop(this.mPanel, true);
             this.mPanel.btnCancel.visible = false;
             this.mPanel.pulsate.play();

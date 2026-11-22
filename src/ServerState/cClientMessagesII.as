@@ -288,6 +288,14 @@ package ServerState
 
         public function InitializeServerCommunication():void
         {
+            if (global.useULS)
+            {
+                var initialFriends:dGetFriendsVO = new dGetFriendsVO();
+                initialFriends.version = defines.VERSION_NR;
+                mInitialized = true;
+                this.SendMessagetoServer(COMMAND.GET_FRIEND_LIST, this.mGameInterface.mCurrentViewedZoneID, initialFriends);
+                return;
+            };
             if (global.useExternalServer)
             {
                 if (!global.useBigBrother)
@@ -381,7 +389,7 @@ package ServerState
 
         public function SendGetZoneMessageToServer(_arg_1:int, _arg_2:int, _arg_3:Object):void
         {
-            if (global.useBigBrother)
+            if (global.useULS || global.useBigBrother)
             {
                 if (this.mBigBrotherMessage == null)
                 {
@@ -1618,6 +1626,11 @@ package ServerState
 
         public function fetchFromArguments():void
         {
+            fetchStartupArguments();
+        }
+
+        public static function fetchStartupArguments():void
+        {
             mAuthToken = gInitStaticForAllZones.getStringArgument("dsoAuthToken");
             ClientLogger.log(("mGI.mClientMessages.mAuthToken: " + mAuthToken));
             mAuthUser = gInitStaticForAllZones.getIntegerArgument("dsoAuthUser", mAuthUser);
@@ -1917,7 +1930,7 @@ package ServerState
                     return;
                 };
             };
-            if (global.useBigBrother)
+            if (global.useULS || global.useBigBrother)
             {
                 if (((this.mLastVisitedZoneID == _arg_2) && (!(this.mLastResultServerName == ""))))
                 {
