@@ -19,6 +19,7 @@
         public var frameOffsYScaledCache:Number;
         public var filteredBitmap:BitmapData = null;
         public var scaledBitmap:BitmapData = null;
+        private var scaledBitmapOwned:Boolean = false;
         private var highlightCache:BitmapData = null;
         public var size_u:int;
         public var size_v:int;
@@ -130,11 +131,13 @@
                 if (global.ui.mZoom.GetScaleFactor() == (1000 * global.mGraphicScaleFactor))
                 {
                     this.scaledBitmap = _local_2;
+                    this.scaledBitmapOwned = false;
                     this.renderRect = this.scaledBitmap.rect;
                 }
                 else
                 {
                     this.scaledBitmap = new BitmapData(this.getScaledBitmapWidth(), this.getScaledBitmapHeight(), true, 0);
+                    this.scaledBitmapOwned = true;
                     this.needAntialias = true;
                     this.renderRect = this.scaledBitmap.rect;
                     _local_3 = global.ui.mZoom.getGraphicScaleMatrix();
@@ -178,8 +181,23 @@
 
         public function clearScale():void
         {
+            // Free the pixel memory now instead of waiting for the garbage
+            // collector. clearScale() runs for every frame on each zoom change
+            // and each zone refresh, and the collector does not see how much
+            // native memory a dropped BitmapData still holds.
+            // Only a bitmap this frame allocated itself may be disposed: at
+            // 100% zoom scaledBitmap is the shared source bitmap.
+            if (((this.scaledBitmapOwned) && (!(this.scaledBitmap == null))))
+            {
+                this.scaledBitmap.dispose();
+            };
             this.scaledBitmap = null;
-            this.highlightCache = null;
+            this.scaledBitmapOwned = false;
+            if (this.highlightCache != null)
+            {
+                this.highlightCache.dispose();
+                this.highlightCache = null;
+            };
         }
 
 

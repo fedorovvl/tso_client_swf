@@ -70,10 +70,27 @@
                 {
                     this.mGeneralInterface.mCurrentPlayerZone.mStreetDataMap.mPathsPreviewsContainer.remove(_local_3);
                     this.mCombatPreviewPaths.splice(_local_2, 1);
+                    // The path may still be the one being moved; its streets
+                    // are rebuilt on the next Render() if so.
+                    _local_3.disposeStreets();
                     break;
                 };
                 _local_2++;
             };
+        }
+
+        // Called when a zone refresh replaces this object: release the streets
+        // of every path and take the paths out of the map's container, which an
+        // on-the-fly refresh keeps.
+        public function dispose():void
+        {
+            var _local_1:cCombatPreviewPath;
+            for each (_local_1 in this.mCombatPreviewPaths)
+            {
+                this.mGeneralInterface.mCurrentPlayerZone.mStreetDataMap.mPathsPreviewsContainer.remove(_local_1);
+                _local_1.disposeStreets();
+            };
+            this.mCombatPreviewPaths.length = 0;
         }
 
         public function AddPreviewPath(_arg_1:CombatPreviewPathVO):void

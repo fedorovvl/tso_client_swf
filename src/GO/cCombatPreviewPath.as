@@ -64,7 +64,35 @@
             var _local_4:int = gCalculations.MoveStreetGridToDir8(global.ui.mCurrentPlayerZone, this.mGridFinish, defines.DIR8_SOUTH_EAST);
             var _local_5:int = gCalculations.MoveStreetGridToDir8(global.ui.mCurrentPlayerZone, this.mGridStart, defines.DIR8_SOUTH_EAST);
             this.mPreviewPath = mGeneralInterface.mPathFinder.CalculatePath(_local_4, _local_5, _local_1, true);
+            this.disposeStreets();
+        }
+
+        // Every cStreet registers itself on channels.ZONE in the cIsoGO
+        // constructor and is only unregistered by dispose(). The streets of a
+        // preview were simply dropped, so each rebuild (once per frame while a
+        // blocking path is being placed or moved) left its streets registered
+        // for the rest of the session. Render() builds them again on demand.
+        public function disposeStreets():void
+        {
+            var _local_1:cStreet;
+            if (this.mStreets_vector != null)
+            {
+                for each (_local_1 in this.mStreets_vector)
+                {
+                    if (_local_1 != null)
+                    {
+                        _local_1.dispose();
+                    };
+                };
+                this.mStreets_vector = null;
+            };
             this.mCachedStreet = false;
+        }
+
+        override public function dispose():void
+        {
+            this.disposeStreets();
+            super.dispose();
         }
 
         public function clone():cCombatPreviewPath
@@ -125,6 +153,7 @@
             {
                 if (!this.mCachedStreet)
                 {
+                    this.disposeStreets();
                     this.mCachedStreet = true;
                     this.mStreets_vector = new Vector.<cStreet>();
                     for each (_local_5 in this.mPreviewPath.dest_vector)
